@@ -24,6 +24,7 @@ import com.badlogic.gdx.webgpu.wrappers.WebGPUTexture;
 
 /** Test of texture wrap and filter methods.
  * todo: select box has a visual issue.
+ * todo: doesn't work if called from TestStarter
  */
 public class WrapAndFilterTest extends GdxTest {
 

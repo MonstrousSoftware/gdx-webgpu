@@ -27,6 +27,7 @@ import com.badlogic.gdx.graphics.glutils.GLVersion;
 import com.badlogic.gdx.graphics.glutils.HdpiMode;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.utils.Disposable;
+import com.badlogic.gdx.webgpu.graphics.utils.WebGPUGL20;
 import com.badlogic.gdx.webgpu.webgpu.*;
 import com.badlogic.gdx.webgpu.wrappers.*;
 import jnr.ffi.Pointer;
@@ -97,7 +98,7 @@ public class WebGPUGraphics extends AbstractGraphics implements WebGPUGraphicsBa
 		this.window = window;
 		this.webGPU = webGPU;
 
-		this.gl20 = null;
+		this.gl20 = new WebGPUGL20();
 		this.gl30 = null;
 		this.gl31 = null;
 		this.gl32 = null;
@@ -105,6 +106,7 @@ public class WebGPUGraphics extends AbstractGraphics implements WebGPUGraphicsBa
 
 		app = (WebGPUApplication) Gdx.app;
 		Gdx.graphics = this;
+        Gdx.gl = this.gl20;
 
 		WebGPUGraphicsContext.Configuration config = new WebGPUGraphicsContext.Configuration(win32handle, app.getConfiguration().samples,
 				app.getConfiguration().vSyncEnabled,app.getConfiguration().enableGPUtiming, app.getConfiguration().backend);
