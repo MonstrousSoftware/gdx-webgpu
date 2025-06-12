@@ -1,0 +1,45 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group = 'com.monstrous'
+version = '1.0'
+
+
+java.sourceCompatibility = 17
+java.targetCompatibility = 17
+
+repositories {
+  mavenCentral()
+  maven { url 'https://jitpack.io' }
+}
+
+project.ext.lwjglVersion = "3.3.4"
+project.ext.lwjglNatives = "natives-windows"
+
+dependencies {
+  implementation 'com.github.MonstrousSoftware:Java-to-WebGPU:1.01'
+
+  implementation 'com.github.jnr:jnr-ffi:2.2.17'
+
+  implementation platform("org.lwjgl:lwjgl-bom:$lwjglVersion")
+
+  implementation "org.lwjgl:lwjgl"
+  implementation "org.lwjgl:lwjgl-glfw"
+
+  runtimeOnly "org.lwjgl:lwjgl::$lwjglNatives"
+}
+
+application {
+    mainClass = 'com.monstrous.Main'
+}
+
+run {
+    setIgnoreExitValue(true)
+}
+
+
+
+
+
