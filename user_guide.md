@@ -5,11 +5,63 @@ This is an extension for LibGDX which allows you to use the WebGPU graphics API 
 
 Gdx-webgpu provide substitute classes for many of the LibGDX graphics classes.  When using the WebGPU for rendering, the substitute classes need to be used as the original classes will not work without a GL context.
 
+## Start-up
+To launch a gdx-webgpu application, create a `WebGPUApplication` and pass it an instance of `ApplicationListener` and optionally a configuration object.
+
+```java
+	// launcher
+	public static void main (String[] argv) {
+		WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
+		config.setWindowedMode(320, 480);
+		new WebGPUApplication(new MyApplication(), config);
+	}
+```
+
+Some useful configuration options:
+
+| option | description |
+|:-------|:-----------|
+|`config.setWindowedMode(320, 480);`     |   Sets the application window to the given size.|
+|`config.useVsync(boolean)`|	Whether to fix the frame rate to vsync.|
+|`config.samples`        |	Set to 4 for anti-aliasing.|
+|`config.backend`     | Default is `WGPUBackendType.Undefined`. This can be used for test a Vulkan backend or a DirectX12 backend for the WebGPU layer. Note that the availability of backends depends on the users' computer.|	
+| `config.enableGPUtiming` |Default is false. Can be set to true to allow GPU timing measurements (to explain how)|
+ 
+Settings related to OpenGL will be ignored (e.g. glEmulation) (todo should be removed).
+Configuration settings are platform dependent.
+
+The `ApplicationListener` object provides the entry points for your application. A bare bones application listener looks as follows:
+
+```java
+        public class MyGame implements ApplicationListener {
+           public void create () {
+           }
+        
+           public void render () {        
+           }
+        
+           public void resize (int width, int height) {
+           }
+        
+           public void pause () {
+           }
+        
+           public void resume () {
+           }
+        
+           public void dispose () {
+           }
+        }
+```
+See [LibGDX Application Life Cycle](https://libgdx.com/wiki/app/the-life-cycle) for more details.
+
+
 ## New classes
 The extension provides a set of new classes listed below intended to be used instead of LibGDX graphics classes.
 
 ### General
 - WebGPUTexture replaces Texture (extends)
+- WebGPUScreenUtils
 
 ### 2d classes
 - WebGPUBitmapFont replaces BitmapFont (extends)
@@ -22,7 +74,15 @@ The extension provides a set of new classes listed below intended to be used ins
 - WebGPUStage replaces Stage (extends)
 
 ### 3d classes
-to do
+
+- WebGPUModelBatch
+- WebGPUModel
+- WebGPUMeshPart
+- WebGPUDefaultShader
+- WebGPUDefaultShaderProvider
+- WebGPUShapeRenderer
+- WebGPUMeshBuilder
+- WebGPUShaderProgram
 
 ## Class specific comments
 This section provides some considerations to keep in mind for specific classes. In general, the classes should behave as their original LibGDX counterpart, but in a few cases there are some caveats.
@@ -41,7 +101,7 @@ This also means that while for `SpriteBatch` the maximum value only affects perf
 There are two methods to set blending parameters. One is for backwards compatibility with and uses GL constants.
 - setBlendFunction
 - setBlendFunctionSeparate
-- 
+ 
 The new methods use WebGPU constants (enum WGPUBlendFactor): 
 - setBlendFactor
 - setBlendFactorSeparate
