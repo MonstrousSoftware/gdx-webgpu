@@ -42,9 +42,6 @@ public class WebGPUStage extends Stage {
 	public WebGPUStage() {
 		super(new ScalingViewport(Scaling.stretch, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), new OrthographicCamera()),
 			new WebGPUSpriteBatch());
-		// adapt camera near/far for WebGPU clip space
-		getCamera().far = -1;
-		getCamera().near = 1;
 	}
 
 	/** Creates a stage with the specified viewport. The stage will use its own {@link Batch} which will be disposed when the stage
