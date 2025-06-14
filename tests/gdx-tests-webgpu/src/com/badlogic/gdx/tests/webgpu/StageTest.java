@@ -7,10 +7,10 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.tests.webgpu.utils.GdxTest;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
 import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplicationConfiguration;
 import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
-import com.badlogic.gdx.webgpu.graphics.viewport.WebGPUScreenViewport;
 import com.badlogic.gdx.webgpu.scene2d.WebGPUSkin;
 import com.badlogic.gdx.webgpu.scene2d.WebGPUStage;
 import com.badlogic.gdx.webgpu.wrappers.WebGPUTexture;
@@ -20,7 +20,7 @@ import com.badlogic.gdx.webgpu.wrappers.WebGPUTexture;
 //
 public class StageTest extends GdxTest {
 		private WebGPUSpriteBatch batch;
-		private WebGPUScreenViewport viewport;
+		private ScreenViewport viewport;
 		private WebGPUStage stage;
 		private WebGPUSkin skin;
 		private WebGPUTexture texture;
@@ -44,7 +44,7 @@ public class StageTest extends GdxTest {
 			mat.setToOrtho(0, w, 0, h, 1, -1);
 			System.out.println(mat.toString());
 
-			viewport = new WebGPUScreenViewport();
+			viewport = new ScreenViewport();
 			batch = new WebGPUSpriteBatch();
 
 			stage = new WebGPUStage(viewport);

@@ -26,11 +26,11 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.tests.webgpu.utils.GdxTestWrapper;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
 import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplicationConfiguration;
 import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUGraphics;
 import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUWindowConfiguration;
-import com.badlogic.gdx.webgpu.graphics.viewport.WebGPUScreenViewport;
 import com.badlogic.gdx.webgpu.scene2d.WebGPUSkin;
 import com.badlogic.gdx.webgpu.scene2d.WebGPUStage;
 import com.badlogic.gdx.webgpu.webgpu.WGPUBackendType;
@@ -66,7 +66,7 @@ public class WebGPUTestStarter {
 
 			final Preferences prefs = Gdx.app.getPreferences("webgpu-tests");
 
-			stage = new WebGPUStage(new WebGPUScreenViewport());
+			stage = new WebGPUStage(new ScreenViewport());
 			Gdx.input.setInputProcessor(stage);
 			skin = new WebGPUSkin(Gdx.files.internal("data/uiskin.json"));
 

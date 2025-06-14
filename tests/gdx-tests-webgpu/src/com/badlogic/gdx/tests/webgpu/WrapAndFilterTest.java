@@ -13,11 +13,11 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.tests.webgpu.utils.GdxTest;
 import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
 import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplicationConfiguration;
 import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUBitmapFont;
 import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
-import com.badlogic.gdx.webgpu.graphics.viewport.WebGPUScreenViewport;
 import com.badlogic.gdx.webgpu.scene2d.WebGPUSkin;
 import com.badlogic.gdx.webgpu.scene2d.WebGPUStage;
 import com.badlogic.gdx.webgpu.wrappers.WebGPUTexture;
@@ -45,7 +45,7 @@ public class WrapAndFilterTest extends GdxTest {
 		private TextureRegion region;
 
 		private WebGPUBitmapFont font;
-		private WebGPUScreenViewport viewport;
+		private ScreenViewport viewport;
 		private WebGPUStage stage;
 		private WebGPUSkin skin;
 		private Texture.TextureFilter minFilter = Texture.TextureFilter.Nearest;
@@ -67,7 +67,7 @@ public class WrapAndFilterTest extends GdxTest {
 
 			// Add some GUI
 			//
-			viewport = new WebGPUScreenViewport();
+			viewport = new ScreenViewport();
 			stage = new WebGPUStage(viewport);
 			stage.setDebugAll(true);
 			Gdx.input.setInputProcessor(stage);

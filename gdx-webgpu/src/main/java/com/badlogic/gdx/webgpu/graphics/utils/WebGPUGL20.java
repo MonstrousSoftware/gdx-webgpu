@@ -1,5 +1,6 @@
 package com.badlogic.gdx.webgpu.graphics.utils;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 
 import java.nio.Buffer;
@@ -13,7 +14,19 @@ import java.nio.IntBuffer;
  */
 public class WebGPUGL20 implements GL20 {
 
+    public int viewportX, viewportY;
+    public int viewportWidth, viewportHeight;
 
+    @Override
+    public void glViewport(int x, int y, int width, int height) {
+        if(x != viewportX || y != viewportY || width != viewportWidth || height != viewportHeight){
+            Gdx.app.log("glViewport", "x=" + x + " y=" + y + " w=" + width + " h=" + height);
+            viewportX = x;
+            viewportY = y;
+            viewportWidth = width;
+            viewportHeight = height;
+        }
+    }
 
     @Override
     public void glActiveTexture(int texture) {
@@ -225,10 +238,7 @@ public class WebGPUGL20 implements GL20 {
 
     }
 
-    @Override
-    public void glViewport(int x, int y, int width, int height) {
 
-    }
 
     @Override
     public void glAttachShader(int program, int shader) {

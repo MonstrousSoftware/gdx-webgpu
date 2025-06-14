@@ -21,10 +21,9 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 
 import com.badlogic.gdx.tests.webgpu.utils.GdxTest;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplicationConfiguration;
 import com.badlogic.gdx.webgpu.graphics.utils.WebGPUScreenUtils;
-import com.badlogic.gdx.webgpu.graphics.viewport.WebGPUScreenViewport;
 import com.badlogic.gdx.webgpu.scene2d.WebGPUSkin;
 import com.badlogic.gdx.webgpu.scene2d.WebGPUStage;
 
@@ -37,7 +36,7 @@ public class ColorTest extends GdxTest {
 
 	@Override
 	public void create () {
-		stage = new WebGPUStage(new WebGPUScreenViewport());
+		stage = new WebGPUStage(new ScreenViewport());
 		Gdx.input.setInputProcessor(stage);
 
 		WebGPUSkin skin = new WebGPUSkin(Gdx.files.internal("data/uiskin.json"));

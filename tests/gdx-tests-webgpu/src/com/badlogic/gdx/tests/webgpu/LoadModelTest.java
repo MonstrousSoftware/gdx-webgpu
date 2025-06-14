@@ -31,6 +31,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.tests.webgpu.utils.GdxTest;
 import com.badlogic.gdx.tests.webgpu.utils.PerspectiveCamController;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.webgpu.assets.WebGPUAssetManager;
 import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
 import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplicationConfiguration;
@@ -38,7 +39,6 @@ import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUBitmapFont;
 import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
 import com.badlogic.gdx.webgpu.graphics.g3d.WebGPUModelBatch;
 import com.badlogic.gdx.webgpu.graphics.utils.WebGPUScreenUtils;
-import com.badlogic.gdx.webgpu.graphics.viewport.WebGPUScreenViewport;
 import com.badlogic.gdx.webgpu.scene2d.WebGPUSkin;
 import com.badlogic.gdx.webgpu.scene2d.WebGPUStage;
 
@@ -58,7 +58,7 @@ public class LoadModelTest extends GdxTest {
 	Model model;
 	ModelInstance instance;
 	AssetManager assets;
-	WebGPUScreenViewport viewport;
+	ScreenViewport viewport;
 	WebGPUStage stage;
 	WebGPUSkin skin;
 	boolean loaded;
@@ -105,7 +105,7 @@ public class LoadModelTest extends GdxTest {
 
 		// Add some GUI
 		//
-		viewport = new WebGPUScreenViewport();
+		viewport = new ScreenViewport();
 		stage = new WebGPUStage(viewport);
 		//stage.setDebugAll(true);
 
