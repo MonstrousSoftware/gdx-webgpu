@@ -20,6 +20,7 @@ import com.badlogic.gdx.AbstractGraphics;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Cursor;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Window;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.webgpu.WebGPUGraphicsBase;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.Cursor.SystemCursor;
@@ -69,6 +70,7 @@ public class WebGPUGraphics extends AbstractGraphics implements WebGPUGraphicsBa
 	public final WebGPUGraphicsContext context;
 
 
+
 	IntBuffer tmpBuffer = BufferUtils.createIntBuffer(1);
 	IntBuffer tmpBuffer2 = BufferUtils.createIntBuffer(1);
 
@@ -81,7 +83,7 @@ public class WebGPUGraphics extends AbstractGraphics implements WebGPUGraphicsBa
 					return;
 				}
 				window.makeCurrent();
-				// gl20.glViewport(0, 0, backBufferWidth, backBufferHeight);
+				//setViewport(0, 0, backBufferWidth, backBufferHeight);
 				window.getListener().resize(getWidth(), getHeight());
 				update();
 				context.resize(getWidth(), getHeight());
@@ -114,7 +116,7 @@ public class WebGPUGraphics extends AbstractGraphics implements WebGPUGraphicsBa
 
 		this.context = new WebGPUGraphicsContext(webGPU, config);
 		context.resize(getWidth(), getHeight());
-
+        setViewport(0, 0, getWidth(), getHeight());
 
 		// initiateGL();
 
@@ -175,7 +177,12 @@ public class WebGPUGraphics extends AbstractGraphics implements WebGPUGraphicsBa
 		return window;
 	}
 
-
+    public void setViewport(int x, int y, int w, int h){
+        context.setViewport(x,y,w,h);
+    }
+    public Rectangle getViewport(){
+        return context.getViewport();
+    }
 
 	void updateFramebufferInfo () {
 		GLFW.glfwGetFramebufferSize(window.getWindowHandle(), tmpBuffer, tmpBuffer2);

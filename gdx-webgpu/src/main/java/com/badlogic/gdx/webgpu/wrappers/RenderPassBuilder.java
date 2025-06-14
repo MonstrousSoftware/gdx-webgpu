@@ -17,6 +17,7 @@
 package com.badlogic.gdx.webgpu.wrappers;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.webgpu.WebGPUGraphicsBase;
 import com.badlogic.gdx.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.graphics.Color;
@@ -153,12 +154,9 @@ public class RenderPassBuilder {
                 outTexture == null ? Gdx.graphics.getWidth() : outTexture.getWidth(),
                 outTexture == null ? Gdx.graphics.getHeight() : outTexture.getHeight());
 
-
-//        if(viewport != null) {
-//            viewport.apply(pass);
-//            viewport = null;        // apply only once after setViewport() is called
-//        }
-
+        // todo may change over time
+        Rectangle view = gfx.getViewport();
+        pass.setViewport(view.x, view.y, view.width, view.height, 0, 1);
 
         return pass;
     }

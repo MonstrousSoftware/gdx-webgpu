@@ -17,7 +17,7 @@ import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUBitmapFont;
 import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
 import com.badlogic.gdx.webgpu.wrappers.WebGPUTexture;
 
-public class ViewportTest extends ApplicationAdapter {
+public class Viewport2Test extends ApplicationAdapter {
 
     private WebGPUSpriteBatch batch;
     private WebGPUTexture background;
@@ -33,7 +33,7 @@ public class ViewportTest extends ApplicationAdapter {
         WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
         config.setWindowedMode(1200, 480);
 
-        new WebGPUApplication(new ViewportTest(), config);
+        new WebGPUApplication(new Viewport2Test(), config);
     }
 
     // demonstrate a custom viewport that shows the content only in a box at the centre of the screen
@@ -50,7 +50,8 @@ public class ViewportTest extends ApplicationAdapter {
 
         @Override
         public void update (int screenWidth, int screenHeight, boolean centerCamera) {
-            setScreenBounds(screenWidth/4, screenHeight/4, screenWidth/2, screenHeight/2);
+            setScreenBounds(screenWidth/2, screenHeight/2, screenWidth/2, screenHeight/2);
+//            setScreenBounds(screenWidth/4, screenHeight/4, screenWidth/2, screenHeight/2);
             apply(centerCamera);
         }
     }
@@ -62,9 +63,10 @@ public class ViewportTest extends ApplicationAdapter {
 
         batch = new WebGPUSpriteBatch();
 
-        getViewports();
+        //getViewports();
         index = 0;
-        viewport = viewports[index];
+        //viewport = viewports[index];
+        viewport = new WindowViewport(800, 500);
 
         font = new WebGPUBitmapFont();
     }
@@ -87,17 +89,15 @@ public class ViewportTest extends ApplicationAdapter {
         } else
             keyUp = true;
 
-        // HACK ! to make sure the matrix is webgpu compliant
         viewport.getCamera().near = 1f;
         viewport.getCamera().far = -1f;
-
         viewport.apply();
         batch.setProjectionMatrix(viewport.getCamera().combined);
 
 
         batch.begin(Color.BLUE);
-        batch.draw(background, 0,0);
-        font.draw(batch, names[index], 50, 90);
+        batch.draw(background, 0,0, 800, 500);
+        //font.draw(batch, names[index], 50, 90);
         font.draw(batch, "Press SPACE to switch viewport. ESCAPE to quit.", 50, 30);
         batch.end();
     }
@@ -112,7 +112,6 @@ public class ViewportTest extends ApplicationAdapter {
 
     @Override
     public void resize(int width, int height) {
-
         viewport.update(width, height, true); // true centers the camera
     }
 

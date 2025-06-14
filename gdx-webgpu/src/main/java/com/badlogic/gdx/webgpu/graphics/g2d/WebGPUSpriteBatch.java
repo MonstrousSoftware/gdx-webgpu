@@ -4,6 +4,7 @@ package com.badlogic.gdx.webgpu.graphics.g2d;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.webgpu.WebGPUGraphicsBase;
 import com.badlogic.gdx.webgpu.graphics.Binder;
 import com.badlogic.gdx.webgpu.graphics.WebGPUShaderProgram;
@@ -154,6 +155,10 @@ public class WebGPUSpriteBatch implements Batch {
         if(specificShader == null) {
             pipelineSpec.shaderSource = getDefaultShaderSource();
         }
+
+        projectionMatrix.setToOrtho(0f, Gdx.graphics.getWidth(), 0f, Gdx.graphics.getHeight(), 1f, -1f);
+        transformMatrix.idt();
+        updateMatrices();
     }
 
     // the index buffer is fixed and only has to be filled on start-up
@@ -297,11 +302,13 @@ public class WebGPUSpriteBatch implements Batch {
 
     public void begin(Color clearColor) {
         renderPass = RenderPassBuilder.create(clearColor, gfx.getSamples());
+        Rectangle view = gfx.getViewport();
+        renderPass.setViewport(view.x, view.y, view.width, view.height, 0, 1);
 
 
         if (drawing)
             throw new RuntimeException("Must end() before begin()");
-        drawing = true;
+
         numSprites = 0;
         vbOffset = 0;
         vertexData.clear();
@@ -319,11 +326,11 @@ public class WebGPUSpriteBatch implements Batch {
         pipelineSpec.vertexAttributes = vertexAttributes;
         pipelineSpec.numSamples = gfx.getSamples();
 
-        projectionMatrix.setToOrtho(0f, Gdx.graphics.getWidth(), 0f, Gdx.graphics.getHeight(), 1f, -1f);
-        transformMatrix.idt();
+        // don't reset the matrices because setProjectionMatrix() and setTransformMatrix()
+        // may be called before begin() and need to be respected.
 
-        setProjectionMatrix(projectionMatrix);
-        //setupMatrices();
+        updateMatrices();
+        drawing = true;
     }
 
     protected void switchTexture (Texture texture) {
@@ -979,7 +986,7 @@ public class WebGPUSpriteBatch implements Batch {
 
     private void updateMatrices(){
         combinedMatrix.set(projectionMatrix).mul(transformMatrix);
-        binder.setUniform("projectionMatrix", combinedMatrix);
+        binder.setUniform("projectionMatrix", combinedMatrix);  //todo naming
     }
 
     private WebGPUBindGroupLayout createBindGroupLayout() {

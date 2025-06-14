@@ -2,6 +2,8 @@ package com.badlogic.gdx.webgpu.graphics.utils;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.webgpu.WebGPUGraphicsBase;
 
 import java.nio.Buffer;
 import java.nio.FloatBuffer;
@@ -14,17 +16,13 @@ import java.nio.IntBuffer;
  */
 public class WebGPUGL20 implements GL20 {
 
-    public int viewportX, viewportY;
-    public int viewportWidth, viewportHeight;
-
     @Override
     public void glViewport(int x, int y, int width, int height) {
-        if(x != viewportX || y != viewportY || width != viewportWidth || height != viewportHeight){
+        WebGPUGraphicsBase gfx = (WebGPUGraphicsBase)Gdx.graphics;
+        Rectangle view = gfx.getViewport();
+        if(x != view.x || y != view.y || width != view.width || height != view.height){
             Gdx.app.log("glViewport", "x=" + x + " y=" + y + " w=" + width + " h=" + height);
-            viewportX = x;
-            viewportY = y;
-            viewportWidth = width;
-            viewportHeight = height;
+            gfx.setViewport(x,y,width, height);
         }
     }
 

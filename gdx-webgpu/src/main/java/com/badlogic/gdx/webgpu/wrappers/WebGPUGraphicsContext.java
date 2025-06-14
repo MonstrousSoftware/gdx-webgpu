@@ -3,6 +3,7 @@ package com.badlogic.gdx.webgpu.wrappers;
 
 
 import com.badlogic.gdx.ApplicationListener;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.webgpu.WebGPUGraphicsBase;
 import com.badlogic.gdx.webgpu.utils.JavaWebGPU;
@@ -23,6 +24,7 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
     private WGPUSupportedLimits supportedLimits;
     private WebGPUTexture multiSamplingTexture;
     private final Configuration config;
+    private final Rectangle viewport = new Rectangle();
 
 
     public static class Configuration {
@@ -143,6 +145,13 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
         }
     }
 
+    public void setViewport(int x, int y, int w, int h){
+        viewport.set(x,y,w,h);
+    }
+    public Rectangle getViewport(){
+        return viewport;
+    }
+
     private void initSwapChain (int width, int height, boolean vsyncEnabled) {
         // configure the surface
         WGPUSurfaceConfiguration config = WGPUSurfaceConfiguration.createDirect();
@@ -237,4 +246,6 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
     public WebGPUTexture getMultiSamplingTexture() {
         return multiSamplingTexture;
     }
+
+
 }

@@ -1,5 +1,6 @@
 package com.badlogic.gdx.webgpu;
 
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.webgpu.webgpu.WGPUBackendType;
 import com.badlogic.gdx.webgpu.webgpu.WGPUTextureFormat;
 import com.badlogic.gdx.webgpu.webgpu.WebGPU_JNI;
@@ -10,6 +11,7 @@ import com.badlogic.gdx.webgpu.wrappers.WebGPUTexture;
 import jnr.ffi.Pointer;
 
 public interface WebGPUGraphicsBase {
+
     WebGPU_JNI getWebGPU ();
 
     WebGPUDevice getDevice ();
@@ -21,5 +23,8 @@ public interface WebGPUGraphicsBase {
     WGPUBackendType getRequestedBackendType();
     int getSamples();
     WebGPUTexture getMultiSamplingTexture();
+
+    void setViewport(int x, int y, int w, int h);
+    Rectangle getViewport();
 
 }
