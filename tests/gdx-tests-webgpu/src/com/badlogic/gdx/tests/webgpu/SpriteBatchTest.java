@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.tests.webgpu.utils.GdxTest;
 import com.badlogic.gdx.utils.TimeUtils;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
 import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplicationConfiguration;
 import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
@@ -22,6 +23,7 @@ public class SpriteBatchTest extends GdxTest {
     private OrthographicCamera camera;
     WebGPUTexture texture;
     WebGPUSpriteBatch spriteBatch;
+    ScreenViewport viewport;
     Sprite[] sprites = new Sprite[SPRITES * 2];
     float angle = 0;
     float ROTATION_SPEED = 20;
@@ -45,20 +47,23 @@ public class SpriteBatchTest extends GdxTest {
     @Override
     public void create() {
         Gdx.app.log(TAG, "[" + this.hashCode() + "] create() START"); // Log instance and start
+
+        viewport = new ScreenViewport();
         spriteBatch = new WebGPUSpriteBatch(SPRITES);
         texture = new WebGPUTexture(Gdx.files.internal("data/badlogicsmall.jpg"));
 
-        camera = new OrthographicCamera();
-        Gdx.app.log(TAG, "[" + this.hashCode() + "] camera assigned: " + (camera != null)); // Log assignment result
+    }
 
+    private void generateSprites(int screenWidth, int screenHeight){
         int width = 32;
         int height = 32;
 
         try {
             for (int i = 0; i < SPRITES; i++) {
-                int x = (int) (Math.random() * (Gdx.graphics.getWidth() - width + width * 0.5f));
-                int y = (int) (Math.random() * (Gdx.graphics.getHeight() - height + height * 0.5f));
-                sprites[i] = new Sprite(texture, width, height);
+                int x = (int) (Math.random() * (screenWidth - width + width * 0.5f));
+                int y = (int) (Math.random() * (screenHeight - height + height * 0.5f));
+                if(sprites[i] == null)
+                    sprites[i] = new Sprite(texture, width, height);
                 sprites[i].setPosition(x, y);
                 sprites[i].setOrigin(width * 0.5f, height * 0.5f);
             }
@@ -71,27 +76,15 @@ public class SpriteBatchTest extends GdxTest {
 
     @Override
     public void resize(int width, int height) {
-        Gdx.app.log(TAG, "[" + this.hashCode() + "] resize(" + width + ", " + height + ") called. Camera is null? " + (camera == null)); // Log instance and camera state
-        if (camera != null) {
-            camera.setToOrtho(false, width, height);
-        } else {
-            Gdx.app.error(TAG, "[" + this.hashCode() + "] resize() called but camera is NULL!");
-        }
+        viewport.update(width, height, true);
+        generateSprites(width, height);
     }
 
     @Override
     public void render() {
-        renderSprites();
-    }
 
-    private void renderSprites() {
-        if (camera == null) {
-            Gdx.app.error(TAG, "[" + this.hashCode() + "] renderSprites() called but camera is NULL! Cannot update.");
-            return;
-        }
-
-        camera.update();
-        spriteBatch.setProjectionMatrix(camera.combined);
+        viewport.apply();
+        spriteBatch.setProjectionMatrix(viewport.getCamera().combined);
 
         float begin = 0;
         float end = 0;

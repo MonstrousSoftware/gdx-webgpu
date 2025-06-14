@@ -62,7 +62,8 @@ public class WebGPUTests {
 		LoadG3DJTest.class,
 		LoadModelTest.class,
 		LightingTest.class,
-		InstancingTest.class
+		InstancingTest.class,
+        ViewportTest.class
 
 		// @on
 

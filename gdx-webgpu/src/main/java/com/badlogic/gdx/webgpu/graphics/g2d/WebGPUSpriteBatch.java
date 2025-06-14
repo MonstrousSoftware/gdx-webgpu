@@ -58,6 +58,7 @@ public class WebGPUSpriteBatch implements Batch {
     private final Matrix4 projectionMatrix;
     private final Matrix4 transformMatrix;
     private final Matrix4 combinedMatrix;
+    private final Matrix4 shiftDepthMatrix;
     private WebGPURenderPass renderPass;
     private int vbOffset;
     private final PipelineCache pipelines;
@@ -117,6 +118,10 @@ public class WebGPUSpriteBatch implements Batch {
         transformMatrix = new Matrix4();
         combinedMatrix = new Matrix4();
 
+        // matrix which will transform an opengl ortho matrix to a webgpu ortho matrix
+        // assumes near = 0 and far = 100 which are the default values if an OrthoCamera was used.
+        shiftDepthMatrix = new Matrix4().idt().scl(1,1,-50f).trn(0,0,-50);
+
         tint = new Color(Color.WHITE);
 
         invTexWidth = 0f;
@@ -156,7 +161,7 @@ public class WebGPUSpriteBatch implements Batch {
             pipelineSpec.shaderSource = getDefaultShaderSource();
         }
 
-        projectionMatrix.setToOrtho(0f, Gdx.graphics.getWidth(), 0f, Gdx.graphics.getHeight(), 1f, -1f);
+        projectionMatrix.setToOrtho2D(0, 0, Gdx.graphics.getWidth(),  Gdx.graphics.getHeight(), 0, 100);
         transformMatrix.idt();
         updateMatrices();
     }
@@ -985,7 +990,8 @@ public class WebGPUSpriteBatch implements Batch {
     }
 
     private void updateMatrices(){
-        combinedMatrix.set(projectionMatrix).mul(transformMatrix);
+
+        combinedMatrix.set(projectionMatrix).mul(shiftDepthMatrix).mul(transformMatrix);
         binder.setUniform("projectionMatrix", combinedMatrix);  //todo naming
     }
 

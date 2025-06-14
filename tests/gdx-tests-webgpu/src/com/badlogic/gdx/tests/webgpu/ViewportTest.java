@@ -7,6 +7,7 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.tests.webgpu.utils.GdxTest;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
@@ -17,7 +18,7 @@ import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUBitmapFont;
 import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
 import com.badlogic.gdx.webgpu.wrappers.WebGPUTexture;
 
-public class ViewportTest extends ApplicationAdapter {
+public class ViewportTest extends GdxTest {
 
     private WebGPUSpriteBatch batch;
     private WebGPUTexture background;
@@ -87,9 +88,6 @@ public class ViewportTest extends ApplicationAdapter {
         } else
             keyUp = true;
 
-        // HACK ! to make sure the matrix is webgpu compliant
-        viewport.getCamera().near = 1f;
-        viewport.getCamera().far = -1f;
 
         viewport.apply();
         batch.setProjectionMatrix(viewport.getCamera().combined);
