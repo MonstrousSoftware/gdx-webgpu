@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.RenderableProvider;
 import com.badlogic.gdx.graphics.g3d.utils.DefaultRenderableSorter;
 import com.badlogic.gdx.graphics.g3d.utils.RenderableSorter;
+import com.badlogic.gdx.graphics.g3d.utils.ShaderProvider;
 import com.badlogic.gdx.webgpu.WebGPUGraphicsBase;
 import com.badlogic.gdx.webgpu.graphics.g3d.shaders.WebGPUDefaultShader;
 import com.badlogic.gdx.webgpu.graphics.g3d.shaders.WebGPUDefaultShaderProvider;
@@ -70,6 +71,7 @@ public class WebGPUModelBatch implements Disposable {
         renderables = new Array<>();
         this.sorter = new WebGPUDefaultRenderableSorter();
     }
+
 
     public boolean isDrawing () {
         return drawing;

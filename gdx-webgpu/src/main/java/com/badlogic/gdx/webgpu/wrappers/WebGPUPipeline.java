@@ -73,7 +73,7 @@ public class WebGPUPipeline implements Disposable {
         pipelineDesc.getVertex().setBuffers(vertexBufferLayout);
 
         pipelineDesc.getVertex().setModule(shaderModule);
-        pipelineDesc.getVertex().setEntryPoint("vs_main");
+        pipelineDesc.getVertex().setEntryPoint(spec.vertexShaderEntryPoint);
         pipelineDesc.getVertex().setConstantCount(0);
         pipelineDesc.getVertex().setConstants();
 
@@ -86,7 +86,7 @@ public class WebGPUPipeline implements Disposable {
             WGPUFragmentState fragmentState = WGPUFragmentState.createDirect();
             fragmentState.setNextInChain();
             fragmentState.setModule(shaderModule);
-            fragmentState.setEntryPoint("fs_main");
+            fragmentState.setEntryPoint(spec.fragmentShaderEntryPoint);
             fragmentState.setConstantCount(0);
             fragmentState.setConstants();
 

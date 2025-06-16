@@ -55,7 +55,7 @@ public class Basic3DTest extends GdxTest {
 
 	@Override
 	public void create () {
-		modelBatch = new WebGPUModelBatch(); //new WebGPUDefaultShaderProvider());
+		modelBatch = new WebGPUModelBatch();
 
 		environment = new Environment();
 		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, .4f, .4f, .4f, 1f));

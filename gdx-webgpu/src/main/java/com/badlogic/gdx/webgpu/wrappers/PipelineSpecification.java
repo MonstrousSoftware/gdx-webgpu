@@ -36,6 +36,8 @@ public class PipelineSpecification {
     public WGPUPrimitiveTopology topology;
     public Environment environment;
     public String shaderSource;
+    public String vertexShaderEntryPoint;
+    public String fragmentShaderEntryPoint;
     public WebGPUShaderProgram shader;
     public boolean useDepthTest;
     public boolean noDepthAttachment; // use only when not rendering to the screen, removes the depth attachment
@@ -62,6 +64,8 @@ public class PipelineSpecification {
         this.name = "pipeline";
         enableDepthTest();
         noDepthAttachment = false;
+        vertexShaderEntryPoint = "vs_main";
+        fragmentShaderEntryPoint = "fs_main";
         blendOpColor = WGPUBlendOperation.Add;
         blendOpAlpha = WGPUBlendOperation.Add;
         setBlendFactor(WGPUBlendFactor.SrcAlpha, WGPUBlendFactor.OneMinusSrcAlpha);

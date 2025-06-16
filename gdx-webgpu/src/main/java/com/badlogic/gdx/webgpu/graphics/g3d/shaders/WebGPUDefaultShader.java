@@ -201,7 +201,9 @@ public class WebGPUDefaultShader implements Shader {
         // set global uniforms, that do not depend on renderables
         // e.g. camera, lighting, environment uniforms
         //
-        //projection.set(camera.projection);
+         // todo: we are working here with an OpenGL projection matrix, which provides a different Z range than for WebGPU.
+
+//        projection.set(camera.projection);
 //        projection.set(shiftDepthMatrix).mul(camera.projection);
 //        combined.set(projection).mul(camera.view);
         binder.setUniform("projectionViewTransform", camera.combined);
