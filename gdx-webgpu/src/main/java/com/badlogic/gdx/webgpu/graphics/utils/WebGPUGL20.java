@@ -12,7 +12,7 @@ import java.nio.IntBuffer;
 /** Fake implementation of GL20
  * The principal purpose is to prevent crashes if some low-level code calls GL functions, e.g. ScissorStack which is called by ScrollPane.
  * Generally the GL functions will just be ignored, because we are not trying to emulate OpenGL.
- * todo Scissors, and glClear
+ * todo glClear?
  */
 public class WebGPUGL20 implements GL20 {
 
@@ -23,6 +23,18 @@ public class WebGPUGL20 implements GL20 {
         if(x != view.x || y != view.y || width != view.width || height != view.height){
             Gdx.app.log("glViewport", "x=" + x + " y=" + y + " w=" + width + " h=" + height);
             gfx.setViewport(x,y,width, height);
+        }
+    }
+
+    @Override
+    public void glScissor(int x, int y, int width, int height) {
+        // note: we are not testing for glEnable(GL_SCISSOR_TEST)/glDisable(GL_SCISSOR_TEST)
+
+        WebGPUGraphicsBase gfx = (WebGPUGraphicsBase)Gdx.graphics;
+        Rectangle scissor = gfx.getScissor();
+        if(x != scissor.x || y != scissor.y || width != scissor.width || height != scissor.height){
+            Gdx.app.log("glScissor", "x=" + x + " y=" + y + " w=" + width + " h=" + height);
+            gfx.setScissor(x,y,width, height);
         }
     }
 
@@ -201,10 +213,7 @@ public class WebGPUGL20 implements GL20 {
 
     }
 
-    @Override
-    public void glScissor(int x, int y, int width, int height) {
 
-    }
 
     @Override
     public void glStencilFunc(int func, int ref, int mask) {

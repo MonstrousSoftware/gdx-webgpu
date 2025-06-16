@@ -158,6 +158,9 @@ public class RenderPassBuilder {
         Rectangle view = gfx.getViewport();
         pass.setViewport(view.x, view.y, view.width, view.height, 0, 1);
 
+        Rectangle scissor = gfx.getScissor();
+        pass.setScissorRect((int)scissor.x, (int)scissor.y, (int)scissor.width, (int)scissor.height);
+
         return pass;
     }
 

@@ -90,12 +90,15 @@ This section provides some considerations to keep in mind for specific classes. 
 ## WebGPUSpriteBatch
 
 ### Maximum
-Just like SpriteBatch you can pass a maximum number of sprites in the constructor, default is 10000:
+Just like SpriteBatch you can pass a maximum number of sprites in the constructor, default is 1000:
 ```java
-	WebGPUSpriteBatch batch = new WebGPUSpriteBatch(10000);
+	WebGPUSpriteBatch batch = new WebGPUSpriteBatch(8000);
 ```
-The maximum may need to be set higher than for `SpriteBatch` since `WebGPUSpriteBatch` cannot flush intermediate batches to the GPU when the buffer is full as the buffer content can only be reused after the end of the frame.
-This also means that while for `SpriteBatch` the maximum value only affects performance, for `WebGPUSpriteBatch` the maximum is a hard limit and further sprites will be ignored and a warning will be issued in the log (to do).
+Unlike SpriteBatch, this maximum is a hard limit: further sprites will be ignored and an error message will be issued in the log.
+
+The maximum may therefore need to be set higher than when using `SpriteBatch`. For `SpriteBatch` the maximum value only affects performance, by reducing the number of flushes.
+On the other hand, `WebGPUSpriteBatch` cannot flush intermediate batches to the GPU when the buffer is full as the buffer content can only be reused after the end of the frame.
+
 
 ### Blend Factor
 There are two methods to set blending parameters. One is for backwards compatibility with and uses GL constants.

@@ -27,4 +27,7 @@ public interface WebGPUGraphicsBase {
     void setViewport(int x, int y, int w, int h);
     Rectangle getViewport();
 
+    void setScissor(int x, int y, int w, int h);
+    Rectangle getScissor();
+
 }

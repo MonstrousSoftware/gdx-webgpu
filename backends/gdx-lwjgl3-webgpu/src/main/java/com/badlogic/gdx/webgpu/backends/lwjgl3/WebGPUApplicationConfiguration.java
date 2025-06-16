@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2011 See AUTHORS file.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -50,13 +50,6 @@ public class WebGPUApplicationConfiguration extends WebGPUWindowConfiguration {
 	int audioDeviceBufferSize = 512;
 	int audioDeviceBufferCount = 9;
 
-	public enum GLEmulation {
-		ANGLE_GLES20, GL20, GL30, GL31, GL32
-	}
-
-	GLEmulation glEmulation = GLEmulation.GL20;
-	int gles30ContextMajorVersion = 3;
-	int gles30ContextMinorVersion = 2;
 
 	int r = 8, g = 8, b = 8, a = 8;
 	int depth = 16, stencil = 0;
@@ -77,9 +70,6 @@ public class WebGPUApplicationConfiguration extends WebGPUWindowConfiguration {
 
 	HdpiMode hdpiMode = HdpiMode.Logical;
 
-	boolean debug = false;
-	PrintStream debugStream = System.err;
-
 	static WebGPUApplicationConfiguration copy (WebGPUApplicationConfiguration config) {
 		WebGPUApplicationConfiguration copy = new WebGPUApplicationConfiguration();
 		copy.set(config);
@@ -92,9 +82,7 @@ public class WebGPUApplicationConfiguration extends WebGPUWindowConfiguration {
 		audioDeviceSimultaneousSources = config.audioDeviceSimultaneousSources;
 		audioDeviceBufferSize = config.audioDeviceBufferSize;
 		audioDeviceBufferCount = config.audioDeviceBufferCount;
-		glEmulation = config.glEmulation;
-		gles30ContextMajorVersion = config.gles30ContextMajorVersion;
-		gles30ContextMinorVersion = config.gles30ContextMinorVersion;
+
 		r = config.r;
 		g = config.g;
 		b = config.b;
@@ -110,8 +98,6 @@ public class WebGPUApplicationConfiguration extends WebGPUWindowConfiguration {
 		preferencesDirectory = config.preferencesDirectory;
 		preferencesFileType = config.preferencesFileType;
 		hdpiMode = config.hdpiMode;
-		debug = config.debug;
-		debugStream = config.debugStream;
 	}
 
 	/** @param visibility whether the window will be visible on creation. (default true) */
@@ -131,7 +117,7 @@ public class WebGPUApplicationConfiguration extends WebGPUWindowConfiguration {
 	}
 
 	/** Sets the audio device configuration.
-	 * 
+	 *
 	 * @param simultaneousSources the maximum number of sources that can be played simultaniously (default 16)
 	 * @param bufferSize the audio device buffer size in samples (default 512)
 	 * @param bufferCount the audio device buffer count (default 9) */
@@ -141,24 +127,9 @@ public class WebGPUApplicationConfiguration extends WebGPUWindowConfiguration {
 		this.audioDeviceBufferCount = bufferCount;
 	}
 
-	/** Sets which OpenGL version to use to emulate OpenGL ES. If the given major/minor version is not supported, the backend falls
-	 * back to OpenGL ES 2.0 emulation through OpenGL 2.0. The default parameters for major and minor should be 3 and 2
-	 * respectively to be compatible with Mac OS X. Specifying major version 4 and minor version 2 will ensure that all OpenGL ES
-	 * 3.0 features are supported. Note however that Mac OS X does only support 3.2.
-	 * 
-	 * @see <a href= "http://legacy.lwjgl.org/javadoc/org/lwjgl/opengl/ContextAttribs.html"> LWJGL OSX ContextAttribs note</a>
-	 * 
-	 * @param glVersion which OpenGL ES emulation version to use
-	 * @param gles3MajorVersion OpenGL ES major version, use 3 as default
-	 * @param gles3MinorVersion OpenGL ES minor version, use 2 as default */
-	public void setOpenGLEmulation (GLEmulation glVersion, int gles3MajorVersion, int gles3MinorVersion) {
-		this.glEmulation = glVersion;
-		this.gles30ContextMajorVersion = gles3MajorVersion;
-		this.gles30ContextMinorVersion = gles3MinorVersion;
-	}
 
 	/** Sets the bit depth of the color, depth and stencil buffer as well as multi-sampling.
-	 * 
+	 *
 	 * @param r red bits (default 8)
 	 * @param g green bits (default 8)
 	 * @param b blue bits (default 8)
@@ -177,7 +148,7 @@ public class WebGPUApplicationConfiguration extends WebGPUWindowConfiguration {
 	}
 
 	/** Set transparent window hint. Results may vary on different OS and GPUs. Usage with the ANGLE backend is less consistent.
-	 * @param transparentFramebuffer */
+	 *  */
 	public void setTransparentFramebuffer (boolean transparentFramebuffer) {
 		this.transparentFramebuffer = transparentFramebuffer;
 	}
@@ -222,18 +193,6 @@ public class WebGPUApplicationConfiguration extends WebGPUWindowConfiguration {
 		this.hdpiMode = mode;
 	}
 
-	/** Enables use of OpenGL debug message callbacks. If not supported by the core GL driver (since GL 4.3), this uses the
-	 * KHR_debug, ARB_debug_output or AMD_debug_output extension if available. By default, debug messages with NOTIFICATION
-	 * severity are disabled to avoid log spam.
-	 *
-	 * You can call with {@link System#err} to output to the "standard" error output stream.
-	 *
-	 * Use {@link Lwjgl3Application#setGLDebugMessageControl(Lwjgl3Application.GLDebugMessageSeverity, boolean)} to enable or
-	 * disable other severity debug levels. */
-	public void enableGLDebugOutput (boolean enable, PrintStream debugOutputStream) {
-		debug = enable;
-		debugStream = debugOutputStream;
-	}
 
 	/** @return the currently active {@link DisplayMode} of the primary monitor */
 	public static DisplayMode getDisplayMode () {

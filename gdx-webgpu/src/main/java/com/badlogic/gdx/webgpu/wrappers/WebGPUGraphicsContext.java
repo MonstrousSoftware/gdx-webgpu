@@ -3,6 +3,7 @@ package com.badlogic.gdx.webgpu.wrappers;
 
 
 import com.badlogic.gdx.ApplicationListener;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.webgpu.WebGPUGraphicsBase;
@@ -25,6 +26,8 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
     private WebGPUTexture multiSamplingTexture;
     private final Configuration config;
     private final Rectangle viewport = new Rectangle();
+    private Rectangle scissor;
+    private int width, height;
 
 
     public static class Configuration {
@@ -143,6 +146,13 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
                 multiSamplingTexture.dispose();
             multiSamplingTexture = new WebGPUTexture("multisampling", width, height, false, true, surfaceFormat, config.numSamples);
         }
+
+        if(scissor == null)
+            scissor = new Rectangle();
+        scissor.set(0,0,width, height); // on resize, set scissor to whole window
+        viewport.set(0,0,width, height);
+        this.width = width;
+        this.height = height;
     }
 
     public void setViewport(int x, int y, int w, int h){
@@ -150,6 +160,21 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
     }
     public Rectangle getViewport(){
         return viewport;
+    }
+
+
+    public void setScissor(int x, int y, int w, int h) {
+        if (x + w > width || y + h > height) {
+            // alert on invalid use, and avoid crash
+            Gdx.app.error("setScissor", "dimensions outside render target");
+            return;
+        }
+        scissor.set(x,y,w,h);
+    }
+
+
+    public Rectangle getScissor() {
+        return scissor;
     }
 
     private void initSwapChain (int width, int height, boolean vsyncEnabled) {

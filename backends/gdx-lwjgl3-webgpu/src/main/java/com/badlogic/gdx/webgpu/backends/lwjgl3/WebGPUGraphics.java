@@ -177,14 +177,26 @@ public class WebGPUGraphics extends AbstractGraphics implements WebGPUGraphicsBa
 		return window;
 	}
 
+    @Override
     public void setViewport(int x, int y, int w, int h){
         context.setViewport(x,y,w,h);
     }
+    @Override
     public Rectangle getViewport(){
         return context.getViewport();
     }
 
-	void updateFramebufferInfo () {
+    @Override
+    public void setScissor(int x, int y, int w, int h) {
+        context.setScissor(x,y,w,h);
+    }
+
+    @Override
+    public Rectangle getScissor() {
+        return context.getScissor();
+    }
+
+    void updateFramebufferInfo () {
 		GLFW.glfwGetFramebufferSize(window.getWindowHandle(), tmpBuffer, tmpBuffer2);
 		this.backBufferWidth = tmpBuffer.get(0);
 		this.backBufferHeight = tmpBuffer2.get(0);

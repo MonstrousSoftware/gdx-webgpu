@@ -31,8 +31,6 @@ import java.util.Map;
  */
 public class WebGPUSpriteBatch implements Batch {
 
-    //private final static String DEFAULT_SHADER = "shaders/sprite.wgsl";
-
     private final static int VERTS_PER_SPRITE = 4;
     private final static int INDICES_PER_SPRITE = 6;
 
@@ -74,7 +72,7 @@ public class WebGPUSpriteBatch implements Batch {
     private static String defaultShader;
 
     public WebGPUSpriteBatch() {
-        this(10000); // default nr
+        this(1000); // default nr
     }
 
     public WebGPUSpriteBatch(int maxSprites) {
@@ -477,12 +475,19 @@ public class WebGPUSpriteBatch implements Batch {
         draw(region, x, y, region.getRegionWidth(), region.getRegionHeight());
     }
 
-    public void draw(TextureRegion region, float x, float y, float w, float h){
+    private boolean check() {
         if (!drawing)
             throw new RuntimeException("SpriteBatch: Must call begin() before draw().");
+        if (numSprites == maxSprites) {
+            Gdx.app.error("WebGPUSpriteBatch", "Too many sprites (more than " + maxSprites + "). Enlarge maxSprites.");
+            return false;
+        }
+        return true;
+    }
 
-        if(numSprites == maxSprites)
-            throw new RuntimeException("WebGPUSpriteBatch: Too many sprites. Enlarge maxSprites.");
+
+    public void draw(TextureRegion region, float x, float y, float w, float h){
+        if(!check()) return;
 
         if(region.getTexture() != lastTexture) { // changing texture, need to flush what we have so far
             switchTexture(region.getTexture());
@@ -493,11 +498,7 @@ public class WebGPUSpriteBatch implements Batch {
 
 
     public void draw (Texture texture, float x, float y, float width, float height, float u, float v, float u2, float v2) {
-        if (!drawing)
-            throw new RuntimeException("SpriteBatch: Must call begin() before draw().");
-
-        if(numSprites == maxSprites)
-            throw new RuntimeException("WebGPUSpriteBatch: Too many sprites. Enlarge maxSprites.");
+        if(!check()) return;
 
         if(texture != lastTexture) { // changing texture, need to flush what we have so far
             switchTexture(texture);
@@ -509,9 +510,7 @@ public class WebGPUSpriteBatch implements Batch {
 
     public void draw (Texture texture, float x, float y, float originX, float originY, float width, float height, float scaleX,
                       float scaleY, float rotation, int srcX, int srcY, int srcWidth, int srcHeight, boolean flipX, boolean flipY) {
-        if (!drawing) throw new IllegalStateException("SpriteBatch.begin must be called before draw.");
-        if(numSprites == maxSprites)
-            throw new RuntimeException("WebGPUSpriteBatch: Too many sprites. Enlarge maxSprites.");
+        if(!check()) return;
 
         if(texture != lastTexture) { // changing texture, need to flush what we have so far
             switchTexture(texture);
@@ -621,9 +620,7 @@ public class WebGPUSpriteBatch implements Batch {
 
     public void draw (Texture texture, float x, float y, float width, float height, int srcX, int srcY, int srcWidth,
                       int srcHeight, boolean flipX, boolean flipY) {
-        if (!drawing) throw new IllegalStateException("SpriteBatch.begin must be called before draw.");
-        if(numSprites == maxSprites)
-            throw new RuntimeException("WebGPUSpriteBatch: Too many sprites. Enlarge maxSprites.");
+        if(!check()) return;
 
         if (texture != lastTexture)
             switchTexture(texture);
@@ -656,9 +653,8 @@ public class WebGPUSpriteBatch implements Batch {
 
 
     public void draw (Texture texture, float x, float y, int srcX, int srcY, int srcWidth, int srcHeight) {
-        if (!drawing) throw new IllegalStateException("SpriteBatch.begin must be called before draw.");
-        if(numSprites == maxSprites)
-            throw new RuntimeException("WebGPUSpriteBatch: Too many sprites. Enlarge maxSprites.");
+        if(!check()) return;
+
         if (texture != lastTexture)
             switchTexture(texture);
 
@@ -698,10 +694,7 @@ public class WebGPUSpriteBatch implements Batch {
 
     // used by Sprite class and BitmapFont
     public void draw(Texture texture, float[] spriteVertices, int offset, int numFloats){
-        if (!drawing)
-            throw new RuntimeException("SpriteBatch: Must call begin() before draw().");
-        if(numSprites == maxSprites)
-            throw new RuntimeException("WebGPUSpriteBatch: Too many sprites. Enlarge maxSprites.");
+        if(!check()) return;
 
         if(texture != lastTexture) { // changing texture, need to flush what we have so far
             switchTexture(texture);
@@ -716,9 +709,7 @@ public class WebGPUSpriteBatch implements Batch {
 
     public void draw (TextureRegion region, float x, float y, float originX, float originY, float width, float height,
                       float scaleX, float scaleY, float rotation) {
-        if (!drawing) throw new IllegalStateException("SpriteBatch.begin must be called before draw.");
-        if(numSprites == maxSprites)
-            throw new RuntimeException("WebGPUSpriteBatch: Too many sprites. Enlarge maxSprites.");
+        if(!check()) return;
         Texture texture = region.getTexture();
         if (texture != lastTexture)
             switchTexture(texture);
@@ -812,9 +803,7 @@ public class WebGPUSpriteBatch implements Batch {
 
     public void draw (TextureRegion region, float x, float y, float originX, float originY, float width, float height,
                       float scaleX, float scaleY, float rotation, boolean clockwise) {
-        if (!drawing) throw new IllegalStateException("SpriteBatch.begin must be called before draw.");
-        if(numSprites == maxSprites)
-            throw new RuntimeException("WebGPUSpriteBatch: Too many sprites. Enlarge maxSprites.");
+        if(!check()) return;
         Texture texture = region.getTexture();
         if (texture != lastTexture)
             switchTexture(texture);
@@ -923,9 +912,7 @@ public class WebGPUSpriteBatch implements Batch {
 
 
     public void draw (TextureRegion region, float width, float height, Affine2 transform) {
-        if (!drawing) throw new IllegalStateException("SpriteBatch.begin must be called before draw.");
-        if(numSprites == maxSprites)
-            throw new RuntimeException("WebGPUSpriteBatch: Too many sprites. Enlarge maxSprites.");
+        if(!check()) return;
         Texture texture = region.getTexture();
         if (texture != lastTexture)
             switchTexture(texture);
@@ -1011,15 +998,6 @@ public class WebGPUSpriteBatch implements Batch {
     }
 
 
-//    private void updateBindGroup(WebGPUBindGroup bg, WebGPUBuffer uniformBuffer, WebGPUTexture texture) {
-//        //WebGPUBindGroup bg = new WebGPUBindGroup(bindGroupLayout);
-//        bg.begin();
-//        bg.addBuffer(0, uniformBuffer);
-//        bg.addTexture(1, texture.getTextureView());
-//        bg.addSampler(2, texture.getSampler());
-//        bg.end();
-//        //return bg;
-//    }
 
 
     @Override
