@@ -1,7 +1,7 @@
 // spritebach.wgsl
 
 struct Uniforms {
-    projectionMatrix: mat4x4f,
+    projectionViewTransform: mat4x4f,
 };
 
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
@@ -32,7 +32,7 @@ struct VertexOutput {
 fn vs_main(in: VertexInput) -> VertexOutput {
    var out: VertexOutput;
 
-   var pos =  uniforms.projectionMatrix * vec4f(in.position, 0.0, 1.0);
+   var pos =  uniforms.projectionViewTransform * vec4f(in.position, 0.0, 1.0);
    out.position = pos;
 #ifdef TEXTURE_COORDINATE
    out.uv = in.uv;

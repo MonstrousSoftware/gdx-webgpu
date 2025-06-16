@@ -137,7 +137,7 @@ public class WebGPUSpriteBatch implements Batch {
         binder.defineBinding("texture", 0, 1);
         binder.defineBinding("textureSampler", 0, 2);
         // define uniforms in uniform buffer (binding 0) with their offset
-        binder.defineUniform("projectionMatrix", 0, 0, 0);
+        binder.defineUniform("projectionViewTransform", 0, 0, 0);
 
         // set binding 0 to uniform buffer
         binder.setBuffer("uniforms", uniformBuffer, 0, uniformBuffer.getSize());
@@ -996,7 +996,7 @@ public class WebGPUSpriteBatch implements Batch {
 
     private void updateMatrices(){
         combinedMatrix.set(shiftDepthMatrix).mul(projectionMatrix).mul(transformMatrix);
-        binder.setUniform("projectionMatrix", combinedMatrix);  //todo naming
+        binder.setUniform("projectionViewTransform", combinedMatrix);
     }
 
     private WebGPUBindGroupLayout createBindGroupLayout() {
@@ -1040,68 +1040,6 @@ public class WebGPUSpriteBatch implements Batch {
             defaultShader = Gdx.files.classpath("shaders/spritebatch.wgsl").readString();
         return defaultShader;
     }
-
-//                "struct Uniforms {\n" +
-//                "    projectionMatrix: mat4x4f,\n" +
-//                "};\n" +
-//                "\n" +
-//                "@group(0) @binding(0) var<uniform> uniforms: Uniforms;\n" +
-//                "@group(0) @binding(1) var texture: texture_2d<f32>;\n" +
-//                "@group(0) @binding(2) var textureSampler: sampler;\n" +
-//                "\n" +
-//                "\n" +
-//                "struct VertexInput {\n" +
-//                "    @location(0) position: vec2f,\n" +
-//                "#ifdef TEXTURE_COORDINATE\n" +
-//                "    @location(1) uv: vec2f,\n" +
-//                "#endif\n" +
-//                "#ifdef COLOR\n" +
-//                "    @location(5) color: vec4f,\n" +
-//                "#endif\n" +
-//                "};\n" +
-//                "\n" +
-//                "struct VertexOutput {\n" +
-//                "    @builtin(position) position: vec4f,\n" +
-//                "#ifdef TEXTURE_COORDINATE\n" +
-//                "    @location(0) uv : vec2f,\n" +
-//                "#endif\n" +
-//                "    @location(1) color: vec4f,\n" +
-//                "};\n" +
-//                "\n" +
-//                "\n" +
-//                "@vertex\n" +
-//                "fn vs_main(in: VertexInput) -> VertexOutput {\n" +
-//                "   var out: VertexOutput;\n" +
-//                "\n" +
-//                "   var pos =  uniforms.projectionMatrix * vec4f(in.position, 0.0, 1.0);\n" +
-//                "   out.position = pos;\n" +
-//                "#ifdef TEXTURE_COORDINATE\n" +
-//                "   out.uv = in.uv;\n" +
-//                "#endif\n" +
-//                "\n" +
-//                "#ifdef COLOR\n" +
-//                "   let color:vec4f = in.color;\n" +
-//                "#else\n" +
-//                "   let color:vec4f = vec4f(1,1,1,1);   // white\n" +
-//                "#endif\n" +
-//                "   out.color = color;\n" +
-//                "\n" +
-//                "   return out;\n" +
-//                "}\n" +
-//                "\n" +
-//                "@fragment\n" +
-//                "fn fs_main(in : VertexOutput) -> @location(0) vec4f {\n" +
-//                "\n" +
-//                "#ifdef TEXTURE_COORDINATE\n" +
-//                "    let color = in.color * textureSample(texture, textureSampler, in.uv);\n" +
-//                "#else\n" +
-//                "    let color = in.color;\n" +
-//                "#endif\n" +
-//                "    return vec4f(color);\n" +
-//                "}";
-//    }
-
-
 
     private void initBlendMap(){
         blendConstantMap.put(GL20.GL_ZERO, WGPUBlendFactor.Zero);

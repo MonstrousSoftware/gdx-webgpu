@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.*;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.webgpu.graphics.Binder;
 import com.badlogic.gdx.webgpu.graphics.WebGPUMesh;
@@ -35,6 +36,9 @@ public class WebGPUDefaultShader implements Shader {
     public int drawCalls;
     private WebGPURenderPass renderPass;
     private final VertexAttributes vertexAttributes;
+    private final Matrix4 combined;
+    private final Matrix4 projection;
+    private final Matrix4 shiftDepthMatrix;
 
     protected int numDirectionalLights;
     protected DirectionalLight[] directionalLights;
@@ -172,6 +176,11 @@ public class WebGPUDefaultShader implements Shader {
         pointLights = new PointLight[config.maxPointLights];
         for(int i = 0; i <config.maxPointLights; i++)
             pointLights[i] = new PointLight();
+
+        projection = new Matrix4();
+        combined = new Matrix4();
+        // matrix to transform OpenGL projection to WebGPU projection by modifying the Z scale
+        shiftDepthMatrix = new Matrix4().scl(1,1,-0.5f).trn(0,0,0.5f);
     }
 
     @Override
@@ -192,6 +201,9 @@ public class WebGPUDefaultShader implements Shader {
         // set global uniforms, that do not depend on renderables
         // e.g. camera, lighting, environment uniforms
         //
+        //projection.set(camera.projection);
+//        projection.set(shiftDepthMatrix).mul(camera.projection);
+//        combined.set(projection).mul(camera.view);
         binder.setUniform("projectionViewTransform", camera.combined);
         binder.setUniform("cameraPosition", camera.position);
 
