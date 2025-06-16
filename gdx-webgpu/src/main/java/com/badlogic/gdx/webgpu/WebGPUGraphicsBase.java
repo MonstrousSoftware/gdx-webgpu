@@ -27,6 +27,8 @@ public interface WebGPUGraphicsBase {
     void setViewport(int x, int y, int w, int h);
     Rectangle getViewport();
 
+    void enableScissor(boolean mode);
+    boolean isScissorEnabled();
     void setScissor(int x, int y, int w, int h);
     Rectangle getScissor();
 

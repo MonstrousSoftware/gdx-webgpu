@@ -30,6 +30,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.utils.ActorGestureListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TiledDrawable;
 import com.badlogic.gdx.tests.webgpu.utils.GdxTest;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplicationConfiguration;
 import com.badlogic.gdx.webgpu.scene2d.WebGPUSkin;
 import com.badlogic.gdx.webgpu.scene2d.WebGPUStage;
 import com.badlogic.gdx.webgpu.wrappers.WebGPUTexture;
@@ -41,6 +43,14 @@ public class Scene2dTest extends GdxTest {
 	private final FloatAction meow = new FloatAction(10, 5);
 	private TiledDrawable patch;
 	private TextureRegion region;
+
+    // launcher
+    public static void main (String[] argv) {
+
+        WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
+        config.setWindowedMode(640, 480);
+        new WebGPUApplication(new Scene2dTest(), config);
+    }
 
 	public void create () {
 		stage = new WebGPUStage();

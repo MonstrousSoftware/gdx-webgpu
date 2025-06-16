@@ -128,7 +128,8 @@ public class WebGPUGraphics extends AbstractGraphics implements WebGPUGraphicsBa
 		return webGPU;
 	}
 
-	// the following getters are forwarded to context
+
+	// the following getters/setters are forwarded to context
 
 	@Override
 	public WebGPUDevice getDevice() {
@@ -184,6 +185,16 @@ public class WebGPUGraphics extends AbstractGraphics implements WebGPUGraphicsBa
     @Override
     public Rectangle getViewport(){
         return context.getViewport();
+    }
+
+
+    @Override
+    public void enableScissor(boolean mode) {
+        context.enableScissor(mode);
+    }
+    @Override
+    public boolean isScissorEnabled(){
+        return context.isScissorEnabled();
     }
 
     @Override

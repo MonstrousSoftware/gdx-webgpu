@@ -5,6 +5,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.webgpu.WebGPUGraphicsBase;
 import com.badlogic.gdx.webgpu.graphics.Binder;
 import com.badlogic.gdx.webgpu.graphics.WebGPUShaderProgram;
@@ -64,12 +65,16 @@ public class WebGPUSpriteBatch implements Batch {
     public int maxSpritesInBatch;    // most nr of sprites in the batch over its lifetime
     public int renderCalls;
     public int pipelineCount;
+    public int numFlushes;
+    public int maxFlushes;
     private float invTexWidth;
     private float invTexHeight;
     private final Map<Integer, WGPUBlendFactor> blendConstantMap = new HashMap<>(); // mapping GL vs WebGPU constants
     private final Map<WGPUBlendFactor, Integer> blendGLConstantMap = new HashMap<>(); // vice versa
     private final Binder binder;
     private static String defaultShader;
+
+    private final int flushStride;    // stride in uniform buffer per flush
 
     public WebGPUSpriteBatch() {
         this(1000); // default nr
@@ -90,21 +95,23 @@ public class WebGPUSpriteBatch implements Batch {
         this.maxSprites = maxSprites;
         this.specificShader = specificShader;
 
-        drawing = false;
-
-
-
-        vertexAttributes = new VertexAttributes(new VertexAttribute(VertexAttributes.Usage.Position, 2, ShaderProgram.POSITION_ATTRIBUTE),
-                VertexAttribute.ColorPacked(), VertexAttribute.TexCoords(0) );
+        vertexAttributes = new VertexAttributes(
+                            new VertexAttribute(VertexAttributes.Usage.Position, 2, ShaderProgram.POSITION_ATTRIBUTE),
+                            VertexAttribute.ColorPacked(),
+                            VertexAttribute.TexCoords(0) );
 
         // vertex: x, y, rgba, u, v
         vertexSize = vertexAttributes.vertexSize; // bytes
 
         initBlendMap(); // fill constants mapping table
 
+        // allow for a different projectionView matrix per flush.
+        maxFlushes = 100;
+        flushStride = (int)gfx.getDevice().getSupportedLimits().getLimits().getMinUniformBufferOffsetAlignment();
+
         // allocate data buffers based on default vertex attributes which are assumed to be the worst case.
         // i.e. with setVertexAttributes() you can specify a subset
-        createBuffers();
+        createBuffers(maxFlushes, flushStride);
         fillIndexBuffer(maxSprites);
 
         // Create FloatBuffer to hold vertex data per batch, is reset every flush
@@ -138,7 +145,7 @@ public class WebGPUSpriteBatch implements Batch {
         binder.defineUniform("projectionViewTransform", 0, 0, 0);
 
         // set binding 0 to uniform buffer
-        binder.setBuffer("uniforms", uniformBuffer, 0, uniformBuffer.getSize());
+        binder.setBuffer("uniforms", uniformBuffer, 0, flushStride); //uniformBuffer.getSize());
         // bindings 1 and 2 are done in switchTexture()
 
         // get pipeline layout which aggregates all the bind group layouts
@@ -161,7 +168,8 @@ public class WebGPUSpriteBatch implements Batch {
 
         projectionMatrix.setToOrtho2D(0, 0, Gdx.graphics.getWidth(),  Gdx.graphics.getHeight(), 0, 100);
         transformMatrix.idt();
-        updateMatrices();
+
+        drawing = false;
     }
 
     // the index buffer is fixed and only has to be filled on start-up
@@ -317,6 +325,7 @@ public class WebGPUSpriteBatch implements Batch {
         vertexData.clear();
         maxSpritesInBatch = 0;
         renderCalls = 0;
+        numFlushes = 0;
 
         prevPipeline = null;
 
@@ -332,7 +341,7 @@ public class WebGPUSpriteBatch implements Batch {
         // don't reset the matrices because setProjectionMatrix() and setTransformMatrix()
         // may be called before begin() and need to be respected.
 
-        updateMatrices();
+
         drawing = true;
     }
 
@@ -353,13 +362,17 @@ public class WebGPUSpriteBatch implements Batch {
             return;
         if(numSprites > maxSpritesInBatch)
             maxSpritesInBatch = numSprites;
+        if(numFlushes >= maxFlushes){
+            Gdx.app.error("WebGPUSpriteBatch", "too many flushes");
+            return;
+        }
         renderCalls++;
 
         setPipeline();
 
-        // bind texture
-        //binder.bindGroup(renderPass, 0);
-        renderPass.setBindGroup( 0, binder.getBindGroup(0).getHandle(), 0, JavaWebGPU.createNullPointer());
+        // bind group
+        updateMatrices();
+        renderPass.setBindGroup( 0, binder.getBindGroup(0).getHandle(), numFlushes*flushStride);
 
         // append new vertex data to GPU vertex buffer
         int numBytes = numSprites * VERTS_PER_SPRITE * vertexSize;
@@ -377,6 +390,7 @@ public class WebGPUSpriteBatch implements Batch {
         vbOffset += numBytes;
         vertexData.clear(); // reset fill position for next batch
         numSprites = 0;   // reset
+        numFlushes++;
     }
 
     public void end() {
@@ -441,7 +455,6 @@ public class WebGPUSpriteBatch implements Batch {
         if(drawing)
             flush();
         projectionMatrix.set(projection);
-        updateMatrices();
     }
 
     @Override
@@ -449,7 +462,6 @@ public class WebGPUSpriteBatch implements Batch {
         if(drawing)
             flush();
         transformMatrix.set(transform);
-        updateMatrices();
     }
 
     @Override
@@ -969,7 +981,7 @@ public class WebGPUSpriteBatch implements Batch {
     }
 
 
-    private void createBuffers() {
+    private void createBuffers(int maxFlushes, int flushStride) {
         int indexSize = maxSprites * INDICES_PER_SPRITE * Short.BYTES;
 
         // Create vertex buffer and index buffer
@@ -977,19 +989,21 @@ public class WebGPUSpriteBatch implements Batch {
         indexBuffer = new WebGPUIndexBuffer(WGPUBufferUsage.CopyDst | WGPUBufferUsage.Index, indexSize, Short.BYTES);
 
         // Create uniform buffer for the projection matrix
-        uniformBufferSize = 16 * Float.BYTES;
+        if(flushStride < 16 * Float.BYTES)
+            throw new GdxRuntimeException("Flush stride too small for required content");
+        uniformBufferSize = maxFlushes * flushStride;
         uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize,WGPUBufferUsage.CopyDst |WGPUBufferUsage.Uniform  );
     }
 
     private void updateMatrices(){
         combinedMatrix.set(shiftDepthMatrix).mul(projectionMatrix).mul(transformMatrix);
-        binder.setUniform("projectionViewTransform", combinedMatrix);
+        binder.setUniform("projectionViewTransform", combinedMatrix, numFlushes * flushStride);
     }
 
     private WebGPUBindGroupLayout createBindGroupLayout() {
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("SpriteBatch bind group layout");
         layout.begin();
-        layout.addBuffer(0, WGPUShaderStage.Vertex, WGPUBufferBindingType.Uniform, uniformBufferSize, false);
+        layout.addBuffer(0, WGPUShaderStage.Vertex, WGPUBufferBindingType.Uniform, flushStride, true);
         layout.addTexture(1, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D, false);
         layout.addSampler(2, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering );
 

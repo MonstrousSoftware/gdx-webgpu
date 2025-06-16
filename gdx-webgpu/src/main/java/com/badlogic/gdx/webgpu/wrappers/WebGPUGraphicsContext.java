@@ -26,6 +26,7 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
     private WebGPUTexture multiSamplingTexture;
     private final Configuration config;
     private final Rectangle viewport = new Rectangle();
+    private boolean scissorEnabled = false;
     private Rectangle scissor;
     private int width, height;
 
@@ -163,6 +164,17 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
     }
 
 
+    @Override
+    public void enableScissor(boolean mode) {
+        scissorEnabled = mode;
+    }
+
+    @Override
+    public boolean isScissorEnabled(){
+        return scissorEnabled;
+    }
+
+    @Override
     public void setScissor(int x, int y, int w, int h) {
         if (x + w > width || y + h > height) {
             // alert on invalid use, and avoid crash
@@ -172,7 +184,7 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
         scissor.set(x,y,w,h);
     }
 
-
+    @Override
     public Rectangle getScissor() {
         return scissor;
     }

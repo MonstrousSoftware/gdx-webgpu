@@ -39,6 +39,23 @@ public class WebGPUGL20 implements GL20 {
     }
 
     @Override
+    public void glEnable(int cap) {
+        if(cap == GL20.GL_SCISSOR_TEST){
+            WebGPUGraphicsBase gfx = (WebGPUGraphicsBase)Gdx.graphics;
+            gfx.enableScissor(true);
+        }
+    }
+
+    @Override
+    public void glDisable(int cap) {
+        if(cap == GL20.GL_SCISSOR_TEST){
+            WebGPUGraphicsBase gfx = (WebGPUGraphicsBase)Gdx.graphics;
+            gfx.enableScissor(false);
+        }
+
+    }
+
+    @Override
     public void glActiveTexture(int texture) {
 
     }
@@ -128,10 +145,7 @@ public class WebGPUGL20 implements GL20 {
 
     }
 
-    @Override
-    public void glDisable(int cap) {
 
-    }
 
     @Override
     public void glDrawArrays(int mode, int first, int count) {
@@ -143,10 +157,7 @@ public class WebGPUGL20 implements GL20 {
 
     }
 
-    @Override
-    public void glEnable(int cap) {
 
-    }
 
     @Override
     public void glFinish() {
