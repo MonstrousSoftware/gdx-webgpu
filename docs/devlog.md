@@ -39,4 +39,6 @@ Does that work? It seems that renderpass.set commands set the render state to be
 Render state includes: viewport, scissor, blend, stencil
 
 todo urgent: smarter queue.write after set uniform.
+We could do a Queue.writeBuffer after every setUniform.
+Or keep track of a dirty range to be flushed.
 
