@@ -119,8 +119,8 @@ public class WebGPUSpriteBatch implements Batch {
         combinedMatrix = new Matrix4();
 
         // matrix which will transform an opengl ortho matrix to a webgpu ortho matrix
-        // assumes near = 0 and far = 100 which are the default values if an OrthoCamera was used.
-        shiftDepthMatrix = new Matrix4().idt().scl(1,1,-50f).trn(0,0,-50);
+        // by scaling the Z range from [-1..1] to [0..1]
+        shiftDepthMatrix = new Matrix4().idt().scl(1,1,-0.5f).trn(0,0,0.5f);
 
         tint = new Color(Color.WHITE);
 
@@ -433,6 +433,11 @@ public class WebGPUSpriteBatch implements Batch {
         return transformMatrix;
     }
 
+
+    /** Set projection matrix.
+     * Expects an OpenGL standard projection matrix, i.e. mapping Z to [-1 .. 1]
+     *
+     */
     @Override
     public void setProjectionMatrix(Matrix4 projection) {
         if(drawing)
@@ -990,8 +995,7 @@ public class WebGPUSpriteBatch implements Batch {
     }
 
     private void updateMatrices(){
-
-        combinedMatrix.set(projectionMatrix).mul(shiftDepthMatrix).mul(transformMatrix);
+        combinedMatrix.set(shiftDepthMatrix).mul(projectionMatrix).mul(transformMatrix);
         binder.setUniform("projectionMatrix", combinedMatrix);  //todo naming
     }
 

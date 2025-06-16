@@ -134,7 +134,6 @@ public class WebGPUModelBatch implements Disposable {
             throw new ArrayIndexOutOfBoundsException("Too many renderables");
         sorter.sort(camera, renderables);
 
-        // todo sort renderables to reduce shader switches and to render front to back for opaque and back to front for transparent
 
         WebGPUDefaultShader currentShader = null;
         for(Renderable renderable : renderables) {
