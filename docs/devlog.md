@@ -29,13 +29,14 @@ Added ScissorDemo.
 Noticed a bug in Scene2d demo that window cannot be dragged around. Probably the same issue as the drop down panel, always being at (0,0).
 Scene2d calls setTransformMatrix with a temp matrix and then pops back to the old transform.
 However SpriteBatch doesn't really flush and uses one matrix for all sprites. Only the last value of the transform is effectively used.
-Maybe create a new render pass every time we flush?
-Of have a bind group that updates per batch? (like ModelBatch materials)
-Or dynamic offset into the uni buf per flush?
+We now use a dynamics offset into the uniform buffer, that allows a separate projectionView matrix per flush.
+This solved some scene2d issues, where actors were stuck at the bottom left position (scene2d uses push/pop view transforms).
 
 
 Also: is it required during the course of a frame to set/enable/disable multiple scissor rectangles? Idem for viewports.
 Maybe we should call set viewport directly on the renderpass, rather than only during the render pass building.
 Does that work? It seems that renderpass.set commands set the render state to be used for the next draw.
 Render state includes: viewport, scissor, blend, stencil
+
+todo urgent: smarter queue.write after set uniform.
 

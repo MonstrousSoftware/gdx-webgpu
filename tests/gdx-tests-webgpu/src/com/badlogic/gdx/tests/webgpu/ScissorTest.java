@@ -3,16 +3,10 @@ package com.badlogic.gdx.tests.webgpu;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.tests.webgpu.utils.GdxTest;
-import com.badlogic.gdx.utils.viewport.FitViewport;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.badlogic.gdx.utils.viewport.StretchViewport;
-import com.badlogic.gdx.utils.viewport.Viewport;
 import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplicationConfiguration;
 import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUBitmapFont;
 import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
 import com.badlogic.gdx.webgpu.wrappers.WebGPUTexture;
@@ -21,21 +15,13 @@ public class ScissorTest extends GdxTest {
 
     private WebGPUSpriteBatch batch;
     private WebGPUTexture background;
-    private Viewport viewport;
-    private Viewport[] viewports;
-    private String[] names;
-    private int index;
     private WebGPUBitmapFont font;
-    private boolean keyUp = true;
     private int x,y;
     private int dx, dy;
 
     // launcher
     public static void main (String[] argv) {
-        WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
-        config.setWindowedMode(640, 480);
-
-        new WebGPUApplication(new ScissorTest(), config);
+        new WebGPUApplication(new ScissorTest());
     }
 
 
@@ -56,12 +42,13 @@ public class ScissorTest extends GdxTest {
     @Override
     public void render(  ){
         if(Gdx.input.isKeyPressed(Input.Keys.ESCAPE)){
-
             Gdx.app.exit();
             return;
         }
 
-        Gdx.gl.glScissor(x,y, 300, 200);
+        Gdx.gl.glEnable(GL20.GL_SCISSOR_TEST);
+        Gdx.gl.glScissor(x,y, 300, 200);    // fake GL call
+        //Gdx.gl.glViewport(x,y, 300, 200);    // fake GL call
 
         x += dx;
         y += dy;
@@ -75,7 +62,6 @@ public class ScissorTest extends GdxTest {
         } else if (y + 200 >= Gdx.graphics.getHeight() ){
             dy = -1;
         }
-
 
         batch.begin(Color.BLUE);
         batch.draw(background, 0,0);
@@ -94,7 +80,7 @@ public class ScissorTest extends GdxTest {
 
     @Override
     public void resize(int width, int height) {
-
+        // todo
     }
 
 
