@@ -29,7 +29,6 @@ public class WebGPUDefaultShader implements Shader {
     private final WebGPUUniformBuffer instanceBuffer;
     private final WebGPUUniformBuffer materialBuffer;
     private final int materialSize;
-    private final int materialBufferSize;
     public int numMaterials;
     private final WebGPUPipeline pipeline;            // a shader has one pipeline
     public int numRenderables;
@@ -73,19 +72,19 @@ public class WebGPUDefaultShader implements Shader {
         pixmap.fill();
         defaultTexture = new WebGPUTexture(pixmap);
 
-        // Create uniform buffer for the projection matrix
+        // Create uniform buffer for global (per-frame) uniforms, e.g. projection matrix, camera position, etc.
         uniformBufferSize = (16 + 4 + 4 +4
                 +8*config.maxDirectionalLights
                 +12*config.maxPointLights)* Float.BYTES;
         uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize, WGPUBufferUsage.CopyDst | WGPUBufferUsage.Uniform);
 
 
-        materialSize = 256; //4*Float.BYTES;      // data size per material
-        // buffer for uniforms per material, e.g. color
+        materialSize = 20*Float.BYTES;      // data size per material (should be enough for now)
+        // buffer for uniforms per material, e.g. color, shininess, ...
         // this does not include textures
 
-        materialBufferSize = materialSize * config.maxMaterials;
-        materialBuffer = new WebGPUUniformBuffer(materialBufferSize, WGPUBufferUsage.CopyDst | WGPUBufferUsage.Uniform);
+        // allocate a uniform buffer with dynamic offsets
+        materialBuffer = new WebGPUUniformBuffer(materialSize, WGPUBufferUsage.CopyDst | WGPUBufferUsage.Uniform,  config.maxMaterials);
 
         binder = new Binder();
         // define groups
@@ -139,19 +138,15 @@ public class WebGPUDefaultShader implements Shader {
         // set binding 0 to uniform buffer
         binder.setBuffer("uniforms", uniformBuffer, 0, uniformBufferSize);
 
+        binder.setBuffer("materialUniforms", materialBuffer, 0,  materialSize);
+
         int instanceSize = 16*Float.BYTES;      // data size per instance
 
         // for now we use a uniform buffer, but we organize data as an array of modelMatrix
-        // and write with an dynamic offset (numRenderables * sizeof matrix4)
+        // we are not using dynamic offsets, but we will index the array in teh shader code using the instance_index
         instanceBuffer = new WebGPUUniformBuffer(instanceSize*config.maxInstances, WGPUBufferUsage.CopyDst | WGPUBufferUsage.Storage);
 
         binder.setBuffer("instanceUniforms", instanceBuffer, 0, (long) instanceSize *config.maxInstances);
-
-
-
-        binder.setBuffer("materialUniforms", materialBuffer, 0,  materialSize);
-
-
 
 
         // get pipeline layout which aggregates all the bind group layouts
@@ -208,6 +203,7 @@ public class WebGPUDefaultShader implements Shader {
 //        combined.set(projection).mul(camera.view);
         binder.setUniform("projectionViewTransform", camera.combined);
         binder.setUniform("cameraPosition", camera.position);
+        uniformBuffer.flush();
 
         // bind group 0 (frame) once per frame
         binder.bindGroup(renderPass, 0);
@@ -267,6 +263,7 @@ public class WebGPUDefaultShader implements Shader {
         // add instance data to instance buffer (instance transform)
         int offset = numRenderables * 16 * Float.BYTES;
         instanceBuffer.set(offset,  renderable.worldTransform);
+        // todo normal matrix per instance
 
         // apply renderable's material
         applyMaterial(renderable.material);
@@ -317,12 +314,14 @@ public class WebGPUDefaultShader implements Shader {
         if(numMaterials >= config.maxMaterials)
             throw new RuntimeException("Too many materials (> "+config.maxMaterials+"). Increase shader.maxMaterials");
 
+        materialBuffer.setDynamicOffsetIndex(numMaterials); // indicate which section of the uniform buffer to use
+
         // diffuse color
         ColorAttribute diffuse = (ColorAttribute) material.get(ColorAttribute.Diffuse);
-        binder.setUniform("diffuseColor", diffuse == null ? Color.WHITE : diffuse.color, numMaterials*materialSize);
+        binder.setUniform("diffuseColor", diffuse == null ? Color.WHITE : diffuse.color);
 
         final FloatAttribute shiny = material.get(FloatAttribute.class,FloatAttribute.Shininess);
-        binder.setUniform("shininess",  shiny == null ? 20 : shiny.value,numMaterials*materialSize );
+        binder.setUniform("shininess",  shiny == null ? 20 : shiny.value );
 
 
         // diffuse texture
@@ -339,12 +338,12 @@ public class WebGPUDefaultShader implements Shader {
         binder.setTexture("diffuseTexture", diffuseTexture.getTextureView());
         binder.setSampler("diffuseSampler", diffuseTexture.getSampler());
 
-        binder.bindGroup(renderPass, 1, numMaterials*materialSize);
+        materialBuffer.flush(); // write to GPU
+        binder.bindGroup(renderPass, 1, numMaterials*materialBuffer.getUniformStride());
 
         numMaterials++;
 
         prevMaterial = material;
-
     }
 
     private WebGPUBindGroupLayout createFrameBindGroupLayout(int uniformBufferSize) {

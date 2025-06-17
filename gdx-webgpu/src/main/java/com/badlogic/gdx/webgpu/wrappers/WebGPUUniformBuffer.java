@@ -35,6 +35,8 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
     private final int maxSlices;
     private final Pointer floatData;
     private int appendOffset;
+    private int dynamicOffsetIndex;
+    private boolean dirty;
 
 
     public WebGPUUniformBuffer(int contentSize, long usage){
@@ -48,6 +50,8 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
         this.maxSlices = maxSlices;
 
         this.uniformStride = calculateStride(contentSize, maxSlices);
+        dynamicOffsetIndex = 0;
+        dirty = false;
 
         // working buffer in native memory to use as input to WriteBuffer
         floatData = JavaWebGPU.createDirectPointer(contentSize);       // native memory buffer for one instance to aid write buffer
@@ -87,97 +91,114 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
         return uniformStride;
     }
 
-    public void beginFill(){
-        appendOffset = 0;
-    }
+//    public void beginFill(){
+//        appendOffset = 0;
+//    }
+//
+//    public void pad(int bytes){
+//        appendOffset += bytes;
+//    }
+//
+//    public int getOffset(){
+//        return appendOffset;
+//    }
+//
+//    public void setOffset(int offset){
+//        this.appendOffset = offset;
+//    }
 
-    public void pad(int bytes){
-        appendOffset += bytes;
-    }
+//    public void append( int value ){
+//        floatData.putInt(appendOffset, value);
+//        appendOffset += Integer.BYTES;
+//    }
+//
+//    public void append( float f ){
+//        floatData.putFloat(appendOffset, f);
+//        appendOffset += Float.BYTES;
+//        //offset += 4*Float.BYTES;           // with padding!
+//    }
+//
+//    public void append( Matrix4 mat ){
+//        set(appendOffset, mat);
+//        appendOffset += 16*Float.BYTES;
+//    }
+//
+//    public void append( Vector3 vec ){
+//        set(appendOffset, vec);
+//        appendOffset += 4*Float.BYTES;           // with padding!
+//    }
+//
+//
+//
+//    public void append( Color color ){
+//        floatData.putFloat(appendOffset +0*Float.BYTES, color.r);
+//        floatData.putFloat(appendOffset +1*Float.BYTES, color.g);
+//        floatData.putFloat(appendOffset +2*Float.BYTES, color.b);
+//        floatData.putFloat(appendOffset +3*Float.BYTES, color.a);
+//        appendOffset += 4*Float.BYTES;
+//    }
+//
+//    public void append( float r, float g, float b, float a ){
+//        floatData.putFloat(appendOffset +0*Float.BYTES, r);
+//        floatData.putFloat(appendOffset +1*Float.BYTES, g);
+//        floatData.putFloat(appendOffset +2*Float.BYTES, b);
+//        floatData.putFloat(appendOffset +3*Float.BYTES, a);
+//        appendOffset += 4*Float.BYTES;
+//    }
+//
+//    /** Write buffer data to the GPU */
+//    public void endFill(){
+//        endFill(0);
+//    }
+//
+//    /** Fill the given slice of the uniform buffer. Writes data to the GPU. destOffset should be a multiple of uniformStride. */
+//    public void endFill(int destOffset){
+//        int dataSize = appendOffset;
+//        if(dataSize > contentSize) throw new RuntimeException("Overflow in UniformBuffer: content ("+dataSize+") > size ("+contentSize+").");
+//        if(destOffset > getSize()-dataSize) throw new IllegalArgumentException("UniformBuffer: offset too large.");
+//        write(destOffset, floatData, dataSize);
+//    }
 
-    public int getOffset(){
-        return appendOffset;
-    }
 
-    public void setOffset(int offset){
-        this.appendOffset = offset;
-    }
-
-    public void append( int value ){
-        floatData.putInt(appendOffset, value);
-        appendOffset += Integer.BYTES;
-    }
-
-    public void append( float f ){
-        floatData.putFloat(appendOffset, f);
-        appendOffset += Float.BYTES;
-        //offset += 4*Float.BYTES;           // with padding!
-    }
-
-    public void append( Matrix4 mat ){
-        set(appendOffset, mat);
-        appendOffset += 16*Float.BYTES;
-    }
-
-    public void append( Vector3 vec ){
-        set(appendOffset, vec);
-        appendOffset += 4*Float.BYTES;           // with padding!
-    }
-
-
-
-    public void append( Color color ){
-        floatData.putFloat(appendOffset +0*Float.BYTES, color.r);
-        floatData.putFloat(appendOffset +1*Float.BYTES, color.g);
-        floatData.putFloat(appendOffset +2*Float.BYTES, color.b);
-        floatData.putFloat(appendOffset +3*Float.BYTES, color.a);
-        appendOffset += 4*Float.BYTES;
-    }
-
-    public void append( float r, float g, float b, float a ){
-        floatData.putFloat(appendOffset +0*Float.BYTES, r);
-        floatData.putFloat(appendOffset +1*Float.BYTES, g);
-        floatData.putFloat(appendOffset +2*Float.BYTES, b);
-        floatData.putFloat(appendOffset +3*Float.BYTES, a);
-        appendOffset += 4*Float.BYTES;
-    }
-
-    /** Write buffer data to the GPU */
-    public void endFill(){
-        endFill(0);
-    }
-
-    /** Fill the given slice of the uniform buffer. Writes data to the GPU. destOffset should be a multiple of uniformStride. */
-    public void endFill(int destOffset){
-        int dataSize = appendOffset;
-        if(dataSize > contentSize) throw new RuntimeException("Overflow in UniformBuffer: content ("+dataSize+") > size ("+contentSize+").");
-        if(destOffset > getSize()-dataSize) throw new IllegalArgumentException("UniformBuffer: offset too large.");
-        write(destOffset, floatData, dataSize);
-    }
-
-    // to be trimmed
     /* call this after any set or a sequence of sets to write the floatData to the GPU buffer */
     public void flush(){
-        write(0, floatData, contentSize);
+        if(dirty) {
+            write(dynamicOffsetIndex * uniformStride, floatData, contentSize);
+            dirty = false;
+        }
     }
 
     public Pointer getFloatData() {
         return floatData;
     }
 
+    /** For a uniform buffer with dynamic offset, set the index of the uniform buffer slice to use [0 .. maxSlices-1].
+     *  Index will be translated to an offset of uniformStride * index */
+    public void setDynamicOffsetIndex(int index){
+        if(index < 0 || index >= maxSlices)
+            throw new IllegalArgumentException("setDynamicOffsetIndex: index out of range, maxSlices = "+maxSlices);
+        if(index != dynamicOffsetIndex)
+            flush();
+        dynamicOffsetIndex = index;
+    }
+
+
     public void set(int offset, float value ){
         floatData.putFloat(offset, value);
+        dirty = true;
     }
 
     public void set( int offset, Vector2 vec ){
         floatData.putFloat(offset, vec.x);
         floatData.putFloat(offset +Float.BYTES, vec.y);
+        dirty = true;
     }
 
     public void set( int offset, Vector3 vec ){
         floatData.putFloat(offset, vec.x);
         floatData.putFloat(offset +Float.BYTES, vec.y);
         floatData.putFloat(offset +2*Float.BYTES, vec.z);
+        dirty = true;
     }
 
     public void set( int offset, Vector4 vec ){
@@ -185,10 +206,12 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
         floatData.putFloat(offset +Float.BYTES, vec.y);
         floatData.putFloat(offset +2*Float.BYTES, vec.z);
         floatData.putFloat(offset +3*Float.BYTES, vec.w);
+        dirty = true;
     }
 
     public void set(int offset, Matrix4 mat ){
         floatData.put(offset, mat.val, 0, 16);
+        dirty = true;
     }
 
     public void set( int offset, Color col ){
@@ -196,6 +219,7 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
         floatData.putFloat(offset +Float.BYTES, col.g);
         floatData.putFloat(offset +2*Float.BYTES,col.b);
         floatData.putFloat(offset +3*Float.BYTES, col.a);
+        dirty = true;
     }
 
 

@@ -72,6 +72,10 @@ public class WebGPUPipeline implements Disposable {
         pipelineDesc.getVertex().setBufferCount(vertexBufferLayout != null ? 1 : 0);
         pipelineDesc.getVertex().setBuffers(vertexBufferLayout);
 
+        WGPUConstantEntry entry = WGPUConstantEntry.createDirect();
+        entry.setKey("numDirLights");
+        entry.setValue(3f);
+
         pipelineDesc.getVertex().setModule(shaderModule);
         pipelineDesc.getVertex().setEntryPoint(spec.vertexShaderEntryPoint);
         pipelineDesc.getVertex().setConstantCount(0);
