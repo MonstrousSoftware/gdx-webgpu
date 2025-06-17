@@ -21,10 +21,10 @@ Some useful configuration options:
 
 | option | description |
 |:-------|:-----------|
-|`config.setWindowedMode(320, 480);`     |   Sets the application window to the given size.|
+|`config.setWindowedMode(w,h);`     |   Sets the application window to the given size.|
 |`config.useVsync(boolean)`|	Whether to fix the frame rate to vsync.|
-|`config.samples`        |	Set to 4 for anti-aliasing.|
-|`config.backend`     | Default is `WGPUBackendType.Undefined`. This can be used for test a Vulkan backend or a DirectX12 backend for the WebGPU layer. Note that the availability of backends depends on the users' computer.|	
+|`config.samples`        |	Set to 4 for anti-aliasing. 1 for no anti-aliasing. |
+|`config.backend`     | Default is `WGPUBackendType.Undefined`. Other values can be used to test a Vulkan backend or a DirectX12 backend for the WebGPU layer. Note that the availability of backends depends on the users' computer.|	
 | `config.enableGPUtiming` |Default is false. Can be set to true to allow GPU timing measurements (to explain how)|
  
 Configuration settings are platform dependent.
