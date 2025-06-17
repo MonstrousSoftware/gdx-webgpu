@@ -50,3 +50,9 @@ Content size is just the size of the matrix4.
 But need WebGPUniformBuffer methods to select the active slice.  This should then be used in buffer.write for the slice offset which will then
 write content size (not stride). Any buffer.setUniform method will set a dirty flag causing buffer.flush to write to GPU.  The write
 will not be per uniform, but per contentsize ("slice") and could be done just before the draw call along with binding the group.
+=> done.
+
+Added (2d) particle effects.
+3d particle effects will be harder to add, there are many classes and specific shaders.
+
+todo When launching via the test chooser reaction to input becomes laggy, e.g. scene2d sliders or window dragging.
