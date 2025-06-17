@@ -26,7 +26,20 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.Vector4;
 import jnr.ffi.Pointer;
 
-// todo auto padding between elements
+/** Uniform buffer, optionally to be used with dynamic offsets
+ *
+ * Usage:
+ *  buffer.setDynamicOffsetIndex(0);    // indicate which slice we are at, can be omitted if not using dynamic offsets
+ *  buffer.set(0, transformMatrix);     // set uniform value
+ *  buffer.set(64, diffuseColor);       // set uniform value, offset in bytes, relative to this slice
+ *  buffer.flush();                     // write content to GPU!
+ *  buffer.setDynamicOffsetIndex(1);    // next slice
+ *  buffer.set(0, transformMatrix);     //
+ *  buffer.set(64, diffuseColor);       //
+ *  buffer.flush();                     // write content to GPU!
+ *
+ *  Beware of required padding between uniforms!
+ */
 
 public class WebGPUUniformBuffer extends WebGPUBuffer {
 
@@ -39,11 +52,22 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
     private boolean dirty;
 
 
+    /** Construct a Uniform Buffer without using dynamic offsets.
+     *
+     * @param contentSize size of data in bytes
+     * @param usage flags of WGPUBufferUsage
+     */
     public WebGPUUniformBuffer(int contentSize, long usage){
         this(contentSize, usage, 1);
     }
 
-    /** Construct a Uniform Buffer. To use dynamic offsets, set maxSlices to the number of segments needed. */
+
+    /** Construct a Uniform Buffer. To use dynamic offsets, set maxSlices to the number of segments needed.
+     *
+     * @param contentSize size of data per slice in bytes (will be padded to a valid uniform stride size)
+     * @param usage flags of WGPUBufferUsage
+     * @param maxSlices minimum 1
+     */
     public WebGPUUniformBuffer(int contentSize, long usage, int maxSlices){
         super("uniform buffer", usage, calculateBufferSize(contentSize, maxSlices));
         this.contentSize = contentSize;
@@ -54,7 +78,7 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
         dirty = false;
 
         // working buffer in native memory to use as input to WriteBuffer
-        floatData = JavaWebGPU.createDirectPointer(contentSize);       // native memory buffer for one instance to aid write buffer
+        floatData = JavaWebGPU.createDirectPointer(contentSize);       // native memory buffer for one slice to aid write buffer
     }
 
 
@@ -66,7 +90,7 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
         // if we use dynamics offsets, there is a minimum stride to apply between "slices"
         if(maxSlices > 1) { // do we use dynamic offsets?
             int uniformStride = calculateStride(contentSize, maxSlices);
-            bufferSize += uniformStride * (maxSlices - 1);
+            bufferSize += (long) uniformStride * (maxSlices - 1);
         }
         return bufferSize;
     }
@@ -182,7 +206,7 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
         dynamicOffsetIndex = index;
     }
 
-
+    /** offset in bytes */
     public void set(int offset, float value ){
         floatData.putFloat(offset, value);
         dirty = true;
