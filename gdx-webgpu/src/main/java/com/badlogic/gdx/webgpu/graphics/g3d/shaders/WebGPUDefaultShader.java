@@ -163,6 +163,9 @@ public class WebGPUDefaultShader implements Shader {
         pipelineSpec.enableBlending();
         pipelineSpec.setBlendFactor(WGPUBlendFactor.SrcAlpha, WGPUBlendFactor.OneMinusSrcAlpha);
         pipelineSpec.environment = renderable.environment;
+        if(renderable.meshPart.primitiveType == GL20.GL_LINES)  // todo all cases
+            pipelineSpec.topology = WGPUPrimitiveTopology.LineList;
+
         pipeline = new WebGPUPipeline(pipelineLayout, pipelineSpec);
 
         directionalLights = new DirectionalLight[config.maxDirectionalLights];

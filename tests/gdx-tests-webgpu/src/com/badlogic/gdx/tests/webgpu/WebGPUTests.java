@@ -67,7 +67,8 @@ public class WebGPUTests {
         ScissorTest.class,
         ASimpleGame.class,
         ParticleEmitterTest.class,
-        ParticleEmittersTest.class
+        ParticleEmittersTest.class,
+        HeightMapTest.class
 
 		// @on
 
