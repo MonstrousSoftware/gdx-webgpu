@@ -20,24 +20,24 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.tests.webgpu.utils.GdxTest;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
-import com.badlogic.gdx.webgpu.graphics.utils.WebGPUImmediateModeRenderer;
-import com.badlogic.gdx.webgpu.wrappers.WebGPUTexture;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplication;
+import com.badlogic.gdx.webgpu.graphics.utils.WgImmediateModeRenderer;
+import com.badlogic.gdx.webgpu.graphics.WgTexture;
 
 public class ImmediateModeRendererTest extends GdxTest {
 	Matrix4 projMatrix = new Matrix4();
-	WebGPUImmediateModeRenderer renderer;
-	WebGPUTexture texture;
+	WgImmediateModeRenderer renderer;
+	WgTexture texture;
 
 
     public static void main (String[] argv) {
-        new WebGPUApplication(new ImmediateModeRendererTest());
+        new WgApplication(new ImmediateModeRendererTest());
     }
 
 	@Override
 	public void create () {
-		renderer = new WebGPUImmediateModeRenderer(false, true, 1);
-		texture = new WebGPUTexture(Gdx.files.internal("data/badlogic.jpg"));
+		renderer = new WgImmediateModeRenderer(false, true, 1);
+		texture = new WgTexture(Gdx.files.internal("data/badlogic.jpg"));
 	}
 	@Override
 	public void dispose () {

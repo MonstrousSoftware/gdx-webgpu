@@ -30,16 +30,16 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.utils.ActorGestureListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TiledDrawable;
 import com.badlogic.gdx.tests.webgpu.utils.GdxTest;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplicationConfiguration;
-import com.badlogic.gdx.webgpu.scene2d.WebGPUSkin;
-import com.badlogic.gdx.webgpu.scene2d.WebGPUStage;
-import com.badlogic.gdx.webgpu.wrappers.WebGPUTexture;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplication;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
+import com.badlogic.gdx.webgpu.scene2d.WgSkin;
+import com.badlogic.gdx.webgpu.scene2d.WgStage;
+import com.badlogic.gdx.webgpu.graphics.WgTexture;
 
 import static com.badlogic.gdx.scenes.scene2d.actions.Actions.*;
 
 public class Scene2dTest extends GdxTest {
-	WebGPUStage stage;
+	WgStage stage;
 	private final FloatAction meow = new FloatAction(10, 5);
 	private TiledDrawable patch;
 	private TextureRegion region;
@@ -47,17 +47,17 @@ public class Scene2dTest extends GdxTest {
     // launcher
     public static void main (String[] argv) {
 
-        WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
+        WgApplicationConfiguration config = new WgApplicationConfiguration();
         config.setWindowedMode(640, 480);
-        new WebGPUApplication(new Scene2dTest(), config);
+        new WgApplication(new Scene2dTest(), config);
     }
 
 	public void create () {
-		stage = new WebGPUStage();
+		stage = new WgStage();
 		//stage.setDebugAll(true);
 		Gdx.input.setInputProcessor(stage);
 
-		region = new TextureRegion(new WebGPUTexture("data/badlogic.jpg"));
+		region = new TextureRegion(new WgTexture("data/badlogic.jpg"));
 		final Actor actor = new Actor() {
 			public void draw (Batch batch, float parentAlpha) {
 				Color color = getColor();
@@ -79,7 +79,7 @@ public class Scene2dTest extends GdxTest {
 			}
 		});
 
-		Skin skin = new WebGPUSkin(Gdx.files.internal("data/uiskin.json"));
+		Skin skin = new WgSkin(Gdx.files.internal("data/uiskin.json"));
 
 		VerticalGroup g = new VerticalGroup().space(5).reverse().pad(5).fill();
 		for (int i = 0; i < 10; i++)

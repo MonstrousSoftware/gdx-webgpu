@@ -4,12 +4,12 @@ package com.badlogic.gdx.tests.webgpu;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplicationConfiguration;
-import com.badlogic.gdx.webgpu.graphics.WebGPUShaderProgram;
-import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUBitmapFont;
-import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
-import com.badlogic.gdx.webgpu.wrappers.WebGPUTexture;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplication;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
+import com.badlogic.gdx.webgpu.graphics.WgShaderProgram;
+import com.badlogic.gdx.webgpu.graphics.g2d.WgBitmapFont;
+import com.badlogic.gdx.webgpu.graphics.g2d.WgSpriteBatch;
+import com.badlogic.gdx.webgpu.graphics.WgTexture;
 
 /** Demonstrates the use of ShaderProgram in combination with SpriteBatch, using a shader coded in WGSL shading language.
 */
@@ -18,34 +18,34 @@ public class WebGPUShaderTest {
 	// launcher
 	public static void main (String[] argv) {
 
-		WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
+		WgApplicationConfiguration config = new WgApplicationConfiguration();
 		config.setWindowedMode(640, 480);
 		config.setTitle("WebGPUTest");
 
-		new WebGPUApplication(new TestApp(), config);
+		new WgApplication(new TestApp(), config);
 	}
 
 	// application
 	static class TestApp extends ApplicationAdapter {
-		private WebGPUSpriteBatch batch;
-		private WebGPUTexture texture;
-		private WebGPUTexture texture2;
-		private WebGPUBitmapFont font;
-		private WebGPUShaderProgram shaderProgram;
+		private WgSpriteBatch batch;
+		private WgTexture texture;
+		private WgTexture texture2;
+		private WgBitmapFont font;
+		private WgShaderProgram shaderProgram;
 
 
 		public void create () {
 
 			// alternative shader program to be used instead of the default one.
-			shaderProgram = new WebGPUShaderProgram("my shader", getShaderSource(), "");
+			shaderProgram = new WgShaderProgram("my shader", getShaderSource(), "");
 
-			batch = new WebGPUSpriteBatch();
+			batch = new WgSpriteBatch();
 
 
-			texture = new WebGPUTexture(Gdx.files.internal("data/badlogic.jpg"));
-			texture2 = new WebGPUTexture(Gdx.files.internal("data/tile.png"));
+			texture = new WgTexture(Gdx.files.internal("data/badlogic.jpg"));
+			texture2 = new WgTexture(Gdx.files.internal("data/tile.png"));
 
-			font = new WebGPUBitmapFont();
+			font = new WgBitmapFont();
 		}
 
 		@Override
@@ -60,7 +60,7 @@ public class WebGPUShaderTest {
 			batch.draw(texture2, 50, 400);
 
 			// revert to default shader
-			batch.setShader((WebGPUShaderProgram) null);
+			batch.setShader((WgShaderProgram) null);
 			batch.draw(texture, 370, 100);
 			batch.draw(texture2, 370, 400);
 

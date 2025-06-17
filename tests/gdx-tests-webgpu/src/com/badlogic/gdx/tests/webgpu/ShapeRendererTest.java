@@ -23,27 +23,27 @@ import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.tests.webgpu.utils.GdxTest;
 import com.badlogic.gdx.tests.webgpu.utils.PerspectiveCamController;
-import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUBitmapFont;
-import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
-import com.badlogic.gdx.webgpu.graphics.utils.WebGPUShapeRenderer;
+import com.badlogic.gdx.webgpu.graphics.g2d.WgBitmapFont;
+import com.badlogic.gdx.webgpu.graphics.g2d.WgSpriteBatch;
+import com.badlogic.gdx.webgpu.graphics.utils.WgShapeRenderer;
 
 public class ShapeRendererTest extends GdxTest {
 
-	WebGPUShapeRenderer renderer;
+	WgShapeRenderer renderer;
 	PerspectiveCamera cam;
 	PerspectiveCamController controller;
-	WebGPUSpriteBatch batch;
-	WebGPUBitmapFont font;
+	WgSpriteBatch batch;
+	WgBitmapFont font;
 
 	public void create () {
-		renderer = new WebGPUShapeRenderer();
+		renderer = new WgShapeRenderer();
 		cam = new PerspectiveCamera(47, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		cam.position.set(0, 0, 2);
 		cam.near = 0.1f;
 		controller = new PerspectiveCamController(cam);
 		Gdx.input.setInputProcessor(controller);
-		batch = new WebGPUSpriteBatch();
-		font = new WebGPUBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
+		batch = new WgSpriteBatch();
+		font = new WgBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
 	}
 
 	public void render () {
@@ -57,7 +57,7 @@ public class ShapeRendererTest extends GdxTest {
 
 		MathUtils.random.setSeed(0);
 
-		renderer.begin(WebGPUShapeRenderer.ShapeType.Point);
+		renderer.begin(WgShapeRenderer.ShapeType.Point);
 
 		renderer.setColor(Color.PINK);
 		for (int i = 0; i < 100; i++)
@@ -66,7 +66,7 @@ public class ShapeRendererTest extends GdxTest {
 		renderer.end();
 
 		if (Gdx.input.isKeyPressed(Keys.F)) {
-			renderer.begin(WebGPUShapeRenderer.ShapeType.Filled);
+			renderer.begin(WgShapeRenderer.ShapeType.Filled);
 
 			renderer.setColor(Color.RED);
 			renderer.rect(0, 0, 1, 1);
@@ -89,7 +89,7 @@ public class ShapeRendererTest extends GdxTest {
 
 			renderer.end();
 		} else {
-			renderer.begin(WebGPUShapeRenderer.ShapeType.Line);
+			renderer.begin(WgShapeRenderer.ShapeType.Line);
 
 			renderer.setColor(Color.RED);
 			renderer.rect(0, 0, 1, 1);

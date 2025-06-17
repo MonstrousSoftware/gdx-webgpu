@@ -4,6 +4,7 @@ package com.badlogic.gdx.webgpu.wrappers;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.webgpu.WebGPUGraphicsBase;
 import com.badlogic.gdx.utils.Disposable;
+import com.badlogic.gdx.webgpu.graphics.WgTexture;
 import com.badlogic.gdx.webgpu.webgpu.*;
 import jnr.ffi.Pointer;
 
@@ -19,15 +20,15 @@ public class WebGPUTextureView implements Disposable {
     public int arrayLayerCount;
 
 
-    public WebGPUTextureView(WebGPUTexture texture) {
+    public WebGPUTextureView(WgTexture texture) {
         this(texture, 1, 1);
     }
 
-    public WebGPUTextureView(WebGPUTexture texture, int mipLevelCount, int arrayLayerCount) {
+    public WebGPUTextureView(WgTexture texture, int mipLevelCount, int arrayLayerCount) {
         this(texture, WGPUTextureAspect.All, WGPUTextureViewDimension._2D, WGPUTextureFormat.RGBA8Unorm, 0, mipLevelCount, 0, arrayLayerCount);
     }
 
-    public WebGPUTextureView(WebGPUTexture texture, WGPUTextureAspect aspect, WGPUTextureViewDimension dimension, WGPUTextureFormat format,
+    public WebGPUTextureView(WgTexture texture, WGPUTextureAspect aspect, WGPUTextureViewDimension dimension, WGPUTextureFormat format,
                              int baseMipLevel, int mipLevelCount, int baseArrayLayer, int arrayLayerCount) {
         WebGPUGraphicsBase gfx = (WebGPUGraphicsBase) Gdx.graphics;
         webGPU = gfx.getWebGPU();

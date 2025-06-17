@@ -8,33 +8,31 @@ import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.tests.webgpu.utils.GdxTest;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplicationConfiguration;
-import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
-import com.badlogic.gdx.webgpu.scene2d.WebGPUSkin;
-import com.badlogic.gdx.webgpu.scene2d.WebGPUStage;
-import com.badlogic.gdx.webgpu.wrappers.WebGPUTexture;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplication;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
+import com.badlogic.gdx.webgpu.graphics.g2d.WgSpriteBatch;
+import com.badlogic.gdx.webgpu.scene2d.WgSkin;
+import com.badlogic.gdx.webgpu.scene2d.WgStage;
+import com.badlogic.gdx.webgpu.graphics.WgTexture;
 
 // demonstrates the use of WebGPUSpriteBatch
 // shows texture from file, texture from pixmap, texture region, sprite
 //
 public class StageTest extends GdxTest {
-		private WebGPUSpriteBatch batch;
+		private WgSpriteBatch batch;
 		private ScreenViewport viewport;
-		private WebGPUStage stage;
-		private WebGPUSkin skin;
-		private WebGPUTexture texture;
+		private WgStage stage;
+		private WgSkin skin;
+		private WgTexture texture;
 
 		// launcher
 		public static void main (String[] argv) {
 
-			WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
+			WgApplicationConfiguration config = new WgApplicationConfiguration();
 			config.setWindowedMode(640, 480);
 			config.setTitle("WebGPUTest");
 
-			new WebGPUApplication(new StageTest(), config);
-
-
+			new WgApplication(new StageTest(), config);
 		}
 
 		public void create () {
@@ -45,14 +43,14 @@ public class StageTest extends GdxTest {
 			System.out.println(mat.toString());
 
 			viewport = new ScreenViewport();
-			batch = new WebGPUSpriteBatch();
+			batch = new WgSpriteBatch();
 
-			stage = new WebGPUStage(viewport);
+			stage = new WgStage(viewport);
 			//stage.enableDebug(false);
 			stage.setDebugAll(true);
 			Gdx.input.setInputProcessor(stage);
 
-			skin = new WebGPUSkin(Gdx.files.internal("data/uiskin.json"));
+			skin = new WgSkin(Gdx.files.internal("data/uiskin.json"));
 
 			Button button = new Button(skin);
 
@@ -69,7 +67,7 @@ public class StageTest extends GdxTest {
 					textButton.setText("Good job!");
 				}
 			});
-			texture = new WebGPUTexture(Gdx.files.internal("data/badlogic.jpg"));
+			texture = new WgTexture(Gdx.files.internal("data/badlogic.jpg"));
 			Image image = new Image(texture);
 			Slider slider = new Slider(0, 100, 20, false, skin);
 			slider.debug();

@@ -41,15 +41,15 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.UBJsonReader;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplicationConfiguration;
-import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUBitmapFont;
-import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
-import com.badlogic.gdx.webgpu.graphics.g3d.WebGPUModelBatch;
-import com.badlogic.gdx.webgpu.graphics.g3d.loaders.WebGPUG3dModelLoader;
-import com.badlogic.gdx.webgpu.graphics.utils.WebGPUScreenUtils;
-import com.badlogic.gdx.webgpu.scene2d.WebGPUSkin;
-import com.badlogic.gdx.webgpu.scene2d.WebGPUStage;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplication;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
+import com.badlogic.gdx.webgpu.graphics.g2d.WgBitmapFont;
+import com.badlogic.gdx.webgpu.graphics.g2d.WgSpriteBatch;
+import com.badlogic.gdx.webgpu.graphics.g3d.WgModelBatch;
+import com.badlogic.gdx.webgpu.graphics.g3d.loaders.WgG3dModelLoader;
+import com.badlogic.gdx.webgpu.graphics.utils.WgScreenUtils;
+import com.badlogic.gdx.webgpu.scene2d.WgSkin;
+import com.badlogic.gdx.webgpu.scene2d.WgStage;
 
 /** Test lights in environment
  * - directional lights, point lights, ambient light
@@ -58,31 +58,31 @@ import com.badlogic.gdx.webgpu.scene2d.WebGPUStage;
 
 public class LightingTest extends GdxTest {
 
-	WebGPUModelBatch modelBatch;
+	WgModelBatch modelBatch;
 	PerspectiveCamera cam;
 	PerspectiveCamController controller;
-	WebGPUSpriteBatch batch;
-	WebGPUBitmapFont font;
+	WgSpriteBatch batch;
+	WgBitmapFont font;
 	Model model;
 	Array<ModelInstance> instances;
 	Environment environment;
 	ScreenViewport viewport;
-	WebGPUStage stage;
-	WebGPUSkin skin;
+	WgStage stage;
+	WgSkin skin;
 
 	// launcher
 	public static void main (String[] argv) {
 
-		WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
+		WgApplicationConfiguration config = new WgApplicationConfiguration();
 		config.setWindowedMode(640, 480);
 		config.setTitle("WebGPUTest");
 
-		new WebGPUApplication(new LightingTest(), config);
+		new WgApplication(new LightingTest(), config);
 	}
 
 	// application
 	public void create () {
-		modelBatch = new WebGPUModelBatch();
+		modelBatch = new WgModelBatch();
 		cam = new PerspectiveCamera(50, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		cam.position.set(0, -0.5f, 2.5f);
 		cam.lookAt(0,0,0);
@@ -90,7 +90,7 @@ public class LightingTest extends GdxTest {
 
 		// create a model instance
 		instances = new Array<>();
-		WebGPUG3dModelLoader loader = new WebGPUG3dModelLoader(new UBJsonReader());
+		WgG3dModelLoader loader = new WgG3dModelLoader(new UBJsonReader());
 		model = loader.loadModel(Gdx.files.internal("data/g3d/head.g3db"));
 		ModelInstance instance = new ModelInstance(model, 0, -1, 0);
 
@@ -132,13 +132,13 @@ public class LightingTest extends GdxTest {
 
 		controller = new PerspectiveCamController(cam);
 		Gdx.input.setInputProcessor(controller);
-		batch = new WebGPUSpriteBatch();
-		font = new WebGPUBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
+		batch = new WgSpriteBatch();
+		font = new WgBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
 
 		// Add some GUI
 		//
 		viewport = new ScreenViewport();
-		stage = new WebGPUStage(viewport);
+		stage = new WgStage(viewport);
 		//stage.setDebugAll(true);
 
 		InputMultiplexer im = new InputMultiplexer();
@@ -146,7 +146,7 @@ public class LightingTest extends GdxTest {
 		im.addProcessor(stage);
 		im.addProcessor(controller);
 
-		skin = new WebGPUSkin(Gdx.files.internal("data/uiskin.json"));
+		skin = new WgSkin(Gdx.files.internal("data/uiskin.json"));
 		CheckBox checkBox1 = new CheckBox("blue directional light", skin);
 		checkBox1.setChecked(true);
 		environment.add(dirLight1);
@@ -262,7 +262,7 @@ public class LightingTest extends GdxTest {
 		for(ModelInstance instance : instances)
 			instance.transform.rotate(Vector3.Y, 15f*delta);
 
-		WebGPUScreenUtils.clear(Color.TEAL);
+		WgScreenUtils.clear(Color.TEAL);
 
 		cam.update();
 		modelBatch.begin(cam);

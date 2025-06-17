@@ -6,8 +6,8 @@ import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.webgpu.WebGPUGraphicsBase;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplicationConfiguration;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplication;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
 import com.badlogic.gdx.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.webgpu.webgpu.*;
 import com.badlogic.gdx.webgpu.wrappers.RenderPassBuilder;
@@ -20,25 +20,25 @@ public class WebGPUTest {
 	// launcher
 	public static void main (String[] argv) {
 
-		WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
+		WgApplicationConfiguration config = new WgApplicationConfiguration();
 		config.setWindowedMode(640, 480);
 		config.setTitle("WebGPUTest");
 		//config.backend = WGPUBackendType.D3D12;
 		config.enableGPUtiming = false;
 
-		new WebGPUApplication(new TestApp(), config);
+		new WgApplication(new TestApp(), config);
 	}
 
 	// application
 	static class TestApp extends ApplicationAdapter {
-		private WebGPUApplication app;
+		private WgApplication app;
 		private WebGPUGraphicsBase gfx;
 		private WebGPU_JNI webGPU;
 		private Pointer pipeline;
 
 		public void create () {
 			gfx = (WebGPUGraphicsBase)Gdx.graphics;
-			app = (WebGPUApplication)Gdx.app;
+			app = (WgApplication)Gdx.app;
 			webGPU = app.getWebGPU();
 			pipeline = initPipeline();
 		}
@@ -49,7 +49,7 @@ public class WebGPUTest {
 
 				 ApplicationListener listener = new TestApp();
 
-				 WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
+				 WgApplicationConfiguration config = new WgApplicationConfiguration();
 				 config.setWindowedMode(200, 200);
 				 config.setTitle("Child Window");
 				 app.newWindow(listener, config);

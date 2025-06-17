@@ -6,33 +6,33 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.tests.webgpu.utils.GdxTest;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
-import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUBitmapFont;
-import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
-import com.badlogic.gdx.webgpu.wrappers.WebGPUTexture;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplication;
+import com.badlogic.gdx.webgpu.graphics.g2d.WgBitmapFont;
+import com.badlogic.gdx.webgpu.graphics.g2d.WgSpriteBatch;
+import com.badlogic.gdx.webgpu.graphics.WgTexture;
 
 public class ScissorTest extends GdxTest {
 
-    private WebGPUSpriteBatch batch;
-    private WebGPUTexture background;
-    private WebGPUBitmapFont font;
+    private WgSpriteBatch batch;
+    private WgTexture background;
+    private WgBitmapFont font;
     private int x,y;
     private int dx, dy;
 
     // launcher
     public static void main (String[] argv) {
-        new WebGPUApplication(new ScissorTest());
+        new WgApplication(new ScissorTest());
     }
 
 
     @Override
     public void create() {
 
-        background = new WebGPUTexture("data/simplegame/background.png", true);
+        background = new WgTexture("data/simplegame/background.png", true);
 
-        batch = new WebGPUSpriteBatch();
+        batch = new WgSpriteBatch();
 
-        font = new WebGPUBitmapFont();
+        font = new WgBitmapFont();
         x = 100;
         y = 100;
         dx = 1;

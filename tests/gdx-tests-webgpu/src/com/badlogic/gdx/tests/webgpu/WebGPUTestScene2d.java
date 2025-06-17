@@ -7,11 +7,11 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplicationConfiguration;
-import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
-import com.badlogic.gdx.webgpu.scene2d.WebGPUStage;
-import com.badlogic.gdx.webgpu.wrappers.WebGPUTexture;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplication;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
+import com.badlogic.gdx.webgpu.graphics.g2d.WgSpriteBatch;
+import com.badlogic.gdx.webgpu.scene2d.WgStage;
+import com.badlogic.gdx.webgpu.graphics.WgTexture;
 
 // demonstrates the use of Scene2d
 //
@@ -20,27 +20,27 @@ public class WebGPUTestScene2d {
 	// launcher
 	public static void main (String[] argv) {
 
-		WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
+		WgApplicationConfiguration config = new WgApplicationConfiguration();
 		config.setWindowedMode(640, 480);
 		config.setTitle("WebGPUTest");
 
-		new WebGPUApplication(new TestApp(), config);
+		new WgApplication(new TestApp(), config);
 	}
 
 	// application
 	static class TestApp extends ApplicationAdapter {
-		private WebGPUSpriteBatch batch;
-		private WebGPUTexture texture;
-		private WebGPUStage stage;
+		private WgSpriteBatch batch;
+		private WgTexture texture;
+		private WgStage stage;
 		private Image image;
 		private TextureRegion region;
 		private TextureRegionDrawable drawable;
 
 		public void create () {
-			batch = new WebGPUSpriteBatch();
-			texture = new WebGPUTexture(Gdx.files.internal("data/badlogic.jpg"));
+			batch = new WgSpriteBatch();
+			texture = new WgTexture(Gdx.files.internal("data/badlogic.jpg"));
 
-			stage = new WebGPUStage();
+			stage = new WgStage();
 
 			region = new TextureRegion(texture, 0, 0, 0.5f, 0.5f);
 			drawable = new TextureRegionDrawable(region);

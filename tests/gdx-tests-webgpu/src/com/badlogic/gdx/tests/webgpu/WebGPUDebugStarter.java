@@ -102,7 +102,7 @@ public class WebGPUDebugStarter {
 						if (character == 'c') {
 							Gdx.input.setCursorCatched(!Gdx.input.isCursorCatched());
 						}
-						WebGPUWindow window = ((WebGPUGraphics)Gdx.graphics).getWindow();
+						WgWindow window = ((WgGraphics)Gdx.graphics).getWindow();
 						if (character == 'v') {
 							window.setVisible(false);
 						}
@@ -167,11 +167,11 @@ public class WebGPUDebugStarter {
 				Gdx.app.log("Test", "disposing");
 			}
 		};
-		WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
+		WgApplicationConfiguration config = new WgApplicationConfiguration();
 		config.setWindowedMode(640, 480);
-		config.setWindowListener(new WebGPUWindowListener() {
+		config.setWindowListener(new WgWindowListener() {
 			@Override
-			public void created (WebGPUWindow window) {
+			public void created (WgWindow window) {
 				Gdx.app.log("Window", "created");
 			}
 
@@ -213,11 +213,11 @@ public class WebGPUDebugStarter {
 				Gdx.app.log("Window", "refreshRequested");
 			}
 		});
-		for (DisplayMode mode : WebGPUApplicationConfiguration.getDisplayModes()) {
+		for (DisplayMode mode : WgApplicationConfiguration.getDisplayModes()) {
 			System.out.println(mode.width + "x" + mode.height);
 		}
 
 		System.setProperty("java.awt.headless", "true");
-		new WebGPUApplication(test, config);
+		new WgApplication(test, config);
 	}
 }

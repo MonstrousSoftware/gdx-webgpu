@@ -7,11 +7,11 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplicationConfiguration;
-import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUBitmapFont;
-import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
-import com.badlogic.gdx.webgpu.wrappers.WebGPUTexture;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplication;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
+import com.badlogic.gdx.webgpu.graphics.g2d.WgBitmapFont;
+import com.badlogic.gdx.webgpu.graphics.g2d.WgSpriteBatch;
+import com.badlogic.gdx.webgpu.graphics.WgTexture;
 
 // demonstrates the use of WebGPUSpriteBatch
 // shows texture from file, texture from pixmap, texture region, sprite
@@ -21,29 +21,29 @@ public class WebGPUTestSpriteBatch  {
 	// launcher
 	public static void main (String[] argv) {
 
-		WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
+		WgApplicationConfiguration config = new WgApplicationConfiguration();
 		config.setWindowedMode(640, 480);
 		config.setTitle("WebGPUTest");
 
-		new WebGPUApplication(new TestApp(), config);
+		new WgApplication(new TestApp(), config);
 	}
 
 	// application
 	static class TestApp extends ApplicationAdapter {
-		private WebGPUSpriteBatch batch;
-		private WebGPUTexture texture;
-		private WebGPUTexture texture2;
-		private WebGPUTexture textureAlpha;
+		private WgSpriteBatch batch;
+		private WgTexture texture;
+		private WgTexture texture2;
+		private WgTexture textureAlpha;
 		private TextureRegion region;
 		private Sprite sprite;
 		private float sx = 10;
-		private WebGPUBitmapFont font;
+		private WgBitmapFont font;
 
 
 		public void create () {
-			batch = new WebGPUSpriteBatch();
+			batch = new WgSpriteBatch();
 
-			texture = new WebGPUTexture(Gdx.files.internal("data/badlogic.jpg"));
+			texture = new WgTexture(Gdx.files.internal("data/badlogic.jpg"));
 
 
 			// create a texture from a pixmap
@@ -52,15 +52,15 @@ public class WebGPUTestSpriteBatch  {
 			pm.fill();
 			pm.setColor(Color.YELLOW);
 			pm.fillCircle(64, 64, 32);
-			texture2 = new WebGPUTexture(pm);
+			texture2 = new WgTexture(pm);
 
-			textureAlpha = new WebGPUTexture(Gdx.files.internal("data/particle.png"));
+			textureAlpha = new WgTexture(Gdx.files.internal("data/particle.png"));
 
 			region = new TextureRegion(texture, 100, 100);
 			sprite = new Sprite(texture);
 			sprite.setScale(0.3f);
 
-			font = new WebGPUBitmapFont();
+			font = new WgBitmapFont();
 		}
 
 		@Override

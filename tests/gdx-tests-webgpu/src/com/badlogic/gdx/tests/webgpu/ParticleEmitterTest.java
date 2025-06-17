@@ -24,12 +24,12 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.ParticleEmitter;
 import com.badlogic.gdx.tests.webgpu.utils.GdxTest;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
-import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplication;
+import com.badlogic.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.badlogic.gdx.webgpu.graphics.g2d.WgParticleEffect;
 
 public class ParticleEmitterTest extends GdxTest {
-	private WebGPUSpriteBatch spriteBatch;
+	private WgSpriteBatch spriteBatch;
 	WgParticleEffect effect;
 	int emitterIndex;
 	Array<ParticleEmitter> emitters;
@@ -39,12 +39,12 @@ public class ParticleEmitterTest extends GdxTest {
 
     // launcher
     public static void main (String[] argv) {
-        new WebGPUApplication(new ParticleEmitterTest());
+        new WgApplication(new ParticleEmitterTest());
     }
 
 	@Override
 	public void create () {
-		spriteBatch = new WebGPUSpriteBatch();
+		spriteBatch = new WgSpriteBatch();
 
 		effect = new WgParticleEffect();
 		effect.load(Gdx.files.internal("data/test.p"), Gdx.files.internal("data"));

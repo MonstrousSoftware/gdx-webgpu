@@ -26,23 +26,23 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.tests.webgpu.utils.GdxTest;
-import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUBitmapFont;
-import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
-import com.badlogic.gdx.webgpu.graphics.utils.WebGPUScreenUtils;
+import com.badlogic.gdx.webgpu.graphics.g2d.WgBitmapFont;
+import com.badlogic.gdx.webgpu.graphics.g2d.WgSpriteBatch;
+import com.badlogic.gdx.webgpu.graphics.utils.WgScreenUtils;
 
 public class TextureAtlasTest extends GdxTest {
-	WebGPUSpriteBatch batch;
+	WgSpriteBatch batch;
 	Sprite badlogic, badlogicSmall, star;
 	TextureAtlas atlas;
 	TextureAtlas jumpAtlas;
 	Animation<TextureRegion> jumpAnimation;
-	WebGPUBitmapFont font;
+	WgBitmapFont font;
 	float time = 0;
-	WebGPUSpriteBatch renderer;
+	WgSpriteBatch renderer;
 
 	public void create () {
-		batch = new WebGPUSpriteBatch();
-		renderer = new WebGPUSpriteBatch();
+		batch = new WgSpriteBatch();
+		renderer = new WgSpriteBatch();
 
 		atlas = new TextureAtlas(Gdx.files.internal("data/pack.atlas"));
 		jumpAtlas = new TextureAtlas(Gdx.files.internal("data/jump.txt"));
@@ -63,9 +63,9 @@ public class TextureAtlasTest extends GdxTest {
 		star = atlas.createSprite("particle-star");
 		star.setPosition(10, 70);
 
-		font = new WebGPUBitmapFont(); //Gdx.files.internal("data/font.fnt"), atlas.findRegion("font"), false);
+		font = new WgBitmapFont(); //Gdx.files.internal("data/font.fnt"), atlas.findRegion("font"), false);
 
-		WebGPUScreenUtils.clear(0, 1, 0, 1);
+		WgScreenUtils.clear(0, 1, 0, 1);
 
 		Gdx.input.setInputProcessor(new InputAdapter() {
 			public boolean keyUp (int keycode) {

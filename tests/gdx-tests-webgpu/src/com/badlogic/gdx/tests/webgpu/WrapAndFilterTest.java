@@ -14,13 +14,13 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.tests.webgpu.utils.GdxTest;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplicationConfiguration;
-import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUBitmapFont;
-import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
-import com.badlogic.gdx.webgpu.scene2d.WebGPUSkin;
-import com.badlogic.gdx.webgpu.scene2d.WebGPUStage;
-import com.badlogic.gdx.webgpu.wrappers.WebGPUTexture;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplication;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
+import com.badlogic.gdx.webgpu.graphics.g2d.WgBitmapFont;
+import com.badlogic.gdx.webgpu.graphics.g2d.WgSpriteBatch;
+import com.badlogic.gdx.webgpu.scene2d.WgSkin;
+import com.badlogic.gdx.webgpu.scene2d.WgStage;
+import com.badlogic.gdx.webgpu.graphics.WgTexture;
 
 /** Test of texture wrap and filter methods.
  * todo: select box has a visual issue.
@@ -31,31 +31,31 @@ public class WrapAndFilterTest extends GdxTest {
 	// launcher
 	public static void main (String[] argv) {
 
-		WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
+		WgApplicationConfiguration config = new WgApplicationConfiguration();
 		config.setWindowedMode(640, 480);
 		config.setTitle("WebGPUTest");
 
-		new WebGPUApplication(new TestApp(), config);
+		new WgApplication(new TestApp(), config);
 	}
 
 	// application
 	static class TestApp extends ApplicationAdapter {
-		private WebGPUSpriteBatch batch;
-		private WebGPUTexture texture;
+		private WgSpriteBatch batch;
+		private WgTexture texture;
 		private TextureRegion region;
 
-		private WebGPUBitmapFont font;
+		private WgBitmapFont font;
 		private ScreenViewport viewport;
-		private WebGPUStage stage;
-		private WebGPUSkin skin;
+		private WgStage stage;
+		private WgSkin skin;
 		private Texture.TextureFilter minFilter = Texture.TextureFilter.Nearest;
 		private Texture.TextureFilter magFilter = Texture.TextureFilter.Nearest;
 
 
 		public void create () {
-			batch = new WebGPUSpriteBatch();
+			batch = new WgSpriteBatch();
 
-			texture = new WebGPUTexture(Gdx.files.internal("data/badlogic.jpg"));
+			texture = new WgTexture(Gdx.files.internal("data/badlogic.jpg"));
 
 //			texture.setWrap(Texture.TextureWrap.MirroredRepeat, Texture.TextureWrap.MirroredRepeat);
 //			texture.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
@@ -63,16 +63,16 @@ public class WrapAndFilterTest extends GdxTest {
 
 			region = new TextureRegion(texture, 0f,0f,2f,2f);		// uv outside 1.0 range to show off wrap mode
 
-			font = new WebGPUBitmapFont();
+			font = new WgBitmapFont();
 
 			// Add some GUI
 			//
 			viewport = new ScreenViewport();
-			stage = new WebGPUStage(viewport);
+			stage = new WgStage(viewport);
 			stage.setDebugAll(true);
 			Gdx.input.setInputProcessor(stage);
 
-			skin = new WebGPUSkin(Gdx.files.internal("data/uiskin.json"));
+			skin = new WgSkin(Gdx.files.internal("data/uiskin.json"));
 			SelectBox<String> selectBox = new SelectBox<>(skin);
 			// Add a listener to the button. ChangeListener is fired when the button's checked state changes, eg when clicked,
 			// Button#setChecked() is called, via a key press, etc. If the event.cancel() is called, the checked state will be reverted.

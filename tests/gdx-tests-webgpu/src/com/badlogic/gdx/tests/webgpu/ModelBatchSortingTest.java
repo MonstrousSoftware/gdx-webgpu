@@ -28,25 +28,25 @@ import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.tests.webgpu.utils.GdxTest;
 import com.badlogic.gdx.tests.webgpu.utils.PerspectiveCamController;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplicationConfiguration;
-import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUBitmapFont;
-import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
-import com.badlogic.gdx.webgpu.graphics.g3d.WebGPUModelBatch;
-import com.badlogic.gdx.webgpu.graphics.g3d.utils.WebGPUModelBuilder;
-import com.badlogic.gdx.webgpu.graphics.utils.WebGPUScreenUtils;
-import com.badlogic.gdx.webgpu.wrappers.WebGPUTexture;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplication;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
+import com.badlogic.gdx.webgpu.graphics.g2d.WgBitmapFont;
+import com.badlogic.gdx.webgpu.graphics.g2d.WgSpriteBatch;
+import com.badlogic.gdx.webgpu.graphics.g3d.WgModelBatch;
+import com.badlogic.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
+import com.badlogic.gdx.webgpu.graphics.utils.WgScreenUtils;
+import com.badlogic.gdx.webgpu.graphics.WgTexture;
 
 /** Test renderables sorting order */
 
 
 public class ModelBatchSortingTest extends GdxTest {
 
-	WebGPUModelBatch modelBatch;
+	WgModelBatch modelBatch;
 	PerspectiveCamera cam;
 	PerspectiveCamController controller;
-	WebGPUSpriteBatch batch;
-	WebGPUBitmapFont font;
+	WgSpriteBatch batch;
+	WgBitmapFont font;
 	Model model;
 	Array<ModelInstance> instances;
 
@@ -54,16 +54,16 @@ public class ModelBatchSortingTest extends GdxTest {
 	// launcher
 	public static void main (String[] argv) {
 
-		WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
+		WgApplicationConfiguration config = new WgApplicationConfiguration();
 		config.setWindowedMode(640, 480);
 		config.setTitle("WebGPUTest");
 
-		new WebGPUApplication(new ModelBatchSortingTest(), config);
+		new WgApplication(new ModelBatchSortingTest(), config);
 	}
 
 	// application
 	public void create () {
-		modelBatch = new WebGPUModelBatch();
+		modelBatch = new WgModelBatch();
 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		cam.position.set(0, 0, 2);
 		cam.near = 0.1f;
@@ -71,14 +71,14 @@ public class ModelBatchSortingTest extends GdxTest {
 
 		controller = new PerspectiveCamController(cam);
 		Gdx.input.setInputProcessor(controller);
-		batch = new WebGPUSpriteBatch();
-		font = new WebGPUBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
+		batch = new WgSpriteBatch();
+		font = new WgBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
 
 
 		instances = new Array<>();
 
-		ModelBuilder modelBuilder = new WebGPUModelBuilder();
-		WebGPUTexture texture2 = new WebGPUTexture(Gdx.files.internal("data/badlogic.jpg"), true);
+		ModelBuilder modelBuilder = new WgModelBuilder();
+		WgTexture texture2 = new WgTexture(Gdx.files.internal("data/badlogic.jpg"), true);
 		texture2.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear);
 		Material mat = new Material(TextureAttribute.createDiffuse(texture2));
 		Material mat2 = new Material(ColorAttribute.createDiffuse(new Color(0,1, 0, 0.5f)));
@@ -105,7 +105,7 @@ public class ModelBatchSortingTest extends GdxTest {
 	public void render () {
 
 
-		WebGPUScreenUtils.clear(Color.TEAL);
+		WgScreenUtils.clear(Color.TEAL);
 
 		cam.update();
 		modelBatch.begin(cam);

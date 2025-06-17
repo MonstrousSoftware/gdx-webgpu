@@ -8,11 +8,11 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplicationConfiguration;
-import com.badlogic.gdx.webgpu.graphics.WebGPUMesh;
-import com.badlogic.gdx.webgpu.graphics.g3d.model.WebGPUMeshPart;
-import com.badlogic.gdx.webgpu.graphics.utils.WebGPUMeshBuilder;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplication;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
+import com.badlogic.gdx.webgpu.graphics.WgMesh;
+import com.badlogic.gdx.webgpu.graphics.g3d.model.WgMeshPart;
+import com.badlogic.gdx.webgpu.graphics.utils.WgMeshBuilder;
 import com.badlogic.gdx.webgpu.wrappers.*;
 
 // Basic test of Mesh and MeshPart
@@ -25,21 +25,21 @@ public class WebGPUTestMeshBuilder {
 	// launcher
 	public static void main (String[] argv) {
 
-		WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
+		WgApplicationConfiguration config = new WgApplicationConfiguration();
 		config.setWindowedMode(640, 480);
 		config.setTitle("WebGPUTest");
 		//config.backend = WGPUBackendType.D3D12;
 		config.enableGPUtiming = false;
 
-		new WebGPUApplication(new TestApp(), config);
+		new WgApplication(new TestApp(), config);
 	}
 
 	// application
 	static class TestApp extends ApplicationAdapter {
-        private WebGPUMesh mesh;
-		private WebGPUMeshPart meshPart;
-		private WebGPUMesh mesh2;
-		private WebGPUMeshPart meshPart2;
+        private WgMesh mesh;
+		private WgMeshPart meshPart;
+		private WgMesh mesh2;
+		private WgMeshPart meshPart2;
         private WebGPUPipeline pipeline;
 
 
@@ -52,7 +52,7 @@ public class WebGPUTestMeshBuilder {
 			pipeline = new WebGPUPipeline((WebGPUPipelineLayout) null, pipelineSpec);
 
 			// create a circular mesh part with the mesh builder
-            WebGPUMeshBuilder mb = new WebGPUMeshBuilder();
+            WgMeshBuilder mb = new WgMeshBuilder();
 			mb.begin(vattr);
 			mb.ensureCapacity(200, 200);
 			meshPart2 = mb.part( "circle", GL20.GL_TRIANGLES);
@@ -61,7 +61,7 @@ public class WebGPUTestMeshBuilder {
 			mesh2 = mb.end();
 
 
-			mesh = new WebGPUMesh(true, 4, 6, vattr);
+			mesh = new WgMesh(true, 4, 6, vattr);
 			mesh.setVertices(new float[]{
 				-0.5f, -0.5f, 0, 	0, 1, 	1,0,1,1,
 				0.5f, -0.5f, 0, 	1,1,	0,1,1,1,
@@ -73,7 +73,7 @@ public class WebGPUTestMeshBuilder {
 			int offset = 3;	// offset in the indices array, since the mesh is indexed
 			int size = 3;	// nr of indices, since the mesh is indexed
 			int type = GL20.GL_TRIANGLES;	// primitive type using GL constant
-			meshPart = new WebGPUMeshPart("part", mesh, offset, size, type);
+			meshPart = new WgMeshPart("part", mesh, offset, size, type);
 		}
 
 		@Override

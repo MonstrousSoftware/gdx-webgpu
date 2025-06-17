@@ -14,17 +14,17 @@ import com.badlogic.gdx.tests.webgpu.utils.GdxTest;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
-import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
-import com.badlogic.gdx.webgpu.wrappers.WebGPUTexture;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplication;
+import com.badlogic.gdx.webgpu.graphics.g2d.WgSpriteBatch;
+import com.badlogic.gdx.webgpu.graphics.WgTexture;
 
 public class ASimpleGame extends GdxTest {
-    WebGPUTexture backgroundTexture;
-    WebGPUTexture bucketTexture;
-    WebGPUTexture dropTexture;
+    WgTexture backgroundTexture;
+    WgTexture bucketTexture;
+    WgTexture dropTexture;
     Sound dropSound;
     Music music;
-    WebGPUSpriteBatch spriteBatch;
+    WgSpriteBatch spriteBatch;
     FitViewport viewport;
     Sprite bucketSprite;
     Vector2 touchPos;
@@ -34,17 +34,17 @@ public class ASimpleGame extends GdxTest {
     Rectangle dropRectangle;
 
     public static void main (String[] argv) {
-        new WebGPUApplication(new ASimpleGame());
+        new WgApplication(new ASimpleGame());
     }
 
     @Override
     public void create() {
-        backgroundTexture = new WebGPUTexture("data/simplegame/background.png");
-        bucketTexture = new WebGPUTexture("data/simplegame/bucket.png");
-        dropTexture = new WebGPUTexture("data/simplegame/drop.png");
+        backgroundTexture = new WgTexture("data/simplegame/background.png");
+        bucketTexture = new WgTexture("data/simplegame/bucket.png");
+        dropTexture = new WgTexture("data/simplegame/drop.png");
         dropSound = Gdx.audio.newSound(Gdx.files.internal("data/simplegame/drop.mp3"));
         music = Gdx.audio.newMusic(Gdx.files.internal("data/simplegame/music.mp3"));
-        spriteBatch = new WebGPUSpriteBatch();
+        spriteBatch = new WgSpriteBatch();
         viewport = new FitViewport(8, 5);
         bucketSprite = new Sprite(bucketTexture);
         bucketSprite.setSize(1, 1);

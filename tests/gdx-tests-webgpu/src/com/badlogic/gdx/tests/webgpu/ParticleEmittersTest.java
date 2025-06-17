@@ -21,12 +21,10 @@ import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.graphics.g2d.ParticleEffectPool;
 import com.badlogic.gdx.graphics.g2d.ParticleEffectPool.PooledEffect;
 import com.badlogic.gdx.graphics.g2d.ParticleEmitter;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
@@ -35,14 +33,14 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.tests.webgpu.utils.GdxTest;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
-import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplication;
+import com.badlogic.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.badlogic.gdx.webgpu.graphics.g2d.WgParticleEffect;
-import com.badlogic.gdx.webgpu.scene2d.WebGPUSkin;
-import com.badlogic.gdx.webgpu.scene2d.WebGPUStage;
+import com.badlogic.gdx.webgpu.scene2d.WgSkin;
+import com.badlogic.gdx.webgpu.scene2d.WgStage;
 
 public class ParticleEmittersTest extends GdxTest {
-	private WebGPUSpriteBatch spriteBatch;
+	private WgSpriteBatch spriteBatch;
 	WgParticleEffect effect;
 	ParticleEffectPool effectPool;
 	Array<PooledEffect> effects = new Array();
@@ -55,12 +53,12 @@ public class ParticleEmittersTest extends GdxTest {
 
     // launcher
     public static void main (String[] argv) {
-        new WebGPUApplication(new ParticleEmittersTest());
+        new WgApplication(new ParticleEmittersTest());
     }
 
 	@Override
 	public void create () {
-		spriteBatch = new WebGPUSpriteBatch();
+		spriteBatch = new WgSpriteBatch();
 
 		effect = new WgParticleEffect();
 		effect.load(Gdx.files.internal("data/singleTextureAllAdditive.p"), Gdx.files.internal("data"));
@@ -126,8 +124,8 @@ public class ParticleEmittersTest extends GdxTest {
 	}
 
 	private void setupUI () {
-		ui = new WebGPUStage(new ExtendViewport(640, 480));
-		Skin skin = new WebGPUSkin(Gdx.files.internal("data/uiskin.json"));
+		ui = new WgStage(new ExtendViewport(640, 480));
+		Skin skin = new WgSkin(Gdx.files.internal("data/uiskin.json"));
 		skipCleanup = new CheckBox("Skip blend function clean-up", skin);
 		skipCleanup.addListener(listener);
 		logLabel = new Label("", skin.get(LabelStyle.class));

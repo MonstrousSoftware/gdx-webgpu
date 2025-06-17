@@ -7,6 +7,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.webgpu.WebGPUGraphicsBase;
+import com.badlogic.gdx.webgpu.graphics.WgTexture;
 import com.badlogic.gdx.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.webgpu.webgpu.*;
 import jnr.ffi.Pointer;
@@ -21,9 +22,9 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
     public WGPUTextureFormat surfaceFormat;
     public Pointer targetView;
     public WebGPUCommandEncoder commandEncoder;
-    public WebGPUTexture depthTexture;
+    public WgTexture depthTexture;
     private WGPUSupportedLimits supportedLimits;
-    private WebGPUTexture multiSamplingTexture;
+    private WgTexture multiSamplingTexture;
     private final Configuration config;
     private final Rectangle viewport = new Rectangle();
     private boolean scissorEnabled = false;
@@ -145,7 +146,7 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
         if(config.numSamples > 1 ) {
             if(multiSamplingTexture != null)
                 multiSamplingTexture.dispose();
-            multiSamplingTexture = new WebGPUTexture("multisampling", width, height, false, true, surfaceFormat, config.numSamples);
+            multiSamplingTexture = new WgTexture("multisampling", width, height, false, true, surfaceFormat, config.numSamples);
         }
 
         if(scissor == null)
@@ -202,7 +203,7 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
 
     private void initDepthBuffer(int width, int height, int samples){
 
-        depthTexture = new WebGPUTexture("depth texture", width, height, 1, WGPUTextureUsage.RenderAttachment,
+        depthTexture = new WgTexture("depth texture", width, height, 1, WGPUTextureUsage.RenderAttachment,
                 WGPUTextureFormat.Depth24Plus, samples, WGPUTextureFormat.Depth24Plus );
     }
 
@@ -265,7 +266,7 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
 //    }
 
     @Override
-    public WebGPUTexture getDepthTexture () {
+    public WgTexture getDepthTexture () {
         return depthTexture;
     }
 
@@ -280,7 +281,7 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
         return config.numSamples;
     }
 
-    public WebGPUTexture getMultiSamplingTexture() {
+    public WgTexture getMultiSamplingTexture() {
         return multiSamplingTexture;
     }
 

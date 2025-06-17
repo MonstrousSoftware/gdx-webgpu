@@ -1,7 +1,6 @@
 package com.badlogic.gdx.tests.webgpu;
 
 
-import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Camera;
@@ -12,29 +11,29 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplicationConfiguration;
-import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUBitmapFont;
-import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
-import com.badlogic.gdx.webgpu.wrappers.WebGPUTexture;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplication;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
+import com.badlogic.gdx.webgpu.graphics.g2d.WgBitmapFont;
+import com.badlogic.gdx.webgpu.graphics.g2d.WgSpriteBatch;
+import com.badlogic.gdx.webgpu.graphics.WgTexture;
 
 public class ViewportTest extends GdxTest {
 
-    private WebGPUSpriteBatch batch;
-    private WebGPUTexture background;
+    private WgSpriteBatch batch;
+    private WgTexture background;
     private Viewport viewport;
     private Viewport[] viewports;
     private String[] names;
     private int index;
-    private WebGPUBitmapFont font;
+    private WgBitmapFont font;
     private boolean keyUp = true;
 
     // launcher
     public static void main (String[] argv) {
-        WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
+        WgApplicationConfiguration config = new WgApplicationConfiguration();
         config.setWindowedMode(1200, 480);
 
-        new WebGPUApplication(new ViewportTest(), config);
+        new WgApplication(new ViewportTest(), config);
     }
 
     // demonstrate a custom viewport that shows the content only in a box at the centre of the screen
@@ -59,15 +58,15 @@ public class ViewportTest extends GdxTest {
     @Override
     public void create() {
 
-        background = new WebGPUTexture("data/simplegame/background.png", true);
+        background = new WgTexture("data/simplegame/background.png", true);
 
-        batch = new WebGPUSpriteBatch();
+        batch = new WgSpriteBatch();
 
         getViewports();
         index = 0;
         viewport = viewports[index];
 
-        font = new WebGPUBitmapFont();
+        font = new WgBitmapFont();
     }
 
     @Override

@@ -30,15 +30,15 @@ import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.tests.webgpu.utils.GdxTest;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
-import com.badlogic.gdx.webgpu.graphics.g3d.WebGPUModelBatch;
-import com.badlogic.gdx.webgpu.graphics.g3d.utils.WebGPUModelBuilder;
+import com.badlogic.gdx.webgpu.graphics.g3d.WgModelBatch;
+import com.badlogic.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
 
 public abstract class BaseG3dTest extends GdxTest {
 	public AssetManager assets;
 
 	public PerspectiveCamera cam;
 	public CameraInputController inputController;
-	public WebGPUModelBatch modelBatch;
+	public WgModelBatch modelBatch;
 	public Model axesModel;
 	public ModelInstance axesInstance;
 	public boolean showAxes = true;
@@ -49,7 +49,7 @@ public abstract class BaseG3dTest extends GdxTest {
 	public void create () {
 		if (assets == null) assets = new AssetManager();
 
-		modelBatch = new WebGPUModelBatch();
+		modelBatch = new WgModelBatch();
 
 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		cam.position.set(10f, 10f, 10f);
@@ -68,7 +68,7 @@ public abstract class BaseG3dTest extends GdxTest {
 	final float GRID_STEP = 1f;
 
 	private void createAxes () {
-		WebGPUModelBuilder modelBuilder = new WebGPUModelBuilder();
+		WgModelBuilder modelBuilder = new WgModelBuilder();
 		modelBuilder.begin();
 		MeshPartBuilder builder = modelBuilder.part("grid", GL20.GL_LINES, Usage.Position | Usage.ColorUnpacked, new Material());
 		builder.setColor(Color.LIGHT_GRAY);
@@ -87,7 +87,7 @@ public abstract class BaseG3dTest extends GdxTest {
 		axesInstance = new ModelInstance(axesModel);
 	}
 
-	protected abstract void render (final WebGPUModelBatch batch, final Array<ModelInstance> instances);
+	protected abstract void render (final WgModelBatch batch, final Array<ModelInstance> instances);
 
 	protected boolean loading = false;
 

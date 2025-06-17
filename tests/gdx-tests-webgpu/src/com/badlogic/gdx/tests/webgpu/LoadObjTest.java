@@ -24,24 +24,24 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.tests.webgpu.utils.GdxTest;
 import com.badlogic.gdx.tests.webgpu.utils.PerspectiveCamController;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplicationConfiguration;
-import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUBitmapFont;
-import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
-import com.badlogic.gdx.webgpu.graphics.g3d.WebGPUModelBatch;
-import com.badlogic.gdx.webgpu.graphics.g3d.loaders.WebGPUObjLoader;
-import com.badlogic.gdx.webgpu.graphics.utils.WebGPUScreenUtils;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplication;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
+import com.badlogic.gdx.webgpu.graphics.g2d.WgBitmapFont;
+import com.badlogic.gdx.webgpu.graphics.g2d.WgSpriteBatch;
+import com.badlogic.gdx.webgpu.graphics.g3d.WgModelBatch;
+import com.badlogic.gdx.webgpu.graphics.g3d.loaders.WgObjLoader;
+import com.badlogic.gdx.webgpu.graphics.utils.WgScreenUtils;
 
 /** Test OBJ loading and ModelInstance rendering */
 
 
 public class LoadObjTest extends GdxTest {
 
-	WebGPUModelBatch modelBatch;
+	WgModelBatch modelBatch;
 	PerspectiveCamera cam;
 	PerspectiveCamController controller;
-	WebGPUSpriteBatch batch;
-	WebGPUBitmapFont font;
+	WgSpriteBatch batch;
+	WgBitmapFont font;
 	Model model;
 	ModelInstance instance;
 
@@ -49,22 +49,22 @@ public class LoadObjTest extends GdxTest {
 	// launcher
 	public static void main (String[] argv) {
 
-		WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
+		WgApplicationConfiguration config = new WgApplicationConfiguration();
 		config.setWindowedMode(640, 480);
 		config.setTitle("WebGPUTest");
 
-		new WebGPUApplication(new LoadObjTest(), config);
+		new WgApplication(new LoadObjTest(), config);
 	}
 
 	// application
 	public void create () {
-		modelBatch = new WebGPUModelBatch();
+		modelBatch = new WgModelBatch();
 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		cam.position.set(0, 2, 4);
 		cam.lookAt(0,0,0);
 		cam.near = 0.1f;
 
-		WebGPUObjLoader loader = new WebGPUObjLoader();
+		WgObjLoader loader = new WgObjLoader();
 		// these assets need to be put in the class path...
 		model = loader.loadModel(Gdx.files.internal("data/g3d/ducky.obj"), true);
 		instance = new ModelInstance(model);
@@ -72,8 +72,8 @@ public class LoadObjTest extends GdxTest {
 
 		controller = new PerspectiveCamController(cam);
 		Gdx.input.setInputProcessor(controller);
-		batch = new WebGPUSpriteBatch();
-		font = new WebGPUBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
+		batch = new WgSpriteBatch();
+		font = new WgBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
 
 
 	}
@@ -82,7 +82,7 @@ public class LoadObjTest extends GdxTest {
 		float delta = Gdx.graphics.getDeltaTime();
 		instance.transform.rotate(Vector3.Y, 15f*delta);
 
-		WebGPUScreenUtils.clear(Color.TEAL);
+		WgScreenUtils.clear(Color.TEAL);
 
 		cam.update();
 		modelBatch.begin(cam);

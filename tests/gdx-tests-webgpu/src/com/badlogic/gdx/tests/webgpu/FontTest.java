@@ -4,24 +4,24 @@ package com.badlogic.gdx.tests.webgpu;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.tests.webgpu.utils.GdxTest;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
-import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUBitmapFont;
-import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplication;
+import com.badlogic.gdx.webgpu.graphics.g2d.WgBitmapFont;
+import com.badlogic.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 
 // demonstrates use of WebPUBitmapFont
 //
 public class FontTest extends GdxTest {
-		private WebGPUSpriteBatch batch;
+		private WgSpriteBatch batch;
 		private BitmapFont font;
 
     public static void main (String[] argv) {
-        new WebGPUApplication(new FontTest());
+        new WgApplication(new FontTest());
     }
 
     @Override
     public void create () {
-        batch = new WebGPUSpriteBatch();
-        font = new WebGPUBitmapFont();
+        batch = new WgSpriteBatch();
+        font = new WgBitmapFont();
 
         //font = new WebGPUBitmapFont(Gdx.files.classpath("com/badlogic/gdx/utils/lsans-15.fnt"));
     }

@@ -27,12 +27,12 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.tests.webgpu.utils.GdxTestWrapper;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplicationConfiguration;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUGraphics;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUWindowConfiguration;
-import com.badlogic.gdx.webgpu.scene2d.WebGPUSkin;
-import com.badlogic.gdx.webgpu.scene2d.WebGPUStage;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplication;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgGraphics;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgWindowConfiguration;
+import com.badlogic.gdx.webgpu.scene2d.WgSkin;
+import com.badlogic.gdx.webgpu.scene2d.WgStage;
 import com.badlogic.gdx.webgpu.webgpu.WGPUBackendType;
 
 
@@ -48,11 +48,11 @@ public class WebGPUTestStarter {
 	 * @param argv command line arguments */
 	public static void main (String[] argv) {
 
-		WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
+		WgApplicationConfiguration config = new WgApplicationConfiguration();
 		config.setWindowedMode(320, 480);
 		config.backend = WGPUBackendType.Vulkan;
 
-		new WebGPUApplication(new TestChooser(), config);
+		new WgApplication(new TestChooser(), config);
 	}
 
 	static class TestChooser extends ApplicationAdapter {
@@ -66,9 +66,9 @@ public class WebGPUTestStarter {
 
 			final Preferences prefs = Gdx.app.getPreferences("webgpu-tests");
 
-			stage = new WebGPUStage(new ScreenViewport());
+			stage = new WgStage(new ScreenViewport());
 			Gdx.input.setInputProcessor(stage);
-			skin = new WebGPUSkin(Gdx.files.internal("data/uiskin.json"));
+			skin = new WgSkin(Gdx.files.internal("data/uiskin.json"));
 
 			Table container = new Table();
 			stage.addActor(container);
@@ -96,14 +96,14 @@ public class WebGPUTestStarter {
 					@Override
 					public void changed (ChangeEvent event, Actor actor) {
 						ApplicationListener test = WebGPUTests.newTest(testName);
-						WebGPUWindowConfiguration winConfig = new WebGPUWindowConfiguration();
+						WgWindowConfiguration winConfig = new WgWindowConfiguration();
 						winConfig.setTitle(testName);
 						winConfig.setWindowedMode(640, 480);
-						winConfig.setWindowPosition(((WebGPUGraphics)Gdx.graphics).getWindow().getPositionX() + 40,
-							((WebGPUGraphics)Gdx.graphics).getWindow().getPositionY() + 40);
+						winConfig.setWindowPosition(((WgGraphics)Gdx.graphics).getWindow().getPositionX() + 40,
+							((WgGraphics)Gdx.graphics).getWindow().getPositionY() + 40);
 						winConfig.useVsync(false);
 						Gdx.app.setLogLevel(Application.LOG_DEBUG);
-						((WebGPUApplication)Gdx.app).newWindow(new GdxTestWrapper(test, false), winConfig);
+						((WgApplication)Gdx.app).newWindow(new GdxTestWrapper(test, false), winConfig);
 						System.out.println("Started test: " + testName);
 						prefs.putString("LastTest", testName);
 						prefs.flush();

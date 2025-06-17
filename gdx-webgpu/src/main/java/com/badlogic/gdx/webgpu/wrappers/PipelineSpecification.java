@@ -21,7 +21,7 @@ package com.badlogic.gdx.webgpu.wrappers;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.webgpu.WebGPUGraphicsBase;
-import com.badlogic.gdx.webgpu.graphics.WebGPUShaderProgram;
+import com.badlogic.gdx.webgpu.graphics.WgShaderProgram;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.webgpu.webgpu.*;
 
@@ -38,7 +38,7 @@ public class PipelineSpecification {
     public String shaderSource;
     public String vertexShaderEntryPoint;
     public String fragmentShaderEntryPoint;
-    public WebGPUShaderProgram shader;
+    public WgShaderProgram shader;
     public boolean useDepthTest;
     public boolean noDepthAttachment; // use only when not rendering to the screen, removes the depth attachment
     public boolean isSkyBox;
@@ -90,7 +90,7 @@ public class PipelineSpecification {
         recalcHash();
     }
 
-    public PipelineSpecification(VertexAttributes vertexAttributes, WebGPUShaderProgram shader) {
+    public PipelineSpecification(VertexAttributes vertexAttributes, WgShaderProgram shader) {
         this();
         this.vertexAttributes = vertexAttributes;
         this.shader = shader;

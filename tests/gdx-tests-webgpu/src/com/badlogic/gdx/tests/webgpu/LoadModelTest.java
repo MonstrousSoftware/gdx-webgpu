@@ -32,15 +32,15 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.tests.webgpu.utils.GdxTest;
 import com.badlogic.gdx.tests.webgpu.utils.PerspectiveCamController;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.badlogic.gdx.webgpu.assets.WebGPUAssetManager;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplicationConfiguration;
-import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUBitmapFont;
-import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
-import com.badlogic.gdx.webgpu.graphics.g3d.WebGPUModelBatch;
-import com.badlogic.gdx.webgpu.graphics.utils.WebGPUScreenUtils;
-import com.badlogic.gdx.webgpu.scene2d.WebGPUSkin;
-import com.badlogic.gdx.webgpu.scene2d.WebGPUStage;
+import com.badlogic.gdx.webgpu.assets.WgAssetManager;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplication;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
+import com.badlogic.gdx.webgpu.graphics.g2d.WgBitmapFont;
+import com.badlogic.gdx.webgpu.graphics.g2d.WgSpriteBatch;
+import com.badlogic.gdx.webgpu.graphics.g3d.WgModelBatch;
+import com.badlogic.gdx.webgpu.graphics.utils.WgScreenUtils;
+import com.badlogic.gdx.webgpu.scene2d.WgSkin;
+import com.badlogic.gdx.webgpu.scene2d.WgStage;
 
 /** Test model loading via asset manager for OBJ, G3DJ and G3DB formats */
 
@@ -52,37 +52,37 @@ public class LoadModelTest extends GdxTest {
 			"data/g3d/ship.obj"
 	};
 
-	WebGPUModelBatch modelBatch;
+	WgModelBatch modelBatch;
 	PerspectiveCamera cam;
 	PerspectiveCamController controller;
 	Model model;
 	ModelInstance instance;
 	AssetManager assets;
 	ScreenViewport viewport;
-	WebGPUStage stage;
-	WebGPUSkin skin;
+	WgStage stage;
+	WgSkin skin;
 	boolean loaded;
-	WebGPUSpriteBatch batch;
-	WebGPUBitmapFont font;
+	WgSpriteBatch batch;
+	WgBitmapFont font;
 
 
 
 	// launcher
 	public static void main (String[] argv) {
 
-		WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
+		WgApplicationConfiguration config = new WgApplicationConfiguration();
 		config.setWindowedMode(640, 480);
 		config.setTitle("WebGPUTest");
 
-		new WebGPUApplication(new LoadModelTest(), config);
+		new WgApplication(new LoadModelTest(), config);
 	}
 
 	// application
 	public void create () {
-		batch = new WebGPUSpriteBatch();
-		font = new WebGPUBitmapFont();
+		batch = new WgSpriteBatch();
+		font = new WgBitmapFont();
 
-		modelBatch = new WebGPUModelBatch();
+		modelBatch = new WgModelBatch();
 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		cam.position.set(0, 2, 4);
 		cam.lookAt(0,0,0);
@@ -95,7 +95,7 @@ public class LoadModelTest extends GdxTest {
 //		model = new WebGPUG3dModelLoader(new JsonReader()).loadModel(file);
 
 		// queue for asynchronous loading
-		assets = new WebGPUAssetManager();
+		assets = new WgAssetManager();
 		loaded = false;
 		for(String fileName : fileNames)
 			assets.load(fileName, Model.class);
@@ -106,7 +106,7 @@ public class LoadModelTest extends GdxTest {
 		// Add some GUI
 		//
 		viewport = new ScreenViewport();
-		stage = new WebGPUStage(viewport);
+		stage = new WgStage(viewport);
 		//stage.setDebugAll(true);
 
 		InputMultiplexer im = new InputMultiplexer();
@@ -114,7 +114,7 @@ public class LoadModelTest extends GdxTest {
 		im.addProcessor(stage);
 		im.addProcessor(controller);
 
-		skin = new WebGPUSkin(Gdx.files.internal("data/uiskin.json"));
+		skin = new WgSkin(Gdx.files.internal("data/uiskin.json"));
 		SelectBox<String> selectBox = new SelectBox<>(skin);
 		// Add a listener to the button. ChangeListener is fired when the button's checked state changes, eg when clicked,
 		// Button#setChecked() is called, via a key press, etc. If the event.cancel() is called, the checked state will be reverted.
@@ -157,7 +157,7 @@ public class LoadModelTest extends GdxTest {
 		if(loaded)
 			instance.transform.rotate(Vector3.Y, 15f*delta);
 
-		WebGPUScreenUtils.clear(Color.TEAL);
+		WgScreenUtils.clear(Color.TEAL);
 
 		cam.update();
 		modelBatch.begin(cam);

@@ -19,7 +19,7 @@ package com.badlogic.gdx.webgpu.graphics.g2d;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.ParticleEffect;
-import com.badlogic.gdx.webgpu.wrappers.WebGPUTexture;
+import com.badlogic.gdx.webgpu.graphics.WgTexture;
 
 
 
@@ -28,7 +28,7 @@ public class WgParticleEffect extends ParticleEffect {
 
     @Override
 	protected Texture loadTexture (FileHandle file) {
-		return new WebGPUTexture(file, false);
+		return new WgTexture(file, false);
 	}
 
 }

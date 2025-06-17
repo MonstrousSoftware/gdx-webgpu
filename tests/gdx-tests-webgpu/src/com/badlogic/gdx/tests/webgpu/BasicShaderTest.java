@@ -10,11 +10,11 @@ import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.utils.ScreenUtils;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplicationConfiguration;
-import com.badlogic.gdx.webgpu.graphics.WebGPUMesh;
-import com.badlogic.gdx.webgpu.graphics.g3d.model.WebGPUMeshPart;
-import com.badlogic.gdx.webgpu.graphics.utils.WebGPUMeshBuilder;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplication;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
+import com.badlogic.gdx.webgpu.graphics.WgMesh;
+import com.badlogic.gdx.webgpu.graphics.g3d.model.WgMeshPart;
+import com.badlogic.gdx.webgpu.graphics.utils.WgMeshBuilder;
 
 /* Shader test based on Xoppa tutorial
     todo requires to load a Model
@@ -33,13 +33,13 @@ public class BasicShaderTest  implements ApplicationListener {
 
     public static void main (String[] argv) {
 
-        WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
+        WgApplicationConfiguration config = new WgApplicationConfiguration();
         config.setWindowedMode(640, 480);
         config.setTitle("WebGPUTest");
         //config.backend = WGPUBackendType.D3D12;
         config.enableGPUtiming = false;
 
-        new WebGPUApplication(new BasicShaderTest(), config);
+        new WgApplication(new BasicShaderTest(), config);
     }
 
 
@@ -60,11 +60,11 @@ public class BasicShaderTest  implements ApplicationListener {
         Gdx.input.setInputProcessor(camController);
 
         VertexAttributes vertAttribs = new VertexAttributes(VertexAttribute.Position(), VertexAttribute.ColorPacked(), VertexAttribute.TexCoords(0), VertexAttribute.Normal());
-        WebGPUMeshBuilder builder = new WebGPUMeshBuilder();
+        WgMeshBuilder builder = new WgMeshBuilder();
         builder.begin(vertAttribs);
-        WebGPUMeshPart part = builder.part("box", GL20.GL_TRIANGLES);
+        WgMeshPart part = builder.part("box", GL20.GL_TRIANGLES);
         builder.box(1, 1,1);
-        WebGPUMesh mesh = builder.end();
+        WgMesh mesh = builder.end();
 
         Material mat = new Material(ColorAttribute.createDiffuse(Color.GREEN));
 

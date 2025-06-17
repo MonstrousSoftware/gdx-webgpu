@@ -7,10 +7,10 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplicationConfiguration;
-import com.badlogic.gdx.webgpu.graphics.WebGPUMesh;
-import com.badlogic.gdx.webgpu.graphics.g3d.model.WebGPUMeshPart;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplication;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
+import com.badlogic.gdx.webgpu.graphics.WgMesh;
+import com.badlogic.gdx.webgpu.graphics.g3d.model.WgMeshPart;
 import com.badlogic.gdx.webgpu.wrappers.*;
 
 // Basic test of Mesh and MeshPart
@@ -22,21 +22,21 @@ public class WebGPUTestMesh {
 	// launcher
 	public static void main (String[] argv) {
 
-		WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
+		WgApplicationConfiguration config = new WgApplicationConfiguration();
 		config.setWindowedMode(640, 480);
 		config.setTitle("WebGPUTest");
 		//config.backend = WGPUBackendType.D3D12;
 		config.enableGPUtiming = false;
 
-		new WebGPUApplication(new TestApp(), config);
+		new WgApplication(new TestApp(), config);
 	}
 
 	// application
 	static class TestApp extends ApplicationAdapter {
-		private WebGPUMesh mesh;
+		private WgMesh mesh;
 		private VertexAttributes vattr;
 		private WebGPUPipeline pipeline;
-		private WebGPUMeshPart meshPart;
+		private WgMeshPart meshPart;
 
 		public void create () {
 			vattr = new VertexAttributes(VertexAttribute.Position(),  VertexAttribute.TexCoords(0), VertexAttribute.ColorUnpacked());
@@ -46,7 +46,7 @@ public class WebGPUTestMesh {
 			pipeline = new WebGPUPipeline((WebGPUPipelineLayout) null, pipelineSpec);
 
 
-			mesh = new WebGPUMesh(true, 4, 6, vattr);
+			mesh = new WgMesh(true, 4, 6, vattr);
 			mesh.setVertices(new float[]{
 				-0.5f, -0.5f, 0, 	0, 1, 	1,0,1,1,
 				0.5f, -0.5f, 0, 	1,1,	0,1,1,1,
@@ -59,7 +59,7 @@ public class WebGPUTestMesh {
 			int offset = 3;	// offset in the indices array, since the mesh is indexed
 			int size = 3;	// nr of indices, since the mesh is indexed
 			int type = GL20.GL_TRIANGLES;	// primitive type using GL constant
-			meshPart = new WebGPUMeshPart("part", mesh, offset, size, type);
+			meshPart = new WgMeshPart("part", mesh, offset, size, type);
 		}
 
 		@Override

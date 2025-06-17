@@ -31,42 +31,42 @@ import com.badlogic.gdx.tests.webgpu.utils.PerspectiveCamController;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.Pool;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplicationConfiguration;
-import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUBitmapFont;
-import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
-import com.badlogic.gdx.webgpu.graphics.g3d.WebGPUModelBatch;
-import com.badlogic.gdx.webgpu.graphics.g3d.model.WebGPUMeshPart;
-import com.badlogic.gdx.webgpu.graphics.utils.WebGPUMeshBuilder;
-import com.badlogic.gdx.webgpu.graphics.utils.WebGPUScreenUtils;
-import com.badlogic.gdx.webgpu.wrappers.WebGPUTexture;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplication;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
+import com.badlogic.gdx.webgpu.graphics.g2d.WgBitmapFont;
+import com.badlogic.gdx.webgpu.graphics.g2d.WgSpriteBatch;
+import com.badlogic.gdx.webgpu.graphics.g3d.WgModelBatch;
+import com.badlogic.gdx.webgpu.graphics.g3d.model.WgMeshPart;
+import com.badlogic.gdx.webgpu.graphics.utils.WgMeshBuilder;
+import com.badlogic.gdx.webgpu.graphics.utils.WgScreenUtils;
+import com.badlogic.gdx.webgpu.graphics.WgTexture;
 
 /** Test use of different shaders due to differing vertex attributes */
 
 
 public class ModelBatchShadersTest extends GdxTest {
 
-	WebGPUModelBatch modelBatch;
+	WgModelBatch modelBatch;
 	PerspectiveCamera cam;
 	PerspectiveCamController controller;
-	WebGPUSpriteBatch batch;
-	WebGPUBitmapFont font;
+	WgSpriteBatch batch;
+	WgBitmapFont font;
 	MyRenderableProvider renderableProvider;
 
 
 	// launcher
 	public static void main (String[] argv) {
 
-		WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
+		WgApplicationConfiguration config = new WgApplicationConfiguration();
 		config.setWindowedMode(640, 480);
 		config.setTitle("WebGPUTest");
 
-		new WebGPUApplication(new ModelBatchShadersTest(), config);
+		new WgApplication(new ModelBatchShadersTest(), config);
 	}
 
 	// application
 	public void create () {
-		modelBatch = new WebGPUModelBatch();
+		modelBatch = new WgModelBatch();
 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		cam.position.set(0, 0, 2);
 		cam.near = 0.1f;
@@ -74,8 +74,8 @@ public class ModelBatchShadersTest extends GdxTest {
 
 		controller = new PerspectiveCamController(cam);
 		Gdx.input.setInputProcessor(controller);
-		batch = new WebGPUSpriteBatch();
-		font = new WebGPUBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
+		batch = new WgSpriteBatch();
+		font = new WgBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
 
 		renderableProvider = new MyRenderableProvider();
 
@@ -86,7 +86,7 @@ public class ModelBatchShadersTest extends GdxTest {
 		renderableProvider.update(delta);
 
 
-		WebGPUScreenUtils.clear(Color.TEAL);
+		WgScreenUtils.clear(Color.TEAL);
 
 		cam.update();
 		modelBatch.begin(cam);
@@ -123,7 +123,7 @@ public class ModelBatchShadersTest extends GdxTest {
 
 	/** artificial implementation of a renderable provider just for testing */
 	public static class MyRenderableProvider implements RenderableProvider, Disposable {
-		final WebGPUMeshPart meshPart1, meshPart2, meshPart3;
+		final WgMeshPart meshPart1, meshPart2, meshPart3;
 		final Material mat1, mat2, mat3;
 		float angle;
 
@@ -133,24 +133,24 @@ public class ModelBatchShadersTest extends GdxTest {
 			// Create some renderables
 			//
 
-			WebGPUTexture texture2 = new WebGPUTexture(Gdx.files.internal("data/badlogic.jpg"), true);
+			WgTexture texture2 = new WgTexture(Gdx.files.internal("data/badlogic.jpg"), true);
 			texture2.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear);
 			mat1 = new Material(TextureAttribute.createDiffuse(texture2));
 
-			WebGPUTexture texture1 = new WebGPUTexture(Gdx.files.internal("data/planet_earth.png"), true);
+			WgTexture texture1 = new WgTexture(Gdx.files.internal("data/planet_earth.png"), true);
 			texture1.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear);
 			mat2 = new Material(TextureAttribute.createDiffuse(texture1));
 			mat2.set(ColorAttribute.createDiffuse(Color.GREEN));
 
 			mat3 = new Material(ColorAttribute.createDiffuse(Color.ORANGE),TextureAttribute.createDiffuse(texture1));
 
-			VertexAttributes attr1 = WebGPUMeshBuilder.createAttributes(VertexAttributes.Usage.Position | VertexAttributes.Usage.TextureCoordinates);
+			VertexAttributes attr1 = WgMeshBuilder.createAttributes(VertexAttributes.Usage.Position | VertexAttributes.Usage.TextureCoordinates);
 			meshPart1 = createMeshPart(attr1);
 
-			VertexAttributes attr2 = WebGPUMeshBuilder.createAttributes(VertexAttributes.Usage.Position | VertexAttributes.Usage.ColorPacked);
+			VertexAttributes attr2 = WgMeshBuilder.createAttributes(VertexAttributes.Usage.Position | VertexAttributes.Usage.ColorPacked);
 			meshPart2 = createMeshPart(attr2);
 
-			VertexAttributes attr3 = WebGPUMeshBuilder.createAttributes(VertexAttributes.Usage.Position | VertexAttributes.Usage.TextureCoordinates);
+			VertexAttributes attr3 = WgMeshBuilder.createAttributes(VertexAttributes.Usage.Position | VertexAttributes.Usage.TextureCoordinates);
 			meshPart3 = createMeshPart(attr3);
 		}
 
@@ -179,12 +179,12 @@ public class ModelBatchShadersTest extends GdxTest {
 			renderables.add(renderable);
 		}
 
-		private WebGPUMeshPart createMeshPart(VertexAttributes attr) {
-			WebGPUMeshBuilder mb = new WebGPUMeshBuilder();
+		private WgMeshPart createMeshPart(VertexAttributes attr) {
+			WgMeshBuilder mb = new WgMeshBuilder();
 
 			mb.begin(attr);
 
-			WebGPUMeshPart part = mb.part("block", GL20.GL_TRIANGLES);
+			WgMeshPart part = mb.part("block", GL20.GL_TRIANGLES);
 			// rotate unit cube by 90 degrees to get the textures the right way up.
 			Matrix4 transform = new Matrix4().rotate(Vector3.Z, 90);
 			BoxShapeBuilder.build(mb, transform);	// create unit cube

@@ -21,32 +21,32 @@ import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.tests.webgpu.utils.GdxTest;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplicationConfiguration;
-import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
-import com.badlogic.gdx.webgpu.graphics.utils.WebGPUScreenUtils;
-import com.badlogic.gdx.webgpu.graphics.utils.WebGPUShapeRenderer;
-import com.badlogic.gdx.webgpu.wrappers.WebGPUTexture;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplication;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
+import com.badlogic.gdx.webgpu.graphics.g2d.WgSpriteBatch;
+import com.badlogic.gdx.webgpu.graphics.utils.WgScreenUtils;
+import com.badlogic.gdx.webgpu.graphics.utils.WgShapeRenderer;
+import com.badlogic.gdx.webgpu.graphics.WgTexture;
 
 public class ShapeRenderer2DTest extends GdxTest {
 
-	WebGPUShapeRenderer renderer;
+	WgShapeRenderer renderer;
 	Camera cam;
-	WebGPUSpriteBatch batch;
-	WebGPUTexture texture;
+	WgSpriteBatch batch;
+	WgTexture texture;
 
 	// launcher
 	public static void main (String[] argv) {
 
-		WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
+		WgApplicationConfiguration config = new WgApplicationConfiguration();
 		config.setWindowedMode(640, 480);
 		config.setTitle("WebGPUTest");
 
-		new WebGPUApplication(new ShapeRenderer2DTest(), config);
+		new WgApplication(new ShapeRenderer2DTest(), config);
 	}
 
 	public void create () {
-		renderer = new WebGPUShapeRenderer();
+		renderer = new WgShapeRenderer();
 
 		cam = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		// important to set near and far for WebGPU clip space
@@ -56,17 +56,17 @@ public class ShapeRenderer2DTest extends GdxTest {
 
 		System.out.println(cam.combined.toString());
 
-		batch = new WebGPUSpriteBatch();
-		texture = new WebGPUTexture(Gdx.files.internal("data/badlogicsmall.jpg"));
+		batch = new WgSpriteBatch();
+		texture = new WgTexture(Gdx.files.internal("data/badlogicsmall.jpg"));
 	}
 
 	public void render () {
 
-		WebGPUScreenUtils.clear(Color.TEAL);
+		WgScreenUtils.clear(Color.TEAL);
 
 		renderer.setProjectionMatrix(cam.combined);
 
-		renderer.begin(WebGPUShapeRenderer.ShapeType.Line);
+		renderer.begin(WgShapeRenderer.ShapeType.Line);
 		renderer.setColor(1, 0, 1, 0.5f);
 		// note: shape renderer has (0,0) at centre screen, unlike SpriteBatch
 		renderer.circle(0, 0, 50);

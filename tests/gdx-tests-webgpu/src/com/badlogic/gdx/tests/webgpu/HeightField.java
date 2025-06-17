@@ -2,7 +2,6 @@
 package com.badlogic.gdx.tests.webgpu;
 
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.VertexAttributes;
@@ -13,7 +12,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.GdxRuntimeException;
-import com.badlogic.gdx.webgpu.graphics.WebGPUMesh;
+import com.badlogic.gdx.webgpu.graphics.WgMesh;
 
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
@@ -81,7 +80,7 @@ public class HeightField implements Disposable {
 	public final int width;
 	public final int height;
 	public final boolean smooth;
-	public final WebGPUMesh mesh;
+	public final WgMesh mesh;
 
 	private final float vertices[];
 	private final int stride;
@@ -144,7 +143,7 @@ public class HeightField implements Disposable {
 		final int numVertices = smooth ? width * height : (width - 1) * (height - 1) * 4;
 		final int numIndices = (width - 1) * (height - 1) * 6;
 
-		this.mesh = new WebGPUMesh(isStatic, numVertices, numIndices, attributes);
+		this.mesh = new WgMesh(isStatic, numVertices, numIndices, attributes);
 		this.vertices = new float[numVertices * stride];
 
 		setIndices();

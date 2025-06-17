@@ -6,11 +6,11 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.tests.webgpu.utils.GdxTest;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplicationConfiguration;
-import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplication;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
+import com.badlogic.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.badlogic.gdx.webgpu.webgpu.WGPUBackendType;
-import com.badlogic.gdx.webgpu.wrappers.WebGPUTexture;
+import com.badlogic.gdx.webgpu.graphics.WgTexture;
 
 import java.text.DecimalFormat;
 
@@ -22,8 +22,8 @@ public class SpriteBatchTest extends GdxTest {
     long startTime = TimeUtils.nanoTime();
     int frames = 0;
     private OrthographicCamera camera;
-    WebGPUTexture texture;
-    WebGPUSpriteBatch spriteBatch;
+    WgTexture texture;
+    WgSpriteBatch spriteBatch;
     ScreenViewport viewport;
     Sprite[] sprites = new Sprite[SPRITES * 2];
     float angle = 0;
@@ -34,7 +34,7 @@ public class SpriteBatchTest extends GdxTest {
     // launcher
     public static void main (String[] argv) {
 
-        WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
+        WgApplicationConfiguration config = new WgApplicationConfiguration();
         config.setWindowedMode(640, 480);
         config.setTitle("WebGPUTest");
         config.backend = WGPUBackendType.Vulkan;
@@ -42,7 +42,7 @@ public class SpriteBatchTest extends GdxTest {
         config.enableGPUtiming = false;
         config.useVsync(false);
 
-        new WebGPUApplication(new SpriteBatchTest(), config);
+        new WgApplication(new SpriteBatchTest(), config);
     }
 
     @Override
@@ -50,8 +50,8 @@ public class SpriteBatchTest extends GdxTest {
         Gdx.app.log(TAG, "[" + this.hashCode() + "] create() START"); // Log instance and start
 
         viewport = new ScreenViewport();
-        spriteBatch = new WebGPUSpriteBatch(SPRITES);
-        texture = new WebGPUTexture(Gdx.files.internal("data/badlogicsmall.jpg"));
+        spriteBatch = new WgSpriteBatch(SPRITES);
+        texture = new WgTexture(Gdx.files.internal("data/badlogicsmall.jpg"));
 
     }
 

@@ -19,6 +19,7 @@ package com.badlogic.gdx.webgpu.wrappers;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.webgpu.WebGPUGraphicsBase;
+import com.badlogic.gdx.webgpu.graphics.WgTexture;
 import com.badlogic.gdx.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.webgpu.webgpu.*;
@@ -49,7 +50,7 @@ public class RenderPassBuilder {
         return create(clearColor, null, gfx.getDepthTexture(), sampleCount);
     }
 
-    public static WebGPURenderPass create( Color clearColor, WebGPUTexture colorTexture, WebGPUTexture depthTexture, int sampleCount){
+    public static WebGPURenderPass create(Color clearColor, WgTexture colorTexture, WgTexture depthTexture, int sampleCount){
         return create("color pass", clearColor, colorTexture, depthTexture, sampleCount, RenderPassType.COLOR_PASS);
     }
 
@@ -64,8 +65,8 @@ public class RenderPassBuilder {
      * @param passType
      * @return
      */
-    public static WebGPURenderPass create(String name, Color clearColor, WebGPUTexture outTexture,
-                                          WebGPUTexture depthTexture, int sampleCount, RenderPassType passType) {
+    public static WebGPURenderPass create(String name, Color clearColor, WgTexture outTexture,
+                                          WgTexture depthTexture, int sampleCount, RenderPassType passType) {
         WebGPUGraphicsBase gfx = (WebGPUGraphicsBase)Gdx.graphics;
         if(gfx.getCommandEncoder() == null)
             throw new RuntimeException("Encoder must be set before calling WebGPURenderPass.create()");

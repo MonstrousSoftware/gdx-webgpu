@@ -22,24 +22,24 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 
 import com.badlogic.gdx.tests.webgpu.utils.GdxTest;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
-import com.badlogic.gdx.webgpu.graphics.utils.WebGPUScreenUtils;
-import com.badlogic.gdx.webgpu.scene2d.WebGPUSkin;
-import com.badlogic.gdx.webgpu.scene2d.WebGPUStage;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplication;
+import com.badlogic.gdx.webgpu.graphics.utils.WgScreenUtils;
+import com.badlogic.gdx.webgpu.scene2d.WgSkin;
+import com.badlogic.gdx.webgpu.scene2d.WgStage;
 
 public class ColorTest extends GdxTest {
-	WebGPUStage stage;
+	WgStage stage;
 
     public static void main (String[] argv) {
-        new WebGPUApplication(new ColorTest());
+        new WgApplication(new ColorTest());
     }
 
 	@Override
 	public void create () {
-		stage = new WebGPUStage(new ScreenViewport());
+		stage = new WgStage(new ScreenViewport());
 		Gdx.input.setInputProcessor(stage);
 
-		WebGPUSkin skin = new WebGPUSkin(Gdx.files.internal("data/uiskin.json"));
+		WgSkin skin = new WgSkin(Gdx.files.internal("data/uiskin.json"));
 		//skin.add("default-font", new BitmapFont(Gdx.files.internal("data/lsans-32.fnt"), false));
 
 		Table root = new Table();
@@ -95,7 +95,7 @@ public class ColorTest extends GdxTest {
 
 	@Override
 	public void render () {
-		WebGPUScreenUtils.clear(0.2f, 0.2f, 0.2f, 1);
+		WgScreenUtils.clear(0.2f, 0.2f, 0.2f, 1);
 
 		stage.act(Math.min(Gdx.graphics.getDeltaTime(), 1 / 30f));
 		stage.draw();

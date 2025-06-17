@@ -7,7 +7,7 @@ import com.badlogic.gdx.webgpu.webgpu.WebGPU_JNI;
 import com.badlogic.gdx.webgpu.wrappers.WebGPUCommandEncoder;
 import com.badlogic.gdx.webgpu.wrappers.WebGPUDevice;
 import com.badlogic.gdx.webgpu.wrappers.WebGPUQueue;
-import com.badlogic.gdx.webgpu.wrappers.WebGPUTexture;
+import com.badlogic.gdx.webgpu.graphics.WgTexture;
 import jnr.ffi.Pointer;
 
 public interface WebGPUGraphicsBase {
@@ -19,10 +19,10 @@ public interface WebGPUGraphicsBase {
     WGPUTextureFormat getSurfaceFormat ();
     Pointer getTargetView ();
     WebGPUCommandEncoder getCommandEncoder ();
-    WebGPUTexture getDepthTexture ();
+    WgTexture getDepthTexture ();
     WGPUBackendType getRequestedBackendType();
     int getSamples();
-    WebGPUTexture getMultiSamplingTexture();
+    WgTexture getMultiSamplingTexture();
 
     void setViewport(int x, int y, int w, int h);
     Rectangle getViewport();

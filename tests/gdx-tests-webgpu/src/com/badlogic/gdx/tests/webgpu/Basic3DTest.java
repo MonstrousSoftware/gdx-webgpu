@@ -32,30 +32,28 @@ import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.tests.webgpu.utils.GdxTest;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplicationConfiguration;
-import com.badlogic.gdx.webgpu.graphics.g3d.WebGPUModel;
-import com.badlogic.gdx.webgpu.graphics.g3d.WebGPUModelBatch;
-import com.badlogic.gdx.webgpu.graphics.g3d.shaders.WebGPUDefaultShaderProvider;
-import com.badlogic.gdx.webgpu.graphics.g3d.utils.WebGPUModelBuilder;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplication;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
+import com.badlogic.gdx.webgpu.graphics.g3d.WgModelBatch;
+import com.badlogic.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
 
 public class Basic3DTest extends GdxTest {
 	public PerspectiveCamera cam;
 	public CameraInputController inputController;
-	public WebGPUModelBatch modelBatch;
+	public WgModelBatch modelBatch;
 	public Model model;
 	public ModelInstance instance;
 	public Environment environment;
 
     // launcher
     public static void main (String[] argv) {
-        WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
-        new WebGPUApplication(new Basic3DTest(), config);
+        WgApplicationConfiguration config = new WgApplicationConfiguration();
+        new WgApplication(new Basic3DTest(), config);
     }
 
 	@Override
 	public void create () {
-		modelBatch = new WebGPUModelBatch();
+		modelBatch = new WgModelBatch();
 
 		environment = new Environment();
 		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, .4f, .4f, .4f, 1f));
@@ -68,7 +66,7 @@ public class Basic3DTest extends GdxTest {
 		cam.far = 30f;
 		cam.update();
 
-        ModelBuilder modelBuilder = new WebGPUModelBuilder();
+        ModelBuilder modelBuilder = new WgModelBuilder();
 		model = modelBuilder.createBox(5f, 5f, 5f, new Material(ColorAttribute.createDiffuse(Color.GREEN)),
 			VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		instance = new ModelInstance(model);

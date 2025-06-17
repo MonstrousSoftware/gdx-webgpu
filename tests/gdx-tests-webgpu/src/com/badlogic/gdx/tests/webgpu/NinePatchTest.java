@@ -26,9 +26,9 @@ import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.tests.webgpu.utils.GdxTest;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
-import com.badlogic.gdx.webgpu.graphics.utils.WebGPUScreenUtils;
-import com.badlogic.gdx.webgpu.wrappers.WebGPUTexture;
+import com.badlogic.gdx.webgpu.graphics.g2d.WgSpriteBatch;
+import com.badlogic.gdx.webgpu.graphics.utils.WgScreenUtils;
+import com.badlogic.gdx.webgpu.graphics.WgTexture;
 
 public class NinePatchTest extends GdxTest {
 	/** A string name for the type of test, and the NinePatch being tested. */
@@ -48,7 +48,7 @@ public class NinePatchTest extends GdxTest {
 	}
 
 	private OrthographicCamera camera;
-	private WebGPUSpriteBatch b;
+	private WgSpriteBatch b;
 	private Array<TestPatch> ninePatches = new Array<TestPatch>(10);
 
 	private final long start = System.currentTimeMillis();
@@ -85,7 +85,7 @@ public class NinePatchTest extends GdxTest {
 		tp = new TestPatch("no middle row", newMidlessPatch());
 		ninePatches.add(tp);
 
-		b = new WebGPUSpriteBatch();
+		b = new WgSpriteBatch();
 	}
 
 	// Make a new 'pixmapSize' square texture region with 'patchSize' patches in it. Each patch is a different color.
@@ -103,7 +103,7 @@ public class NinePatchTest extends GdxTest {
 			}
 		}
 
-		return new TextureRegion(new WebGPUTexture(p), pixmapSize, pixmapSize);
+		return new TextureRegion(new WgTexture(p), pixmapSize, pixmapSize);
 	}
 
 	// Make a degenerate NinePatch
@@ -150,7 +150,7 @@ public class NinePatchTest extends GdxTest {
 			}
 		}
 
-		return new NinePatch(new TextureRegion(new WebGPUTexture(testPatch), fullPatchWidth, fullPatchHeight), patchSize, patchSize,
+		return new NinePatch(new TextureRegion(new WgTexture(testPatch), fullPatchWidth, fullPatchHeight), patchSize, patchSize,
 			patchSize, patchSize);
 	}
 
@@ -163,7 +163,7 @@ public class NinePatchTest extends GdxTest {
 		final int screenWidth = Gdx.graphics.getWidth();
 		final int screenHeight = Gdx.graphics.getHeight();
 
-		WebGPUScreenUtils.clear(0, 0, 0, 0);
+		WgScreenUtils.clear(0, 0, 0, 0);
 
 		timePassed += Gdx.graphics.getDeltaTime();
 

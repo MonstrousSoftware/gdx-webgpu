@@ -20,8 +20,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.webgpu.WebGPUGraphicsBase;
 
 import com.badlogic.gdx.webgpu.graphics.ShaderPrefix;
-import com.badlogic.gdx.webgpu.graphics.WebGPUShaderProgram;
-import com.badlogic.gdx.webgpu.graphics.WebGPUVertexLayout;
+import com.badlogic.gdx.webgpu.graphics.WgShaderProgram;
 import com.badlogic.gdx.webgpu.webgpu.*;
 import com.badlogic.gdx.utils.Disposable;
 import jnr.ffi.Pointer;
@@ -31,7 +30,7 @@ public class WebGPUPipeline implements Disposable {
     private Pointer pipelineLayout;
     private Pointer pipeline;
     public PipelineSpecification specification;
-    private WebGPUShaderProgram shader;
+    private WgShaderProgram shader;
     private boolean ownsShader;
 
     public WebGPUPipeline(WebGPUPipelineLayout pipelineLayout, PipelineSpecification spec) {
@@ -52,7 +51,7 @@ public class WebGPUPipeline implements Disposable {
             String prefix = ShaderPrefix.buildPrefix(spec.vertexAttributes, spec.environment);
             //System.out.println("Shader Source ["+spec.shaderSource+"] Prefix: ["+prefix+"]");
             System.out.println("Compiling shader Source [] Prefix: ["+prefix+"]");
-            shader = new WebGPUShaderProgram(spec.name, spec.shaderSource, prefix);
+            shader = new WgShaderProgram(spec.name, spec.shaderSource, prefix);
             spec.shader = shader;
             spec.recalcHash();
             ownsShader = true;

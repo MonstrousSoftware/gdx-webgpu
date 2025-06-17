@@ -11,9 +11,9 @@ import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
-import com.badlogic.gdx.webgpu.graphics.g3d.WebGPUModelBatch;
-import com.badlogic.gdx.webgpu.wrappers.WebGPUTexture;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplication;
+import com.badlogic.gdx.webgpu.graphics.g3d.WgModelBatch;
+import com.badlogic.gdx.webgpu.graphics.WgTexture;
 
 /** Simple test showing how to use a height map. Uses {@link HeightField}.
  * @author Xoppa */
@@ -26,7 +26,7 @@ public class HeightMapTest extends BaseG3dTest {
 
     // launcher
     public static void main (String[] argv) {
-        new WebGPUApplication(new HeightMapTest());
+        new WgApplication(new HeightMapTest());
     }
 
 	@Override
@@ -36,7 +36,7 @@ public class HeightMapTest extends BaseG3dTest {
 		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1.f));
 		environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -0.5f, -1.0f, -0.8f));
 
-		texture = new WebGPUTexture(Gdx.files.internal("data/badlogic.jpg"));
+		texture = new WgTexture(Gdx.files.internal("data/badlogic.jpg"));
 
 		int w = 20, h = 20;
 		Pixmap data = new Pixmap(Gdx.files.internal("data/g3d/heightmap.png"));
@@ -64,7 +64,7 @@ public class HeightMapTest extends BaseG3dTest {
 	}
 
 	@Override
-	protected void render (WebGPUModelBatch batch, Array<ModelInstance> instances) {
+	protected void render (WgModelBatch batch, Array<ModelInstance> instances) {
 		batch.render(instances);
 		batch.render(ground);
 	}

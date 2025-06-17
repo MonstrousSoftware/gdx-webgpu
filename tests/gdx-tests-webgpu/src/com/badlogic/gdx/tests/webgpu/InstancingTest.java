@@ -35,16 +35,16 @@ import com.badlogic.gdx.tests.webgpu.utils.PerspectiveCamController;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.badlogic.gdx.webgpu.assets.WebGPUAssetManager;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplication;
-import com.badlogic.gdx.webgpu.backends.lwjgl3.WebGPUApplicationConfiguration;
-import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUBitmapFont;
-import com.badlogic.gdx.webgpu.graphics.g2d.WebGPUSpriteBatch;
-import com.badlogic.gdx.webgpu.graphics.g3d.WebGPUModelBatch;
-import com.badlogic.gdx.webgpu.graphics.g3d.shaders.WebGPUDefaultShader;
-import com.badlogic.gdx.webgpu.graphics.utils.WebGPUScreenUtils;
-import com.badlogic.gdx.webgpu.scene2d.WebGPUSkin;
-import com.badlogic.gdx.webgpu.scene2d.WebGPUStage;
+import com.badlogic.gdx.webgpu.assets.WgAssetManager;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplication;
+import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
+import com.badlogic.gdx.webgpu.graphics.g2d.WgBitmapFont;
+import com.badlogic.gdx.webgpu.graphics.g2d.WgSpriteBatch;
+import com.badlogic.gdx.webgpu.graphics.g3d.WgModelBatch;
+import com.badlogic.gdx.webgpu.graphics.g3d.shaders.WgDefaultShader;
+import com.badlogic.gdx.webgpu.graphics.utils.WgScreenUtils;
+import com.badlogic.gdx.webgpu.scene2d.WgSkin;
+import com.badlogic.gdx.webgpu.scene2d.WgStage;
 import com.badlogic.gdx.webgpu.webgpu.WGPUBackendType;
 
 /** Test renderable instancing - reducing the number of draw calls if renderables use the same mesh part.
@@ -59,39 +59,39 @@ public class InstancingTest extends GdxTest {
 			"data/g3d/ship.obj", "data/g3d/webgpu.obj"
 	};
 
-	WebGPUModelBatch modelBatch;
+	WgModelBatch modelBatch;
 	PerspectiveCamera cam;
 	PerspectiveCamController controller;
-	WebGPUSpriteBatch batch;
-	WebGPUBitmapFont font;
+	WgSpriteBatch batch;
+	WgBitmapFont font;
 	Model model;
 	Array<ModelInstance> instances;
 	Environment environment;
 	ScreenViewport viewport;
-	WebGPUStage stage;
-	WebGPUSkin skin;
-	WebGPUAssetManager assets;
+	WgStage stage;
+	WgSkin skin;
+	WgAssetManager assets;
 
 
 	// launcher
 	public static void main (String[] argv) {
 
-		WebGPUApplicationConfiguration config = new WebGPUApplicationConfiguration();
+		WgApplicationConfiguration config = new WgApplicationConfiguration();
 		config.setWindowedMode(640, 480);
 		config.setTitle("WebGPUTest");
 		config.useVsync(false);
 		config.backend = WGPUBackendType.Vulkan;
 		config.enableGPUtiming = false;
 
-		new WebGPUApplication(new InstancingTest(), config);
+		new WgApplication(new InstancingTest(), config);
 	}
 
 	// application
 	public void create () {
 
-		WebGPUDefaultShader.Config config = new WebGPUDefaultShader.Config();
+		WgDefaultShader.Config config = new WgDefaultShader.Config();
 		config.maxInstances = MAX_INSTANCES;
-		modelBatch = new WebGPUModelBatch(config);
+		modelBatch = new WgModelBatch(config);
 
 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		cam.position.set(0, 1.f, 2.5f);
@@ -102,7 +102,7 @@ public class InstancingTest extends GdxTest {
 		instances = new Array<>();
 
 		// queue for asynchronous loading
-		assets = new WebGPUAssetManager();
+		assets = new WgAssetManager();
 		for(String fileName : fileNames)
 			assets.load(fileName, Model.class);
 		assets.finishLoading();
@@ -154,13 +154,13 @@ public class InstancingTest extends GdxTest {
 
 		controller = new PerspectiveCamController(cam);
 		Gdx.input.setInputProcessor(controller);
-		batch = new WebGPUSpriteBatch();
-		font = new WebGPUBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
+		batch = new WgSpriteBatch();
+		font = new WgBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
 
 		// Add some GUI
 		//
 		viewport = new ScreenViewport();
-		stage = new WebGPUStage(viewport);
+		stage = new WgStage(viewport);
 		//stage.setDebugAll(true);
 
 		InputMultiplexer im = new InputMultiplexer();
@@ -168,7 +168,7 @@ public class InstancingTest extends GdxTest {
 		im.addProcessor(stage);
 		im.addProcessor(controller);
 
-		skin = new WebGPUSkin(Gdx.files.internal("data/uiskin.json"));
+		skin = new WgSkin(Gdx.files.internal("data/uiskin.json"));
 
 		SelectBox<String> selectBox = new SelectBox<>(skin);
 		// Add a listener to the button. ChangeListener is fired when the button's checked state changes, eg when clicked,
@@ -325,7 +325,7 @@ public class InstancingTest extends GdxTest {
 		for(ModelInstance instance : instances)
 			instance.transform.rotate(Vector3.Y, 15f*delta);
 
-		WebGPUScreenUtils.clear(Color.TEAL);
+		WgScreenUtils.clear(Color.TEAL);
 
 		cam.update();
 		modelBatch.begin(cam);
