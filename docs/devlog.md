@@ -42,3 +42,10 @@ todo urgent: smarter queue.write after set uniform.
 We could do a Queue.writeBuffer after every setUniform.
 Or keep track of a dirty range to be flushed.
 
+17/06:
+SpriteBatch now uses dynamics offsets for the uniform buffer to allow different viewProjection transforms per flush.
+Now one buffer is allocated of maxFlushes * flushStride.  Should create buffer using WebGPUniformBuffer(contentSize, usage, maxInstances)
+so that the backing float buffer is just for one slice, and write just writes one slice. Stride calculation should be left to uniform buffer.
+Content size is just the size of the matrix4.
+But need WebGPUniformBuffer methods to select the active slice.  This should then be used in buffer.write for the slice offset which will then
+write content size (not stride).
