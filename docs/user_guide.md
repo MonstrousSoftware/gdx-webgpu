@@ -27,7 +27,6 @@ Some useful configuration options:
 |`config.backend`     | Default is `WGPUBackendType.Undefined`. This can be used for test a Vulkan backend or a DirectX12 backend for the WebGPU layer. Note that the availability of backends depends on the users' computer.|	
 | `config.enableGPUtiming` |Default is false. Can be set to true to allow GPU timing measurements (to explain how)|
  
-Settings related to OpenGL will be ignored (e.g. glEmulation) (todo should be removed).
 Configuration settings are platform dependent.
 
 The `ApplicationListener` object provides the entry points for your application. A bare bones application listener looks as follows:
