@@ -32,6 +32,10 @@ public class WebGPUComputePass implements Disposable {
         webGPU.wgpuComputePassEncoderSetPipeline(computePass, pipeline);
     }
 
+    public void setPipeline(WebGPUComputePipeline pipeline) {
+        webGPU.wgpuComputePassEncoderSetPipeline(computePass, pipeline.getHandle());
+    }
+
     public void dispatchWorkGroups(int workgroupCountX, int workgroupCountY, int workgroupCountZ) {
         webGPU.wgpuComputePassEncoderDispatchWorkgroups(computePass,workgroupCountX,workgroupCountY,workgroupCountZ);
     }

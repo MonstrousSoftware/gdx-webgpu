@@ -33,6 +33,7 @@ import jnr.ffi.Pointer;
  *  buffer.set(0, transformMatrix);     // set uniform value
  *  buffer.set(64, diffuseColor);       // set uniform value, offset in bytes, relative to this slice
  *  buffer.flush();                     // write content to GPU!
+ *
  *  buffer.setDynamicOffsetIndex(1);    // next slice
  *  buffer.set(0, transformMatrix);     //
  *  buffer.set(64, diffuseColor);       //
@@ -47,7 +48,6 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
     private final int uniformStride;
     private final int maxSlices;
     private final Pointer floatData;
-    private int appendOffset;
     private int dynamicOffsetIndex;
     private boolean dirty;
 
@@ -61,7 +61,6 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
         this(contentSize, usage, 1);
     }
 
-
     /** Construct a Uniform Buffer. To use dynamic offsets, set maxSlices to the number of segments needed.
      *
      * @param contentSize size of data per slice in bytes (will be padded to a valid uniform stride size)
@@ -69,7 +68,17 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
      * @param maxSlices minimum 1
      */
     public WebGPUUniformBuffer(int contentSize, long usage, int maxSlices){
-        super("uniform buffer", usage, calculateBufferSize(contentSize, maxSlices));
+        this("uniform buffer", contentSize, usage, maxSlices);
+    }
+
+    /** Construct a Uniform Buffer. To use dynamic offsets, set maxSlices to the number of segments needed.
+     *
+     * @param contentSize size of data per slice in bytes (will be padded to a valid uniform stride size)
+     * @param usage flags of WGPUBufferUsage
+     * @param maxSlices minimum 1
+     */
+    public WebGPUUniformBuffer(String label, int contentSize, long usage, int maxSlices){
+        super(label, usage, calculateBufferSize(contentSize, maxSlices));
         this.contentSize = contentSize;
         this.maxSlices = maxSlices;
 
@@ -114,75 +123,6 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
     public int getUniformStride(){
         return uniformStride;
     }
-
-//    public void beginFill(){
-//        appendOffset = 0;
-//    }
-//
-//    public void pad(int bytes){
-//        appendOffset += bytes;
-//    }
-//
-//    public int getOffset(){
-//        return appendOffset;
-//    }
-//
-//    public void setOffset(int offset){
-//        this.appendOffset = offset;
-//    }
-
-//    public void append( int value ){
-//        floatData.putInt(appendOffset, value);
-//        appendOffset += Integer.BYTES;
-//    }
-//
-//    public void append( float f ){
-//        floatData.putFloat(appendOffset, f);
-//        appendOffset += Float.BYTES;
-//        //offset += 4*Float.BYTES;           // with padding!
-//    }
-//
-//    public void append( Matrix4 mat ){
-//        set(appendOffset, mat);
-//        appendOffset += 16*Float.BYTES;
-//    }
-//
-//    public void append( Vector3 vec ){
-//        set(appendOffset, vec);
-//        appendOffset += 4*Float.BYTES;           // with padding!
-//    }
-//
-//
-//
-//    public void append( Color color ){
-//        floatData.putFloat(appendOffset +0*Float.BYTES, color.r);
-//        floatData.putFloat(appendOffset +1*Float.BYTES, color.g);
-//        floatData.putFloat(appendOffset +2*Float.BYTES, color.b);
-//        floatData.putFloat(appendOffset +3*Float.BYTES, color.a);
-//        appendOffset += 4*Float.BYTES;
-//    }
-//
-//    public void append( float r, float g, float b, float a ){
-//        floatData.putFloat(appendOffset +0*Float.BYTES, r);
-//        floatData.putFloat(appendOffset +1*Float.BYTES, g);
-//        floatData.putFloat(appendOffset +2*Float.BYTES, b);
-//        floatData.putFloat(appendOffset +3*Float.BYTES, a);
-//        appendOffset += 4*Float.BYTES;
-//    }
-//
-//    /** Write buffer data to the GPU */
-//    public void endFill(){
-//        endFill(0);
-//    }
-//
-//    /** Fill the given slice of the uniform buffer. Writes data to the GPU. destOffset should be a multiple of uniformStride. */
-//    public void endFill(int destOffset){
-//        int dataSize = appendOffset;
-//        if(dataSize > contentSize) throw new RuntimeException("Overflow in UniformBuffer: content ("+dataSize+") > size ("+contentSize+").");
-//        if(destOffset > getSize()-dataSize) throw new IllegalArgumentException("UniformBuffer: offset too large.");
-//        write(destOffset, floatData, dataSize);
-//    }
-
 
     /* call this after any set or a sequence of sets to write the floatData to the GPU buffer */
     public void flush(){

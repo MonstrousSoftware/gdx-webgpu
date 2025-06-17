@@ -68,7 +68,9 @@ public class WebGPUTests {
         ASimpleGame.class,
         ParticleEmitterTest.class,
         ParticleEmittersTest.class,
-        HeightMapTest.class
+        HeightMapTest.class,
+        TestCompute.class,
+        TestComputeRNG.class
 
 		// @on
 

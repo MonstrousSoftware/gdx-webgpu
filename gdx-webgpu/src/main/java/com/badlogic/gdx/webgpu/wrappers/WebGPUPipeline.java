@@ -59,7 +59,6 @@ public class WebGPUPipeline implements Disposable {
         this.specification = new PipelineSpecification(spec);
 
         Pointer shaderModule = shader.getHandle();
-       // WGPUVertexBufferLayout vertexBufferLayout = spec.vertexAttributes != null ? spec.vertexAttributes.getVertexBufferLayout() : null;
         WGPUVertexBufferLayout vertexBufferLayout = spec.vertexAttributes == null ? null : WebGPUVertexLayout.buildVertexBufferLayout(spec.vertexAttributes);
 
 
