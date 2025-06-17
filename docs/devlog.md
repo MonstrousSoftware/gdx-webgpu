@@ -48,4 +48,5 @@ Now one buffer is allocated of maxFlushes * flushStride.  Should create buffer u
 so that the backing float buffer is just for one slice, and write just writes one slice. Stride calculation should be left to uniform buffer.
 Content size is just the size of the matrix4.
 But need WebGPUniformBuffer methods to select the active slice.  This should then be used in buffer.write for the slice offset which will then
-write content size (not stride).
+write content size (not stride). Any buffer.setUniform method will set a dirty flag causing buffer.flush to write to GPU.  The write
+will not be per uniform, but per contentsize ("slice") and could be done just before the draw call along with binding the group.
