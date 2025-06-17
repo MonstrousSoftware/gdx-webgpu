@@ -65,7 +65,9 @@ public class WebGPUTests {
 		InstancingTest.class,
         ViewportTest.class,
         ScissorTest.class,
-        ASimpleGame.class
+        ASimpleGame.class,
+        ParticleEmitterTest.class,
+        ParticleEmittersTest.class
 
 		// @on
 
