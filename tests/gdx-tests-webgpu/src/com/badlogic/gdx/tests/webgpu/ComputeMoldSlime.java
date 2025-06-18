@@ -124,6 +124,9 @@ public class ComputeMoldSlime extends GdxTest {
         pipelineBlur = new WebGPUComputePipeline(shader, "compute", pipelineLayout);
         pipelineLayout.dispose();
         shader.dispose();
+
+        // as we switch between 2 textures
+        // the output of the last pass (texture) will be the input for the first pass in the next iteration
     }
 
     private void iterate(){
