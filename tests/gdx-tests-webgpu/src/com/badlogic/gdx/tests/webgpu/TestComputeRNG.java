@@ -19,9 +19,7 @@ import jnr.ffi.Pointer;
 
 
 /**
- * Demonstration of using a compute shader: performs a simple function on the array of input floats.
- * Follows example from https://eliemichel.github.io/LearnWebGPU/basic-compute/compute-pipeline.html#
- * Uses some comfort classes to encapsulate WebGPU concepts.
+ * Compute shader test.
  */
 
 public class TestComputeRNG extends GdxTest {
