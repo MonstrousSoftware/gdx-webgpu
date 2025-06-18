@@ -33,7 +33,7 @@ fn compute(@builtin(global_invocation_id) id: vec3<u32>) {
     if(newPosition.x < 0  || newPosition.x >= uniforms.width || newPosition.y < 0 || newPosition.y >= uniforms.height){
         let random : u32 = hash( u32(agent.position.x + uniforms.width * agent.position.y + f32(id.x)));
         agents[id.x].direction += unitScale(random) * pi * 2.0;
-        //newPosition = agent.position;
+        newPosition = agent.position;
     }
     agents[id.x].position = newPosition;
 

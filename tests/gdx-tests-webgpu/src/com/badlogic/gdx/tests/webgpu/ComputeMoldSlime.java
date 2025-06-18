@@ -260,13 +260,18 @@ public class ComputeMoldSlime extends GdxTest {
             return;
         }
         iterate();
-//        if(Gdx.input.isKeyPressed(Input.Keys.SPACE)){
-//            iterate();
-//        }
+        if(Gdx.input.isKeyPressed(Input.Keys.SPACE)){
+            Pixmap pm = new Pixmap(width, height, Pixmap.Format.RGBA8888);
+            pm.setColor(Color.BLACK);
+            pm.fill();
+            texture.load(pm.getPixels(), 0);
+        }
 
         batch.begin(Color.BLACK);
 
-        batch.draw(texture2,   (Gdx.graphics.getWidth() - width) /2f, (Gdx.graphics.getHeight() - height) /2f);
+        batch.draw(texture2,   0,0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight() );
+
+        //batch.draw(texture2,   (Gdx.graphics.getWidth() - width) /2f, (Gdx.graphics.getHeight() - height) /2f);
 
         batch.end();
     }
