@@ -1,4 +1,7 @@
-// move agents
+// Slime Mold
+// Simulate mold spores
+// Following Coding Adventure: Ant and Slime Simulations by Sebastian Lague.
+//
 
 struct Uniforms {
     width : f32,
@@ -6,6 +9,8 @@ struct Uniforms {
     evaporationSpeed: f32,
     deltaTime: f32,
     sensorDistance: f32,
+    sensorAngleSpacing: f32,
+    turnSpeed: f32,
 }
 
 
@@ -25,27 +30,30 @@ const pi : f32 = 3.14159;
 
 
 @compute @workgroup_size(16, 1, 1)
-fn compute(@builtin(global_invocation_id) id: vec3<u32>) {
+fn moveAgents(@builtin(global_invocation_id) id: vec3<u32>) {
     // id is index into agents array
     let agent : Agent = agents[id.x];
 
     let direction: vec2f = vec2f( cos(agent.direction), sin(agent.direction));
+    let random : u32 = hash( u32(agent.position.x + uniforms.width * agent.position.y + f32(id.x)));
 
     let weightForward: f32 = sense(agent, 0);
-    let weightLeft: f32 = sense(agent, 0.2 * pi);
-    let weightRight: f32 = sense(agent, -0.2 * pi);
+    let weightLeft: f32 = sense(agent, uniforms.sensorAngleSpacing * pi);
+    let weightRight: f32 = sense(agent, -uniforms.sensorAngleSpacing * pi);
+    let randomSteerStrength: f32 = unitScale(random);
 
     if(weightForward > weightLeft && weightForward > weightRight){
-
-    } else if(weightRight > weightLeft){
-        agents[id.x].direction -= 1.0f;
+        // do nothing
+    } else if(weightForward < weightLeft && weightForward < weightRight) {
+        agents[id.x].direction += (randomSteerStrength - 0.5) * uniforms.turnSpeed * uniforms.deltaTime;
+   } else if(weightRight > weightLeft){
+        agents[id.x].direction -= randomSteerStrength * uniforms.turnSpeed * uniforms.deltaTime;
     } else if(weightLeft > weightRight){
-        agents[id.x].direction += 1.0f;
+        agents[id.x].direction += randomSteerStrength * uniforms.turnSpeed * uniforms.deltaTime;
     }
 
     var newPosition: vec2f = agent.position + direction;
     if(newPosition.x < 0  || newPosition.x >= uniforms.width || newPosition.y < 0 || newPosition.y >= uniforms.height){
-        let random : u32 = hash( u32(agent.position.x + uniforms.width * agent.position.y + f32(id.x)));
         agents[id.x].direction += unitScale(random) * pi * 2.0;
         newPosition = agent.position;
     }
@@ -87,4 +95,42 @@ fn hash( input: u32) -> u32 {
     state ^= state >> 16;
     state *= 2654435769u;
     return state;
+}
+
+
+
+@compute @workgroup_size(16, 16, 1)
+fn evaporate(@builtin(global_invocation_id) id: vec3<u32>) {
+
+    if(id.x < 0  || id.x >= u32(uniforms.width) || id.y < 0 || id.y >= u32(uniforms.height)){
+        return;
+    }
+
+    let originalColor = textureLoad(inputTexture, id.xy, 0);
+    let evaporatedColor = max(vec4f(0.0), originalColor - uniforms.deltaTime*uniforms.evaporationSpeed);
+
+    textureStore(outputTexture, id.xy, evaporatedColor);
+}
+
+
+@compute @workgroup_size(16, 16, 1)
+fn blur(@builtin(global_invocation_id) id: vec3<u32>) {
+
+    if(id.x < 0  || id.x >= u32(uniforms.width) || id.y < 0 || id.y >= u32(uniforms.height)){
+        return;
+    }
+
+    var color : vec4f = vec4f(0);
+
+    for(var x: i32 = -1; x <= 1; x++){
+        for(var y: i32 = -1; y <= 1; y++){
+            let sampleX : i32 = i32(id.x) + x;
+            let sampleY : i32 = i32(id.y) + y;
+            if(sampleX > 0 && sampleX < i32(uniforms.width) && sampleY > 0 && sampleY < i32(uniforms.height)){
+                color += textureLoad(inputTexture, vec2(sampleX, sampleY), 0);
+            }
+        }
+    }
+    color /= 9.0;
+    textureStore(outputTexture, id.xy, color);
 }
