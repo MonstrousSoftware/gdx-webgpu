@@ -5,6 +5,7 @@ struct Uniforms {
     height : f32,
     evaporationSpeed: f32,
     deltaTime: f32,
+    sensorDistance: f32,
 }
 
 
@@ -17,7 +18,8 @@ struct Agent {
 
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
 @group(0) @binding(1) var<storage, read_write> agents: array<Agent>;
-@group(0) @binding(2) var outputTexture: texture_storage_2d<rgba8unorm,write>;
+@group(0) @binding(2) var inputTexture: texture_2d<f32>;
+@group(0) @binding(3) var outputTexture: texture_storage_2d<rgba8unorm,write>;
 
 const pi : f32 = 3.14159;
 
@@ -28,6 +30,18 @@ fn compute(@builtin(global_invocation_id) id: vec3<u32>) {
     let agent : Agent = agents[id.x];
 
     let direction: vec2f = vec2f( cos(agent.direction), sin(agent.direction));
+
+    let weightForward: f32 = sense(agent, 0);
+    let weightLeft: f32 = sense(agent, 0.2 * pi);
+    let weightRight: f32 = sense(agent, -0.2 * pi);
+
+    if(weightForward > weightLeft && weightForward > weightRight){
+
+    } else if(weightRight > weightLeft){
+        agents[id.x].direction -= 1.0f;
+    } else if(weightLeft > weightRight){
+        agents[id.x].direction += 1.0f;
+    }
 
     var newPosition: vec2f = agent.position + direction;
     if(newPosition.x < 0  || newPosition.x >= uniforms.width || newPosition.y < 0 || newPosition.y >= uniforms.height){
@@ -42,6 +56,22 @@ fn compute(@builtin(global_invocation_id) id: vec3<u32>) {
 
     textureStore(outputTexture, texCoord, white);
 }
+
+fn sense(agent: Agent, angleOffset : f32) ->f32 {
+    let sensorAngle : f32 = agent.direction + angleOffset;
+    let sensorDir : vec2f = vec2f(cos(sensorAngle), sin(sensorAngle));
+    let sensorCentre: vec2i = vec2i(agent.position + sensorDir * uniforms.sensorDistance);
+
+    var sum: f32 = 0;
+    for(var x: i32 = -1; x <= 1; x++){
+        for(var y: i32 = -1; y <= 1; y++){
+            let pos: vec2i = sensorCentre + vec2i(x,y);
+            sum += textureLoad(inputTexture, pos, 0).r;
+        }
+    }
+    return sum;
+}
+
 
 fn unitScale( h: u32 ) -> f32 {
     return f32(h) / 4294967295.0;

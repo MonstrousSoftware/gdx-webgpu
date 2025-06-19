@@ -30,7 +30,7 @@ public class ComputeMoldSlime extends GdxTest {
 
     private int width = 640;
     private int height = 480;
-    private static final int NUM_AGENTS = 512;
+    private static final int NUM_AGENTS = 2048;
     private int agentSize = 4*Float.BYTES; // bytes including padding
 
     private WgSpriteBatch batch;
@@ -75,11 +75,12 @@ public class ComputeMoldSlime extends GdxTest {
 
 
 
-        WebGPUUniformBuffer uniforms = new WebGPUUniformBuffer(4*Float.BYTES, WGPUBufferUsage.CopyDst |WGPUBufferUsage.Uniform);
+        WebGPUUniformBuffer uniforms = new WebGPUUniformBuffer(5*Float.BYTES, WGPUBufferUsage.CopyDst |WGPUBufferUsage.Uniform);
         uniforms.set(0, width);
         uniforms.set(Float.BYTES, height);
-        uniforms.set(2*Float.BYTES, 0.15f);  // evapSpeed
+        uniforms.set(2*Float.BYTES, 0.18f);  // evapSpeed
         uniforms.set(3*Float.BYTES, 0.01f);  // deltaTime
+        uniforms.set(4*Float.BYTES, 10f);    // senseDistance
         uniforms.flush();
 
 
@@ -91,7 +92,7 @@ public class ComputeMoldSlime extends GdxTest {
         // make a pipeline
         WebGPUBindGroupLayout bindGroupLayout = makeBindGroupLayout();
 
-        bindGroupMove = makeBindGroup(bindGroupLayout, uniforms, agents, texture.getTextureView());
+        bindGroupMove = makeBindGroup(bindGroupLayout, uniforms, agents, texture2.getTextureView(), texture.getTextureView());
         bindGroupLayout.dispose();
 
         WebGPUPipelineLayout pipelineLayout = new WebGPUPipelineLayout("move agents pipeline layout", bindGroupLayout);
@@ -218,19 +219,21 @@ public class ComputeMoldSlime extends GdxTest {
     private WebGPUBindGroupLayout makeBindGroupLayout(){
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout();
         layout.begin();
-        layout.addBuffer(0, WGPUShaderStage.Compute, WGPUBufferBindingType.Uniform, (long) 4*Float.BYTES, false );
+        layout.addBuffer(0, WGPUShaderStage.Compute, WGPUBufferBindingType.Uniform, (long) 5*Float.BYTES, false );
         layout.addBuffer(1, WGPUShaderStage.Compute, WGPUBufferBindingType.Storage, (long) agentSize * NUM_AGENTS, false );
-        layout.addStorageTexture(2, WGPUShaderStage.Compute, WGPUStorageTextureAccess.WriteOnly, WGPUTextureFormat.RGBA8Unorm, WGPUTextureViewDimension._2D);
+        layout.addTexture(2, WGPUShaderStage.Compute, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D, false);
+        layout.addStorageTexture(3, WGPUShaderStage.Compute, WGPUStorageTextureAccess.WriteOnly, WGPUTextureFormat.RGBA8Unorm, WGPUTextureViewDimension._2D);
         layout.end();
         return layout;
     }
 
-    private WebGPUBindGroup makeBindGroup(WebGPUBindGroupLayout bindGroupLayout, WebGPUUniformBuffer uniforms, WebGPUBuffer agents, WebGPUTextureView textureView){
+    private WebGPUBindGroup makeBindGroup(WebGPUBindGroupLayout bindGroupLayout, WebGPUUniformBuffer uniforms, WebGPUBuffer agents, WebGPUTextureView inView, WebGPUTextureView textureView){
         WebGPUBindGroup bg = new WebGPUBindGroup(bindGroupLayout);
         bg.begin();
         bg.setBuffer(0, uniforms);
         bg.setBuffer(1, agents);
-        bg.setTexture(2, textureView);
+        bg.setTexture(2, inView);
+        bg.setTexture(3, textureView);
         bg.end();
         return bg;
     }
@@ -238,7 +241,7 @@ public class ComputeMoldSlime extends GdxTest {
     private WebGPUBindGroupLayout makeBindGroupLayout2(){
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout();
         layout.begin();
-        layout.addBuffer(0, WGPUShaderStage.Compute, WGPUBufferBindingType.Uniform, (long) 4*Float.BYTES, false );
+        layout.addBuffer(0, WGPUShaderStage.Compute, WGPUBufferBindingType.Uniform, (long) 5*Float.BYTES, false );
         layout.addTexture(1, WGPUShaderStage.Compute, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D, false);
         layout.addStorageTexture(2, WGPUShaderStage.Compute, WGPUStorageTextureAccess.WriteOnly, WGPUTextureFormat.RGBA8Unorm, WGPUTextureViewDimension._2D);
         layout.end();
