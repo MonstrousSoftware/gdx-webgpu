@@ -1,4 +1,4 @@
-// Slime Mold
+// Compute Shader for Slime Mold
 // Simulate mold spores
 // Following Coding Adventure: Ant and Slime Simulations by Sebastian Lague.
 //
@@ -17,7 +17,7 @@ struct Uniforms {
 struct Agent {
   position: vec2f,
   direction: f32,   // in radians
-  dummy: f32
+  dummy: f32        // explicit padding
 }
 
 
@@ -60,7 +60,7 @@ fn moveAgents(@builtin(global_invocation_id) id: vec3<u32>) {
     agents[id.x].position = newPosition;
 
     let texCoord : vec2i = vec2i(newPosition);
-    let white = vec4f(1, 1, 1, 1);
+    let white = vec4f(0.5, 1, 0.8, 1);
 
     textureStore(outputTexture, texCoord, white);
 }

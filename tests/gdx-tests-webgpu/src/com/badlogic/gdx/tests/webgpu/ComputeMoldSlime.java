@@ -2,10 +2,21 @@ package com.badlogic.gdx.tests.webgpu;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Slider;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.tests.webgpu.utils.GdxTest;
+import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
 import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplication;
 import com.badlogic.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
 import com.badlogic.gdx.webgpu.backends.lwjgl3.WgGraphics;
@@ -13,6 +24,8 @@ import com.badlogic.gdx.webgpu.graphics.WgShaderProgram;
 import com.badlogic.gdx.webgpu.graphics.WgTexture;
 import com.badlogic.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.badlogic.gdx.webgpu.graphics.g2d.WgSpriteBatch;
+import com.badlogic.gdx.webgpu.scene2d.WgSkin;
+import com.badlogic.gdx.webgpu.scene2d.WgStage;
 import com.badlogic.gdx.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.webgpu.webgpu.*;
 import com.badlogic.gdx.webgpu.wrappers.*;
@@ -29,8 +42,6 @@ import java.nio.FloatBuffer;
 
 public class ComputeMoldSlime extends GdxTest {
 
-
-    private static final int NUM_AGENTS = 81920;
     private int agentSize = 4*Float.BYTES; // bytes including padding
     private int uniformSize = 7*Float.BYTES;
     private int width;
@@ -47,6 +58,9 @@ public class ComputeMoldSlime extends GdxTest {
     WebGPUUniformBuffer uniforms;
     WebGPUBuffer agents;
     Config config;
+    Viewport viewport;
+    WgStage stage;
+    WgSkin skin;
 
 
     public static class Config {
@@ -73,11 +87,23 @@ public class ComputeMoldSlime extends GdxTest {
         // start the simulation on resize()
 
         config = new Config();
-        config.numAgents = 4096;
+        config.numAgents = 40960;
         config.evapSpeed = 0.88f;
         config.senseDistance = 10f;
         config.senseAngleSpacing = 0.2f;
         config.turnSpeed = 10f;
+
+        viewport = new ScreenViewport();
+        stage = new WgStage(viewport);
+        skin = new WgSkin();
+
+        // Add some GUI
+        //
+        viewport = new ScreenViewport();
+        stage = new WgStage(viewport);
+        Gdx.input.setInputProcessor(stage);
+        skin = new WgSkin(Gdx.files.internal("data/uiskin.json"));
+        //rebuildStage();
     }
 
 
@@ -115,9 +141,9 @@ public class ComputeMoldSlime extends GdxTest {
 
 
         // create a buffer for the agents
-        agents = new WebGPUBuffer("agents", WGPUBufferUsage.Storage | WGPUBufferUsage.CopyDst | WGPUBufferUsage.CopySrc, (long) agentSize * NUM_AGENTS);
+        agents = new WebGPUBuffer("agents", WGPUBufferUsage.Storage | WGPUBufferUsage.CopyDst | WGPUBufferUsage.CopySrc, (long) agentSize * config.numAgents);
         // fill agent buffer with initial data
-        initAgents(queue, agents);
+        initAgents(queue, agents, config.numAgents);
 
         // we use a single shader source file with 3 entry points for the different steps
         WgShaderProgram shader = new WgShaderProgram(Gdx.files.internal("data/wgsl/compute-slime.wgsl")); // from assets folder
@@ -170,7 +196,7 @@ public class ComputeMoldSlime extends GdxTest {
         pass.setPipeline(pipeline1);
         pass.setBindGroup(0, bindGroupMove);
 
-        int invocationCountX = NUM_AGENTS;    // nr of input values
+        int invocationCountX = config.numAgents;    // nr of input values
 
         int workgroupSizeX = 16;
         // This ceils invocationCountX / workgroupSizePerDim
@@ -228,10 +254,10 @@ public class ComputeMoldSlime extends GdxTest {
         pass.dispose();
     }
 
-    private void initAgents(  WebGPUQueue queue, WebGPUBuffer agents ){
-        ByteBuffer byteBuffer = BufferUtils.createByteBuffer( agentSize * NUM_AGENTS * Float.BYTES);
+    private void initAgents(  WebGPUQueue queue, WebGPUBuffer agents, int numAgents ){
+        ByteBuffer byteBuffer = BufferUtils.createByteBuffer( agentSize * numAgents * Float.BYTES);
         FloatBuffer floatBuffer = byteBuffer.asFloatBuffer();
-        for(int i = 0; i < NUM_AGENTS; i++){
+        for(int i = 0; i < numAgents; i++){
             float angle = MathUtils.random(0, MathUtils.PI2);
             float distance = MathUtils.random(0, 100);
             float x = width/2.0f - distance * MathUtils.cos(angle);
@@ -243,7 +269,8 @@ public class ComputeMoldSlime extends GdxTest {
             floatBuffer.put(i*4+2, dir);
             floatBuffer.put(i*4+3, 0);   // padding
         }
-        queue.writeBuffer(agents, 0, JavaWebGPU.createByteBufferPointer(byteBuffer),agentSize * NUM_AGENTS);
+        queue.writeBuffer(agents, 0, JavaWebGPU.createByteBufferPointer(byteBuffer),agentSize * numAgents);
+        // todo dispose nio buffers
     }
 
 
@@ -253,7 +280,7 @@ public class ComputeMoldSlime extends GdxTest {
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout();
         layout.begin();
         layout.addBuffer(0, WGPUShaderStage.Compute, WGPUBufferBindingType.Uniform,  uniformSize, false );
-        layout.addBuffer(1, WGPUShaderStage.Compute, WGPUBufferBindingType.Storage, (long) agentSize * NUM_AGENTS, false );
+        layout.addBuffer(1, WGPUShaderStage.Compute, WGPUBufferBindingType.Storage, (long) agentSize * config.numAgents, false );
         layout.addTexture(2, WGPUShaderStage.Compute, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D, false);
         layout.addStorageTexture(3, WGPUShaderStage.Compute, WGPUStorageTextureAccess.WriteOnly, WGPUTextureFormat.RGBA8Unorm, WGPUTextureViewDimension._2D);
         layout.end();
@@ -271,34 +298,21 @@ public class ComputeMoldSlime extends GdxTest {
         return bg;
     }
 
-//    private WebGPUBindGroupLayout makeBindGroupLayout2(){
-//        WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout();
-//        layout.begin();
-//        layout.addBuffer(0, WGPUShaderStage.Compute, WGPUBufferBindingType.Uniform, uniformSize, false );
-//        layout.addTexture(1, WGPUShaderStage.Compute, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D, false);
-//        layout.addStorageTexture(2, WGPUShaderStage.Compute, WGPUStorageTextureAccess.WriteOnly, WGPUTextureFormat.RGBA8Unorm, WGPUTextureViewDimension._2D);
-//        layout.end();
-//        return layout;
-//    }
-//
-//    private WebGPUBindGroup makeBindGroup2(WebGPUBindGroupLayout bindGroupLayout, WebGPUUniformBuffer uniforms, WebGPUTextureView textureViewIn,  WebGPUTextureView textureViewOut){
-//        WebGPUBindGroup bg = new WebGPUBindGroup(bindGroupLayout);
-//        bg.begin();
-//        bg.setBuffer(0, uniforms);
-//        bg.setTexture(1, textureViewIn);
-//        bg.setTexture(2, textureViewOut);
-//        bg.end();
-//        return bg;
-//    }
-
-
     @Override
     public void render(){
         if(Gdx.input.isKeyPressed(Input.Keys.ESCAPE)){
             Gdx.app.exit();
             return;
         }
-        step(Gdx.graphics.getDeltaTime());
+
+        if(Gdx.input.isKeyJustPressed(Input.Keys.TAB)){
+            if(stage.getActors().size > 0)
+                stage.clear();
+            else
+                rebuildStage();
+        }
+
+
         if(Gdx.input.isKeyPressed(Input.Keys.SPACE)){
             Pixmap pm = new Pixmap(width, height, Pixmap.Format.RGBA8888);
             pm.setColor(Color.BLACK);
@@ -306,17 +320,14 @@ public class ComputeMoldSlime extends GdxTest {
             texture.load(pm.getPixels(), 0);
         }
 
+        step(Gdx.graphics.getDeltaTime());
+
         batch.begin(Color.BLACK);
         batch.draw(texture2,   0,0);
         batch.end();
-    }
 
-    @Override
-    public void dispose(){
-        // cleanup
-        exitSim();
-        batch.dispose();
-        font.dispose();
+        stage.act();
+        stage.draw();
     }
 
     @Override
@@ -327,6 +338,113 @@ public class ComputeMoldSlime extends GdxTest {
         if(texture != null) // sim was running already?
             exitSim();
         initSim(width, height);
+        //viewport.update(width, height);
+        viewport.setWorldSize(width, height);
+        stage.getViewport().update(width, height, true);
+        rebuildStage();
     }
+
+    @Override
+    public void dispose(){
+        // cleanup
+        exitSim();
+        batch.dispose();
+        font.dispose();
+    }
+
+
+    private void rebuildStage(){
+
+        Label numAgents = new Label(String.valueOf(config.numAgents), skin);
+        Label evapSpeed = new Label(String.valueOf(config.evapSpeed), skin);
+        Label turnSpeed = new Label(String.valueOf(config.turnSpeed), skin);
+        Label angle = new Label(String.valueOf(config.senseAngleSpacing), skin);
+        Label senseDistance = new Label(String.valueOf(config.senseDistance), skin);
+
+        Slider instancesSlider = new Slider(1, 1000000, 10, false, skin);
+        instancesSlider.addListener(new ChangeListener() {
+            public void changed (ChangeEvent event, Actor actor) {
+                config.numAgents = (int) instancesSlider.getValue();
+                numAgents.setText(config.numAgents);
+                exitSim();
+                initSim(width, height);
+            }
+        });
+
+        Slider evapSlider = new Slider(0, 2.5f, 0.01f, false, skin);
+        evapSlider.addListener(new ChangeListener() {
+            public void changed (ChangeEvent event, Actor actor) {
+                config.evapSpeed = evapSlider.getValue();
+                evapSpeed.setText(String.valueOf(config.evapSpeed));
+                uniforms.set(2*Float.BYTES, config.evapSpeed);  // evapSpeed
+                uniforms.flush();
+            }
+        });
+
+        Slider angleSlider = new Slider(0, 0.5f, 0.01f, false, skin);
+        angleSlider.addListener(new ChangeListener() {
+            public void changed (ChangeEvent event, Actor actor) {
+                config.senseAngleSpacing = angleSlider.getValue();
+                angle.setText(String.valueOf(config.senseAngleSpacing));
+                uniforms.set(5*Float.BYTES, config.senseAngleSpacing);
+                uniforms.flush();
+            }
+        });
+
+        Slider distSlider = new Slider(0, 40f, 1f, false, skin);
+        distSlider.addListener(new ChangeListener() {
+            public void changed (ChangeEvent event, Actor actor) {
+                config.senseDistance = distSlider.getValue();
+                senseDistance.setText(String.valueOf(config.senseDistance));
+                uniforms.set(4*Float.BYTES, config.senseDistance);
+                uniforms.flush();
+            }
+        });
+
+        Slider turnSlider = new Slider(0, 20, 0.01f, false, skin);
+        turnSlider.addListener(new ChangeListener() {
+            public void changed (ChangeEvent event, Actor actor) {
+                config.turnSpeed = turnSlider.getValue();
+                turnSpeed.setText(String.valueOf(config.turnSpeed));
+                uniforms.set(6*Float.BYTES, config.turnSpeed);
+                uniforms.flush();
+            }
+        });
+
+        stage.clear();
+        Table screenTable = new Table();
+        screenTable.setFillParent(true);
+        Table controls = new Table();
+        controls.add(new Label("#Agents:", skin)).align(Align.left);
+        controls.add(numAgents).align(Align.left).row();
+        controls.add(instancesSlider).align(Align.left).row();
+
+        controls.add(new Label("Evaporation speed:", skin)).align(Align.left);
+        controls.add(evapSpeed).align(Align.left).row();
+        controls.add(evapSlider).align(Align.left).row();
+
+
+        controls.add(new Label("Sense angle:", skin)).align(Align.left);
+        controls.add(angle).align(Align.left).row();
+        controls.add(angleSlider).align(Align.left).row();
+
+
+        controls.add(new Label("Sense distance:", skin)).align(Align.left);
+        controls.add(senseDistance).align(Align.left).row();
+        controls.add(distSlider).align(Align.left).row();
+
+
+        controls.add(new Label("Turn speed:", skin)).align(Align.left);
+        controls.add(turnSpeed).align(Align.left).row();
+        controls.add(turnSlider).align(Align.left).row();
+
+        controls.add(new Label("(TAB to hide sliders)", skin)).pad(20).align(Align.left);
+
+        screenTable.add(controls).left().top().expand();
+
+        stage.addActor(screenTable);
+    }
+
+
 
 }
