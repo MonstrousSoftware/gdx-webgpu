@@ -91,6 +91,8 @@ public class WgGraphics extends AbstractGraphics implements WebGPUGraphicsBase, 
 				// GLFW.glfwSwapBuffers(windowHandle);
 			} else {
 				window.asyncResized = true;
+                System.out.println("Window.async resized");
+
 			}
 		}
 	};

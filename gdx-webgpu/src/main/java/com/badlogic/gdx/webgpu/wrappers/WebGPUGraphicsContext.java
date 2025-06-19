@@ -134,6 +134,8 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
     }
 
     public void resize(int width, int height){
+        System.out.println("resize: "+width+" x "+height);
+
         if(width * height == 0 )   // on minimize, don't create zero sized textures
             return;
         terminateDepthBuffer();
@@ -192,6 +194,7 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
 
     private void initSwapChain (int width, int height, boolean vsyncEnabled) {
         // configure the surface
+        System.out.println("initSwapChain: "+width+" x "+height);
         WGPUSurfaceConfiguration config = WGPUSurfaceConfiguration.createDirect();
         config.setNextInChain().setWidth(width).setHeight(height).setFormat(surfaceFormat).setViewFormatCount(0)
                 .setViewFormats(JavaWebGPU.createNullPointer()).setUsage(WGPUTextureUsage.RenderAttachment).setDevice(device.getHandle())
@@ -202,7 +205,7 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
     }
 
     private void initDepthBuffer(int width, int height, int samples){
-
+        System.out.println("initDepthBuffer: "+width+" x "+height);
         depthTexture = new WgTexture("depth texture", width, height, 1, WGPUTextureUsage.RenderAttachment,
                 WGPUTextureFormat.Depth24Plus, samples, WGPUTextureFormat.Depth24Plus );
     }

@@ -76,6 +76,7 @@ public class ComputeMoldSlime extends GdxTest {
         WgApplicationConfiguration config = new WgApplicationConfiguration();
         config.setWindowedMode(800, 600);
         config.setTitle("Compute Shader Slime Mold");
+
         new WgApplication(new ComputeMoldSlime(), config);
     }
 
