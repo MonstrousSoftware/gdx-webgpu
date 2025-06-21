@@ -26,6 +26,7 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
+import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
@@ -61,7 +62,7 @@ public class InstancingTest extends GdxTest {
 
 	WgModelBatch modelBatch;
 	PerspectiveCamera cam;
-	PerspectiveCamController controller;
+	CameraInputController controller;
 	WgSpriteBatch batch;
 	WgBitmapFont font;
 	Model model;
@@ -152,7 +153,8 @@ public class InstancingTest extends GdxTest {
 
 
 
-		controller = new PerspectiveCamController(cam);
+        //controller = new PerspectiveCamController(cam);
+        controller = new CameraInputController(cam);
 		Gdx.input.setInputProcessor(controller);
 		batch = new WgSpriteBatch();
 		font = new WgBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
@@ -325,6 +327,7 @@ public class InstancingTest extends GdxTest {
 		for(ModelInstance instance : instances)
 			instance.transform.rotate(Vector3.Y, 15f*delta);
 
+        viewport.apply();
 		WgScreenUtils.clear(Color.TEAL);
 
 		cam.update();
@@ -335,6 +338,7 @@ public class InstancingTest extends GdxTest {
 		modelBatch.end();
 
 
+        batch.setProjectionMatrix(viewport.getCamera().combined);
 		batch.begin();
 		int y = 120;
 		font.draw(batch, "Draw calls: "+modelBatch.drawCalls+" shader switches: "+modelBatch.shaderSwitches,0, y -= 20);
@@ -352,6 +356,7 @@ public class InstancingTest extends GdxTest {
 		cam.viewportWidth = width;
 		cam.viewportHeight = height;
 		cam.update();
+        viewport.update(width, height, true);
 
 	}
 

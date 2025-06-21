@@ -153,6 +153,7 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
 
         if(scissor == null)
             scissor = new Rectangle();
+        System.out.println("set scissor & viewport: "+width+" x "+height);
         scissor.set(0,0,width, height); // on resize, set scissor to whole window
         viewport.set(0,0,width, height);
         this.width = width;

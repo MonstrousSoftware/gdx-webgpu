@@ -46,8 +46,7 @@ public class WebGPUTestStarter {
 	public static void main (String[] argv) {
 
 		WgApplicationConfiguration config = new WgApplicationConfiguration();
-		config.setWindowedMode(320, 480);
-		config.backend = WGPUBackendType.Vulkan;
+		config.setWindowedMode(320, 640);
 
 		new WgApplication(new TestChooser(), config);
 	}

@@ -105,6 +105,7 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 		ByteBuffer vertexBB = ByteBuffer.allocateDirect(maxVertices * vertexSize*Float.BYTES);
 		vertexBB.order(ByteOrder.LITTLE_ENDIAN); // webgpu expects little endian data
 		vertexDataPtr = Pointer.wrap(JavaWebGPU.getRuntime(), vertexBB);
+        vertexData = vertexBB.asFloatBuffer();  // float view on the byte buffer
 
 
 		bindGroupLayout = createBindGroupLayout();
