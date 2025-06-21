@@ -38,9 +38,6 @@ import com.badlogic.gdx.webgpu.webgpu.WGPUBackendType;
 
 // test starter
 public class WebGPUTestStarter {
-
-
-
 	/** Runs libgdx tests.
 	 *
 
