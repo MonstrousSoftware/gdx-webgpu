@@ -14,11 +14,11 @@
  * limitations under the License.
  ******************************************************************************/
 
-group = 'badlogic.gdx.tests.webgpu'
+group = 'monstrous.gdx.tests.webgpu'
 version = '1.0'
 
 ext {
-	mainTestClass = "com.badlogic.gdx.tests.webgpu.WebGPUTestStarter"
+	mainTestClass = "com.monstrous.gdx.tests.webgpu.WebGPUTestStarter"
 	ext.j2w_version = "1.01"
 }
 sourceSets.main.resources.srcDirs = ["../assets"]
