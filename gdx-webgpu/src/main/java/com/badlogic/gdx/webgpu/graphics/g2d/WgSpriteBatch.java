@@ -112,7 +112,8 @@ public class WgSpriteBatch implements Batch {
 
         // Create FloatBuffer to hold vertex data per batch, is reset every flush
         vertexBB = BufferUtils.newUnsafeByteBuffer(maxSprites * VERTS_PER_SPRITE * vertexSize);
-        vertexBB.order(ByteOrder.nativeOrder());  // important
+        vertexBB.order(ByteOrder.LITTLE_ENDIAN);
+        // important, webgpu expects little endian.  ByteBuffer defaults to big endian.
         vertexData = vertexBB.asFloatBuffer();
 
         projectionMatrix = new Matrix4();

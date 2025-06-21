@@ -53,14 +53,15 @@ public class ComputeMoldSlime extends GdxTest {
     private WgGraphics gfx;
     private WebGPUComputePipeline pipeline1, pipeline2, pipeline3;
     private WgTexture texture, texture2;
-    WebGPUBindGroup bindGroupMove, bindGroupEvap, bindGroupBlur;
-    WebGPUQueue queue;
-    WebGPUUniformBuffer uniforms;
-    WebGPUBuffer agents;
-    Config config;
-    Viewport viewport;
-    WgStage stage;
-    WgSkin skin;
+    private WebGPUBindGroup bindGroupMove, bindGroupEvap, bindGroupBlur;
+    private WebGPUQueue queue;
+    private WebGPUUniformBuffer uniforms;
+    private WebGPUBuffer agents;
+    private Config config;
+    private Viewport viewport;
+    private WgStage stage;
+    private WgSkin skin;
+    private int savedWidth, savedHeight;
 
 
     public static class Config {
@@ -313,6 +314,19 @@ public class ComputeMoldSlime extends GdxTest {
                 rebuildStage();
         }
 
+        if(Gdx.input.isKeyJustPressed(Input.Keys.F11)){
+            boolean fullScreen = Gdx.graphics.isFullscreen();
+            WgGraphics.DisplayMode currentMode = Gdx.graphics.getDisplayMode();
+            if (fullScreen)
+                Gdx.graphics.setWindowedMode(savedWidth, savedHeight);
+            else {
+                savedWidth = Gdx.graphics.getWidth();
+                savedHeight = Gdx.graphics.getHeight();
+                Gdx.graphics.setFullscreenMode(currentMode);
+            }
+            return;
+        }
+
 
         if(Gdx.input.isKeyPressed(Input.Keys.SPACE)){
             Pixmap pm = new Pixmap(width, height, Pixmap.Format.RGBA8888);
@@ -372,7 +386,7 @@ public class ComputeMoldSlime extends GdxTest {
             }
         });
 
-        Slider evapSlider = new Slider(0, 2.5f, 0.01f, false, skin);
+        Slider evapSlider = new Slider(0, 1.0f, 0.01f, false, skin);
         evapSlider.addListener(new ChangeListener() {
             public void changed (ChangeEvent event, Actor actor) {
                 config.evapSpeed = evapSlider.getValue();
@@ -418,28 +432,29 @@ public class ComputeMoldSlime extends GdxTest {
         Table controls = new Table();
         controls.add(new Label("#Agents:", skin)).align(Align.left);
         controls.add(numAgents).align(Align.left).row();
-        controls.add(instancesSlider).align(Align.left).row();
+        controls.add(instancesSlider).colspan(2).align(Align.left).row();
 
         controls.add(new Label("Evaporation speed:", skin)).align(Align.left);
         controls.add(evapSpeed).align(Align.left).row();
-        controls.add(evapSlider).align(Align.left).row();
+        controls.add(evapSlider).colspan(2).align(Align.left).row();
 
 
         controls.add(new Label("Sense angle:", skin)).align(Align.left);
         controls.add(angle).align(Align.left).row();
-        controls.add(angleSlider).align(Align.left).row();
+        controls.add(angleSlider).colspan(2).align(Align.left).row();
 
 
         controls.add(new Label("Sense distance:", skin)).align(Align.left);
         controls.add(senseDistance).align(Align.left).row();
-        controls.add(distSlider).align(Align.left).row();
+        controls.add(distSlider).colspan(2).align(Align.left).row();
 
 
         controls.add(new Label("Turn speed:", skin)).align(Align.left);
         controls.add(turnSpeed).align(Align.left).row();
-        controls.add(turnSlider).align(Align.left).row();
+        controls.add(turnSlider).colspan(2).align(Align.left).row();
 
-        controls.add(new Label("(TAB to hide sliders)", skin)).pad(20).align(Align.left);
+        controls.add(new Label("(TAB to hide sliders)", skin)).colspan(2).pad(20).align(Align.left).row();
+        controls.add(new Label("(F11 to toggle full screen)", skin)).colspan(2).pad(10).align(Align.left);
 
         screenTable.add(controls).left().top().expand();
 

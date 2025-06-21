@@ -82,7 +82,7 @@ public class WgGraphics extends AbstractGraphics implements WebGPUGraphicsBase, 
 					return;
 				}
 				window.makeCurrent();
-				//setViewport(0, 0, backBufferWidth, backBufferHeight);
+				setViewport(0, 0, backBufferWidth, backBufferHeight);
 				window.getListener().resize(getWidth(), getHeight());
 				update();
 				context.resize(getWidth(), getHeight());
@@ -568,8 +568,8 @@ public class WgGraphics extends AbstractGraphics implements WebGPUGraphicsBase, 
 
 	@Override
 	public void setVSync (boolean vsync) {
-		getWindow().getConfig().vSyncEnabled = vsync;
-		GLFW.glfwSwapInterval(vsync ? 1 : 0);
+//		getWindow().getConfig().vSyncEnabled = vsync;
+//		GLFW.glfwSwapInterval(vsync ? 1 : 0);
 	}
 
 	/** Sets the target framerate for the application, when using continuous rendering. Must be positive. The cpu sleeps as needed.

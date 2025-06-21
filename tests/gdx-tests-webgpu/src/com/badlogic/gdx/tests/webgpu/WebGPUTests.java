@@ -70,7 +70,9 @@ public class WebGPUTests {
         ParticleEmittersTest.class,
         HeightMapTest.class,
         TestCompute.class,
-        TestComputeRNG.class
+        TestComputeRNG.class,
+        ComputeMoldSlime.class,
+        FullScreenTest.class
 
 		// @on
 

@@ -139,8 +139,8 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
         if(width * height == 0 )   // on minimize, don't create zero sized textures
             return;
         terminateDepthBuffer();
-        if(surface != null)
-            webGPU.wgpuSurfaceUnconfigure(surface);
+
+        exitSwapChain();
 
         initSwapChain(width, height, config.vSyncEnabled);
         initDepthBuffer(width, height, config.numSamples);
@@ -157,6 +157,10 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
         viewport.set(0,0,width, height);
         this.width = width;
         this.height = height;
+
+        // make sure we get a target view from the new swap chain
+        // to present at the end of this frame
+        targetView = getNextSurfaceTextureView();
     }
 
     public void setViewport(int x, int y, int w, int h){
@@ -194,18 +198,30 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
 
     private void initSwapChain (int width, int height, boolean vsyncEnabled) {
         // configure the surface
-        System.out.println("initSwapChain: "+width+" x "+height);
+        //System.out.println("initSwapChain: "+width+" x "+height);
         WGPUSurfaceConfiguration config = WGPUSurfaceConfiguration.createDirect();
-        config.setNextInChain().setWidth(width).setHeight(height).setFormat(surfaceFormat).setViewFormatCount(0)
-                .setViewFormats(JavaWebGPU.createNullPointer()).setUsage(WGPUTextureUsage.RenderAttachment).setDevice(device.getHandle())
-                .setPresentMode(vsyncEnabled ? WGPUPresentMode.Fifo : WGPUPresentMode.Immediate)
-                .setAlphaMode(WGPUCompositeAlphaMode.Auto);
+        config.setNextInChain()
+            .setWidth(width)
+            .setHeight(height)
+            .setFormat(surfaceFormat)
+            .setViewFormatCount(0)
+            .setViewFormats(JavaWebGPU.createNullPointer())
+            .setUsage(WGPUTextureUsage.RenderAttachment)
+            .setDevice(device.getHandle())
+            .setPresentMode(vsyncEnabled ? WGPUPresentMode.Fifo : WGPUPresentMode.Immediate)
+            .setAlphaMode(WGPUCompositeAlphaMode.Auto);
 
         webGPU.wgpuSurfaceConfigure(surface, config);
     }
 
+    private void exitSwapChain(){
+        //System.out.println("exitSwapChain");
+        if(surface != null)
+            webGPU.wgpuSurfaceUnconfigure(surface);
+    }
+
     private void initDepthBuffer(int width, int height, int samples){
-        System.out.println("initDepthBuffer: "+width+" x "+height);
+        //System.out.println("initDepthBuffer: "+width+" x "+height);
         depthTexture = new WgTexture("depth texture", width, height, 1, WGPUTextureUsage.RenderAttachment,
                 WGPUTextureFormat.Depth24Plus, samples, WGPUTextureFormat.Depth24Plus );
     }
@@ -221,12 +237,10 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
 
     @Override
     public void dispose() {
-        webGPU.wgpuSurfaceUnconfigure(surface);
+        exitSwapChain();
         queue.dispose();
         device.dispose();
-//
-//		webGPU.wgpuQueueRelease(queue);
-//		webGPU.wgpuDeviceRelease(device);
+
         webGPU.wgpuSurfaceRelease(surface);
 
         terminateDepthBuffer();
