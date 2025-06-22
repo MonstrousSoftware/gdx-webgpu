@@ -50,7 +50,8 @@ public abstract class WgModelLoader<P extends WgModelLoader.ModelParameters> ext
 
 	/** Directly load the raw model data on the calling thread. */
 	public ModelData loadModelData (final FileHandle fileHandle) {
-		return loadModelData(fileHandle, null);
+
+        return loadModelData(fileHandle, null);
 	}
 
 	/** Directly load the model on the calling thread. The model with not be managed by an {@link AssetManager}. */
