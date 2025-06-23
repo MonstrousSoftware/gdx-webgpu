@@ -309,7 +309,7 @@ public class WgSpriteBatch implements Batch {
     }
 
     public void begin(Color clearColor) {
-        renderPass = RenderPassBuilder.create(clearColor, gfx.getSamples());
+        renderPass = RenderPassBuilder.create("SpriteBatch", clearColor, gfx.getSamples());
         Rectangle view = gfx.getViewport();
         renderPass.setViewport(view.x, view.y, view.width, view.height, 0, 1);
 

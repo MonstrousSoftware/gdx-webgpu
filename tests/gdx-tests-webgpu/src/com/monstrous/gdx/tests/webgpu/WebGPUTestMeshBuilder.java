@@ -80,7 +80,7 @@ public class WebGPUTestMeshBuilder {
 		public void render () {
 
 			// create a render pass
-			WebGPURenderPass pass = RenderPassBuilder.create( Color.SKY );
+			WebGPURenderPass pass = RenderPassBuilder.create( "Test Mesh Builder", Color.SKY );
 
 			pass.setPipeline(pipeline);
 

@@ -83,7 +83,7 @@ public class WgModelBatch implements Disposable {
         this.camera = camera;
 
         WebGPUGraphicsBase gfx = (WebGPUGraphicsBase) Gdx.graphics;
-        renderPass = RenderPassBuilder.create(null, gfx.getSamples());
+        renderPass = RenderPassBuilder.create("ModelBatch", null, gfx.getSamples());
 
         renderables.clear();
         shaderSwitches = 0;

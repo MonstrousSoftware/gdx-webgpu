@@ -36,6 +36,7 @@ import com.monstrous.gdx.tests.webgpu.utils.PerspectiveCamController;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.monstrous.gdx.webgpu.WebGPUGraphicsBase;
 import com.monstrous.gdx.webgpu.assets.WgAssetManager;
 import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplication;
 import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
@@ -72,6 +73,7 @@ public class InstancingTest extends GdxTest {
 	WgStage stage;
 	WgSkin skin;
 	WgAssetManager assets;
+    WebGPUGraphicsBase gfx;
 
 
 	// launcher
@@ -82,13 +84,14 @@ public class InstancingTest extends GdxTest {
 		config.setTitle("WebGPUTest");
 		config.useVsync(false);
 		config.backend = WGPUBackendType.Vulkan;
-		config.enableGPUtiming = false;
+		config.enableGPUtiming = true;
 
 		new WgApplication(new InstancingTest(), config);
 	}
 
 	// application
 	public void create () {
+        gfx = (WebGPUGraphicsBase) Gdx.graphics;
 
 		WgDefaultShader.Config config = new WgDefaultShader.Config();
 		config.maxInstances = MAX_INSTANCES;
@@ -345,6 +348,7 @@ public class InstancingTest extends GdxTest {
 		font.draw(batch, "numRenderables: "+modelBatch.numRenderables ,0, y -= 20);
 		font.draw(batch, "Materials: "+modelBatch.numMaterials ,0, y -= 20);
 		font.draw(batch, "FPS: "+Gdx.graphics.getFramesPerSecond() ,0, y -= 20);
+        font.draw(batch, "GPU time: "+gfx.getAverageGPUtime() ,0, y -= 20);
 		batch.end();
 
 		stage.act();

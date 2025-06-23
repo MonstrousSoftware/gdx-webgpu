@@ -25,6 +25,7 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
     public WgTexture depthTexture;
     private WGPUSupportedLimits supportedLimits;
     private WgTexture multiSamplingTexture;
+    private GPUTimer gpuTimer;
     private final Configuration config;
     private final Rectangle viewport = new Rectangle();
     private boolean scissorEnabled = false;
@@ -72,7 +73,16 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
 
         queue = new WebGPUQueue(device);
 
+        gpuTimer = new GPUTimer(device, config.gpuTimingEnabled);
+
         // create a swap chain via resize
+    }
+
+
+    /** returns null if gpu timing is not enabled in application configuration. */
+    @Override
+    public GPUTimer getGPUTimer() {
+        return gpuTimer;
     }
 
 
@@ -89,6 +99,9 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
 
         listener.render();	// call user code
 
+        // resolve time stamps after render pass end and before encoder finish
+        gpuTimer.resolveTimeStamps(commandEncoder);
+
         // finish command encoder to get a command buffer
         WebGPUCommandBuffer commandBuffer = commandEncoder.finish();
         commandEncoder.dispose();
@@ -96,11 +109,19 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
         queue.submit(commandBuffer);	// submit command buffer
         commandBuffer.dispose();
 
+        // fetch time stamps after submitting the command buffer
+        gpuTimer.fetchTimestamps();
+
         // At the end of the frame
         webGPU.wgpuTextureViewRelease(targetView);
         webGPU.wgpuSurfacePresent(surface);
         targetView = null;
         device.tick();
+    }
+
+    @Override
+    public float getAverageGPUtime(){
+        return gpuTimer.getAverageGPUtime();
     }
 
     private Pointer getNextSurfaceTextureView () {
@@ -197,6 +218,8 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
         return scissor;
     }
 
+
+
     private void initSwapChain (int width, int height, boolean vsyncEnabled) {
         // configure the surface
         //System.out.println("initSwapChain: "+width+" x "+height);
@@ -241,6 +264,7 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
         exitSwapChain();
         queue.dispose();
         device.dispose();
+        gpuTimer.dispose();
 
         webGPU.wgpuSurfaceRelease(surface);
 

@@ -4,6 +4,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.monstrous.gdx.webgpu.webgpu.WGPUBackendType;
 import com.monstrous.gdx.webgpu.webgpu.WGPUTextureFormat;
 import com.monstrous.gdx.webgpu.webgpu.WebGPU_JNI;
+import com.monstrous.gdx.webgpu.wrappers.GPUTimer;
 import com.monstrous.gdx.webgpu.wrappers.WebGPUCommandEncoder;
 import com.monstrous.gdx.webgpu.wrappers.WebGPUDevice;
 import com.monstrous.gdx.webgpu.wrappers.WebGPUQueue;
@@ -31,5 +32,8 @@ public interface WebGPUGraphicsBase {
     boolean isScissorEnabled();
     void setScissor(int x, int y, int w, int h);
     Rectangle getScissor();
+
+    GPUTimer getGPUTimer();
+    float getAverageGPUtime();
 
 }

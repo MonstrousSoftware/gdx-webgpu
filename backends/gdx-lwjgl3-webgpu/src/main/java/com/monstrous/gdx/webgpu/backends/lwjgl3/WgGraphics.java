@@ -31,10 +31,7 @@ import com.monstrous.gdx.webgpu.graphics.utils.WgGL20;
 import com.monstrous.gdx.webgpu.webgpu.WGPUBackendType;
 import com.monstrous.gdx.webgpu.webgpu.WGPUTextureFormat;
 import com.monstrous.gdx.webgpu.webgpu.WebGPU_JNI;
-import com.monstrous.gdx.webgpu.wrappers.WebGPUCommandEncoder;
-import com.monstrous.gdx.webgpu.wrappers.WebGPUDevice;
-import com.monstrous.gdx.webgpu.wrappers.WebGPUGraphicsContext;
-import com.monstrous.gdx.webgpu.wrappers.WebGPUQueue;
+import com.monstrous.gdx.webgpu.wrappers.*;
 import jnr.ffi.Pointer;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.PointerBuffer;
@@ -72,6 +69,7 @@ public class WgGraphics extends AbstractGraphics implements WebGPUGraphicsBase, 
 	private DisplayMode displayModeBeforeFullscreen = null;
 	private final WebGPU_JNI webGPU;
 	public final WebGPUGraphicsContext context;
+    private float gpuTime;
 
 
 
@@ -213,6 +211,16 @@ public class WgGraphics extends AbstractGraphics implements WebGPUGraphicsBase, 
         return context.getScissor();
     }
 
+    @Override
+    public GPUTimer getGPUTimer() {
+        return context.getGPUTimer();
+    }
+
+    @Override
+    public float getAverageGPUtime(){
+        return gpuTime;
+    }
+
     void updateFramebufferInfo () {
 		GLFW.glfwGetFramebufferSize(window.getWindowHandle(), tmpBuffer, tmpBuffer2);
 		this.backBufferWidth = tmpBuffer.get(0);
@@ -239,6 +247,8 @@ public class WgGraphics extends AbstractGraphics implements WebGPUGraphicsBase, 
 			fps = frames;
 			frames = 0;
 			frameCounterStart = time;
+            // request average gpu time once per second to keep it readable
+            gpuTime = context.getAverageGPUtime();
 		}
 		frames++;
 		frameId++;
