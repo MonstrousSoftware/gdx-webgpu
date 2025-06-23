@@ -130,6 +130,7 @@ been changed. SpriteBatch will make an internal adjustment to compensate if prov
 
 Any LibGDX functions not related to graphics should just work, e.g. maths classes, audio, networking, etc.
 
+
 ## Class specific comments
 This section provides some considerations to keep in mind for specific classes. In general, the classes should behave as their original LibGDX counterpart, but in a few cases there are some caveats.
 
@@ -172,3 +173,28 @@ If a texture is intended to be used as render output, it needs to be constructed
 If anti-aliasing is desired, the parameter `numSamples` should be set to 4 (valid values are 1 and 4).
 
 If a WgTexture is constructed from a TextureData, it must be a WgTextureData.
+
+# Other comments
+
+## GPU timing
+To get timing of render passes, set `enableGPUtiming` to true in the application configuration (it may not have effect on all platforms).  
+
+Access the GPUTimer as follows:
+```java 
+    WebGPUGraphicsBase gfx = (WebGPUGraphicsBase) Gdx.graphics;
+    GPUTimer gpuTimer = gfx.getGPUTimer();
+```
+
+You can use the methods of GPUTimer to get the number of render passes, their labels and their average time in microseconds:
+```java 
+        int numPasses = gpuTimer.getNumPasses();
+
+        for(int pass = 0; pass < numPasses; pass++) {
+            String name = gpuTimer.getPassName(pass);
+            float microseconds = gpuTimer.getAverageTime(pass);
+            System.out.println(name + " : " + microseconds);
+        }
+```
+         
+        
+

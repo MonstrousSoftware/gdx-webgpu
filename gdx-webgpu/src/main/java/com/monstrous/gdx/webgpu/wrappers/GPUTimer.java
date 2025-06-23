@@ -29,16 +29,18 @@ import jnr.ffi.Pointer;
  */
 
 public class GPUTimer implements Disposable {
-    private final static int BUF_SIZE = 16;     // size for two 64-bit integer values
+    public final static int MAX_PASSES = 20;   // max number of passes that we can support
 
     private final boolean enabled;
     private Pointer timestampQuerySet;
     private Pointer timeStampResolveBuffer;
     private Pointer timeStampMapBuffer;
     private boolean timeStampMapOngoing = false;
-    private WGPURenderPassTimestampWrites query = null;
+    //private WGPURenderPassTimestampWrites query = null;
     private WebGPU_JNI webGPU;
-    private WebGPUDevice device;
+    private final WebGPUDevice device;
+    private int passNumber;
+    private int numPasses;
 
     public GPUTimer(WebGPUDevice device, boolean enabled) {
         this.device = device;
@@ -54,8 +56,7 @@ public class GPUTimer implements Disposable {
         querySetDescriptor.setNextInChain();
         querySetDescriptor.setLabel("Timestamp Query Set");
         querySetDescriptor.setType(WGPUQueryType.Timestamp);
-        querySetDescriptor.setCount(2); // start and end time
-
+        querySetDescriptor.setCount(2*MAX_PASSES); // start and end time
 
         timestampQuerySet = webGPU.wgpuDeviceCreateQuerySet(device.getHandle(), querySetDescriptor);
 
@@ -63,49 +64,86 @@ public class GPUTimer implements Disposable {
         WGPUBufferDescriptor bufferDesc = WGPUBufferDescriptor.createDirect();
         bufferDesc.setLabel("timestamp resolve buffer");
         bufferDesc.setUsage( WGPUBufferUsage.CopySrc | WGPUBufferUsage.QueryResolve );
-        bufferDesc.setSize(BUF_SIZE);     // space for 2 uint64's
+        bufferDesc.setSize(8*2*MAX_PASSES);     // space for 2 uint64's per pass
         bufferDesc.setMappedAtCreation(0L);
         timeStampResolveBuffer = webGPU.wgpuDeviceCreateBuffer(device.getHandle(), bufferDesc);
 
         bufferDesc.setLabel("timestamp map buffer");
         bufferDesc.setUsage( WGPUBufferUsage.CopyDst | WGPUBufferUsage.MapRead );
-        bufferDesc.setSize(BUF_SIZE);
+        bufferDesc.setSize(8*2*MAX_PASSES);
         timeStampMapBuffer = webGPU.wgpuDeviceCreateBuffer(device.getHandle(), bufferDesc);
 
-        query = WGPURenderPassTimestampWrites.createDirect();
-        query.setBeginningOfPassWriteIndex(0);
-        query.setEndOfPassWriteIndex(1);
-        query.setQuerySet(timestampQuerySet);
+        passNumber = -1;
+
     }
 
 
-    /** get a query that can be passed into a render pass descriptor using renderPassDescriptor.setTimestampWrites(query);
+    public boolean isEnabled(){
+        return enabled;
+    }
+
+    /** get a query set that can be made into a query for renderPassDescriptor.setTimestampWrites(query);
      *  Will be null if timing is not enabled. */
-    public WGPURenderPassTimestampWrites getRenderPassQuery(){
-        return query;
+    public Pointer getQuerySet(){
+        return timestampQuerySet;
+    }
+
+    public int addPass(String name){
+        if(passNumber == MAX_PASSES) {
+            Gdx.app.error("GPUTimer", "Timing too many passes: "+passNumber);
+            names[passNumber] = name;
+            return passNumber;  // overwrite last slot instead of overflowing
+        }
+        else {
+            names[passNumber+1] = name;
+            return passNumber++;
+        }
+    }
+
+    public int getStartIndex(){
+        return 2 * passNumber;
+    }
+
+    public int getStopIndex(){
+        return 2* passNumber + 1;
+    }
+
+    /** number of passes in this frame so far. */
+    public int getNumPasses(){
+        return numPasses;
     }
 
     public void resolveTimeStamps(WebGPUCommandEncoder encoder){
+        // reset pass counter as we are at the end of the frame
+        numPasses = passNumber+1;
+        passNumber = -1;
+
         if( !enabled || timeStampMapOngoing)
             return;
 
         // Resolve the timestamp queries (write their result to the resolve buffer)
-        webGPU.wgpuCommandEncoderResolveQuerySet(encoder.getHandle(), timestampQuerySet, 0, 2, timeStampResolveBuffer, 0);
+        webGPU.wgpuCommandEncoderResolveQuerySet(encoder.getHandle(), timestampQuerySet, 0, 2*numPasses, timeStampResolveBuffer, 0);
 
         // Copy to the map buffer
-        webGPU.wgpuCommandEncoderCopyBufferToBuffer(encoder.getHandle(), timeStampResolveBuffer, 0,  timeStampMapBuffer, 0,BUF_SIZE);
+        webGPU.wgpuCommandEncoderCopyBufferToBuffer(encoder.getHandle(), timeStampResolveBuffer, 0,  timeStampMapBuffer, 0,8*2*numPasses);
+
+
     }
+
 
 
     // a lambda expression to define a callback function
     WGPUBufferMapCallback onTimestampBufferMapped = (WGPUBufferMapAsyncStatus status, Pointer userData) -> {
         if(status == WGPUBufferMapAsyncStatus.Success) {
-            Pointer ram =  webGPU.wgpuBufferGetConstMappedRange(timeStampMapBuffer, 0, BUF_SIZE);
-            long start = ram.getLong(0);
-            long end = ram.getLong(Long.BYTES);
+            Pointer ram =  webGPU.wgpuBufferGetConstMappedRange(timeStampMapBuffer, 0, 8*2*MAX_PASSES);
+            for(int pass = 0; pass < numPasses; pass++) {
+                long start = ram.getLong(8L *2*pass);
+                long end = ram.getLong(8L *2*pass + 8);
+                long ns = end - start;
+                addTimeSample(pass, ns);
+            }
             webGPU.wgpuBufferUnmap(timeStampMapBuffer);
-            long ns = end - start;
-            addTimeSample(ns);
+
         }
         timeStampMapOngoing = false;
     };
@@ -115,7 +153,7 @@ public class GPUTimer implements Disposable {
             return;
 
         timeStampMapOngoing = true;
-        webGPU.wgpuBufferMapAsync(timeStampMapBuffer, WGPUMapMode.Read, 0, BUF_SIZE, onTimestampBufferMapped, null);
+        webGPU.wgpuBufferMapAsync(timeStampMapBuffer, WGPUMapMode.Read, 0, 8*2*MAX_PASSES, onTimestampBufferMapped, null);
     }
 
     @Override
@@ -138,32 +176,32 @@ public class GPUTimer implements Disposable {
         webGPU.wgpuBufferRelease(timeStampResolveBuffer);
     }
 
-    private long cumulative = 0;
-    private int numSamples = 0;
+    private final String[] names = new String[MAX_PASSES];
+    private final long[] cumulative = new long[MAX_PASSES];
+    private final int[] numSamples = new int[MAX_PASSES];
 
-    private void addTimeSample(long ns){
-        numSamples++;
-        cumulative += ns;
+    private void addTimeSample(int pass, long ns){
+        numSamples[pass]++;
+        cumulative[pass] += ns;
     }
 
     // returns average time per frame spent by GPU (in microseconds).
-    public float getAverageGPUtime(){
-        if(numSamples == 0)
+    public float getAverageGPUtime(int pass){
+        if(numSamples[pass] == 0)
             return 0;
-        float avg = (float) (cumulative/1000) / (float)numSamples;
-        //resetGPUsamples();
+        float avg = (float) (cumulative[pass]/1000) / (float)numSamples[pass];  // average time converted from nano to microseconds
+        resetGPUsamples(pass);
         return avg;
     }
 
-    public void logAverageGPUtime(){
-        if(numSamples > 0)
-            System.out.println("average: "+(float)cumulative / (float)numSamples + " numSamples: "+numSamples);
-        resetGPUsamples();
+    public String getPassName(int pass){
+        return names[pass];
     }
 
-    public void resetGPUsamples(){
-        numSamples = 0;
-        cumulative = 0;
+
+    public void resetGPUsamples(int pass){
+        numSamples[pass] = 0;
+        cumulative[pass] = 0L;
     }
 
 

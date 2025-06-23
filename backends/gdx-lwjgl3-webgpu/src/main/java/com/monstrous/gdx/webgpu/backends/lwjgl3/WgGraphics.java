@@ -69,7 +69,7 @@ public class WgGraphics extends AbstractGraphics implements WebGPUGraphicsBase, 
 	private DisplayMode displayModeBeforeFullscreen = null;
 	private final WebGPU_JNI webGPU;
 	public final WebGPUGraphicsContext context;
-    private float gpuTime;
+    private float[] gpuTime = new float[GPUTimer.MAX_PASSES];
 
 
 
@@ -217,8 +217,8 @@ public class WgGraphics extends AbstractGraphics implements WebGPUGraphicsBase, 
     }
 
     @Override
-    public float getAverageGPUtime(){
-        return gpuTime;
+    public float getAverageGPUtime(int pass){
+        return gpuTime[pass];
     }
 
     void updateFramebufferInfo () {
@@ -248,7 +248,9 @@ public class WgGraphics extends AbstractGraphics implements WebGPUGraphicsBase, 
 			frames = 0;
 			frameCounterStart = time;
             // request average gpu time once per second to keep it readable
-            gpuTime = context.getAverageGPUtime();
+            for(int i = 0; i < context.getGPUTimer().getNumPasses(); i++)
+            //for(int i = 0; i < GPUTimer.MAX_PASSES; i++)
+                gpuTime[i] = context.getAverageGPUtime(i);
 		}
 		frames++;
 		frameId++;

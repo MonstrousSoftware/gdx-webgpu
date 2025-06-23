@@ -34,6 +34,6 @@ public interface WebGPUGraphicsBase {
     Rectangle getScissor();
 
     GPUTimer getGPUTimer();
-    float getAverageGPUtime();
+    float getAverageGPUtime(int pass);
 
 }

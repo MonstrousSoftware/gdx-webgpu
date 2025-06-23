@@ -56,3 +56,7 @@ Added (2d) particle effects.
 3d particle effects will be harder to add, there are many classes and specific shaders.
 
 todo When launching via the test chooser reaction to input becomes laggy, e.g. scene2d sliders or window dragging.
+
+23/06:
+- Added time stamp queries to match GPU time per render pass.
+ 

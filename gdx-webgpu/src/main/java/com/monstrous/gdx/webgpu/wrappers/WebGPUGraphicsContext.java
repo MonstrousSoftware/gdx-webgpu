@@ -25,7 +25,7 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
     public WgTexture depthTexture;
     private WGPUSupportedLimits supportedLimits;
     private WgTexture multiSamplingTexture;
-    private GPUTimer gpuTimer;
+    private final GPUTimer gpuTimer;
     private final Configuration config;
     private final Rectangle viewport = new Rectangle();
     private boolean scissorEnabled = false;
@@ -120,8 +120,8 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
     }
 
     @Override
-    public float getAverageGPUtime(){
-        return gpuTimer.getAverageGPUtime();
+    public float getAverageGPUtime(int pass){
+        return gpuTimer.getAverageGPUtime(pass);
     }
 
     private Pointer getNextSurfaceTextureView () {

@@ -84,7 +84,7 @@ public class InstancingTest extends GdxTest {
 		config.setTitle("WebGPUTest");
 		config.useVsync(false);
 		config.backend = WGPUBackendType.Vulkan;
-		config.enableGPUtiming = true;
+		config.enableGPUtiming = false;
 
 		new WgApplication(new InstancingTest(), config);
 	}
@@ -343,12 +343,14 @@ public class InstancingTest extends GdxTest {
 
         batch.setProjectionMatrix(viewport.getCamera().combined);
 		batch.begin();
-		int y = 120;
+		int y = 250;
 		font.draw(batch, "Draw calls: "+modelBatch.drawCalls+" shader switches: "+modelBatch.shaderSwitches,0, y -= 20);
 		font.draw(batch, "numRenderables: "+modelBatch.numRenderables ,0, y -= 20);
 		font.draw(batch, "Materials: "+modelBatch.numMaterials ,0, y -= 20);
 		font.draw(batch, "FPS: "+Gdx.graphics.getFramesPerSecond() ,0, y -= 20);
-        font.draw(batch, "GPU time: "+gfx.getAverageGPUtime() ,0, y -= 20);
+
+        for(int pass = 0; pass < gfx.getGPUTimer().getNumPasses(); pass++)
+            font.draw(batch, "GPU time (pass "+pass+" "+gfx.getGPUTimer().getPassName(pass)+") : "+(int)gfx.getAverageGPUtime(pass) ,0, y -= 20);
 		batch.end();
 
 		stage.act();
