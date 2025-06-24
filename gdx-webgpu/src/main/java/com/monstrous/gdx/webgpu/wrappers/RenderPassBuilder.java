@@ -145,19 +145,17 @@ public class RenderPassBuilder {
             renderPassDescriptor.setDepthStencilAttachment(depthStencilAttachment);
         }
 
-        //if(name.contentEquals("SpriteBatch")) {
-            GPUTimer timer = gfx.getGPUTimer();
-            if (timer.isEnabled()) {
-                timer.addPass(name);  // announce a new render pass for this frame (this determines the index values)
-                // create a query
-                //System.out.println("Timer for "+name+ " indices: "+timer.getStartIndex()+" "+timer.getStopIndex());
-                WGPURenderPassTimestampWrites query = WGPURenderPassTimestampWrites.createDirect();
-                query.setBeginningOfPassWriteIndex(timer.getStartIndex());  // get offset for this render pass's start time
-                query.setEndOfPassWriteIndex(timer.getStopIndex());
-                query.setQuerySet(timer.getQuerySet());
-                renderPassDescriptor.setTimestampWrites(query);
-            }
-       // }
+        GPUTimer timer = gfx.getGPUTimer();
+        if (timer.isEnabled()) {
+            timer.addPass(name);  // announce a new render pass for this frame (this determines the index values)
+            // create a query
+            //System.out.println("Timer for "+name+ " indices: "+timer.getStartIndex()+" "+timer.getStopIndex());
+            WGPURenderPassTimestampWrites query = WGPURenderPassTimestampWrites.createDirect();
+            query.setBeginningOfPassWriteIndex(timer.getStartIndex());  // get offset for this render pass's start time
+            query.setEndOfPassWriteIndex(timer.getStopIndex());
+            query.setQuerySet(timer.getQuerySet());
+            renderPassDescriptor.setTimestampWrites(query);
+        }
 
 
         Pointer renderPassPtr = gfx.getWebGPU().wgpuCommandEncoderBeginRenderPass(gfx.getCommandEncoder().getHandle(), renderPassDescriptor);

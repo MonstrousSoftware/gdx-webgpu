@@ -72,7 +72,8 @@ public class WebGPUTests {
         TestCompute.class,
         TestComputeRNG.class,
         ComputeMoldSlime.class,
-        FullScreenTest.class
+        FullScreenTest.class,
+        GPUTimerTest.class
 
 		// @on
 

@@ -36,7 +36,6 @@ public class GPUTimer implements Disposable {
     private Pointer timeStampResolveBuffer;
     private Pointer timeStampMapBuffer;
     private boolean timeStampMapOngoing = false;
-    //private WGPURenderPassTimestampWrites query = null;
     private WebGPU_JNI webGPU;
     private final WebGPUDevice device;
     private int passNumber;

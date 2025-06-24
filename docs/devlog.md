@@ -59,4 +59,4 @@ todo When launching via the test chooser reaction to input becomes laggy, e.g. s
 
 23/06:
 - Added time stamp queries to match GPU time per render pass.
- 
+- Todo: caches query objects per pass in GPUTimer class; extends to compute pass.

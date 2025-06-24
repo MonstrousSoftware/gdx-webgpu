@@ -31,11 +31,10 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
-import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
-import com.monstrous.gdx.tests.webgpu.utils.PerspectiveCamController;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.webgpu.WebGPUGraphicsBase;
 import com.monstrous.gdx.webgpu.assets.WgAssetManager;
 import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplication;
@@ -49,17 +48,12 @@ import com.monstrous.gdx.webgpu.scene2d.WgSkin;
 import com.monstrous.gdx.webgpu.scene2d.WgStage;
 import com.monstrous.gdx.webgpu.webgpu.WGPUBackendType;
 
-/** Test renderable instancing - reducing the number of draw calls if renderables use the same mesh part.
+/** Demonstrates gpu timer measurements.
  * */
 
 
-public class InstancingTest extends GdxTest {
+public class GPUTimerTest extends GdxTest {
 	final static int MAX_INSTANCES = 10000;
-
-	final static String[] fileNames = {  "data/g3d/ducky.obj", "data/g3d/head.g3db",
-			"data/g3d/monkey.g3db", "data/g3d/teapot.g3db", "data/g3d/cube.g3dj",
-			"data/g3d/ship.obj", "data/g3d/webgpu.obj"
-	};
 
 	WgModelBatch modelBatch;
 	PerspectiveCamera cam;
@@ -84,9 +78,9 @@ public class InstancingTest extends GdxTest {
 		config.setTitle("WebGPUTest");
 		config.useVsync(false);
 		config.backend = WGPUBackendType.Vulkan;
-		config.enableGPUtiming = false;
+		config.enableGPUtiming = true;
 
-		new WgApplication(new InstancingTest(), config);
+		new WgApplication(new GPUTimerTest(), config);
 	}
 
 	// application
@@ -107,11 +101,10 @@ public class InstancingTest extends GdxTest {
 
 		// queue for asynchronous loading
 		assets = new WgAssetManager();
-		for(String fileName : fileNames)
-			assets.load(fileName, Model.class);
+        assets.load("data/g3d/ducky.obj", Model.class);
 		assets.finishLoading();
 
-		model = assets.get(fileNames[0]);
+		model = assets.get("data/g3d/ducky.obj");
 		ModelInstance instance = new ModelInstance(model, 0, -1, 0);
 
 		instances.add(instance);
@@ -175,112 +168,6 @@ public class InstancingTest extends GdxTest {
 
 		skin = new WgSkin(Gdx.files.internal("data/uiskin.json"));
 
-		SelectBox<String> selectBox = new SelectBox<>(skin);
-		// Add a listener to the button. ChangeListener is fired when the button's checked state changes, eg when clicked,
-		// Button#setChecked() is called, via a key press, etc. If the event.cancel() is called, the checked state will be reverted.
-		// ClickListener could have been used, but would only fire when clicked. Also, canceling a ClickListener event won't
-		// revert the checked state.
-		selectBox.addListener(new ChangeListener() {
-			public void changed (ChangeEvent event, Actor actor) {
-				System.out.println("Clicked! Is checked: " + selectBox.getSelected());
-
-					model = assets.get(selectBox.getSelected(), Model.class);
-					instances.clear();
-						for(float z = -3; z > -20; z-= 3) {
-						for (float x = -25; x < 25; x += 3) {
-							ModelInstance instance = new ModelInstance(model, x, -1, z);
-							instance.transform.rotate(Vector3.Y, (float)Math.random() * 360f);
-							instances.add(instance);
-						}
-					}
-
-			}
-		});
-
-		selectBox.setItems(fileNames );
-
-
-		CheckBox checkBox1 = new CheckBox("blue directional light", skin);
-		checkBox1.setChecked(true);
-		environment.add(dirLight1);
-		checkBox1.addListener(new ChangeListener() {
-			public void changed (ChangeEvent event, Actor actor) {
-				System.out.println("Clicked! Is checked: " + checkBox1.isChecked());
-				if(checkBox1.isChecked())
-					environment.add(dirLight1);
-				else
-					environment.remove(dirLight1);
-			}
-		});
-		CheckBox checkBox2 = new CheckBox("red directional light", skin);
-		checkBox2.setChecked(true);
-		environment.add(dirLight2);
-		checkBox2.addListener(new ChangeListener() {
-			public void changed (ChangeEvent event, Actor actor) {
-				System.out.println("Clicked! Is checked: " + checkBox2.isChecked());
-				if(checkBox2.isChecked())
-					environment.add(dirLight2);
-				else
-					environment.remove(dirLight2);
-			}
-		});
-		CheckBox checkBox3 = new CheckBox("green directional light", skin);
-		checkBox3.setChecked(true);
-		environment.add(dirLight3);
-		checkBox3.addListener(new ChangeListener() {
-			public void changed (ChangeEvent event, Actor actor) {
-				System.out.println("Clicked! Is checked: " + checkBox3.isChecked());
-				if(checkBox3.isChecked())
-					environment.add(dirLight3);
-				else
-					environment.remove(dirLight3);
-			}
-		});
-
-
-		Slider ambientSlider = new Slider(0.0f, 1.0f, 0.01f, false, skin);
-		ambientSlider.addListener(new ChangeListener() {
-			public void changed (ChangeEvent event, Actor actor) {
-				System.out.println("Ambient level: " + ambientSlider.getValue());
-				float v = ambientSlider.getValue();
-				ambient.color.set(v, v, v, 1.0f);
-			}
-		});
-
-
-		CheckBox checkBox4 = new CheckBox("purple point light", skin);
-		checkBox4.addListener(new ChangeListener() {
-			public void changed (ChangeEvent event, Actor actor) {
-				System.out.println("Point light 1: " + checkBox4.isChecked());
-				if(checkBox4.isChecked())
-					environment.add(pointLight1);
-				else
-					environment.remove(pointLight1);
-			}
-		});
-
-		CheckBox checkBox5 = new CheckBox("yellow point light", skin);
-		checkBox5.addListener(new ChangeListener() {
-			public void changed (ChangeEvent event, Actor actor) {
-				System.out.println("Point light 2: " + checkBox5.isChecked());
-				if(checkBox5.isChecked())
-					environment.add(pointLight2);
-				else
-					environment.remove(pointLight2);
-			}
-		});
-
-		Slider intensitySlider = new Slider(0.0f, 10.0f, 0.01f, false, skin);
-		intensitySlider.setValue(1f);
-		intensitySlider.addListener(new ChangeListener() {
-			public void changed (ChangeEvent event, Actor actor) {
-				System.out.println("Intensity level: " + intensitySlider.getValue());
-				float v = intensitySlider.getValue();
-				pointLight1.intensity = v;
-				pointLight2.intensity = v;
-			}
-		});
-
 
 		Slider instancesSlider = new Slider(1, MAX_INSTANCES, 10, false, skin);
 		instancesSlider.addListener(new ChangeListener() {
@@ -305,16 +192,6 @@ public class InstancingTest extends GdxTest {
 		Table screenTable = new Table();
 		screenTable.setFillParent(true);
 		Table controls = new Table();
-		controls.add(selectBox).align(Align.left).row();
-		controls.add(checkBox1).align(Align.left).row();
-		controls.add(checkBox2).align(Align.left).row();
-		controls.add(checkBox3).align(Align.left).row();
-		controls.add(new Label("ambient:", skin)).align(Align.left).row();
-		controls.add(ambientSlider).align(Align.left).row();
-//		controls.add(checkBox4).align(Align.left).row();
-//		controls.add(checkBox5).align(Align.left).row();
-//		controls.add(new Label("point lights intensity:", skin)).align(Align.left).row();
-//		controls.add(intensitySlider).align(Align.left).row();
 		controls.add(new Label("numInstances:", skin)).align(Align.left).row();
 		controls.add(instancesSlider).align(Align.left).row();
 		screenTable.add(controls).left().top().expand();
@@ -348,8 +225,11 @@ public class InstancingTest extends GdxTest {
 		font.draw(batch, "numRenderables: "+modelBatch.numRenderables ,0, y -= 20);
 		font.draw(batch, "Materials: "+modelBatch.numMaterials ,0, y -= 20);
 		font.draw(batch, "FPS: "+Gdx.graphics.getFramesPerSecond() ,0, y -= 20);
-        batch.end();
+        font.draw(batch, "delta time: "+(int)(1000000/(Gdx.graphics.getFramesPerSecond()+0.001f))+" microseconds",0, y -= 20);
 
+        for(int pass = 0; pass < gfx.getGPUTimer().getNumPasses(); pass++)
+            font.draw(batch, "GPU time (pass "+pass+" "+gfx.getGPUTimer().getPassName(pass)+") : "+(int)gfx.getAverageGPUtime(pass)+ " microseconds" ,0, y -= 20);
+		batch.end();
 
 		stage.act();
 		stage.draw();
