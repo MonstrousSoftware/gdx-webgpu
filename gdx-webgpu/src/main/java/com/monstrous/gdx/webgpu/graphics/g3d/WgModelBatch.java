@@ -134,7 +134,6 @@ public class WgModelBatch implements Disposable {
             throw new ArrayIndexOutOfBoundsException("Too many renderables");
         sorter.sort(camera, renderables);
 
-
         WgDefaultShader currentShader = null;
         for(Renderable renderable : renderables) {
             if (currentShader != renderable.shader) {

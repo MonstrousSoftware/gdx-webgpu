@@ -174,6 +174,12 @@ If anti-aliasing is desired, the parameter `numSamples` should be set to 4 (vali
 
 If a WgTexture is constructed from a TextureData, it must be a WgTextureData.
 
+## WgFrameBuffer
+This can be used to capture output to a texture.
+Note that the format needs to be specified as a WGPUTextureFormat enum (e.g.  `WGPUTextureFormat.BGRA8Unorm`). (TOFIX: has to match the surface format.)
+Unlike FrameBuffer in LibGDX, WgFrameBuffer can be nested. 
+
+
 # Other comments
 
 ## GPU timing

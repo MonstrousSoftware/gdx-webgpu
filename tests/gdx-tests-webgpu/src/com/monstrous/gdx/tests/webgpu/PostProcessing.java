@@ -27,23 +27,19 @@ import com.monstrous.gdx.tests.webgpu.utils.PerspectiveCamController;
 import com.monstrous.gdx.webgpu.WebGPUGraphicsBase;
 import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplication;
 import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
-import com.monstrous.gdx.webgpu.graphics.WgTexture;
+import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgObjLoader;
 import com.monstrous.gdx.webgpu.graphics.utils.WgFrameBuffer;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
-import com.monstrous.gdx.webgpu.webgpu.WGPUTextureFormat;
-import com.monstrous.gdx.webgpu.webgpu.WGPUTextureUsage;
 
-/** Demonstrate wgFrameBuffer use.
- * todo support other formats
- * todo handle viewport if fbo has other dimensions than window
+/** Demonstrate post-processing with screen shader
  * */
 
 
-public class FrameBufferTest extends GdxTest {
+public class PostProcessing extends GdxTest {
 
 	WgModelBatch modelBatch;
 	PerspectiveCamera cam;
@@ -54,6 +50,7 @@ public class FrameBufferTest extends GdxTest {
 	ModelInstance instance;
     WebGPUGraphicsBase gfx;
     WgFrameBuffer fbo;
+    WgShaderProgram shader;
 
 
 	// launcher
@@ -63,7 +60,7 @@ public class FrameBufferTest extends GdxTest {
 		config.setWindowedMode(640, 480);
 		config.setTitle("WebGPUTest");
 
-		new WgApplication(new FrameBufferTest(), config);
+		new WgApplication(new PostProcessing(), config);
 	}
 
 	// application
@@ -72,8 +69,8 @@ public class FrameBufferTest extends GdxTest {
 
 		modelBatch = new WgModelBatch();
 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		cam.position.set(0, 2, 3);
-		cam.lookAt(0,0,0);
+		cam.position.set(0, 1, 2);
+		cam.lookAt(0,1,0);
 		cam.near = 0.1f;
 
 		WgObjLoader loader = new WgObjLoader();
@@ -88,6 +85,8 @@ public class FrameBufferTest extends GdxTest {
 		font = new WgBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
 
         fbo = new WgFrameBuffer(gfx.getSurfaceFormat(),  640, 480, true);
+
+        shader = new WgShaderProgram(Gdx.files.internal("data/wgsl/sprite-greyscale.wgsl"));
 	}
 
 	public void render () {
@@ -108,9 +107,11 @@ public class FrameBufferTest extends GdxTest {
 
 
 		batch.begin();
-        batch.draw(fbo.getColorBufferTexture(), 20, 100, 256, 180);
-        batch.draw(fbo.getColorBufferTexture(), 320+20, 100, 256, 180);
-		font.draw(batch, "Using FrameBuffer as Render Target" , 0, 20);
+        batch.draw(fbo.getColorBufferTexture(), 20, 100, 256, 256);
+        batch.setShader(shader);
+        batch.draw(fbo.getColorBufferTexture(), 320+20, 100, 256, 256);
+        batch.setShader((WgShaderProgram)null);
+		font.draw(batch, "Post-Processing shader" , 0, 20);
 		batch.end();
 	}
 
@@ -129,6 +130,7 @@ public class FrameBufferTest extends GdxTest {
 		modelBatch.dispose();
 		model.dispose();
         fbo.dispose();
+        shader.dispose();
 	}
 
 

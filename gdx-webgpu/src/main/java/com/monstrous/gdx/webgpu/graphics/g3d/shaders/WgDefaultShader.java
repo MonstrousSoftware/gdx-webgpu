@@ -19,6 +19,7 @@ import com.monstrous.gdx.webgpu.wrappers.*;
 
 import static com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888;
 
+/** Default shader to render renderables  */
 public class WgDefaultShader implements Shader {
 
     private final Config config;
