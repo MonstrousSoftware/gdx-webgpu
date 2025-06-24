@@ -6,6 +6,7 @@ import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Disposable;
+import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.monstrous.gdx.webgpu.WebGPUGraphicsBase;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.utils.JavaWebGPU;
@@ -133,6 +134,7 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
             System.out.println("*** No current texture");
             return JavaWebGPU.createNullPointer();
         }
+
         // [...] Create surface texture view
         WGPUTextureViewDescriptor viewDescriptor = WGPUTextureViewDescriptor.createDirect();
         viewDescriptor.setNextInChain();
@@ -293,6 +295,32 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
     public Pointer getTargetView () {
         return targetView;
     }
+
+    /** Push a texture view to use for output, instead of the screen. */
+    @Override
+    public Pointer pushTargetView(WebGPUTextureView view) {
+        Pointer prevTargetView = targetView;
+        targetView = view.getHandle();
+        return prevTargetView;
+    }
+
+    @Override
+    public void popTargetView(Pointer prevTargetView) {
+        targetView = prevTargetView;
+    }
+
+    @Override
+    public WgTexture pushDepthTexture(WgTexture depth) {
+        WgTexture prevDepth = depthTexture;
+        depthTexture = depth;
+        return prevDepth;
+    }
+
+    @Override
+    public void popDepthTexture(WgTexture prevDepth) {
+        depthTexture  = prevDepth;
+    }
+
     @Override
     public WebGPUCommandEncoder getCommandEncoder () {
         return commandEncoder;

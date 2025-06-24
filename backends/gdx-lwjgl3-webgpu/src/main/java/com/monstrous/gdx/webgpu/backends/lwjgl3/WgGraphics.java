@@ -149,11 +149,33 @@ public class WgGraphics extends AbstractGraphics implements WebGPUGraphicsBase, 
 	public WGPUTextureFormat getSurfaceFormat () {
 		return context.getSurfaceFormat();
 	}
+
 	@Override
 	public Pointer getTargetView () {
 		return context.getTargetView();
 	}
-	@Override
+
+    @Override
+    public Pointer pushTargetView(WebGPUTextureView view) {
+        return context.pushTargetView(view);
+    }
+
+    @Override
+    public void popTargetView(Pointer prevView) {
+        context.popTargetView(prevView);
+    }
+
+    @Override
+    public WgTexture pushDepthTexture(WgTexture depth) {
+        return context.pushDepthTexture(depth);
+    }
+
+    @Override
+    public void popDepthTexture(WgTexture prevDepth) {
+        context.popDepthTexture(prevDepth);
+    }
+
+    @Override
 	public WebGPUCommandEncoder getCommandEncoder () {
 		return context.getCommandEncoder();
 	}
