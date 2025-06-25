@@ -6,7 +6,6 @@ import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Disposable;
-import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.monstrous.gdx.webgpu.WebGPUGraphicsBase;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.utils.JavaWebGPU;
@@ -28,7 +27,7 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
     private WgTexture multiSamplingTexture;
     private final GPUTimer gpuTimer;
     private final Configuration config;
-    private final Rectangle viewport = new Rectangle();
+    private final Rectangle viewportRectangle = new Rectangle();
     private boolean scissorEnabled = false;
     private Rectangle scissor;
     private int width, height;
@@ -178,7 +177,7 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
             scissor = new Rectangle();
         System.out.println("set scissor & viewport: "+width+" x "+height);
         scissor.set(0,0,width, height); // on resize, set scissor to whole window
-        viewport.set(0,0,width, height);
+        viewportRectangle.set(0,0,width, height);
         this.width = width;
         this.height = height;
 
@@ -187,11 +186,16 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
         targetView = getNextSurfaceTextureView();
     }
 
-    public void setViewport(int x, int y, int w, int h){
-        viewport.set(x,y,w,h);
+    public void setViewportRectangle(int x, int y, int w, int h){
+        viewportRectangle.set(x,y,w,h);
     }
-    public Rectangle getViewport(){
-        return viewport;
+
+    public void setViewportRectangle(Rectangle rect){
+        viewportRectangle.set(rect.x,rect.y,rect.width,rect.height);
+    }
+
+    public Rectangle getViewportRectangle(){
+        return viewportRectangle;
     }
 
 
@@ -298,15 +302,17 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
 
     /** Push a texture view to use for output, instead of the screen. */
     @Override
-    public Pointer pushTargetView(WebGPUTextureView view) {
+    public Pointer pushTargetView(WgTexture texture, Rectangle oldViewport) {
         Pointer prevTargetView = targetView;
-        targetView = view.getHandle();
-        // todo setViewport()
+        targetView = texture.getTextureView().getHandle();
+        oldViewport.set(getViewportRectangle());
+        setViewportRectangle(0,0,texture.getWidth(), texture.getHeight());
         return prevTargetView;
     }
 
     @Override
-    public void popTargetView(Pointer prevTargetView) {
+    public void popTargetView(Pointer prevTargetView, Rectangle oldViewport) {
+        setViewportRectangle(oldViewport);
         targetView = prevTargetView;
     }
 

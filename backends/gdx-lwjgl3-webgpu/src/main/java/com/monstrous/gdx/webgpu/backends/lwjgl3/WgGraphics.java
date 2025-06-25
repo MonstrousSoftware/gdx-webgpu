@@ -85,7 +85,7 @@ public class WgGraphics extends AbstractGraphics implements WebGPUGraphicsBase, 
 					return;
 				}
 				window.makeCurrent();
-				setViewport(0, 0, backBufferWidth, backBufferHeight);
+				setViewportRectangle(0, 0, backBufferWidth, backBufferHeight);
 				window.getListener().resize(getWidth(), getHeight());
 				update();
 				context.resize(getWidth(), getHeight());
@@ -120,7 +120,7 @@ public class WgGraphics extends AbstractGraphics implements WebGPUGraphicsBase, 
 
 		this.context = new WebGPUGraphicsContext(webGPU, config);
 		context.resize(getWidth(), getHeight());
-        setViewport(0, 0, getWidth(), getHeight());
+        setViewportRectangle(0, 0, getWidth(), getHeight());
 
 		// initiateGL();
 
@@ -156,13 +156,13 @@ public class WgGraphics extends AbstractGraphics implements WebGPUGraphicsBase, 
 	}
 
     @Override
-    public Pointer pushTargetView(WebGPUTextureView view) {
-        return context.pushTargetView(view);
+    public Pointer pushTargetView(WgTexture outputTexture, Rectangle prevViewport) {
+        return context.pushTargetView(outputTexture, prevViewport);
     }
 
     @Override
-    public void popTargetView(Pointer prevView) {
-        context.popTargetView(prevView);
+    public void popTargetView(Pointer prevView, Rectangle prevViewport) {
+        context.popTargetView(prevView, prevViewport);
     }
 
     @Override
@@ -205,12 +205,12 @@ public class WgGraphics extends AbstractGraphics implements WebGPUGraphicsBase, 
 	}
 
     @Override
-    public void setViewport(int x, int y, int w, int h){
-        context.setViewport(x,y,w,h);
+    public void setViewportRectangle(int x, int y, int w, int h){
+        context.setViewportRectangle(x,y,w,h);
     }
     @Override
-    public Rectangle getViewport(){
-        return context.getViewport();
+    public Rectangle getViewportRectangle(){
+        return context.getViewportRectangle();
     }
 
 

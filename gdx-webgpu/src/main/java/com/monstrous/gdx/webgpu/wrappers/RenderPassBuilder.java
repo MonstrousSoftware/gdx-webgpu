@@ -164,7 +164,7 @@ public class RenderPassBuilder {
                 outTexture == null ? Gdx.graphics.getHeight() : outTexture.getHeight());
 
         // todo may change over time
-        Rectangle view = gfx.getViewport();
+        Rectangle view = gfx.getViewportRectangle();
         pass.setViewport(view.x, view.y, view.width, view.height, 0, 1);
 
         if(gfx.isScissorEnabled()) {

@@ -16,8 +16,22 @@ public interface WebGPUGraphicsBase {
     WebGPUQueue getQueue ();
     WGPUTextureFormat getSurfaceFormat ();
     Pointer getTargetView ();
-    Pointer pushTargetView(WebGPUTextureView view);
-    void popTargetView(Pointer prevPointer);
+
+    /** Use provided texture for output (must have usage RenderAttachment).
+     *
+     * @param texture texture to use for output
+     * @param oldViewport previous viewport dimensions
+     * @return Pointer of previous TextureView
+     */
+    Pointer pushTargetView(WgTexture texture, Rectangle oldViewport);
+
+    /** Restore previous output target.
+     *
+     * @param prevPointer TextureView returned by pushTargetView()
+     * @param prevViewport Viewport rectangle returned by pushTargetView()
+     */
+    void popTargetView(Pointer prevPointer, Rectangle prevViewport);
+
     WebGPUCommandEncoder getCommandEncoder ();
     WgTexture getDepthTexture ();
     WgTexture pushDepthTexture(WgTexture depth);
@@ -26,8 +40,8 @@ public interface WebGPUGraphicsBase {
     int getSamples();
     WgTexture getMultiSamplingTexture();
 
-    void setViewport(int x, int y, int w, int h);
-    Rectangle getViewport();
+    void setViewportRectangle(int x, int y, int w, int h);
+    Rectangle getViewportRectangle();
 
     void enableScissor(boolean mode);
     boolean isScissorEnabled();

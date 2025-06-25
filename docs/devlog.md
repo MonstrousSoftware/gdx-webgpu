@@ -62,5 +62,10 @@ todo When launching via the test chooser reaction to input becomes laggy, e.g. s
 - Todo: caches query objects per pass in GPUTimer class; extends to compute pass.
 
 24/06:
-- Added wgFrameBuffer
+- Added wgFrameBuffer. A Frame Buffer is implemented by replacing the output texture view by a texture 
+with the usage flag RenderAttachment.  The output texture view is managed by WebGPUGraphicsContext, and it has a push and pop method to change output texture. The previous value is returned by push to be stored in the FrameBuffer object, so that frame buffers can be nested.
+The same applies to the depth texture.
+
+ 
 - Added demo of PostProcessing with a frame buffer and a screen shader.
+- 

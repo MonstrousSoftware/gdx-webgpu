@@ -117,6 +117,7 @@ public class WgTexture extends Texture {
         load(data, label);
     }
 
+
     public void load (TextureData data, String label) {
         this.data = data;
         this.label = label;
