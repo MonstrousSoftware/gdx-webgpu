@@ -1,11 +1,7 @@
 package com.monstrous.gdx.webgpu.graphics.g3d.environment;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
-import com.badlogic.gdx.graphics.g3d.environment.ShadowMap;
-import com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor;
-import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Disposable;
@@ -18,6 +14,8 @@ public class WgDirectionalShadowLight extends DirectionalLight implements  Dispo
     protected float halfDepth;
     protected float halfHeight;
     protected final Vector3 tmpV = new Vector3();
+    private Matrix4 shiftDepthMatrix;
+    private final Matrix4 tmpMat4 = new Matrix4();
 
     public WgDirectionalShadowLight(int shadowMapWidth, int shadowMapHeight, float shadowViewportWidth, float shadowViewportHeight,
                                   float shadowNear, float shadowFar) {
@@ -25,11 +23,14 @@ public class WgDirectionalShadowLight extends DirectionalLight implements  Dispo
         cam = new OrthographicCamera(shadowViewportWidth, shadowViewportHeight);
         cam.near = shadowNear;
         cam.far = shadowFar;
+        cam.up.set(1,0,0);      // in case light comes straight down
         halfHeight = shadowViewportHeight * 0.5f;
         halfDepth = shadowNear + 0.5f * (shadowFar - shadowNear);
 //        textureDesc = new TextureDescriptor();
 //        textureDesc.minFilter = textureDesc.magFilter = Texture.TextureFilter.Nearest;
 //        textureDesc.uWrap = textureDesc.vWrap = Texture.TextureWrap.ClampToEdge;
+
+        shiftDepthMatrix = new Matrix4().idt().scl(1,1,0.5f).trn(0,0,0.5f);
     }
 
     public void update(final Camera camera) {
@@ -42,6 +43,9 @@ public class WgDirectionalShadowLight extends DirectionalLight implements  Dispo
         cam.direction.set(direction).nor();
         cam.normalizeUp();
         cam.update();
+
+        tmpMat4.set(shiftDepthMatrix).mul(cam.combined);
+        cam.combined.set(tmpMat4);
     }
 
     public void begin(final Camera camera) {
@@ -55,18 +59,10 @@ public class WgDirectionalShadowLight extends DirectionalLight implements  Dispo
     }
 
     public void begin() {
-        final int w = fbo.getWidth();
-        final int h = fbo.getHeight();
         fbo.begin();
-//        Gdx.gl.glViewport(0, 0, w, h);
-//        Gdx.gl.glClearColor(1, 1, 1, 1);
-//        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
-//        Gdx.gl.glEnable(GL20.GL_SCISSOR_TEST);
-//        Gdx.gl.glScissor(1, 1, w - 2, h - 2);
     }
 
     public void end() {
-        //Gdx.gl.glDisable(GL20.GL_SCISSOR_TEST);
         fbo.end();
     }
 

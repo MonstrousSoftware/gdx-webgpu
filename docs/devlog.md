@@ -68,4 +68,10 @@ The same applies to the depth texture.
 
  
 - Added demo of PostProcessing with a frame buffer and a screen shader.
-- 
+
+25/06:
+Working on shadows. Have a DirectionalShadowLight which uses a FrameBuffer to capture an orthographic render from the light source.
+Some trouble getting depth to work properly.  Again an issue with the matrix definition for ortho projection having a different Z range than for OpenGL.
+WgDirectionalShadowLight now post-multiplies the combined matrix to compensate.
+For now, it renders to a color buffer, need to make a depth shader.
+ 

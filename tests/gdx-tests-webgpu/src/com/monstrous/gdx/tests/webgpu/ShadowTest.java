@@ -77,6 +77,8 @@ public class ShadowTest extends GdxTest {
 		cam.near = 0.1f;
         cam.lookAt(0,0,0);
 
+
+
         shadowBatch = new WgModelBatch();   // to do provider
 
 		controller = new PerspectiveCamController(cam);
@@ -98,26 +100,29 @@ public class ShadowTest extends GdxTest {
         box = modelBuilder.createBox(1, 1, 1, mat, attribs);
 
         long attribs2 = VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.ColorPacked;
-        ground = modelBuilder.createBox(10, 0.1f, 10, mat2, attribs2);
+        ground = modelBuilder.createBox(5, 0.1f, 6, mat2, attribs2);
 
-        instances.add(new ModelInstance(box,0,1.5f,0));
+
+        instances.add(new ModelInstance(box,0,1.0f,0));
         instances.add(new ModelInstance(ground,0,0,0));
 
         environment = new Environment();
 
-        float level = 0.2f;
+        float level = 0.3f;
         ColorAttribute ambient =  ColorAttribute.createAmbientLight(level, level, level, 1f);
         environment.set(ambient);
 
         DirectionalLight dirLight1 = new DirectionalLight();
-        dirLight1.setDirection(.2f, -.8f, .2f);
+        dirLight1.setDirection(0.3f,-0.8f,0.1f);
         dirLight1.setColor(Color.BLUE);
         environment.add(dirLight1);
 
 
-        final int MAP = 256;
-        final int VP = 5;
-        shadowLight = new WgDirectionalShadowLight(MAP, MAP, VP, VP, 0.1f, 50f);
+        final int MAP = 1024;
+        final int VP = 8;
+        final float DEPTH = 20f;
+        shadowLight = new WgDirectionalShadowLight(MAP, MAP, VP, VP, 0f, DEPTH);
+        shadowLight.setDirection(dirLight1.direction);
         shadowLight.set(dirLight1);
 	}
 
@@ -129,12 +134,33 @@ public class ShadowTest extends GdxTest {
 
 		cam.update();
 
-        shadowLight.begin(new Vector3(0, 5, 0), Vector3.Zero);
-
+        Vector3 focalPoint = new Vector3(0, 0, 0);
+        shadowLight.begin(focalPoint, Vector3.Zero);
 		shadowBatch.begin(shadowLight.getCamera(), Color.RED);
         shadowBatch.render(instances);
         shadowBatch.end();
         shadowLight.end();
+
+//        Vector3 coord = new Vector3(0,0,0);
+//        //shadowLight.getCamera().project(coord);
+//        coord.prj(shadowLight.getCamera().combined);
+//        System.out.println("0,0,0 project to :"+coord);
+//
+//        coord.set(0,2,0);
+//        coord.prj(shadowLight.getCamera().combined);
+//        System.out.println("0,2,0 project to :"+coord);
+//
+//        coord.set(0,-2,0);
+//        coord.prj(shadowLight.getCamera().combined);
+//        System.out.println("0,-2,0 project to :"+coord);
+//
+//        coord.set(0,10,0);
+//        coord.prj(shadowLight.getCamera().combined);
+//        System.out.println("0,10,0 project to :"+coord);
+//
+//        coord.set(0,-10,0);
+//        coord.prj(shadowLight.getCamera().combined);
+//        System.out.println("0,-10,0 project to :"+coord);
 
         WgScreenUtils.clear(Color.TEAL);
         modelBatch.begin(cam);
