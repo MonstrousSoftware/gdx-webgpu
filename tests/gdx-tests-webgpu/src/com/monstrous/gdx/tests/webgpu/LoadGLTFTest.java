@@ -53,6 +53,7 @@ public class LoadGLTFTest extends GdxTest {
 	WgBitmapFont font;
 	Model model;
 	ModelInstance instance;
+    String modelFileName;
 
 
 	// launcher
@@ -74,16 +75,13 @@ public class LoadGLTFTest extends GdxTest {
 		cam.near = 0.1f;
 		cam.far = 1000f;		// extend far distance to avoid clipping the skybox
 
-		String modelFileName = "data/g3d/gltf/Cube/Cube.gltf";
-        GLTF gltf = GLTFParser.load(modelFileName);
-        WgGLTFModelLoader loader = new WgGLTFModelLoader(new JsonReader());
-        ModelData modelData = new ModelData();
-        loader.load(modelData, gltf);
-        model = new WgModel(modelData, new WgTextureProvider.FileTextureProvider());
-        //FileHandle file = Gdx.files.internal(modelFileName);
-//		model = new WgGLTFModelLoader(new JsonReader()).loadModel(file);
-		instance = new ModelInstance(model);
+		modelFileName = "data/g3d/gltf/Cube/Cube.gltf";
+        //modelFileName = "data/g3d/gltf/StanfordDragon/stanfordDragon.gltf";
+        //modelFileName = "data/g3d/gltf/Cubes/cubes.gltf";
 
+        FileHandle file = Gdx.files.internal(modelFileName);
+        model = new WgGLTFModelLoader(new JsonReader()).loadModel(file);
+		instance = new ModelInstance(model);
 
 		controller = new PerspectiveCamController(cam);
 		Gdx.input.setInputProcessor(controller);
@@ -107,7 +105,7 @@ public class LoadGLTFTest extends GdxTest {
 
 
 		batch.begin();
-		font.draw(batch, "Model loaded from G3DJ file" , 0, 20);
+		font.draw(batch, "Model loaded: "+modelFileName , 0, 20);
 		batch.end();
 	}
 

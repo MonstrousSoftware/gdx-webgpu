@@ -16,20 +16,16 @@
 
 package com.monstrous.gdx.webgpu.graphics.g3d.loaders;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.loaders.FileHandleResolver;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.graphics.g3d.Material;
-import com.badlogic.gdx.graphics.g3d.model.MeshPart;
-import com.badlogic.gdx.graphics.g3d.model.Node;
-import com.badlogic.gdx.graphics.g3d.model.NodePart;
 import com.badlogic.gdx.graphics.g3d.model.data.*;
 import com.badlogic.gdx.math.*;
 import com.badlogic.gdx.utils.*;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.gltf.*;
+import org.jetbrains.annotations.NotNull;
 
-import java.nio.FloatBuffer;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -57,7 +53,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
 		return parseModel(fileHandle);
 	}
 
-	public ModelData parseModel (FileHandle handle) {
+	public ModelData parseModel (@NotNull FileHandle handle) {
         // create path to find additional resources
         int lastSlashPos = handle.path().lastIndexOf('/');
         String path = handle.path().substring(0, lastSlashPos + 1);
@@ -69,14 +65,12 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
 
 
         /* Then convert it to ModelData. */
-		ModelData model = new ModelData();
-        load(model, gltf);
-		return model;
+		return load(gltf);
 	}
 
     /** load GLTF contents into a ModelData object */
-    // perhaps should allocate and return ModelData
-    public void load(ModelData model, GLTF gltf){
+    protected ModelData load( GLTF gltf ){
+        ModelData modelData = new ModelData();
         meshMap.clear();
         materials.clear();
 
@@ -118,7 +112,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
 
 
             materials.add(modelMaterial);
-            model.materials.add(modelMaterial);
+            modelData.materials.add(modelMaterial);
         }
 
         long endLoad = System.currentTimeMillis();
@@ -127,9 +121,11 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
         startLoad = System.currentTimeMillis();
         for(GLTFMesh gltfMesh : gltf.meshes){
             // build a mesh for each primitive
+            // note: a ModelMesh can have multiple ModelMeshParts
+            // in GLTF a mesh can have multiple primitives
             for(GLTFPrimitive primitive : gltfMesh.primitives){
                 ModelMesh mesh = buildMesh(gltf,  gltf.rawBuffer, primitive );
-                model.addMesh(mesh);
+                modelData.addMesh(mesh);
                 meshMap.put(primitive, mesh);
             }
         }
@@ -146,18 +142,18 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
 
 
 
-        model.nodes.clear();
+        modelData.nodes.clear();
         for( GLTFNode gltfNode : gltf.nodes ) {
-            ModelNode node = addNode(model, gltf, gltfNode);
-            model.nodes.add(node);
+            ModelNode node = addNode(modelData, gltf, gltfNode);
+            modelData.nodes.add(node);
         }
 
         GLTFScene scene = gltf.scenes.get(gltf.scene);
         for( int nodeId : scene.nodes ) {
             GLTFNode gltfNode = gltf.nodes.get(nodeId);
-            ModelNode rootNode = model.nodes.get(nodeId);
+            ModelNode rootNode = modelData.nodes.get(nodeId);
 
-            addNodeHierarchy(model, gltf, gltfNode, rootNode);     // recursively add the node hierarchy
+            addNodeHierarchy(modelData, gltf, gltfNode, rootNode);     // recursively add the node hierarchy
             //rootNode.updateMatrices(true);
             //model.addNode(rootNode);
         }
@@ -247,7 +243,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
 //
 //            model.addAnimation(animation);
 //        }
-
+        return modelData;
     }
 
 
@@ -277,16 +273,19 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
 
         // optional transforms
         if(gltfNode.matrix != null){
+            node.translation = new Vector3();
+            node.scale = new Vector3();
+            node.rotation = new Quaternion();
             gltfNode.matrix.getTranslation(node.translation);
             gltfNode.matrix.getScale(node.scale);
             gltfNode.matrix.getRotation(node.rotation);
         }
         if(gltfNode.translation != null)
-            node.translation.set(gltfNode.translation);
+            node.translation = new Vector3(gltfNode.translation);
         if(gltfNode.scale != null)
-            node.scale.set(gltfNode.scale);
+            node.scale = new Vector3(gltfNode.scale);
         if(gltfNode.rotation != null)
-            node.rotation.set(gltfNode.rotation);
+            node.rotation = new Quaternion(gltfNode.rotation);
 
         if(gltfNode.mesh >= 0){ // this node refers to a mesh
 
