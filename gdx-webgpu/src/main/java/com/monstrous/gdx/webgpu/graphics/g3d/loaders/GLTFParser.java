@@ -108,8 +108,8 @@ public class GLTFParser {
                     texture.name = tex.get("name").asString();
                 if(tex.has("source"))
                     texture.source = tex.get("source").asInt();
-                if(tex.has("sample"))
-                    texture.source = tex.get("sample").asInt();
+                if(tex.has("sampler"))
+                    texture.source = tex.get("sampler").asInt();
                 gltf.textures.add(texture);
             }
         }
@@ -141,8 +141,12 @@ public class GLTFParser {
                 if(pbrMR.has("metallicFactor")) {
                     pbr.metallicFactor = pbrMR.get("metallicFactor").asFloat();
                 }
-                pbr.metallicRoughnessTexture = mat.getInt("metallicRoughnessTexture", -1);
-
+                if(pbrMR.has("metallicRoughnessTexture")) {
+                    JsonValue mrTex = pbrMR.get("metallicRoughnessTexture");
+                    pbr.metallicRoughnessTexture = mrTex.get("index").asInt();
+                    //mat.getInt("metallicRoughnessTexture", -1);
+                } else
+                    pbr.metallicRoughnessTexture = -1;
                 material.normalTexture = mat.getInt("normalTexture", -1);
                 material.emissiveTexture = mat.getInt("emissiveTexture", -1);
                 material.occlusionTexture = mat.getInt("occlusionTexture", -1);

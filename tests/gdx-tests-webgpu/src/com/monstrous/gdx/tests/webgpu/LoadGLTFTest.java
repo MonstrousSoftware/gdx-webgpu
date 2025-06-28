@@ -22,6 +22,8 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
+import com.badlogic.gdx.graphics.g3d.model.data.ModelData;
+import com.badlogic.gdx.graphics.g3d.utils.TextureProvider;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.JsonReader;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
@@ -30,11 +32,14 @@ import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplication;
 import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
+import com.monstrous.gdx.webgpu.graphics.g3d.WgModel;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.GLTFParser;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgG3dModelLoader;
+import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLTFModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.gltf.GLTF;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
+import com.monstrous.gdx.webgpu.graphics.utils.WgTextureProvider;
 
 /** Test G3DJ loading and ModelInstance rendering */
 
@@ -70,10 +75,14 @@ public class LoadGLTFTest extends GdxTest {
 		cam.far = 1000f;		// extend far distance to avoid clipping the skybox
 
 		String modelFileName = "data/g3d/gltf/Cube/Cube.gltf";
-        GLTF model = GLTFParser.load(modelFileName);
-//		FileHandle file = Gdx.files.internal(modelFileName);
-//		model = new WgG3dModelLoader(new JsonReader()).loadModel(file);
-//		instance = new ModelInstance(model);
+        GLTF gltf = GLTFParser.load(modelFileName);
+        WgGLTFModelLoader loader = new WgGLTFModelLoader(new JsonReader());
+        ModelData modelData = new ModelData();
+        loader.load(modelData, gltf);
+        model = new WgModel(modelData, new WgTextureProvider.FileTextureProvider());
+        //FileHandle file = Gdx.files.internal(modelFileName);
+//		model = new WgGLTFModelLoader(new JsonReader()).loadModel(file);
+		instance = new ModelInstance(model);
 
 
 		controller = new PerspectiveCamController(cam);

@@ -63,15 +63,19 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
         String path = handle.path().substring(0, lastSlashPos + 1);
         String json = handle.readString();
 
+        /* Read file into a GLTF class hierarchy. */
         GLTF gltf = GLTFParser.parseJSON(json, path);
+        gltf.rawBuffer = new GLTFRawBuffer(gltf.buffers.get(0).uri);           // read .bin file, assume 1 buffer
 
+
+        /* Then convert it to ModelData. */
 		ModelData model = new ModelData();
         load(model, gltf);
-
 		return model;
 	}
 
     /** load GLTF contents into a ModelData object */
+    // perhaps should allocate and return ModelData
     public void load(ModelData model, GLTF gltf){
         meshMap.clear();
         materials.clear();
@@ -80,6 +84,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
         int index = 0;
         for(GLTFMaterial gltfMat :  gltf.materials){
             ModelMaterial modelMaterial = new ModelMaterial();
+            modelMaterial.textures = new Array<>();
 
             modelMaterial.id = gltfMat.name != null ? gltfMat.name : "mat"+index;   // copy name or generate one as a debugging aid
             index++;
@@ -143,7 +148,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
 
         model.nodes.clear();
         for( GLTFNode gltfNode : gltf.nodes ) {
-            ModelNode node = addNode(gltf, gltfNode);
+            ModelNode node = addNode(model, gltf, gltfNode);
             model.nodes.add(node);
         }
 
@@ -152,7 +157,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
             GLTFNode gltfNode = gltf.nodes.get(nodeId);
             ModelNode rootNode = model.nodes.get(nodeId);
 
-            addNodeHierarchy(gltf, gltfNode, rootNode);     // recursively add the node hierarchy
+            addNodeHierarchy(model, gltf, gltfNode, rootNode);     // recursively add the node hierarchy
             //rootNode.updateMatrices(true);
             //model.addNode(rootNode);
         }
@@ -266,7 +271,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
 //        return bytes;
 //    }
 
-    private ModelNode addNode(GLTF gltf, GLTFNode gltfNode){
+    private ModelNode addNode(ModelData model, GLTF gltf, GLTFNode gltfNode){
         ModelNode node = new ModelNode();
         node.id = gltfNode.name;
 
@@ -286,8 +291,11 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
         if(gltfNode.mesh >= 0){ // this node refers to a mesh
 
             GLTFMesh gltfMesh = gltf.meshes.get(gltfNode.mesh);
+            ModelMesh modelMesh = model.meshes.get(gltfNode.mesh); // assume same index
             node.parts = new ModelNodePart[gltfMesh.primitives.size()];
             int partId = 0;
+            // assumes mesh is dedicated to this node
+            modelMesh.parts = new ModelMeshPart[gltfMesh.primitives.size()];
 
             for( GLTFPrimitive primitive : gltfMesh.primitives) {
                 GLTFAccessor indexAccessor = gltf.accessors.get(primitive.indices);
@@ -303,13 +311,33 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
 //                nodePart.bones = 1;
 //                nodePart.uvMapping = 1;
 
-                node.parts[partId++] = nodePart;
+                node.parts[partId] = nodePart;
+                ModelMeshPart modelMeshPart = new ModelMeshPart();
+                modelMeshPart.id = nodePart.meshPartId;
+                modelMeshPart.primitiveType = GL20.GL_TRIANGLES; // todo
+                modelMeshPart.indices = new short[indexAccessor.count];
+
+                GLTFBufferView view = gltf.bufferViews.get(indexAccessor.bufferView);
+                if(view.buffer != 0)
+                    throw new RuntimeException("GLTF: Can only support buffer 0");
+                int offset = view.byteOffset + indexAccessor.byteOffset;
+
+                if(indexAccessor.componentType == GLTF.USHORT16) {
+                    GLTFRawBuffer rawBuffer = gltf.rawBuffer;
+                    rawBuffer.byteBuffer.position(offset);
+                    for (int i = 0; i < indexAccessor.count; i++) {
+                        modelMeshPart.indices[i] = rawBuffer.byteBuffer.getShort();
+                    }
+                } else
+                    throw new RuntimeException("32 bit indices not supported");
+                modelMesh.parts[partId] = modelMeshPart;
+                partId++;
             }
         }
         return node;
     }
 
-    private void addNodeHierarchy(GLTF gltf, GLTFNode gltfNode, ModelNode root){
+    private void addNodeHierarchy(ModelData model, GLTF gltf, GLTFNode gltfNode, ModelNode root){
         // now add any children
         root.children = new ModelNode[gltfNode.children.size()];
         int i = 0;
@@ -317,7 +345,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
             GLTFNode gltfChild = gltf.nodes.get(j);
             ModelNode child = model.nodes.get(j);
             root.children[i++] = child;
-            addNodeHierarchy(gltf, gltfChild, child);
+            addNodeHierarchy(model, gltf, gltfChild, child);
         }
     }
 
