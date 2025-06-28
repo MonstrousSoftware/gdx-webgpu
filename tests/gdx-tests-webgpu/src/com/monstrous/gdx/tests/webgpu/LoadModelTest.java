@@ -49,7 +49,8 @@ public class LoadModelTest extends GdxTest {
 
 	final static String[] fileNames = {  "data/g3d/ducky.obj", "data/g3d/head.g3db", "data/g3d/invaders.g3dj",
 			"data/g3d/monkey.g3db", "data/g3d/skydome.g3db", "data/g3d/teapot.g3db", "data/g3d/cube.g3dj",
-			"data/g3d/ship.obj"
+			"data/g3d/ship.obj",
+            "data/g3d/gltf/Cube/Cube.gltf"
 	};
 
 	WgModelBatch modelBatch;

@@ -22,6 +22,7 @@ import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgG3dModelLoader;
+import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLTFModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgObjLoader;
 import com.badlogic.gdx.graphics.Cubemap;
 import com.badlogic.gdx.graphics.Pixmap;
@@ -67,6 +68,7 @@ public class WgAssetManager extends AssetManager {
 			setLoader(Model.class, ".g3dj", new WgG3dModelLoader(new JsonReader(), resolver));
 			setLoader(Model.class, ".g3db", new WgG3dModelLoader(new UBJsonReader(), resolver));
 			setLoader(Model.class, ".obj", new WgObjLoader(resolver));
+            setLoader(Model.class, ".gltf", new WgGLTFModelLoader(new JsonReader(), resolver));
 			setLoader(ShaderProgram.class, new ShaderProgramLoader(resolver));
 			setLoader(Cubemap.class, new CubemapLoader(resolver));
 		}
