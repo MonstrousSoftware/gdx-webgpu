@@ -19,6 +19,7 @@ import com.monstrous.gdx.webgpu.wrappers.*;
 
 import static com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888;
 
+/** Default shader to render renderables  */
 public class WgDefaultShader implements Shader {
 
     private final Config config;
@@ -276,7 +277,7 @@ public class WgDefaultShader implements Shader {
         final MeshPart meshPart = renderable.meshPart;
         if (!(meshPart.mesh instanceof WgMesh))
             throw new RuntimeException("WebGPUMeshPart supports only WebGPUMesh");
-        if(prevMeshPart != null && meshPart.id.contentEquals(prevMeshPart.id)){     // todo: should compare mesh parts not just id which is even optional
+        if(prevMeshPart != null && meshPart.equals(prevMeshPart)){
             // note that renderables get a copy of a mesh part not a reference to the Model's mesh part, so you can just compare references.
             instanceCount++;
         } else {
@@ -312,12 +313,14 @@ public class WgDefaultShader implements Shader {
     private void applyMaterial(Material material){
 
         // is this material the same as the previous? then we are done.
-        if(prevMaterial != null && material.attributesHash() == prevMaterial.attributesHash())  // store hash instead of prev mat?
-            return;
+//        if(prevMaterial != null && material.attributesHash() == prevMaterial.attributesHash())  // store hash instead of prev mat?
+//            return;
+        int hash = material.attributesHash();
 
         if(numMaterials >= config.maxMaterials)
             throw new RuntimeException("Too many materials (> "+config.maxMaterials+"). Increase shader.maxMaterials");
 
+        // move to new buffer offset for this new material (flushes previous one).
         materialBuffer.setDynamicOffsetIndex(numMaterials); // indicate which section of the uniform buffer to use
 
         // diffuse color

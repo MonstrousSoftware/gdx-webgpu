@@ -59,7 +59,7 @@ public final class WgScreenUtils {
 	public static void clear (float r, float g, float b, float a, boolean clearDepth, boolean applyAntialiasing) {
 		backgroundColor.set(r,g,b,a);
 		WebGPUGraphicsBase gfx = (WebGPUGraphicsBase) Gdx.graphics;
-		WebGPURenderPass renderPass = RenderPassBuilder.create(backgroundColor, gfx.getSamples());
+		WebGPURenderPass renderPass = RenderPassBuilder.create("ScreenUtils.clear", backgroundColor, gfx.getSamples());
 		renderPass.end();
 
 		// clearDepth and antiAliasing are ignored

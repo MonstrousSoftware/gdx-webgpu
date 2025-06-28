@@ -31,10 +31,7 @@ import com.monstrous.gdx.webgpu.graphics.utils.WgGL20;
 import com.monstrous.gdx.webgpu.webgpu.WGPUBackendType;
 import com.monstrous.gdx.webgpu.webgpu.WGPUTextureFormat;
 import com.monstrous.gdx.webgpu.webgpu.WebGPU_JNI;
-import com.monstrous.gdx.webgpu.wrappers.WebGPUCommandEncoder;
-import com.monstrous.gdx.webgpu.wrappers.WebGPUDevice;
-import com.monstrous.gdx.webgpu.wrappers.WebGPUGraphicsContext;
-import com.monstrous.gdx.webgpu.wrappers.WebGPUQueue;
+import com.monstrous.gdx.webgpu.wrappers.*;
 import jnr.ffi.Pointer;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.PointerBuffer;
@@ -72,6 +69,7 @@ public class WgGraphics extends AbstractGraphics implements WebGPUGraphicsBase, 
 	private DisplayMode displayModeBeforeFullscreen = null;
 	private final WebGPU_JNI webGPU;
 	public final WebGPUGraphicsContext context;
+    private float[] gpuTime = new float[GPUTimer.MAX_PASSES];
 
 
 
@@ -87,7 +85,7 @@ public class WgGraphics extends AbstractGraphics implements WebGPUGraphicsBase, 
 					return;
 				}
 				window.makeCurrent();
-				setViewport(0, 0, backBufferWidth, backBufferHeight);
+				setViewportRectangle(0, 0, backBufferWidth, backBufferHeight);
 				window.getListener().resize(getWidth(), getHeight());
 				update();
 				context.resize(getWidth(), getHeight());
@@ -122,7 +120,7 @@ public class WgGraphics extends AbstractGraphics implements WebGPUGraphicsBase, 
 
 		this.context = new WebGPUGraphicsContext(webGPU, config);
 		context.resize(getWidth(), getHeight());
-        setViewport(0, 0, getWidth(), getHeight());
+        setViewportRectangle(0, 0, getWidth(), getHeight());
 
 		// initiateGL();
 
@@ -151,11 +149,33 @@ public class WgGraphics extends AbstractGraphics implements WebGPUGraphicsBase, 
 	public WGPUTextureFormat getSurfaceFormat () {
 		return context.getSurfaceFormat();
 	}
+
 	@Override
 	public Pointer getTargetView () {
 		return context.getTargetView();
 	}
-	@Override
+
+    @Override
+    public Pointer pushTargetView(WgTexture outputTexture, Rectangle prevViewport) {
+        return context.pushTargetView(outputTexture, prevViewport);
+    }
+
+    @Override
+    public void popTargetView(Pointer prevView, Rectangle prevViewport) {
+        context.popTargetView(prevView, prevViewport);
+    }
+
+    @Override
+    public WgTexture pushDepthTexture(WgTexture depth) {
+        return context.pushDepthTexture(depth);
+    }
+
+    @Override
+    public void popDepthTexture(WgTexture prevDepth) {
+        context.popDepthTexture(prevDepth);
+    }
+
+    @Override
 	public WebGPUCommandEncoder getCommandEncoder () {
 		return context.getCommandEncoder();
 	}
@@ -185,12 +205,12 @@ public class WgGraphics extends AbstractGraphics implements WebGPUGraphicsBase, 
 	}
 
     @Override
-    public void setViewport(int x, int y, int w, int h){
-        context.setViewport(x,y,w,h);
+    public void setViewportRectangle(int x, int y, int w, int h){
+        context.setViewportRectangle(x,y,w,h);
     }
     @Override
-    public Rectangle getViewport(){
-        return context.getViewport();
+    public Rectangle getViewportRectangle(){
+        return context.getViewportRectangle();
     }
 
 
@@ -211,6 +231,16 @@ public class WgGraphics extends AbstractGraphics implements WebGPUGraphicsBase, 
     @Override
     public Rectangle getScissor() {
         return context.getScissor();
+    }
+
+    @Override
+    public GPUTimer getGPUTimer() {
+        return context.getGPUTimer();
+    }
+
+    @Override
+    public float getAverageGPUtime(int pass){
+        return gpuTime[pass];
     }
 
     void updateFramebufferInfo () {
@@ -239,6 +269,10 @@ public class WgGraphics extends AbstractGraphics implements WebGPUGraphicsBase, 
 			fps = frames;
 			frames = 0;
 			frameCounterStart = time;
+            // request average gpu time once per second to keep it readable
+            for(int i = 0; i < context.getGPUTimer().getNumPasses(); i++)
+            //for(int i = 0; i < GPUTimer.MAX_PASSES; i++)
+                gpuTime[i] = context.getAverageGPUtime(i);
 		}
 		frames++;
 		frameId++;

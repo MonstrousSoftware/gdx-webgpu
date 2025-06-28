@@ -19,10 +19,10 @@ public class WgGL20 implements GL20 {
     @Override
     public void glViewport(int x, int y, int width, int height) {
         WebGPUGraphicsBase gfx = (WebGPUGraphicsBase)Gdx.graphics;
-        Rectangle view = gfx.getViewport();
+        Rectangle view = gfx.getViewportRectangle();
         if(x != view.x || y != view.y || width != view.width || height != view.height){
             Gdx.app.log("glViewport", "x=" + x + " y=" + y + " w=" + width + " h=" + height);
-            gfx.setViewport(x,y,width, height);
+            gfx.setViewportRectangle(x,y,width, height);
         }
     }
 

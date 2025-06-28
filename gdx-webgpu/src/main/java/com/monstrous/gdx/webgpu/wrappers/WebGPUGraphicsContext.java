@@ -25,8 +25,9 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
     public WgTexture depthTexture;
     private WGPUSupportedLimits supportedLimits;
     private WgTexture multiSamplingTexture;
+    private final GPUTimer gpuTimer;
     private final Configuration config;
-    private final Rectangle viewport = new Rectangle();
+    private final Rectangle viewportRectangle = new Rectangle();
     private boolean scissorEnabled = false;
     private Rectangle scissor;
     private int width, height;
@@ -72,7 +73,16 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
 
         queue = new WebGPUQueue(device);
 
+        gpuTimer = new GPUTimer(device, config.gpuTimingEnabled);
+
         // create a swap chain via resize
+    }
+
+
+    /** returns null if gpu timing is not enabled in application configuration. */
+    @Override
+    public GPUTimer getGPUTimer() {
+        return gpuTimer;
     }
 
 
@@ -89,6 +99,9 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
 
         listener.render();	// call user code
 
+        // resolve time stamps after render pass end and before encoder finish
+        gpuTimer.resolveTimeStamps(commandEncoder);
+
         // finish command encoder to get a command buffer
         WebGPUCommandBuffer commandBuffer = commandEncoder.finish();
         commandEncoder.dispose();
@@ -96,11 +109,19 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
         queue.submit(commandBuffer);	// submit command buffer
         commandBuffer.dispose();
 
+        // fetch time stamps after submitting the command buffer
+        gpuTimer.fetchTimestamps();
+
         // At the end of the frame
         webGPU.wgpuTextureViewRelease(targetView);
         webGPU.wgpuSurfacePresent(surface);
         targetView = null;
         device.tick();
+    }
+
+    @Override
+    public float getAverageGPUtime(int pass){
+        return gpuTimer.getAverageGPUtime(pass);
     }
 
     private Pointer getNextSurfaceTextureView () {
@@ -112,6 +133,7 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
             System.out.println("*** No current texture");
             return JavaWebGPU.createNullPointer();
         }
+
         // [...] Create surface texture view
         WGPUTextureViewDescriptor viewDescriptor = WGPUTextureViewDescriptor.createDirect();
         viewDescriptor.setNextInChain();
@@ -155,7 +177,7 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
             scissor = new Rectangle();
         System.out.println("set scissor & viewport: "+width+" x "+height);
         scissor.set(0,0,width, height); // on resize, set scissor to whole window
-        viewport.set(0,0,width, height);
+        viewportRectangle.set(0,0,width, height);
         this.width = width;
         this.height = height;
 
@@ -164,11 +186,16 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
         targetView = getNextSurfaceTextureView();
     }
 
-    public void setViewport(int x, int y, int w, int h){
-        viewport.set(x,y,w,h);
+    public void setViewportRectangle(int x, int y, int w, int h){
+        viewportRectangle.set(x,y,w,h);
     }
-    public Rectangle getViewport(){
-        return viewport;
+
+    public void setViewportRectangle(Rectangle rect){
+        viewportRectangle.set(rect.x,rect.y,rect.width,rect.height);
+    }
+
+    public Rectangle getViewportRectangle(){
+        return viewportRectangle;
     }
 
 
@@ -196,6 +223,8 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
     public Rectangle getScissor() {
         return scissor;
     }
+
+
 
     private void initSwapChain (int width, int height, boolean vsyncEnabled) {
         // configure the surface
@@ -241,6 +270,7 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
         exitSwapChain();
         queue.dispose();
         device.dispose();
+        gpuTimer.dispose();
 
         webGPU.wgpuSurfaceRelease(surface);
 
@@ -269,6 +299,35 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
     public Pointer getTargetView () {
         return targetView;
     }
+
+    /** Push a texture view to use for output, instead of the screen. */
+    @Override
+    public Pointer pushTargetView(WgTexture texture, Rectangle oldViewport) {
+        Pointer prevTargetView = targetView;
+        targetView = texture.getTextureView().getHandle();
+        oldViewport.set(getViewportRectangle());
+        setViewportRectangle(0,0,texture.getWidth(), texture.getHeight());
+        return prevTargetView;
+    }
+
+    @Override
+    public void popTargetView(Pointer prevTargetView, Rectangle oldViewport) {
+        setViewportRectangle(oldViewport);
+        targetView = prevTargetView;
+    }
+
+    @Override
+    public WgTexture pushDepthTexture(WgTexture depth) {
+        WgTexture prevDepth = depthTexture;
+        depthTexture = depth;
+        return prevDepth;
+    }
+
+    @Override
+    public void popDepthTexture(WgTexture prevDepth) {
+        depthTexture  = prevDepth;
+    }
+
     @Override
     public WebGPUCommandEncoder getCommandEncoder () {
         return commandEncoder;

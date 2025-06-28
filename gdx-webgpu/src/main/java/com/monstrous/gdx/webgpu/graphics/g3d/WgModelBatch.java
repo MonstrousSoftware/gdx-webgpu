@@ -75,15 +75,18 @@ public class WgModelBatch implements Disposable {
         return drawing;
     }
 
+    public void begin(final Camera camera){
+        begin(camera, null);
+    }
 
-    public void begin(final Camera camera) {
+    public void begin(final Camera camera, final Color clearColor) {
         if (drawing)
             throw new RuntimeException("Must end() before begin()");
         drawing = true;
         this.camera = camera;
 
         WebGPUGraphicsBase gfx = (WebGPUGraphicsBase) Gdx.graphics;
-        renderPass = RenderPassBuilder.create(null, gfx.getSamples());
+        renderPass = RenderPassBuilder.create("ModelBatch", clearColor, gfx.getSamples());
 
         renderables.clear();
         shaderSwitches = 0;
@@ -133,7 +136,6 @@ public class WgModelBatch implements Disposable {
         if(renderables.size > config.maxInstances)
             throw new ArrayIndexOutOfBoundsException("Too many renderables");
         sorter.sort(camera, renderables);
-
 
         WgDefaultShader currentShader = null;
         for(Renderable renderable : renderables) {

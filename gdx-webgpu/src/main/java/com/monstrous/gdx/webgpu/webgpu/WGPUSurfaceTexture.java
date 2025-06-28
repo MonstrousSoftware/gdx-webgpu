@@ -35,7 +35,7 @@ public class WGPUSurfaceTexture extends WgpuJavaStruct {
 		return struct;
 	}
 
-	public jnr.ffi.Pointer getTexture () {
+	public jnr.ffi.Pointer getTexture() {
 		return texture.get();
 	}
 
