@@ -596,11 +596,13 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                     weights.add(w);
                 }
 
-                // if the material has a normal map and tangents are not provided we need to calculate them
-                // todo
-                //        if(hasNormalMap && (tangents.size() == 0  || bitangents.size() == 0))
-                //            addTBN(meshData, positions, textureCoordinates, normals, tangents, bitangents);
+
             }
+
+            // if the material has a normal map and tangents are not provided we need to calculate them
+
+            if(hasNormalMap && (tangents.size() == 0  || bitangents.size() == 0))
+                addTBN(modelMeshPart, positions, textureCoordinates, normals, tangents, bitangents);
 
             // now fill a vertex buffer including all primitives
 
@@ -679,36 +681,37 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
         Vector2 uv;
     }
 
-//    private void addTBN( final MeshData meshData,
-//                         final ArrayList<Vector3>positions, final ArrayList<Vector2>textureCoordinates,
-//                         final ArrayList<Vector3>normals,
-//                         ArrayList<Vector3>tangents,
-//                         ArrayList<Vector3>bitangents){
-//
-//        // add tangent and bitangent to vertices of each triangle
-//        Vector3 T = new Vector3();
-//        Vector3 B = new Vector3();
-//        Vertex[] corners = new Vertex[3];
-//        for(int i= 0; i < 3; i++)
-//            corners[i] = new Vertex();
-//
-//        for (int j = 0; j < meshData.indexValues.size(); j+= 3) {   // for each triangle
-//            for(int i= 0; i < 3; i++) {                 // for each corner
-//                int index = meshData.indexValues.get(i);        // assuming we use an indexed mesh
-//
-//                corners[i].position = positions.get(index);
-//                corners[i].normal = normals.get(index);
-//                corners[i].uv = textureCoordinates.get(index);
-//            }
-//
-//            calculateBTN(corners, T, B);
-//
-//            for(int i= 0; i < 3; i++) {
-//                tangents.add(T);
-//                bitangents.add(B);
-//            }
-//        }
-//    }
+    private void addTBN( final ModelMeshPart modelData,
+                         final ArrayList<Vector3>positions, final ArrayList<Vector2>textureCoordinates,
+                         final ArrayList<Vector3>normals,
+                         ArrayList<Vector3>tangents,
+                         ArrayList<Vector3>bitangents){
+
+        // add tangent and bitangent to vertices of each triangle
+        Vector3 T = new Vector3();
+        Vector3 B = new Vector3();
+        Vertex[] corners = new Vertex[3];
+        for(int i= 0; i < 3; i++)
+            corners[i] = new Vertex();
+
+        // todo assumes short index
+        for (int j = 0; j < modelData.indices.length; j+= 3) {   // for each triangle
+            for(int i= 0; i < 3; i++) {                 // for each corner
+                int index = modelData.indices[i];        // assuming we use an indexed mesh
+
+                corners[i].position = positions.get(index);
+                corners[i].normal = normals.get(index);
+                corners[i].uv = textureCoordinates.get(index);
+            }
+
+            calculateBTN(corners, T, B);
+
+            for(int i= 0; i < 3; i++) {
+                tangents.add(T);
+                bitangents.add(B);
+            }
+        }
+    }
 
     private static Vector3 Ntmp = new Vector3();
     private static Vector3 N = new Vector3();

@@ -1,4 +1,4 @@
-package com.monstrous.gdx.webgpu.graphics.g3d.loaders;
+package com.monstrous.gdx.webgpu.graphics.g3d.loaders.gltf;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;

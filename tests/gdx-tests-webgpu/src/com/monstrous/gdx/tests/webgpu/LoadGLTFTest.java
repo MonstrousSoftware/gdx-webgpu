@@ -25,8 +25,6 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
-import com.badlogic.gdx.graphics.g3d.model.data.ModelData;
-import com.badlogic.gdx.graphics.g3d.utils.TextureProvider;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.JsonReader;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
@@ -35,15 +33,9 @@ import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplication;
 import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
-import com.monstrous.gdx.webgpu.graphics.g3d.WgModel;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
-import com.monstrous.gdx.webgpu.graphics.g3d.loaders.GLTFParser;
-import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgG3dModelLoader;
-import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLBModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLTFModelLoader;
-import com.monstrous.gdx.webgpu.graphics.g3d.loaders.gltf.GLTF;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
-import com.monstrous.gdx.webgpu.graphics.utils.WgTextureProvider;
 
 /** Test G3DJ loading and ModelInstance rendering */
 
@@ -59,6 +51,9 @@ public class LoadGLTFTest extends GdxTest {
 	ModelInstance instance;
     String modelFileName;
     Environment environment;
+    int numMeshes;
+    int numVerts;
+    int numIndices;
 
 
 	// launcher
@@ -75,20 +70,27 @@ public class LoadGLTFTest extends GdxTest {
 	public void create () {
 		modelBatch = new WgModelBatch();
 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		cam.position.set(0, 2, 4);
-		cam.lookAt(0,0,0);
+		cam.position.set(0, 1, 4);
+		cam.lookAt(0,1,0);
 		cam.near = 0.1f;
-		cam.far = 1000f;		// extend far distance to avoid clipping the skybox
+		cam.far = 100f;
 
 		//modelFileName = "data/g3d/gltf/Cube/Cube.gltf";
-        modelFileName = "data/g3d/gltf/StanfordDragon/stanfordDragon.gltf";
+        //modelFileName = "data/g3d/gltf/StanfordDragon/stanfordDragon.gltf";
         //modelFileName = "data/g3d/gltf/Cubes/cubes.gltf";
         //modelFileName = "data/g3d/gltf/AntiqueCamera/AntiqueCamera.gltf";
-       // modelFileName = "data/g3d/gltf/Cubes/cubes.gltf";
+        //modelFileName = "data/g3d/gltf/torus.gltf";
+        modelFileName = "data/g3d/gltf/Sponza/Sponza.gltf";
 
         FileHandle file = Gdx.files.internal(modelFileName);
         model = new WgGLTFModelLoader(new JsonReader()).loadModel(file);
 		instance = new ModelInstance(model);
+
+        numMeshes = instance.model.meshes.size;
+        for(int i = 0; i < numMeshes; i++){
+            numVerts += instance.model.meshes.get(i).getNumVertices();
+            numIndices += instance.model.meshes.get(i).getNumIndices();
+        }
 
 		controller = new PerspectiveCamController(cam);
 		Gdx.input.setInputProcessor(controller);
@@ -122,9 +124,10 @@ public class LoadGLTFTest extends GdxTest {
 
 
 		batch.begin();
-		font.draw(batch, "Model loaded: "+modelFileName , 0, 80);
-        font.draw(batch, "Vertices: "+instance.model.meshes.get(0).getNumVertices() , 0, 50);
-        font.draw(batch, "Indices: "+instance.model.meshes.get(0).getNumIndices() , 0, 20);
+		font.draw(batch, "Model loaded: "+modelFileName , 0, 110);
+        font.draw(batch, "Meshes: "+numMeshes , 0, 80);
+        font.draw(batch, "Vertices: "+numVerts , 0, 50);
+        font.draw(batch, "Indices: "+numIndices , 0, 20);
 		batch.end();
 	}
 

@@ -1,7 +1,5 @@
 package com.monstrous.gdx.webgpu.graphics.g3d.loaders.gltf;
 
-import com.monstrous.gdx.webgpu.graphics.g3d.loaders.GLTFRawBuffer;
-
 import java.util.ArrayList;
 
 // class to store the contents of a gltf file

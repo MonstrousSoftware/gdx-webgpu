@@ -14,21 +14,18 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.monstrous.gdx.webgpu.graphics.g3d.loaders;
+package com.monstrous.gdx.webgpu.graphics.g3d.loaders.gltf;
 
 
 
 // JSON parser of the GLTF file format into a set of GLTF class objects
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
-import com.monstrous.gdx.webgpu.graphics.g3d.loaders.gltf.*;
 
 public class GLTFParser {
 
@@ -112,7 +109,7 @@ public class GLTFParser {
                 if(tex.has("source"))
                     texture.source = tex.get("source").asInt();
                 if(tex.has("sampler"))
-                    texture.source = tex.get("sampler").asInt();
+                    texture.sampler = tex.get("sampler").asInt();
                 gltf.textures.add(texture);
             }
         }
@@ -148,11 +145,19 @@ public class GLTFParser {
                     JsonValue mrTex = pbrMR.get("metallicRoughnessTexture");
                     pbr.metallicRoughnessTexture = mrTex.get("index").asInt();
                     //mat.getInt("metallicRoughnessTexture", -1);
-                } else
-                    pbr.metallicRoughnessTexture = -1;
-                material.normalTexture = mat.getInt("normalTexture", -1);
-                material.emissiveTexture = mat.getInt("emissiveTexture", -1);
-                material.occlusionTexture = mat.getInt("occlusionTexture", -1);
+                }
+                if(mat.has("normalTexture")){
+                    JsonValue tex = mat.get("normalTexture");
+                    material.normalTexture = tex.get("index").asInt();
+                }
+                if(mat.has("emissiveTexture")){
+                    JsonValue tex = mat.get("emissiveTexture");
+                    material.emissiveTexture = tex.get("index").asInt();
+                }
+                if(mat.has("occlusionTexture")){
+                    JsonValue tex = mat.get("occlusionTexture");
+                    material.occlusionTexture = tex.get("index").asInt();
+                }
 
                 gltf.materials.add(material);
             }
