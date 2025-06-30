@@ -36,7 +36,7 @@ import java.util.Map;
 
 
 public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParameters> {
-    private final Map<GLTFPrimitive, ModelMesh> meshMap = new HashMap<>();
+    private final Map<GLTFPrimitive, String> meshMap = new HashMap<>();
     private final ArrayList<ModelMaterial> materials = new ArrayList<>();
     //private final ArrayList<ModelNode> nodes = new ArrayList<>();
 
@@ -80,7 +80,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
             ModelMaterial modelMaterial = new ModelMaterial();
             modelMaterial.textures = new Array<>();
 
-            modelMaterial.id = gltfMat.name != null ? gltfMat.name : "mat"+index;   // copy name or generate one as a debugging aid
+            modelMaterial.id = gltfMat.name != null ? gltfMat.name : "mat"+index;   // copy name or generate one to be used as reference
             index++;
 
             if(gltfMat.pbrMetallicRoughness.baseColorFactor != null)
@@ -120,14 +120,9 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
 
         startLoad = System.currentTimeMillis();
         for(GLTFMesh gltfMesh : gltf.meshes){
-            // build a mesh for each primitive
-            // note: a ModelMesh can have multiple ModelMeshParts
             // in GLTF a mesh can have multiple primitives
-            for(GLTFPrimitive primitive : gltfMesh.primitives){
-                ModelMesh mesh = buildMesh(gltf,  gltf.rawBuffer, primitive );
-                modelData.addMesh(mesh);
-                meshMap.put(primitive, mesh);
-            }
+
+            buildMesh(modelData, gltf,  gltf.rawBuffer, gltfMesh );
         }
 
         endLoad = System.currentTimeMillis();
@@ -290,47 +285,25 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
         if(gltfNode.mesh >= 0){ // this node refers to a mesh
 
             GLTFMesh gltfMesh = gltf.meshes.get(gltfNode.mesh);
-            ModelMesh modelMesh = model.meshes.get(gltfNode.mesh); // assume same index
+
             node.parts = new ModelNodePart[gltfMesh.primitives.size()];
             int partId = 0;
             // assumes mesh is dedicated to this node
-            modelMesh.parts = new ModelMeshPart[gltfMesh.primitives.size()];
+
 
             for( GLTFPrimitive primitive : gltfMesh.primitives) {
-                GLTFAccessor indexAccessor = gltf.accessors.get(primitive.indices);
-                //GLTFBufferView view = gltf.bufferViews.get(indexAccessor.bufferView);
-                if (!indexAccessor.type.contentEquals("SCALAR"))
-                    throw new RuntimeException("GLTF: Expect primitive.indices to refer to SCALAR accessor");
 
                 ModelNodePart nodePart = new ModelNodePart();
-                nodePart.meshPartId = meshMap.get(primitive).id;
+                nodePart.meshPartId = meshMap.get(primitive);   // get id of ModelMeshPart
                 // cross reference to material.id (a String)
                 nodePart.materialId = materials.get(primitive.material).id;
+                System.out.println("Node refers to material: "+nodePart.materialId);
                 // todo
 //                nodePart.bones = 1;
 //                nodePart.uvMapping = 1;
 
-                node.parts[partId] = nodePart;
-                ModelMeshPart modelMeshPart = new ModelMeshPart();
-                modelMeshPart.id = nodePart.meshPartId;
-                modelMeshPart.primitiveType = GL20.GL_TRIANGLES; // todo
-                modelMeshPart.indices = new short[indexAccessor.count];
+                node.parts[partId++] = nodePart;
 
-                GLTFBufferView view = gltf.bufferViews.get(indexAccessor.bufferView);
-                if(view.buffer != 0)
-                    throw new RuntimeException("GLTF: Can only support buffer 0");
-                int offset = view.byteOffset + indexAccessor.byteOffset;
-
-                if(indexAccessor.componentType == GLTF.USHORT16) {
-                    GLTFRawBuffer rawBuffer = gltf.rawBuffer;
-                    rawBuffer.byteBuffer.position(offset);
-                    for (int i = 0; i < indexAccessor.count; i++) {
-                        modelMeshPart.indices[i] = rawBuffer.byteBuffer.getShort();
-                    }
-                } else
-                    throw new RuntimeException("32 bit indices not supported");
-                modelMesh.parts[partId] = modelMeshPart;
-                partId++;
             }
         }
         return node;
@@ -349,49 +322,107 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
     }
 
 
-    private ModelMesh buildMesh(GLTF gltf, GLTFRawBuffer rawBuffer, GLTFPrimitive primitive){
+    private ModelMesh buildMesh(ModelData modelData, GLTF gltf, GLTFRawBuffer rawBuffer, GLTFMesh gltfMesh){
+
+
 
         ModelMesh modelMesh = new ModelMesh();
+        modelMesh.id = gltfMesh.name;
+        modelMesh.parts = new ModelMeshPart[gltfMesh.primitives.size()];
 
-        int indexAccessorId = primitive.indices;
-        GLTFAccessor indexAccessor = gltf.accessors.get(indexAccessorId);
+        ArrayList<Vector3> positions = new ArrayList<>();
+        ArrayList<Vector3> normals = new ArrayList<>();
+        ArrayList<Vector3> tangents = new ArrayList<>();
+        ArrayList<Vector2> textureCoordinates = new ArrayList<>();
+        ArrayList<Vector4> joints = new ArrayList<>();
+        ArrayList<Vector4> weights = new ArrayList<>();
+        ArrayList<Vector3> bitangents = new ArrayList<>();
+        boolean hasNormalMap = false;
 
-        GLTFBufferView view = gltf.bufferViews.get(indexAccessor.bufferView);
-        if(view.buffer != 0)
-            throw new RuntimeException("GLTF: Can only support buffer 0");
-        int offset = view.byteOffset;
-        offset += indexAccessor.byteOffset;
+        Array<VertexAttribute> meshVA = null;
 
-        boolean hasNormalMap = gltf.materials.get(primitive.material).normalTexture >= 0;
+        int primitiveIndex = 0;
+        for(GLTFPrimitive primitive : gltfMesh.primitives) {
 
-        // todo adjust this based on the file contents:
-        Array<VertexAttribute> va = new Array<>();
-        va.add(VertexAttribute.Position());
-        va.add(VertexAttribute.TexCoords(0));
-        va.add(VertexAttribute.Normal());
 
-        if(hasNormalMap){
-            va.add(VertexAttribute.Tangent());
-            va.add(VertexAttribute.Binormal());
-        }
-        for(GLTFAttribute attrib : primitive.attributes){
-            // todo not supported?
+
+            // note: even if only one of the primitives has a normal texture, the mesh will need tangents
+            if( gltf.materials.get(primitive.material).normalTexture >= 0 )
+                hasNormalMap = true;
+
+            // todo adjust this based on the file contents:
+            Array<VertexAttribute> va = new Array<>();
+            va.add(VertexAttribute.Position());
+            va.add(VertexAttribute.TexCoords(0));
+            va.add(VertexAttribute.Normal());
+
+            // todo: do this after the loop when we've seen all primitives?
+            if (hasNormalMap) {
+                va.add(VertexAttribute.Tangent());
+                va.add(VertexAttribute.Binormal());
+            }
+            for (GLTFAttribute attrib : primitive.attributes) {
+                // todo not supported?
 //            if(attrib.name.contentEquals("JOINTS_0")){  // todo only supports _0
 //                vaFlags |= VertexAttributes.Usage.JOINTS;
 //            }
-            if(attrib.name.contentEquals("WEIGHTS_0")){
-                va.add(VertexAttribute.BoneWeight(0));
+                if (attrib.name.contentEquals("WEIGHTS_0")) {
+                    va.add(VertexAttribute.BoneWeight(0));
+                }
             }
-        }
 
-        modelMesh.attributes = new VertexAttribute[va.size];
-        for(int i = 0; i < va.size; i++)
-            modelMesh.attributes[i] = va.get(i);
+            // Use the first primitive as basis for the meshes' vertex attributes
+            // and check that the other primitives match.
+            // todo make multiple meshes if need be
+            if(primitiveIndex == 0) {
+                modelMesh.attributes = new VertexAttribute[va.size];
+                for (int i = 0; i < va.size; i++)
+                    modelMesh.attributes[i] = va.get(i);
+                meshVA = va;
+            } else {
+                if(!va.equals(meshVA))
+                    throw new RuntimeException("Not supported: Mesh primitives have different attributes");
+            }
 
-        if(indexAccessor.componentType != GLTF.USHORT16 && indexAccessor.componentType != GLTF.UINT32 )
-            throw new RuntimeException("GLTF: Can only support short or integer index");
 
-        rawBuffer.byteBuffer.position(offset);
+            // primitive indices
+            int indexAccessorId = primitive.indices;
+            GLTFAccessor indexAccessor = gltf.accessors.get(indexAccessorId);
+
+
+
+
+            ModelMeshPart modelMeshPart = new ModelMeshPart();
+            modelMeshPart.id = modelMesh.id + "." + primitiveIndex; //nodePart.meshPartId;
+            modelMeshPart.primitiveType = GL20.GL_TRIANGLES; // todo
+            modelMeshPart.indices = new short[indexAccessor.count];
+            meshMap.put(primitive,  modelMeshPart.id);
+
+            GLTFBufferView view = gltf.bufferViews.get(indexAccessor.bufferView);
+            if(view.buffer != 0)
+                throw new RuntimeException("GLTF: Can only support buffer 0");
+            int offset = view.byteOffset + indexAccessor.byteOffset;
+
+            if(indexAccessor.componentType == GLTF.USHORT16) {
+                //GLTFRawBuffer rawBuffer = gltf.rawBuffer;
+                rawBuffer.byteBuffer.position(offset);
+                // do we need an offset because mesh is now shared between primitives?
+                // yes equal to number of vertices we have so far from the previous primitives, i.e. positions.size()
+                // note: combining meshes of primitives, means the short indices may not reach far enough....
+                short meshPartOffset = (short)positions.size();
+                for (int i = 0; i < indexAccessor.count; i++) {
+                    modelMeshPart.indices[i] = (short)(meshPartOffset + rawBuffer.byteBuffer.getShort());
+                }
+                System.out.println("Primitive indices: "+modelMeshPart.id+ " count:"+indexAccessor.count);
+                for (int i = 0; i < indexAccessor.count; i++) {
+                    System.out.print(modelMeshPart.indices[i] + " ");
+                }
+                System.out.println();
+            } else
+                throw new RuntimeException("32 bit indices not supported");     // todo try to handle this
+            modelMesh.parts[primitiveIndex] = modelMeshPart;
+            primitiveIndex++;
+
 
 //        int max = -1;
 //        if(indexAccessor.componentType == GLTF.USHORT16){
@@ -410,198 +441,201 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
 //            //System.out.println("max index "+max); // TMP
 //        }
 
-        //boolean hasNormalMap = meshData.vertexAttributes.hasUsage(VertexAttribute.Usage.TANGENT);
+            //boolean hasNormalMap = meshData.vertexAttributes.hasUsage(VertexAttribute.Usage.TANGENT);
 
-        int positionAccessorId = -1;
-        int normalAccessorId = -1;
-        int uvAccessorId = -1;
-        int tangentAccessorId = -1;
-        int jointsAccessorId = -1;
-        int weightsAccessorId = -1;
-        ArrayList<GLTFAttribute> attributes = primitive.attributes;
-        for(GLTFAttribute attribute : attributes){
-            if(attribute.name.contentEquals("POSITION")){
-                positionAccessorId = attribute.value;
-            } else if(attribute.name.contentEquals("NORMAL")){
-                normalAccessorId = attribute.value;
-            } else  if(attribute.name.contentEquals("TEXCOORD_0")){
-                uvAccessorId = attribute.value;
-            } else if(attribute.name.contentEquals("TANGENT")){
-                tangentAccessorId = attribute.value;
-            } else if(attribute.name.contentEquals("JOINTS_0")){
-                jointsAccessorId = attribute.value;
-            } else if(attribute.name.contentEquals("WEIGHTS_0")){
-                weightsAccessorId = attribute.value;
-            }
-        }
-        if(positionAccessorId < 0)
-            throw new RuntimeException("GLTF: need POSITION attribute");
-        GLTFAccessor positionAccessor = gltf.accessors.get(positionAccessorId);
-        view = gltf.bufferViews.get(positionAccessor.bufferView);
-        if(view.buffer != 0)
-            throw new RuntimeException("GLTF: Can only support buffer 0");
-        offset = view.byteOffset;
-        offset += positionAccessor.byteOffset;
-
-        //System.out.println("Position offset: "+offset);
-        //System.out.println("Position count: "+positionAccessor.count);
-
-        if(positionAccessor.componentType != GLTF.FLOAT32 || !positionAccessor.type.contentEquals("VEC3"))
-            throw new RuntimeException("GLTF: Can only support float positions as VEC3");
-
-        ArrayList<Vector3> positions = new ArrayList<>();
-        rawBuffer.byteBuffer.position(offset);
-        for(int i = 0; i < positionAccessor.count; i++){
-            // assuming float32
-            float f1 = rawBuffer.byteBuffer.getFloat();
-            float f2 = rawBuffer.byteBuffer.getFloat();
-            float f3 = rawBuffer.byteBuffer.getFloat();
-            //System.out.println("float  "+f1 + " "+ f2 + " "+f3);
-            positions.add(new Vector3(f1, f2, f3));
-        }
-
-        ArrayList<Vector3> normals = new ArrayList<>();
-        if(normalAccessorId >= 0) {
-            GLTFAccessor normalAccessor = gltf.accessors.get(normalAccessorId);
-            view = gltf.bufferViews.get(normalAccessor.bufferView);
-            if (view.buffer != 0)
-                throw new RuntimeException("GLTF: Can only support buffer 0");
-            offset = view.byteOffset;
-            offset += normalAccessor.byteOffset;
-
-
-            if (normalAccessor.componentType != GLTF.FLOAT32 || !positionAccessor.type.contentEquals("VEC3"))
-                throw new RuntimeException("GLTF: Can only support float normals as VEC3");
-
-            rawBuffer.byteBuffer.position(offset);
-            for (int i = 0; i < normalAccessor.count; i++) {
-                // assuming float32
-                float f1 = rawBuffer.byteBuffer.getFloat();
-                float f2 = rawBuffer.byteBuffer.getFloat();
-                float f3 = rawBuffer.byteBuffer.getFloat();
-                //System.out.println("float  "+f1 + " "+ f2 + " "+f3);
-                normals.add(new Vector3(f1, f2, f3));
-            }
-        }
-
-        ArrayList<Vector3> tangents = new ArrayList<>();
-        if(tangentAccessorId >= 0) {
-            GLTFAccessor tangentAccessor = gltf.accessors.get(tangentAccessorId);
-            view = gltf.bufferViews.get(tangentAccessor.bufferView);
-            if (view.buffer != 0)
-                throw new RuntimeException("GLTF: Can only support buffer 0");
-            offset = view.byteOffset;
-            offset += tangentAccessor.byteOffset;
-
-            if (tangentAccessor.componentType != GLTF.FLOAT32 || !positionAccessor.type.contentEquals("VEC3"))
-                throw new RuntimeException("GLTF: Can only support float tangents as VEC3");
-
-            rawBuffer.byteBuffer.position(offset);
-            for (int i = 0; i < tangentAccessor.count; i++) {
-                // assuming float32
-                float f1 = rawBuffer.byteBuffer.getFloat();
-                float f2 = rawBuffer.byteBuffer.getFloat();
-                float f3 = rawBuffer.byteBuffer.getFloat();
-                //System.out.println("float  "+f1 + " "+ f2 + " "+f3);
-                tangents.add(new Vector3(f1, f2, f3));
-            }
-        }
-
-        ArrayList<Vector2> textureCoordinates = new ArrayList<>();
-        if(uvAccessorId >= 0) {
-
-            GLTFAccessor uvAccessor = gltf.accessors.get(uvAccessorId);
-            view = gltf.bufferViews.get(uvAccessor.bufferView);
-            if (view.buffer != 0)
-                throw new RuntimeException("GLTF: Can only support buffer 0");
-            offset = view.byteOffset;
-            offset += uvAccessor.byteOffset;
-
-            //System.out.println("UV offset: " + offset);
-
-            if (uvAccessor.componentType != GLTF.FLOAT32 || !uvAccessor.type.contentEquals("VEC2"))
-                throw new RuntimeException("GLTF: Can only support float positions as VEC2");
-
-
-            rawBuffer.byteBuffer.position(offset);
-            for (int i = 0; i < uvAccessor.count; i++) {
-                // assuming float32
-                float f1 = rawBuffer.byteBuffer.getFloat();
-                float f2 = rawBuffer.byteBuffer.getFloat();
-                //System.out.println("float  "+f1 + " "+ f2 );
-                textureCoordinates.add(new Vector2(f1, f2));
-            }
-        }
-
-        ArrayList<Vector4> joints = new ArrayList<>();
-        if(jointsAccessorId >= 0) {
-            GLTFAccessor jointsAccessor = gltf.accessors.get(jointsAccessorId);
-            if (jointsAccessor.componentType != GLTF.USHORT16 &&  jointsAccessor.componentType != GLTF.UBYTE8)
-                throw new RuntimeException("GLTF: Can only joints defined as USHORT16 or UBYTE8, type = "+jointsAccessor.componentType);
-            if ( !jointsAccessor.type.contentEquals("VEC4"))
-                throw new RuntimeException("GLTF: Can only support joints as vec4, type = "+jointsAccessor.type);
-            view = gltf.bufferViews.get(jointsAccessor.bufferView);
-            if (view.buffer != 0)
-                throw new RuntimeException("GLTF: Can only support buffer 0");
-            offset = view.byteOffset;
-            offset += jointsAccessor.byteOffset;
-            rawBuffer.byteBuffer.position(offset);
-            boolean isByte = (jointsAccessor.componentType == GLTF.UBYTE8);
-            short u1, u2, u3, u4;
-            for (int i = 0; i < jointsAccessor.count; i++) {
-                // assuming ubyte8 or ushort16 (handled as (signed) short here)
-                if(isByte) {
-                    u1 = rawBuffer.byteBuffer.get();
-                    u2 = rawBuffer.byteBuffer.get();
-                    u3 = rawBuffer.byteBuffer.get();
-                    u4 = rawBuffer.byteBuffer.get();
-                } else {
-                    u1 = rawBuffer.byteBuffer.getShort();
-                    u2 = rawBuffer.byteBuffer.getShort();
-                    u3 = rawBuffer.byteBuffer.getShort();
-                    u4 = rawBuffer.byteBuffer.getShort();
+            int positionAccessorId = -1;
+            int normalAccessorId = -1;
+            int uvAccessorId = -1;
+            int tangentAccessorId = -1;
+            int jointsAccessorId = -1;
+            int weightsAccessorId = -1;
+            ArrayList<GLTFAttribute> attributes = primitive.attributes;
+            for (GLTFAttribute attribute : attributes) {
+                if (attribute.name.contentEquals("POSITION")) {
+                    positionAccessorId = attribute.value;
+                } else if (attribute.name.contentEquals("NORMAL")) {
+                    normalAccessorId = attribute.value;
+                } else if (attribute.name.contentEquals("TEXCOORD_0")) {
+                    uvAccessorId = attribute.value;
+                } else if (attribute.name.contentEquals("TANGENT")) {
+                    tangentAccessorId = attribute.value;
+                } else if (attribute.name.contentEquals("JOINTS_0")) {
+                    jointsAccessorId = attribute.value;
+                } else if (attribute.name.contentEquals("WEIGHTS_0")) {
+                    weightsAccessorId = attribute.value;
                 }
+            }
+            if (positionAccessorId < 0)
+                throw new RuntimeException("GLTF: need POSITION attribute");
+            GLTFAccessor positionAccessor = gltf.accessors.get(positionAccessorId);
+            view = gltf.bufferViews.get(positionAccessor.bufferView);
+            if (view.buffer != 0)
+                throw new RuntimeException("GLTF: Can only support buffer 0");
+            offset = view.byteOffset;
+            offset += positionAccessor.byteOffset;
 
-                Vector4 jj = new Vector4(u1, u2, u3, u4);
-                joints.add(jj);
+            //System.out.println("Position offset: "+offset);
+            //System.out.println("Position count: "+positionAccessor.count);
+
+            if (positionAccessor.componentType != GLTF.FLOAT32 || !positionAccessor.type.contentEquals("VEC3"))
+                throw new RuntimeException("GLTF: Can only support float positions as VEC3");
+
+
+            rawBuffer.byteBuffer.position(offset);
+            for (int i = 0; i < positionAccessor.count; i++) {
+                // assuming float32
+                float f1 = rawBuffer.byteBuffer.getFloat();
+                float f2 = rawBuffer.byteBuffer.getFloat();
+                float f3 = rawBuffer.byteBuffer.getFloat();
+                //System.out.println("float  "+f1 + " "+ f2 + " "+f3);
+                positions.add(new Vector3(f1, f2, f3));
+            }
+
+
+            if (normalAccessorId >= 0) {
+                GLTFAccessor normalAccessor = gltf.accessors.get(normalAccessorId);
+                view = gltf.bufferViews.get(normalAccessor.bufferView);
+                if (view.buffer != 0)
+                    throw new RuntimeException("GLTF: Can only support buffer 0");
+                offset = view.byteOffset;
+                offset += normalAccessor.byteOffset;
+
+
+                if (normalAccessor.componentType != GLTF.FLOAT32 || !positionAccessor.type.contentEquals("VEC3"))
+                    throw new RuntimeException("GLTF: Can only support float normals as VEC3");
+
+                rawBuffer.byteBuffer.position(offset);
+                for (int i = 0; i < normalAccessor.count; i++) {
+                    // assuming float32
+                    float f1 = rawBuffer.byteBuffer.getFloat();
+                    float f2 = rawBuffer.byteBuffer.getFloat();
+                    float f3 = rawBuffer.byteBuffer.getFloat();
+                    //System.out.println("float  "+f1 + " "+ f2 + " "+f3);
+                    normals.add(new Vector3(f1, f2, f3));
+                }
+            }
+
+
+            if (tangentAccessorId >= 0) {
+                GLTFAccessor tangentAccessor = gltf.accessors.get(tangentAccessorId);
+                view = gltf.bufferViews.get(tangentAccessor.bufferView);
+                if (view.buffer != 0)
+                    throw new RuntimeException("GLTF: Can only support buffer 0");
+                offset = view.byteOffset;
+                offset += tangentAccessor.byteOffset;
+
+                if (tangentAccessor.componentType != GLTF.FLOAT32 || !positionAccessor.type.contentEquals("VEC3"))
+                    throw new RuntimeException("GLTF: Can only support float tangents as VEC3");
+
+                rawBuffer.byteBuffer.position(offset);
+                for (int i = 0; i < tangentAccessor.count; i++) {
+                    // assuming float32
+                    float f1 = rawBuffer.byteBuffer.getFloat();
+                    float f2 = rawBuffer.byteBuffer.getFloat();
+                    float f3 = rawBuffer.byteBuffer.getFloat();
+                    //System.out.println("float  "+f1 + " "+ f2 + " "+f3);
+                    tangents.add(new Vector3(f1, f2, f3));
+                }
+            }
+
+
+            if (uvAccessorId >= 0) {
+
+                GLTFAccessor uvAccessor = gltf.accessors.get(uvAccessorId);
+                view = gltf.bufferViews.get(uvAccessor.bufferView);
+                if (view.buffer != 0)
+                    throw new RuntimeException("GLTF: Can only support buffer 0");
+                offset = view.byteOffset;
+                offset += uvAccessor.byteOffset;
+
+                //System.out.println("UV offset: " + offset);
+
+                if (uvAccessor.componentType != GLTF.FLOAT32 || !uvAccessor.type.contentEquals("VEC2"))
+                    throw new RuntimeException("GLTF: Can only support float positions as VEC2");
+
+
+                rawBuffer.byteBuffer.position(offset);
+                for (int i = 0; i < uvAccessor.count; i++) {
+                    // assuming float32
+                    float f1 = rawBuffer.byteBuffer.getFloat();
+                    float f2 = rawBuffer.byteBuffer.getFloat();
+                    //System.out.println("float  "+f1 + " "+ f2 );
+                    textureCoordinates.add(new Vector2(f1, f2));
+                }
+            }
+
+
+            if (jointsAccessorId >= 0) {
+                GLTFAccessor jointsAccessor = gltf.accessors.get(jointsAccessorId);
+                if (jointsAccessor.componentType != GLTF.USHORT16 && jointsAccessor.componentType != GLTF.UBYTE8)
+                    throw new RuntimeException("GLTF: Can only joints defined as USHORT16 or UBYTE8, type = " + jointsAccessor.componentType);
+                if (!jointsAccessor.type.contentEquals("VEC4"))
+                    throw new RuntimeException("GLTF: Can only support joints as vec4, type = " + jointsAccessor.type);
+                view = gltf.bufferViews.get(jointsAccessor.bufferView);
+                if (view.buffer != 0)
+                    throw new RuntimeException("GLTF: Can only support buffer 0");
+                offset = view.byteOffset;
+                offset += jointsAccessor.byteOffset;
+                rawBuffer.byteBuffer.position(offset);
+                boolean isByte = (jointsAccessor.componentType == GLTF.UBYTE8);
+                short u1, u2, u3, u4;
+                for (int i = 0; i < jointsAccessor.count; i++) {
+                    // assuming ubyte8 or ushort16 (handled as (signed) short here)
+                    if (isByte) {
+                        u1 = rawBuffer.byteBuffer.get();
+                        u2 = rawBuffer.byteBuffer.get();
+                        u3 = rawBuffer.byteBuffer.get();
+                        u4 = rawBuffer.byteBuffer.get();
+                    } else {
+                        u1 = rawBuffer.byteBuffer.getShort();
+                        u2 = rawBuffer.byteBuffer.getShort();
+                        u3 = rawBuffer.byteBuffer.getShort();
+                        u4 = rawBuffer.byteBuffer.getShort();
+                    }
+
+                    Vector4 jj = new Vector4(u1, u2, u3, u4);
+                    joints.add(jj);
 
 //                int jointInt = (u1&0xFF) << 24 | (u2 &0xFF) << 16 | (u3&0xFF) << 8 | (u4&0xFF);
 //                System.out.println("joints  "+u1 + " "+ u2 + " "+u3+" "+u4+": "+Integer.toHexString(jointInt));
 //                joints.add(jointInt);
+                }
             }
+
+
+            if (weightsAccessorId >= 0) {
+                GLTFAccessor accessor = gltf.accessors.get(weightsAccessorId);
+                if (accessor.componentType != GLTF.FLOAT32 || !accessor.type.contentEquals("VEC4"))
+                    throw new RuntimeException("GLTF: Can only support vec4(FLOAT32) for joints, type = " + accessor.componentType);
+                view = gltf.bufferViews.get(accessor.bufferView);
+                if (view.buffer != 0)
+                    throw new RuntimeException("GLTF: Can only support buffer 0");
+                offset = view.byteOffset;
+                offset += accessor.byteOffset;
+                rawBuffer.byteBuffer.position(offset);
+
+                for (int i = 0; i < accessor.count; i++) {
+                    float f1 = rawBuffer.byteBuffer.getFloat();
+                    float f2 = rawBuffer.byteBuffer.getFloat();
+                    float f3 = rawBuffer.byteBuffer.getFloat();
+                    float f4 = rawBuffer.byteBuffer.getFloat();
+                    Vector4 w = new Vector4(f1, f2, f3, f4);
+                    System.out.println("weights  " + w.toString());
+                    weights.add(w);
+                }
+
+                // if the material has a normal map and tangents are not provided we need to calculate them
+                // todo
+                //        if(hasNormalMap && (tangents.size() == 0  || bitangents.size() == 0))
+                //            addTBN(meshData, positions, textureCoordinates, normals, tangents, bitangents);
+            }
+
         }
 
-        ArrayList<Vector4> weights = new ArrayList<>();
-        if(weightsAccessorId >= 0) {
-            GLTFAccessor accessor = gltf.accessors.get(weightsAccessorId);
-            if (accessor.componentType != GLTF.FLOAT32 || !accessor.type.contentEquals("VEC4"))
-                throw new RuntimeException("GLTF: Can only support vec4(FLOAT32) for joints, type = "+accessor.componentType);
-            view = gltf.bufferViews.get(accessor.bufferView);
-            if (view.buffer != 0)
-                throw new RuntimeException("GLTF: Can only support buffer 0");
-            offset = view.byteOffset;
-            offset += accessor.byteOffset;
-            rawBuffer.byteBuffer.position(offset);
-
-            for (int i = 0; i < accessor.count; i++) {
-                float f1 = rawBuffer.byteBuffer.getFloat();
-                float f2 = rawBuffer.byteBuffer.getFloat();
-                float f3 = rawBuffer.byteBuffer.getFloat();
-                float f4 = rawBuffer.byteBuffer.getFloat();
-                Vector4 w = new Vector4(f1, f2, f3, f4);
-                System.out.println("weights  "+w.toString());
-                weights.add(w);
-            }
-        }
-
-        ArrayList<Vector3> bitangents = new ArrayList<>();
-        // if the material has a normal map and tangents are not provided we need to calculate them
-// todo
-//        if(hasNormalMap && (tangents.size() == 0  || bitangents.size() == 0))
-//            addTBN(meshData, positions, textureCoordinates, normals, tangents, bitangents);
+        // now fill a vertex buffer including all primitives
 
         // x y z   u v   nx ny nz (tx ty tz   bx by bz)
-        modelMesh.id = gltf.nodes.get(0).name;
+        //modelMesh.id = gltf.nodes.get(0).name;
         Vector3 normal = new Vector3(0, 1, 0);
         Vector2 uv = new Vector2();
         int ix = 0;
@@ -664,6 +698,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
             }
         }
 
+        modelData.addMesh(modelMesh);
         return modelMesh;
     }
 

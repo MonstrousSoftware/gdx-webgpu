@@ -75,9 +75,9 @@ public class LoadGLTFTest extends GdxTest {
 		cam.near = 0.1f;
 		cam.far = 1000f;		// extend far distance to avoid clipping the skybox
 
-		modelFileName = "data/g3d/gltf/Cube/Cube.gltf";
+		//modelFileName = "data/g3d/gltf/Cube/Cube.gltf";
         //modelFileName = "data/g3d/gltf/StanfordDragon/stanfordDragon.gltf";
-        //modelFileName = "data/g3d/gltf/Cubes/cubes.gltf";
+        modelFileName = "data/g3d/gltf/Cubes/cubes.gltf";
 
         FileHandle file = Gdx.files.internal(modelFileName);
         model = new WgGLTFModelLoader(new JsonReader()).loadModel(file);
