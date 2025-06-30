@@ -23,6 +23,7 @@ import com.badlogic.gdx.graphics.g3d.model.data.*;
 import com.badlogic.gdx.math.*;
 import com.badlogic.gdx.utils.*;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.gltf.*;
+import com.monstrous.gdx.webgpu.graphics.g3d.model.WgModelMeshPart;
 import org.jetbrains.annotations.NotNull;
 
 
@@ -337,7 +338,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
 
             ModelMesh modelMesh = new ModelMesh();
             modelMesh.id = gltfMesh.name + "."+primitiveIndex;
-            modelMesh.parts = new ModelMeshPart[1]; //gltfMesh.primitives.size()];
+            modelMesh.parts = new WgModelMeshPart[1]; // one part per mesh
 
 
             ArrayList<Vector3> positions = new ArrayList<>();
@@ -382,54 +383,35 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
             GLTFAccessor indexAccessor = gltf.accessors.get(indexAccessorId);
 
 
-            ModelMeshPart modelMeshPart = new ModelMeshPart();
+            WgModelMeshPart modelMeshPart = new WgModelMeshPart();
             modelMeshPart.id = modelMesh.id; // must be unique as it is used in modelNodePart as a reference
-            modelMeshPart.primitiveType = GL20.GL_TRIANGLES; // todo
-            modelMeshPart.indices = new short[indexAccessor.count];
+            modelMeshPart.primitiveType = primitive.mode; // GLTF uses OpenGL constants, e.g. GL_TRIANGLES
+
             meshMap.put(primitive,  modelMeshPart.id);
 
             GLTFBufferView view = gltf.bufferViews.get(indexAccessor.bufferView);
             if(view.buffer != 0)
                 throw new RuntimeException("GLTF: Can only support buffer 0");
             int offset = view.byteOffset + indexAccessor.byteOffset;
+            rawBuffer.byteBuffer.position(offset);
 
             if(indexAccessor.componentType == GLTF.USHORT16) {
-                //GLTFRawBuffer rawBuffer = gltf.rawBuffer;
-                rawBuffer.byteBuffer.position(offset);
-                // do we need an offset because mesh is now shared between primitives?
-                // yes equal to number of vertices we have so far from the previous primitives, i.e. positions.size()
-                // note: combining meshes of primitives, means the short indices may not reach far enough....
-                short meshPartOffset = (short)positions.size();
+                modelMeshPart.indices = new short[indexAccessor.count];
+
                 for (int i = 0; i < indexAccessor.count; i++) {
-                    modelMeshPart.indices[i] = (short)(meshPartOffset + rawBuffer.byteBuffer.getShort());
+                    modelMeshPart.indices[i] = rawBuffer.byteBuffer.getShort();
                 }
-//                System.out.println("Primitive indices: "+modelMeshPart.id+ " count:"+indexAccessor.count);
-//                for (int i = 0; i < indexAccessor.count; i++) {
-//                    System.out.print(modelMeshPart.indices[i] + " ");
-//                }
-//                System.out.println();
-            } else
-                throw new RuntimeException("32 bit indices not supported");     // todo try to handle this
+            } else {
+                modelMeshPart.indices32 = new int[indexAccessor.count];
+                for(int i = 0; i < indexAccessor.count; i++){
+                    modelMeshPart.indices32[i] = rawBuffer.byteBuffer.getInt();
+                }
+                System.out.println("Using 32 bit indices:  "+indexAccessor.count);
+            }
+
             modelMesh.parts[0] = modelMeshPart;
             primitiveIndex++;
 
-
-//        int max = -1;
-//        if(indexAccessor.componentType == GLTF.USHORT16){
-//            meshData.indexSizeInBytes = 2; // 16 bit index
-//            for(int i = 0; i < indexAccessor.count; i++){
-//                meshData.indexValues.add( (int)rawBuffer.byteBuffer.getShort());
-//            }
-//        } else {
-//            meshData.indexSizeInBytes = 4; // 32 bit index
-//            for(int i = 0; i < indexAccessor.count; i++){
-//                int index = rawBuffer.byteBuffer.getInt();
-//                if(index > max)
-//                    max = index;
-//                meshData.indexValues.add( index);
-//            }
-//            //System.out.println("max index "+max); // TMP
-//        }
 
             //boolean hasNormalMap = meshData.vertexAttributes.hasUsage(VertexAttribute.Usage.TANGENT);
 

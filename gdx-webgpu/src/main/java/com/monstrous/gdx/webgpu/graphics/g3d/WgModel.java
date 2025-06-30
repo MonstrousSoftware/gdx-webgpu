@@ -34,8 +34,10 @@ import com.badlogic.gdx.graphics.g3d.model.data.*;
 import com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor;
 import com.badlogic.gdx.graphics.g3d.utils.TextureProvider;
 import com.badlogic.gdx.utils.*;
+import com.monstrous.gdx.webgpu.graphics.g3d.model.WgModelMeshPart;
 
 import java.nio.Buffer;
+import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 
 
@@ -49,35 +51,69 @@ public class WgModel extends Model {
 	@Override
 	protected void convertMesh (ModelMesh modelMesh) {
 		int numIndices = 0;
+        boolean needWideIndices = false;
 		for (ModelMeshPart part : modelMesh.parts) {
-			numIndices += part.indices.length;
+            // GLTF models may require 32 bit indices, these are provided using an extended ModelMeshPart
+            if(part instanceof WgModelMeshPart){
+                if(((WgModelMeshPart) part).indices32 != null){
+                    numIndices += ((WgModelMeshPart)part).indices32.length;
+                    needWideIndices = true;
+                }
+            }
+            if(part.indices != null)
+			    numIndices += part.indices.length;
 		}
 		boolean hasIndices = numIndices > 0;
 		VertexAttributes attributes = new VertexAttributes(modelMesh.attributes);
-		int numVertices = modelMesh.vertices.length / (attributes.vertexSize / 4);
+		int numVertices = modelMesh.vertices.length / (attributes.vertexSize / Float.BYTES);
 
-		Mesh mesh = new WgMesh(true, numVertices, numIndices, attributes);
+		Mesh mesh = new WgMesh(true, numVertices, numIndices, needWideIndices, attributes);
 		meshes.add(mesh);
 		disposables.add(mesh);
 
 		BufferUtils.copy(modelMesh.vertices, mesh.getVerticesBuffer(true), modelMesh.vertices.length, 0);
 		int offset = 0;
-		ShortBuffer indicesBuffer = mesh.getIndicesBuffer(true);
-		((Buffer)indicesBuffer).clear();
-		for (ModelMeshPart part : modelMesh.parts) {
-			MeshPart meshPart = new WgMeshPart();
-			meshPart.id = part.id;
-			meshPart.primitiveType = part.primitiveType;
-			meshPart.offset = offset;
-			meshPart.size = hasIndices ? part.indices.length : numVertices;
-			meshPart.mesh = mesh;
-			if (hasIndices) {
-				indicesBuffer.put(part.indices);
-			}
-			offset += meshPart.size;
-			meshParts.add(meshPart);
-		}
-		((Buffer)indicesBuffer).position(0);
+
+
+        if(needWideIndices){
+            IntBuffer intBuffer = ((WgIndexBuffer)mesh.getIndexData()).getIntBuffer(true);
+            ((Buffer)intBuffer).clear();
+
+            for (ModelMeshPart part : modelMesh.parts) {
+                MeshPart meshPart = new WgMeshPart();
+                meshPart.id = part.id;
+                meshPart.primitiveType = part.primitiveType;
+                meshPart.offset = offset;
+                meshPart.size = hasIndices ?  ((WgModelMeshPart)part).indices32.length : numVertices;
+                meshPart.mesh = mesh;
+                if (hasIndices) {
+                    intBuffer.put(((WgModelMeshPart)part).indices32);
+                }
+                offset += meshPart.size;
+                meshParts.add(meshPart);
+            }
+            ((Buffer)intBuffer).position(0);
+        } else {
+            ShortBuffer indicesBuffer = mesh.getIndicesBuffer(true);
+            ((Buffer)indicesBuffer).clear();
+
+            for (ModelMeshPart part : modelMesh.parts) {
+                MeshPart meshPart = new WgMeshPart();
+                meshPart.id = part.id;
+                meshPart.primitiveType = part.primitiveType;
+                meshPart.offset = offset;
+                meshPart.size = hasIndices ?  part.indices.length : numVertices;
+                meshPart.mesh = mesh;
+                if (hasIndices) {
+                       indicesBuffer.put(part.indices);
+                }
+                offset += meshPart.size;
+                meshParts.add(meshPart);
+            }
+            ((Buffer)indicesBuffer).position(0);
+        }
+
+        // todo (assumes short indices to calc bbox)
 		for (MeshPart part : meshParts)
 			part.update();
 	}

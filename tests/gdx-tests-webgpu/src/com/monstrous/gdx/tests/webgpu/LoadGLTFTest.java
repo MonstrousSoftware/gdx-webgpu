@@ -20,8 +20,11 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
+import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.model.data.ModelData;
 import com.badlogic.gdx.graphics.g3d.utils.TextureProvider;
 import com.badlogic.gdx.math.Vector3;
@@ -55,6 +58,7 @@ public class LoadGLTFTest extends GdxTest {
 	Model model;
 	ModelInstance instance;
     String modelFileName;
+    Environment environment;
 
 
 	// launcher
@@ -78,8 +82,9 @@ public class LoadGLTFTest extends GdxTest {
 
 		//modelFileName = "data/g3d/gltf/Cube/Cube.gltf";
         modelFileName = "data/g3d/gltf/StanfordDragon/stanfordDragon.gltf";
-        modelFileName = "data/g3d/gltf/Cubes/cubes.gltf";
+        //modelFileName = "data/g3d/gltf/Cubes/cubes.gltf";
         //modelFileName = "data/g3d/gltf/AntiqueCamera/AntiqueCamera.gltf";
+       // modelFileName = "data/g3d/gltf/Cubes/cubes.gltf";
 
         FileHandle file = Gdx.files.internal(modelFileName);
         model = new WgGLTFModelLoader(new JsonReader()).loadModel(file);
@@ -89,6 +94,15 @@ public class LoadGLTFTest extends GdxTest {
 		Gdx.input.setInputProcessor(controller);
 		batch = new WgSpriteBatch();
 		font = new WgBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
+
+        environment = new Environment();
+        float amb = 0.7f;
+        ColorAttribute ambient =  ColorAttribute.createAmbientLight(amb, amb, amb, 1f);
+        environment.set(ambient);
+
+        DirectionalLight dirLight1 = new DirectionalLight();
+        dirLight1.setDirection(1f, -.2f, .2f);
+        dirLight1.setColor(Color.BLUE);
 
 	}
 
@@ -101,7 +115,7 @@ public class LoadGLTFTest extends GdxTest {
 		cam.update();
 		modelBatch.begin(cam);
 
-		modelBatch.render(instance);
+		modelBatch.render(instance, environment);
 
 		modelBatch.end();
 
