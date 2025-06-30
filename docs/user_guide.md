@@ -78,8 +78,9 @@ The `ApplicationListener` object provides the entry points for your application.
 See [LibGDX Application Life Cycle](https://libgdx.com/wiki/app/the-life-cycle) for more details.
 
 
-## New classes
-The extension provides a set of new classes listed below intended to be used instead of LibGDX graphics classes.
+## Substitute classes
+The extension provides a set of new classes listed below intended to be used instead of LibGDX graphics classes.  The prefix "Wg" is used for
+classes that replace an existing LibGDX class.
 
 ### General
 - WgTexture instead of Texture (extends)
@@ -201,6 +202,10 @@ You can use the methods of GPUTimer to get the number of render passes, their la
             System.out.println(name + " : " + microseconds);
         }
 ```
-         
+ ![gpu timing example](images/gpu-timing.png) 
+
+In the example above, you can see 5 render passes being executed: 1 to clear the screen, 1 to render the 3d scene, 
+1 to put the text on the screen, and 2 for the user interface using Scene2D.  In this case the draw call for 451 instanced models
+takes 1570 microseconds, which is the bulk of the frame time.
         
 
