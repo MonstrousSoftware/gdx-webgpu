@@ -66,7 +66,7 @@ public class LoadGLTFTest extends GdxTest {
 	public static void main (String[] argv) {
 
 		WgApplicationConfiguration config = new WgApplicationConfiguration();
-		config.setWindowedMode(640, 480);
+		config.setWindowedMode(1200, 800);
 		config.setTitle("WebGPUTest");
         config.useVsync(false);
         config.backend = WGPUBackendType.Vulkan;
