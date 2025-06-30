@@ -102,7 +102,8 @@ public class LoadGLTFTest extends GdxTest {
 
         DirectionalLight dirLight1 = new DirectionalLight();
         dirLight1.setDirection(1f, -.2f, .2f);
-        dirLight1.setColor(Color.BLUE);
+        dirLight1.setColor(Color.GOLD);
+        environment.add(dirLight1);
 
 	}
 
@@ -121,7 +122,9 @@ public class LoadGLTFTest extends GdxTest {
 
 
 		batch.begin();
-		font.draw(batch, "Model loaded: "+modelFileName , 0, 20);
+		font.draw(batch, "Model loaded: "+modelFileName , 0, 80);
+        font.draw(batch, "Vertices: "+instance.model.meshes.get(0).getNumVertices() , 0, 50);
+        font.draw(batch, "Indices: "+instance.model.meshes.get(0).getNumIndices() , 0, 20);
 		batch.end();
 	}
 

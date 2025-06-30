@@ -21,8 +21,11 @@ import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
+import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
@@ -65,6 +68,7 @@ public class LoadModelTest extends GdxTest {
 	boolean loaded;
 	WgSpriteBatch batch;
 	WgBitmapFont font;
+    Environment environment;
 
 
 
@@ -100,6 +104,17 @@ public class LoadModelTest extends GdxTest {
 		loaded = false;
 		for(String fileName : fileNames)
 			assets.load(fileName, Model.class);
+
+        // Create an environment with lights
+        environment = new Environment();
+
+        ColorAttribute ambient =  ColorAttribute.createAmbientLight(0.5f, 0.5f, 0.5f, 1f);
+        environment.set(ambient);
+
+        DirectionalLight dirLight1 = new DirectionalLight();
+        dirLight1.setDirection(1f, -.2f, .2f);
+        dirLight1.setColor(Color.YELLOW);
+        environment.add(dirLight1);
 
 		controller = new PerspectiveCamController(cam);
 		Gdx.input.setInputProcessor(controller);
@@ -164,7 +179,7 @@ public class LoadModelTest extends GdxTest {
 		modelBatch.begin(cam);
 
 		if(loaded)
-			modelBatch.render(instance);
+			modelBatch.render(instance, environment);
 
 		modelBatch.end();
 

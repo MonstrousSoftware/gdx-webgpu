@@ -141,6 +141,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
     let litColor = vec4f(color.rgb * radiance + specular, 1.0);
 
     color = litColor;
+    //color = vec4f(1,0,0,1);
 #endif
 
     //return vec4f(in.normal, 1.0);
