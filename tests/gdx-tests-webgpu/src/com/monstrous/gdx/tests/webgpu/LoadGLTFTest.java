@@ -27,8 +27,11 @@ import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.JsonReader;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.tests.webgpu.utils.PerspectiveCamController;
+import com.monstrous.gdx.webgpu.WebGPUGraphicsBase;
 import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplication;
 import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
@@ -36,6 +39,7 @@ import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLTFModelLoader;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
+import com.monstrous.gdx.webgpu.webgpu.WGPUBackendType;
 
 /** Test G3DJ loading and ModelInstance rendering */
 
@@ -54,6 +58,8 @@ public class LoadGLTFTest extends GdxTest {
     int numMeshes;
     int numVerts;
     int numIndices;
+    WebGPUGraphicsBase gfx;
+    private Viewport viewport;
 
 
 	// launcher
@@ -62,12 +68,18 @@ public class LoadGLTFTest extends GdxTest {
 		WgApplicationConfiguration config = new WgApplicationConfiguration();
 		config.setWindowedMode(640, 480);
 		config.setTitle("WebGPUTest");
+        config.useVsync(false);
+        config.backend = WGPUBackendType.Vulkan;
+        config.enableGPUtiming = true;
+        //config.samples = 4;
 
 		new WgApplication(new LoadGLTFTest(), config);
 	}
 
 	// application
 	public void create () {
+        gfx = (WebGPUGraphicsBase) Gdx.graphics;
+
 		modelBatch = new WgModelBatch();
 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		cam.position.set(0, 1, 4);
@@ -94,6 +106,7 @@ public class LoadGLTFTest extends GdxTest {
 
 		controller = new PerspectiveCamController(cam);
 		Gdx.input.setInputProcessor(controller);
+        viewport = new ScreenViewport();
 		batch = new WgSpriteBatch();
 		font = new WgBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
 
@@ -122,13 +135,21 @@ public class LoadGLTFTest extends GdxTest {
 
 		modelBatch.end();
 
-
+        viewport.apply();
+        batch.setProjectionMatrix(viewport.getCamera().combined);
 		batch.begin();
-		font.draw(batch, "Model loaded: "+modelFileName , 0, 110);
-        font.draw(batch, "Meshes: "+numMeshes , 0, 80);
-        font.draw(batch, "Vertices: "+numVerts , 0, 50);
-        font.draw(batch, "Indices: "+numIndices , 0, 20);
-		batch.end();
+        int y = 200;
+		font.draw(batch, "Model loaded: "+modelFileName , 0, y-=20);
+        font.draw(batch, "Meshes: "+numMeshes , 0, y-=20);
+        font.draw(batch, "Vertices: "+numVerts , 0, y-=20);
+        font.draw(batch, "Indices: "+numIndices , 0, y-=20);
+        font.draw(batch, "FPS: "+Gdx.graphics.getFramesPerSecond() ,0, y -= 20);
+        font.draw(batch, "delta time: "+(int)(1000000/(Gdx.graphics.getFramesPerSecond()+0.001f))+" microseconds",0, y -= 20);
+
+        for(int pass = 0; pass < gfx.getGPUTimer().getNumPasses(); pass++)
+            font.draw(batch, "GPU time (pass "+pass+" "+gfx.getGPUTimer().getPassName(pass)+") : "+(int)gfx.getAverageGPUtime(pass)+ " microseconds" ,0, y -= 20);
+        batch.end();
+
 	}
 
 	@Override
@@ -136,6 +157,7 @@ public class LoadGLTFTest extends GdxTest {
 		cam.viewportWidth = width;
 		cam.viewportHeight = height;
 		cam.update();
+        viewport.update(width, height, true);
 
 	}
 
