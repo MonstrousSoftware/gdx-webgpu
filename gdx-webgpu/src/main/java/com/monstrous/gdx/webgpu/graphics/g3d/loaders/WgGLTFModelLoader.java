@@ -30,14 +30,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-/** Loader for gltf anf glb model formats.
+/** Loader for gltf model format.
  *
  */
 
 
 public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParameters> {
     private final Map<GLTFPrimitive, String> meshMap = new HashMap<>();
-    private final ArrayList<ModelMaterial> materials = new ArrayList<>();
     //private final ArrayList<ModelNode> nodes = new ArrayList<>();
 
 	public WgGLTFModelLoader(final BaseJsonReader reader) {
@@ -72,86 +71,14 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
     protected ModelData load( GLTF gltf ){
         ModelData modelData = new ModelData();
         meshMap.clear();
-        materials.clear();
 
-        long startLoad = System.currentTimeMillis();
-        int index = 0;
-        for(GLTFMaterial gltfMat :  gltf.materials){
-            ModelMaterial modelMaterial = new ModelMaterial();
-            modelMaterial.textures = new Array<>();
+        loadMaterials(modelData, gltf);
+        loadMeshes(modelData, gltf);
+        loadNodes(modelData, gltf);
+        loadScenes(modelData, gltf);
 
-            modelMaterial.id = gltfMat.name != null ? gltfMat.name : "mat"+index;   // copy name or generate one to be used as reference
-            index++;
-
-            if(gltfMat.pbrMetallicRoughness.baseColorFactor != null)
-                modelMaterial.diffuse = gltfMat.pbrMetallicRoughness.baseColorFactor;
-//            if(gltfMat.pbrMetallicRoughness.roughnessFactor >= 0)
-//                materialData.roughnessFactor = gltfMat.pbrMetallicRoughness.roughnessFactor;
-//            if(gltfMat.pbrMetallicRoughness.metallicFactor >= 0)
-//                materialData.metallicFactor = gltfMat.pbrMetallicRoughness.metallicFactor;
-            if(gltfMat.pbrMetallicRoughness.baseColorTexture >= 0){
-                int textureId = gltfMat.pbrMetallicRoughness.baseColorTexture;
-                GLTFImage image = gltf.images.get( gltf.textures.get(textureId).source );
-                ModelTexture tex = new ModelTexture();
-                tex.usage = ModelTexture.USAGE_DIFFUSE;
-                tex.id = gltfMat.name;
-                tex.fileName = image.uri;   // todo can be embedded in buffer
-
-                modelMaterial.textures.add(tex);
-            }
-            // todo
-//                materialData.diffuseMapData = readImageData(gltf, gltfMat.pbrMetallicRoughness.baseColorTexture);
-//            if(gltfMat.pbrMetallicRoughness.metallicRoughnessTexture >= 0)
-//                materialData.metallicRoughnessMapData = readImageData(gltf, gltfMat.pbrMetallicRoughness.metallicRoughnessTexture);
-//            if(gltfMat.normalTexture >= 0)
-//                materialData.normalMapData = readImageData(gltf, gltfMat.normalTexture);
-//            if(gltfMat.emissiveTexture >= 0)
-//                materialData.emissiveMapData =  readImageData(gltf, gltfMat.emissiveTexture);
-//            if(gltfMat.occlusionTexture >= 0)
-//                materialData.occlusionMapData =  readImageData(gltf, gltfMat.occlusionTexture);
-
-
-            materials.add(modelMaterial);
-            modelData.materials.add(modelMaterial);
-        }
-
-        long endLoad = System.currentTimeMillis();
-        System.out.println("Material loading/generation time (ms): "+(endLoad - startLoad));
-
-        startLoad = System.currentTimeMillis();
-        for(GLTFMesh gltfMesh : gltf.meshes){
-            // in GLTF a mesh can have multiple primitives
-
-            buildMesh(modelData, gltf,  gltf.rawBuffer, gltfMesh );
-        }
-
-        endLoad = System.currentTimeMillis();
-        System.out.println("Mesh loading time (ms): "+(endLoad - startLoad));
-
-
-
-
-//        for(GLTFScene scene : gltf.scenes ){
-//
-//        }
-
-
-
-        modelData.nodes.clear();
-        for( GLTFNode gltfNode : gltf.nodes ) {
-            ModelNode node = addNode(modelData, gltf, gltfNode);
-            modelData.nodes.add(node);
-        }
-
+        // todo give priority to the default scene
         GLTFScene scene = gltf.scenes.get(gltf.scene);
-        for( int nodeId : scene.nodes ) {
-            GLTFNode gltfNode = gltf.nodes.get(nodeId);
-            ModelNode rootNode = modelData.nodes.get(nodeId);
-
-            addNodeHierarchy(modelData, gltf, gltfNode, rootNode);     // recursively add the node hierarchy
-            //rootNode.updateMatrices(true);
-            //model.addNode(rootNode);
-        }
 
 //        for(GLTFSkin skin : gltf.skins) {
 //            // skin.inverseBindMatrices points to an accessor to get mat4 data
@@ -241,6 +168,88 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
         return modelData;
     }
 
+    private void loadMaterials(ModelData modelData, GLTF gltf) {
+        long startLoad = System.currentTimeMillis();
+        int index = 0;
+        for(GLTFMaterial gltfMat :  gltf.materials){
+            ModelMaterial modelMaterial = new ModelMaterial();
+            modelMaterial.textures = new Array<>();
+
+            modelMaterial.id = gltfMat.name != null ? gltfMat.name : "mat"+index;   // copy name or generate one to be used as reference
+            index++;
+
+            if(gltfMat.pbrMetallicRoughness.baseColorFactor != null)
+                modelMaterial.diffuse = gltfMat.pbrMetallicRoughness.baseColorFactor;
+//            if(gltfMat.pbrMetallicRoughness.roughnessFactor >= 0)
+//                materialData.roughnessFactor = gltfMat.pbrMetallicRoughness.roughnessFactor;
+//            if(gltfMat.pbrMetallicRoughness.metallicFactor >= 0)
+//                materialData.metallicFactor = gltfMat.pbrMetallicRoughness.metallicFactor;
+            if(gltfMat.pbrMetallicRoughness.baseColorTexture >= 0){
+                int textureId = gltfMat.pbrMetallicRoughness.baseColorTexture;
+                GLTFImage image = gltf.images.get( gltf.textures.get(textureId).source );
+                ModelTexture tex = new ModelTexture();
+                tex.usage = ModelTexture.USAGE_DIFFUSE;
+                tex.id = gltfMat.name;
+                tex.fileName = image.uri;   // todo can be embedded in buffer
+
+                modelMaterial.textures.add(tex);
+            }
+            // todo
+//                materialData.diffuseMapData = readImageData(gltf, gltfMat.pbrMetallicRoughness.baseColorTexture);
+//            if(gltfMat.pbrMetallicRoughness.metallicRoughnessTexture >= 0)
+//                materialData.metallicRoughnessMapData = readImageData(gltf, gltfMat.pbrMetallicRoughness.metallicRoughnessTexture);
+//            if(gltfMat.normalTexture >= 0)
+//                materialData.normalMapData = readImageData(gltf, gltfMat.normalTexture);
+//            if(gltfMat.emissiveTexture >= 0)
+//                materialData.emissiveMapData =  readImageData(gltf, gltfMat.emissiveTexture);
+//            if(gltfMat.occlusionTexture >= 0)
+//                materialData.occlusionMapData =  readImageData(gltf, gltfMat.occlusionTexture);
+
+
+            modelData.materials.add(modelMaterial);
+        }
+        long endLoad = System.currentTimeMillis();
+        System.out.println("Material loading/generation time (ms): "+(endLoad - startLoad));
+    }
+
+    private void loadMeshes(ModelData modelData, GLTF gltf){
+        long startLoad = System.currentTimeMillis();
+        for(GLTFMesh gltfMesh : gltf.meshes){
+            // in GLTF a mesh can have multiple primitives
+
+            buildMesh(modelData, gltf,  gltf.rawBuffer, gltfMesh );
+        }
+
+        long endLoad = System.currentTimeMillis();
+        System.out.println("Mesh loading time (ms): "+(endLoad - startLoad));
+    }
+
+    /** convert all nodes, but does not yet create a node hierarchy */
+    private void loadNodes(ModelData modelData, GLTF gltf){
+        modelData.nodes.clear();
+        for( GLTFNode gltfNode : gltf.nodes ) {
+            ModelNode node = addNode(modelData, gltf, gltfNode);
+            modelData.nodes.add(node);
+        }
+    }
+
+    /** convert all scenes */
+    private void loadScenes(ModelData modelData, GLTF gltf) {
+        for (GLTFScene scene : gltf.scenes) {
+
+            for (int nodeId : scene.nodes) {
+                GLTFNode gltfNode = gltf.nodes.get(nodeId);
+                ModelNode rootNode = modelData.nodes.get(nodeId);
+
+                addNodeHierarchy(modelData, gltf, gltfNode, rootNode);     // recursively add the node hierarchy
+                //rootNode.updateMatrices(true);
+                //model.addNode(rootNode);
+            }
+        }
+    }
+
+
+
 
 
 //    private byte[] readImageData( GLTF gltf, int textureId )  {
@@ -262,7 +271,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
 //        return bytes;
 //    }
 
-    private ModelNode addNode(ModelData model, GLTF gltf, GLTFNode gltfNode){
+    private ModelNode addNode(ModelData modelData, GLTF gltf, GLTFNode gltfNode){
         ModelNode node = new ModelNode();
         node.id = gltfNode.name;
 
@@ -296,7 +305,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                 ModelNodePart nodePart = new ModelNodePart();
                 nodePart.meshPartId = meshMap.get(primitive);   // get id of ModelMeshPart
                 // cross reference to material.id (a String)
-                nodePart.materialId = materials.get(primitive.material).id;
+                nodePart.materialId = modelData.materials.get(primitive.material).id;
                 System.out.println("Node refers to material: "+nodePart.materialId);
                 // todo
 //                nodePart.bones = 1;
