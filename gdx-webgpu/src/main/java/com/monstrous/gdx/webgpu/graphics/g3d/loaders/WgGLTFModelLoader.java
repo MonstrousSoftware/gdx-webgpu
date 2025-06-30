@@ -291,28 +291,27 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
         if(gltfNode.rotation != null)
             node.rotation = new Quaternion(gltfNode.rotation);
 
+        // does this node have a mesh?
         if(gltfNode.mesh >= 0){ // this node refers to a mesh
-
+            // translate to ModelNodePart per GLTF primitive
             GLTFMesh gltfMesh = gltf.meshes.get(gltfNode.mesh);
 
             node.parts = new ModelNodePart[gltfMesh.primitives.size()];
-            int partId = 0;
             // assumes mesh is dedicated to this node
 
-
+            int partId = 0;
             for( GLTFPrimitive primitive : gltfMesh.primitives) {
 
                 ModelNodePart nodePart = new ModelNodePart();
                 nodePart.meshPartId = meshMap.get(primitive);   // get id of ModelMeshPart
                 // cross reference to material.id (a String)
                 nodePart.materialId = modelData.materials.get(primitive.material).id;
-                System.out.println("Node refers to material: "+nodePart.materialId);
+                System.out.println("Node refers to mesh part :" + nodePart.meshPartId + " material: "+nodePart.materialId);
                 // todo
 //                nodePart.bones = 1;
 //                nodePart.uvMapping = 1;
 
                 node.parts[partId++] = nodePart;
-
             }
         }
         return node;
@@ -331,29 +330,25 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
     }
 
 
-    private ModelMesh buildMesh(ModelData modelData, GLTF gltf, GLTFRawBuffer rawBuffer, GLTFMesh gltfMesh){
+    private void buildMesh(ModelData modelData, GLTF gltf, GLTFRawBuffer rawBuffer, GLTFMesh gltfMesh){
 
-
-
-        ModelMesh modelMesh = new ModelMesh();
-        modelMesh.id = gltfMesh.name;
-        modelMesh.parts = new ModelMeshPart[gltfMesh.primitives.size()];
-
-        ArrayList<Vector3> positions = new ArrayList<>();
-        ArrayList<Vector3> normals = new ArrayList<>();
-        ArrayList<Vector3> tangents = new ArrayList<>();
-        ArrayList<Vector2> textureCoordinates = new ArrayList<>();
-        ArrayList<Vector4> joints = new ArrayList<>();
-        ArrayList<Vector4> weights = new ArrayList<>();
-        ArrayList<Vector3> bitangents = new ArrayList<>();
-        boolean hasNormalMap = false;
-
-        Array<VertexAttribute> meshVA = null;
 
         int primitiveIndex = 0;
         for(GLTFPrimitive primitive : gltfMesh.primitives) {
 
+            ModelMesh modelMesh = new ModelMesh();
+            modelMesh.id = gltfMesh.name + "."+primitiveIndex;
+            modelMesh.parts = new ModelMeshPart[1]; //gltfMesh.primitives.size()];
 
+
+            ArrayList<Vector3> positions = new ArrayList<>();
+            ArrayList<Vector3> normals = new ArrayList<>();
+            ArrayList<Vector3> tangents = new ArrayList<>();
+            ArrayList<Vector2> textureCoordinates = new ArrayList<>();
+            ArrayList<Vector4> joints = new ArrayList<>();
+            ArrayList<Vector4> weights = new ArrayList<>();
+            ArrayList<Vector3> bitangents = new ArrayList<>();
+            boolean hasNormalMap = false;
 
             // note: even if only one of the primitives has a normal texture, the mesh will need tangents
             if( gltf.materials.get(primitive.material).normalTexture >= 0 )
@@ -365,7 +360,6 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
             va.add(VertexAttribute.TexCoords(0));
             va.add(VertexAttribute.Normal());
 
-            // todo: do this after the loop when we've seen all primitives?
             if (hasNormalMap) {
                 va.add(VertexAttribute.Tangent());
                 va.add(VertexAttribute.Binormal());
@@ -380,25 +374,13 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                 }
             }
 
-            // Use the first primitive as basis for the meshes' vertex attributes
-            // and check that the other primitives match.
-            // todo make multiple meshes if need be
-            if(primitiveIndex == 0) {
-                modelMesh.attributes = new VertexAttribute[va.size];
-                for (int i = 0; i < va.size; i++)
-                    modelMesh.attributes[i] = va.get(i);
-                meshVA = va;
-            } else {
-                if(!va.equals(meshVA))
-                    throw new RuntimeException("Not supported: Mesh primitives have different attributes");
-            }
-
+            modelMesh.attributes = new VertexAttribute[va.size];
+            for (int i = 0; i < va.size; i++)
+                modelMesh.attributes[i] = va.get(i);
 
             // primitive indices
-            int indexAccessorId = primitive.indices;
+            int indexAccessorId = primitive.indices;        // todo indices are optional
             GLTFAccessor indexAccessor = gltf.accessors.get(indexAccessorId);
-
-
 
 
             ModelMeshPart modelMeshPart = new ModelMeshPart();
@@ -429,7 +411,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                 System.out.println();
             } else
                 throw new RuntimeException("32 bit indices not supported");     // todo try to handle this
-            modelMesh.parts[primitiveIndex] = modelMeshPart;
+            modelMesh.parts[0] = modelMeshPart;
             primitiveIndex++;
 
 
@@ -639,76 +621,75 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                 //            addTBN(meshData, positions, textureCoordinates, normals, tangents, bitangents);
             }
 
-        }
+            // now fill a vertex buffer including all primitives
 
-        // now fill a vertex buffer including all primitives
+            // x y z   u v   nx ny nz (tx ty tz   bx by bz)
+            //modelMesh.id = gltf.nodes.get(0).name;
+            Vector3 normal = new Vector3(0, 1, 0);
+            Vector2 uv = new Vector2();
+            int ix = 0;
+            int vertSize = 8;
+            if(hasNormalMap)
+                vertSize += 6;
+            if(!joints.isEmpty())
+                vertSize += 4;
+            if(!weights.isEmpty())
+                vertSize += 4;
 
-        // x y z   u v   nx ny nz (tx ty tz   bx by bz)
-        //modelMesh.id = gltf.nodes.get(0).name;
-        Vector3 normal = new Vector3(0, 1, 0);
-        Vector2 uv = new Vector2();
-        int ix = 0;
-        int vertSize = 8;
-        if(hasNormalMap)
-            vertSize += 6;
-        if(!joints.isEmpty())
-            vertSize += 4;
-        if(!weights.isEmpty())
-            vertSize += 4;
+            float[] verts = new float[positions.size() * vertSize ];
+            modelMesh.vertices = verts;
+            for(int i = 0; i < positions.size(); i++){
+                Vector3 pos = positions.get(i);
+                verts[ix++] = pos.x;
+                verts[ix++] = pos.y;
+                verts[ix++] = pos.z;
 
-        float[] verts = new float[positions.size() * vertSize ];
-        modelMesh.vertices = verts;
-        for(int i = 0; i < positions.size(); i++){
-            Vector3 pos = positions.get(i);
-            verts[ix++] = pos.x;
-            verts[ix++] = pos.y;
-            verts[ix++] = pos.z;
+                if(!textureCoordinates.isEmpty())
+                    uv =  textureCoordinates.get(i);
+                verts[ix++] = uv.x;
+                verts[ix++] = uv.y;
 
-            if(!textureCoordinates.isEmpty())
-                uv =  textureCoordinates.get(i);
-            verts[ix++] = uv.x;
-            verts[ix++] = uv.y;
+                if(!normals.isEmpty())
+                    normal = normals.get(i);
+                verts[ix++] = normal.x;
+                verts[ix++] = normal.y;
+                verts[ix++] = normal.z;
 
-            if(!normals.isEmpty())
-                normal = normals.get(i);
-            verts[ix++] = normal.x;
-            verts[ix++] = normal.y;
-            verts[ix++] = normal.z;
+                if(hasNormalMap) {
+                    Vector3 tangent = tangents.get(i);
+                    verts[ix++] = tangent.x;
+                    verts[ix++] = tangent.y;
+                    verts[ix++] = tangent.z;
 
-            if(hasNormalMap) {
-                Vector3 tangent = tangents.get(i);
-                verts[ix++] = tangent.x;
-                verts[ix++] = tangent.y;
-                verts[ix++] = tangent.z;
+                    // calculate bitangent from normal x tangent
+                    Vector3 bitangent = bitangents.get(i);
+                    verts[ix++] = bitangent.x;
+                    verts[ix++] = bitangent.y;
+                    verts[ix++] = bitangent.z;
+                }
 
-                // calculate bitangent from normal x tangent
-                Vector3 bitangent = bitangents.get(i);
-                verts[ix++] = bitangent.x;
-                verts[ix++] = bitangent.y;
-                verts[ix++] = bitangent.z;
-            }
-
-            if(!joints.isEmpty()) {
+                if(!joints.isEmpty()) {
 //                float jointF = Float.intBitsToFloat(joints.get(i));
 //                meshData.vertFloats.add(jointF);        // masquerade integer value as float
-                Vector4 jnt = joints.get(i);
-                verts[ix++] = jnt.x;
-                verts[ix++] = jnt.y;
-                verts[ix++] = jnt.z;
-                verts[ix++] = jnt.w;
-            }
+                    Vector4 jnt = joints.get(i);
+                    verts[ix++] = jnt.x;
+                    verts[ix++] = jnt.y;
+                    verts[ix++] = jnt.z;
+                    verts[ix++] = jnt.w;
+                }
 
-            if(!weights.isEmpty()) {
-                Vector4 weight = weights.get(i);
-                verts[ix++] = weight.x;
-                verts[ix++] = weight.y;
-                verts[ix++] = weight.z;
-                verts[ix++] = weight.w;
+                if(!weights.isEmpty()) {
+                    Vector4 weight = weights.get(i);
+                    verts[ix++] = weight.x;
+                    verts[ix++] = weight.y;
+                    verts[ix++] = weight.z;
+                    verts[ix++] = weight.w;
+                }
             }
+            modelData.addMesh(modelMesh);
         }
 
-        modelData.addMesh(modelMesh);
-        return modelMesh;
+
     }
 
     private static class Vertex {

@@ -221,9 +221,8 @@ public class WgDefaultShader implements Shader {
 
         numRenderables = 0;
         numMaterials = 0;
-        prevMeshPart = null;
         drawCalls = 0;
-        prevMaterial = null;
+        prevRenderable = null;  // to store renderable that still needs to be rendered
 
         renderPass.setPipeline(pipeline.getHandle());
     }
@@ -253,7 +252,7 @@ public class WgDefaultShader implements Shader {
         render(renderable, combinedAttributes);
     }
 
-    private MeshPart prevMeshPart;
+    private Renderable prevRenderable;
     private int firstInstance;
     private int instanceCount;
 
@@ -270,23 +269,26 @@ public class WgDefaultShader implements Shader {
         instanceBuffer.set(offset,  renderable.worldTransform);
         // todo normal matrix per instance
 
-        // apply renderable's material
-        applyMaterial(renderable.material);
+        boolean newMaterial = false;
+        int hash = renderable.material.attributesHash();
+        if(prevRenderable == null || hash != prevRenderable.material.attributesHash())
+            newMaterial = true;
 
-
-        final MeshPart meshPart = renderable.meshPart;
-        if (!(meshPart.mesh instanceof WgMesh))
-            throw new RuntimeException("WebGPUMeshPart supports only WebGPUMesh");
-        if(prevMeshPart != null && meshPart.equals(prevMeshPart)){
+        if(!newMaterial && prevRenderable != null && renderable.meshPart.equals(prevRenderable.meshPart)){
             // note that renderables get a copy of a mesh part not a reference to the Model's mesh part, so you can just compare references.
             instanceCount++;
-        } else {
-            if(prevMeshPart != null)
-                renderBatch(prevMeshPart, instanceCount, firstInstance);
+        } else {    // either a new material or a new mesh part, we need to flush the run of instances
+
+            if(prevRenderable != null) {
+                applyMaterial(prevRenderable.material);
+                renderBatch(prevRenderable.meshPart, instanceCount, firstInstance);
+            }
             instanceCount = 1;
             firstInstance = numRenderables;
-            prevMeshPart = meshPart;
+            prevRenderable = renderable;
         }
+
+
         numRenderables++;
     }
 
@@ -303,19 +305,19 @@ public class WgDefaultShader implements Shader {
     }
 
     public void end(){
-        if(prevMeshPart != null)
-            renderBatch(prevMeshPart, instanceCount, firstInstance);
+        if(prevRenderable != null) {
+            applyMaterial(prevRenderable.material);
+            renderBatch(prevRenderable.meshPart, instanceCount, firstInstance);
+        }
         instanceBuffer.flush();
     }
-
-    private Material prevMaterial;
 
     private void applyMaterial(Material material){
 
         // is this material the same as the previous? then we are done.
 //        if(prevMaterial != null && material.attributesHash() == prevMaterial.attributesHash())  // store hash instead of prev mat?
 //            return;
-        int hash = material.attributesHash();
+//        int hash = material.attributesHash();
 
         if(numMaterials >= config.maxMaterials)
             throw new RuntimeException("Too many materials (> "+config.maxMaterials+"). Increase shader.maxMaterials");
@@ -350,7 +352,7 @@ public class WgDefaultShader implements Shader {
 
         numMaterials++;
 
-        prevMaterial = material;
+        //prevMaterial = material;
     }
 
     private WebGPUBindGroupLayout createFrameBindGroupLayout(int uniformBufferSize) {
