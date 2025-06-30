@@ -37,7 +37,6 @@ import java.util.Map;
 
 public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParameters> {
     private final Map<GLTFPrimitive, String> meshMap = new HashMap<>();
-    //private final ArrayList<ModelNode> nodes = new ArrayList<>();
 
 	public WgGLTFModelLoader(final BaseJsonReader reader) {
 		this(reader, null);
@@ -68,7 +67,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
 	}
 
     /** load GLTF contents into a ModelData object */
-    protected ModelData load( GLTF gltf ){
+    public ModelData load( GLTF gltf ){
         ModelData modelData = new ModelData();
         meshMap.clear();
 
@@ -384,7 +383,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
 
 
             ModelMeshPart modelMeshPart = new ModelMeshPart();
-            modelMeshPart.id = modelMesh.id + "." + primitiveIndex; //nodePart.meshPartId;
+            modelMeshPart.id = modelMesh.id; // must be unique as it is used in modelNodePart as a reference
             modelMeshPart.primitiveType = GL20.GL_TRIANGLES; // todo
             modelMeshPart.indices = new short[indexAccessor.count];
             meshMap.put(primitive,  modelMeshPart.id);
@@ -404,11 +403,11 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                 for (int i = 0; i < indexAccessor.count; i++) {
                     modelMeshPart.indices[i] = (short)(meshPartOffset + rawBuffer.byteBuffer.getShort());
                 }
-                System.out.println("Primitive indices: "+modelMeshPart.id+ " count:"+indexAccessor.count);
-                for (int i = 0; i < indexAccessor.count; i++) {
-                    System.out.print(modelMeshPart.indices[i] + " ");
-                }
-                System.out.println();
+//                System.out.println("Primitive indices: "+modelMeshPart.id+ " count:"+indexAccessor.count);
+//                for (int i = 0; i < indexAccessor.count; i++) {
+//                    System.out.print(modelMeshPart.indices[i] + " ");
+//                }
+//                System.out.println();
             } else
                 throw new RuntimeException("32 bit indices not supported");     // todo try to handle this
             modelMesh.parts[0] = modelMeshPart;

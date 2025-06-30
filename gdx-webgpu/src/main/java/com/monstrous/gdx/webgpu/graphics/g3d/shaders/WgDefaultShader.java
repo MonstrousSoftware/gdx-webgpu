@@ -55,7 +55,7 @@ public class WgDefaultShader implements Shader {
 
         public Config() {
             this.maxInstances = 1024;
-            this.maxMaterials = 128;
+            this.maxMaterials = 512;
             this.maxDirectionalLights = 3;  // todo hard coded in shader, don't change
             this.maxPointLights = 3;  // todo hard coded in shader, don't change
         }

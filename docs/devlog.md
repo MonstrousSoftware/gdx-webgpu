@@ -75,3 +75,8 @@ Some trouble getting depth to work properly.  Again an issue with the matrix def
 WgDirectionalShadowLight now post-multiplies the combined matrix to compensate.
 For now, it renders to a color buffer, need to make a depth shader.
  
+30/06:
+Added GLTF loader, still buggy.
+Simplified mesh loading by creating one Mesh per GLTF primitive. (A GLTF Mesh consists of multiple primitives, which can have different vertex attributes).
+Maybe it is more efficient to use a shared Mesh for multiple MeshParts, but maybe the difference is negligible.
+Testing GLB loader. 

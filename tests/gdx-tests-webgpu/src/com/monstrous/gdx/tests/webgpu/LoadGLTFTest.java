@@ -36,6 +36,7 @@ import com.monstrous.gdx.webgpu.graphics.g3d.WgModel;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.GLTFParser;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgG3dModelLoader;
+import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLBModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLTFModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.gltf.GLTF;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
@@ -76,8 +77,9 @@ public class LoadGLTFTest extends GdxTest {
 		cam.far = 1000f;		// extend far distance to avoid clipping the skybox
 
 		//modelFileName = "data/g3d/gltf/Cube/Cube.gltf";
-        //modelFileName = "data/g3d/gltf/StanfordDragon/stanfordDragon.gltf";
+        modelFileName = "data/g3d/gltf/StanfordDragon/stanfordDragon.gltf";
         modelFileName = "data/g3d/gltf/Cubes/cubes.gltf";
+        //modelFileName = "data/g3d/gltf/AntiqueCamera/AntiqueCamera.gltf";
 
         FileHandle file = Gdx.files.internal(modelFileName);
         model = new WgGLTFModelLoader(new JsonReader()).loadModel(file);

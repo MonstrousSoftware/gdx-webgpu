@@ -27,7 +27,8 @@ struct ModelUniforms {
 
 struct MaterialUniforms {
     diffuseColor: vec4f,
-    shininess: f32
+    shininess: f32,
+    //dummy: vec3f
 };
 
 @group(0) @binding(0) var<uniform> uFrame: FrameUniforms;

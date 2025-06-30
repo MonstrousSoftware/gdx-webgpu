@@ -32,20 +32,20 @@ import com.monstrous.gdx.webgpu.graphics.g3d.loaders.gltf.*;
 
 public class GLTFParser {
 
-    public static GLTF load(String filePath) {
-        int slash = filePath.lastIndexOf('/');
-        String path = filePath.substring(0, slash + 1);
-        String name = filePath.substring(slash + 1);
-        MaterialData materialData = null;
-
-        FileHandle handle = Gdx.files.internal(filePath);
-        String contents = handle.readString();
-
-        GLTF gltf = parseJSON(contents, path);
-        if(!gltf.buffers.isEmpty())
-            gltf.rawBuffer = new GLTFRawBuffer(gltf.buffers.get(0).uri);           // read .bin file, assume 1 buffer
-        return gltf;
-    }
+//    public static GLTF load(String filePath) {
+//        int slash = filePath.lastIndexOf('/');
+//        String path = filePath.substring(0, slash + 1);
+//        String name = filePath.substring(slash + 1);
+//        MaterialData materialData = null;
+//
+//        FileHandle handle = Gdx.files.internal(filePath);
+//        String contents = handle.readString();
+//
+//        GLTF gltf = parseJSON(contents, path);
+//        if(!gltf.buffers.isEmpty())
+//            gltf.rawBuffer = new GLTFRawBuffer(gltf.buffers.get(0).uri);           // read .bin file, assume 1 buffer
+//        return gltf;
+//    }
 
     public static GLTF parseJSON(String jsonAsString, String path) {
         GLTF gltf = new GLTF();
@@ -59,8 +59,8 @@ public class GLTFParser {
 
                 JsonValue image = ims.next();
 
-                String imagepath = image.get("uri").asString();
-                if (imagepath != null) {
+                if (image.has("uri")) {
+                    String imagepath = image.get("uri").asString();
                     // texture file
                     im.uri = path + imagepath;
                     //System.out.println("image path: " + imagepath);
@@ -69,7 +69,10 @@ public class GLTFParser {
                     im.mimeType = image.get("mimeType").asString();
                     Long view = image.get("bufferView").asLong();
                     im.bufferView = view.intValue();
-                    im.name = image.get("name").asString();
+                    if(image.has("name"))
+                        im.name = image.get("name").asString();
+                    else
+                        im.name = "anon";
                     //System.out.println("image : " + im.mimeType+" "+im.name);
                 }
 
@@ -195,7 +198,10 @@ public class GLTFParser {
                 JsonValue buf = buffers.next();
                 if (buf.has("name"))
                     buffer.name = buf.get("name").asString();
-                buffer.uri = path + buf.getString("uri");
+                if (buf.has("uri")) {
+                    buffer.uri = path +  buf.getString("uri");
+                }
+                //buffer.uri = path + buf.getString("uri");
                 buffer.byteLength = buf.getInt("byteLength");
 
                 gltf.buffers.add(buffer);
