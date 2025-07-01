@@ -80,3 +80,33 @@ Added GLTF loader, still buggy.
 Simplified mesh loading by creating one Mesh per GLTF primitive. (A GLTF Mesh consists of multiple primitives, which can have different vertex attributes).
 Maybe it is more efficient to use a shared Mesh for multiple MeshParts, but maybe the difference is negligible.
 Testing GLB loader. 
+
+01/07:
+Regarding the GLTF support, there are a few steps to import a GLTF model.
+First the file is parsed to a GLTF object with many support objects such as GLTFAccesor, GLTFAnimation, etc.
+This is just a pure translatation of the JSON file to equivalent Java classes.
+Then the GLTF object is used to construct a ModelData object.  This ModelData object is specific to LibGDX 
+and is also used to import OBJ and G3DB formats. 
+The ModelData object is then passed to a Model constructor to create a Model object.
+
+These steps are executed by the model loader, use it as follows:
+
+        FileHandle file = Gdx.files.internal("data/g3d/gltf/Sponza/Sponza.gltf");
+        model = new WgGLTFModelLoader(new JsonReader()).loadModel(file);
+		instance = new ModelInstance(model);
+
+To use asynchronous loading via the asset manager:
+
+		AssetManager assets = new WgAssetManager();
+		assets.load("data/g3d/gltf/Sponza/Sponza.gltf", Model.class);
+		while(assets.update()){
+			// do other stuff
+		}
+		model = assets.get("data/g3d/gltf/Sponza/Sponza.gltf", Model.class);
+		instance = new ModelInstance(model);
+		
+
+LibGDX only support shorts as index values (i.e. 16 bit) for up to 32K index values. Some models will exceed that value, e.g. the Stanford Dragon has 131K index values.
+Gdx-webgpu supports models with 32 bit indexing (int type) supporting 2 billion index values.	
+
+	
