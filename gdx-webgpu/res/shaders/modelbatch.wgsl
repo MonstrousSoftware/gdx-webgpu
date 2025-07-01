@@ -1,4 +1,8 @@
 // basic ModelBatch shader
+// Copyright 2025 Monstrous Software.
+// Licensed under the Apache License, Version 2.0 (the "License");
+
+// Note this is an uber shader with conditional compilation depending on #define values from the shader prefix
 
 struct DirectionalLight {
     color: vec4f,
@@ -36,8 +40,10 @@ struct MaterialUniforms {
 @group(1) @binding(0) var<uniform> material: MaterialUniforms;
 @group(1) @binding(1) var diffuseTexture: texture_2d<f32>;
 @group(1) @binding(2) var diffuseSampler: sampler;
-@group(1) @binding(3) var metallicRoughnessTexture: texture_2d<f32>;        // not used yet
-@group(1) @binding(4) var metallicRoughnessSampler: sampler;
+@group(1) @binding(3) var normalTexture: texture_2d<f32>;        // not used yet
+@group(1) @binding(4) var normalSampler: sampler;
+@group(1) @binding(5) var metallicRoughnessTexture: texture_2d<f32>;        // not used yet
+@group(1) @binding(6) var metallicRoughnessSampler: sampler;
 
 @group(2) @binding(0) var<storage, read> instances: array<ModelUniforms>;
 
@@ -49,6 +55,10 @@ struct VertexInput {
 #endif
 #ifdef NORMAL
     @location(2) normal: vec3f,
+#endif
+#ifdef NORMAL_MAP
+    @location(3) tangent: vec3f,
+    @location(4) bitangent: vec3f,
 #endif
 #ifdef COLOR
     @location(5) color: vec4f,
@@ -62,6 +72,10 @@ struct VertexOutput {
     @location(2) color: vec4f,
     @location(3) normal: vec3f,
     @location(4) worldPos : vec3f,
+#ifdef NORMAL_MAP
+    @location(5) tangent: vec3f,
+    @location(6) bitangent: vec3f,
+#endif
 };
 
 @vertex
@@ -91,6 +105,11 @@ fn vs_main(in: VertexInput, @builtin(instance_index) instance: u32) -> VertexOut
 #endif
     out.normal = normal;
 
+#ifdef NORMAL_MAP
+    out.tangent = in.tangent;
+    out.bitangent = in.bitangent;
+#endif
+
    return out;
 }
 
@@ -98,6 +117,7 @@ fn vs_main(in: VertexInput, @builtin(instance_index) instance: u32) -> VertexOut
 @fragment
 fn fs_main(in : VertexOutput) -> @location(0) vec4f {
 #ifdef TEXTURE_COORDINATE
+   // var color = in.color * textureSample(normalTexture, normalSampler, in.uv);
    //var color = in.color * textureSample(metallicRoughnessTexture, metallicRoughnessSampler, in.uv);
    var color = in.color * textureSample(diffuseTexture, diffuseSampler, in.uv);
 #else
@@ -105,7 +125,27 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
 #endif
 
 #ifdef LIGHTING
+    //let normal = normalize(in.normal.xyz);
+
+#ifdef NORMAL_MAP
+    let normalMapStrength = 0.3;
+
+    let encodedN = textureSample(normalTexture, normalSampler, in.uv).rgb;
+    let localN = encodedN * 2.0 - 1.0;
+    // The TBN matrix converts directions from the local space to the world space
+    let localToWorld = mat3x3f(
+        normalize(in.tangent),
+        normalize(in.bitangent),
+        normalize(in.normal),
+    );
+    let worldN = localToWorld * localN;
+    let normal = mix(in.normal.xyz, worldN, normalMapStrength);
+#else
     let normal = normalize(in.normal.xyz);
+#endif
+
+
+
     let shininess : f32 = material.shininess;
 
 
@@ -148,7 +188,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
     color = litColor;
 #endif
 
-    //return vec4f(in.normal, 1.0);
+    //return vec4f(normal, 1.0);
     //return vec4f(uFrame.ambientLight.rgb, 1.0);
     //return material.diffuseColor;
     return color;

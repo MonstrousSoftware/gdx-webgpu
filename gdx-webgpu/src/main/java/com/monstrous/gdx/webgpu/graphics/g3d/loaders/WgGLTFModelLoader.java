@@ -184,6 +184,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
 //                materialData.roughnessFactor = gltfMat.pbrMetallicRoughness.roughnessFactor;
 //            if(gltfMat.pbrMetallicRoughness.metallicFactor >= 0)
 //                materialData.metallicFactor = gltfMat.pbrMetallicRoughness.metallicFactor;
+
             if(gltfMat.pbrMetallicRoughness.baseColorTexture >= 0){
                 int textureId = gltfMat.pbrMetallicRoughness.baseColorTexture;
                 GLTFImage image = gltf.images.get( gltf.textures.get(textureId).source );
@@ -204,12 +205,17 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
 
                 modelMaterial.textures.add(tex);
             }
+            if(gltfMat.normalTexture >= 0){
+                int textureId = gltfMat.normalTexture;
+                GLTFImage image = gltf.images.get( gltf.textures.get(textureId).source );
+                ModelTexture tex = new ModelTexture();
+                tex.usage = ModelTexture.USAGE_NORMAL;
+                tex.id = gltfMat.name;
+                tex.fileName = image.uri;   // todo can be embedded in buffer
+
+                modelMaterial.textures.add(tex);
+            }
             // todo
-//                materialData.diffuseMapData = readImageData(gltf, gltfMat.pbrMetallicRoughness.baseColorTexture);
-//            if(gltfMat.pbrMetallicRoughness.metallicRoughnessTexture >= 0)
-//                materialData.metallicRoughnessMapData = readImageData(gltf, gltfMat.pbrMetallicRoughness.metallicRoughnessTexture);
-//            if(gltfMat.normalTexture >= 0)
-//                materialData.normalMapData = readImageData(gltf, gltfMat.normalTexture);
 //            if(gltfMat.emissiveTexture >= 0)
 //                materialData.emissiveMapData =  readImageData(gltf, gltfMat.emissiveTexture);
 //            if(gltfMat.occlusionTexture >= 0)
@@ -225,7 +231,8 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
     private void loadMeshes(ModelData modelData, GLTF gltf){
         long startLoad = System.currentTimeMillis();
         for(GLTFMesh gltfMesh : gltf.meshes){
-            // in GLTF a mesh can have multiple primitives
+            // in GLTF a "mesh" is a set of primitives, not a shared vertex/index buffer.
+            // we will create one ModelMesh and one ModelMeshPart per primitive
 
             buildMesh(modelData, gltf,  gltf.rawBuffer, gltfMesh );
         }
@@ -360,7 +367,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
             ArrayList<Vector3> bitangents = new ArrayList<>();
             boolean hasNormalMap = false;
 
-            // note: even if only one of the primitives has a normal texture, the mesh will need tangents
+            // if the primitive has a normal texture, the mesh will need tangents and binormals
             if( gltf.materials.get(primitive.material).normalTexture >= 0 )
                 hasNormalMap = true;
 

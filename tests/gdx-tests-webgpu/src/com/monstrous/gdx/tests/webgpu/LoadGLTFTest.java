@@ -26,6 +26,7 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
@@ -98,8 +99,12 @@ public class LoadGLTFTest extends GdxTest {
         model = new WgGLTFModelLoader(new JsonReader()).loadModel(file);
 		instance = new ModelInstance(model);
 
-        cam.position.z = 3 * instance.nodes.first().parts.first().meshPart.radius;
-        cam.position.y = instance.nodes.first().parts.first().meshPart.radius;
+        BoundingBox bbox = new BoundingBox();
+        model.calculateBoundingBox(bbox);
+        cam.position.z = bbox.getHeight();
+        cam.position.y = bbox.getHeight() ;
+        cam.lookAt(0, bbox.getHeight() / 2f,0);
+        cam.update();
 
         numMeshes = instance.model.meshes.size;
         for(int i = 0; i < numMeshes; i++){

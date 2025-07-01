@@ -23,6 +23,9 @@ import com.badlogic.gdx.graphics.g3d.Environment;
 public class ShaderPrefix {
     private static StringBuffer sb = new StringBuffer();
 
+    /** create a shader prefix depending on the defined attributes which allows to skip some shader code via conditional compilation.
+     * The prefix consists of a number of #define statements.
+     * */
     public static String buildPrefix(VertexAttributes vertexAttributes, Environment environment ){
         sb.setLength(0);
 

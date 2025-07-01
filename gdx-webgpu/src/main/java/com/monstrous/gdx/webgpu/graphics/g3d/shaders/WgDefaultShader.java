@@ -26,6 +26,7 @@ public class WgDefaultShader implements Shader {
     private final Config config;
     private static String defaultShader;
     private final WgTexture defaultTexture;
+    private final WgTexture defaultNormalTexture;
     public final Binder binder;
     private final WebGPUUniformBuffer uniformBuffer;
     private final int uniformBufferSize;
@@ -74,6 +75,9 @@ public class WgDefaultShader implements Shader {
         pixmap.setColor(Color.PINK);
         pixmap.fill();
         defaultTexture = new WgTexture(pixmap);
+        pixmap.setColor(Color.GREEN);
+        pixmap.fill();
+        defaultNormalTexture = new WgTexture(pixmap);
 
         // Create uniform buffer for global (per-frame) uniforms, e.g. projection matrix, camera position, etc.
         uniformBufferSize = (16 + 4 + 4 +4
@@ -95,12 +99,15 @@ public class WgDefaultShader implements Shader {
         binder.defineGroup(1, createMaterialBindGroupLayout(materialSize));
         binder.defineGroup(2, createInstancingBindGroupLayout());
         // define bindings in the groups
+        // must match with shader code
         binder.defineBinding("uniforms", 0, 0);
         binder.defineBinding("materialUniforms", 1, 0);
         binder.defineBinding("diffuseTexture", 1, 1);
         binder.defineBinding("diffuseSampler", 1, 2);
-        binder.defineBinding("metallicRoughnessTexture", 1, 3);
-        binder.defineBinding("metallicRoughnessSampler", 1, 4);
+        binder.defineBinding("normalTexture", 1, 3);
+        binder.defineBinding("normalSampler", 1, 4);
+        binder.defineBinding("metallicRoughnessTexture", 1, 5);
+        binder.defineBinding("metallicRoughnessSampler", 1, 6);
         binder.defineBinding("instanceUniforms", 2, 0);
         // define uniforms in uniform buffers with their offset
         // frame uniforms
@@ -349,6 +356,19 @@ public class WgDefaultShader implements Shader {
         binder.setTexture("diffuseTexture", diffuseTexture.getTextureView());
         binder.setSampler("diffuseSampler", diffuseTexture.getSampler());
 
+        // normal texture
+        WgTexture normalTexture;
+        if(material.has(TextureAttribute.Normal)) {
+            TextureAttribute ta = (TextureAttribute) material.get(TextureAttribute.Normal);
+            assert ta != null;
+            Texture tex = ta.textureDescription.texture;
+            normalTexture = (WgTexture)tex;
+        } else {
+            normalTexture = defaultNormalTexture;   // green texture, ie. Y = 1
+        }
+        binder.setTexture("normalTexture", normalTexture.getTextureView());
+        binder.setSampler("normalSampler", normalTexture.getSampler());
+
         // metallic roughness texture
         WgTexture metallicRoughnessTexture;
         if(material.has(PBRTextureAttribute.MetallicRoughness)) {
@@ -386,6 +406,8 @@ public class WgDefaultShader implements Shader {
         layout.addSampler(2, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering );
         layout.addTexture(3, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D, false);
         layout.addSampler(4, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering );
+        layout.addTexture(5, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D, false);
+        layout.addSampler(6, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering );
         layout.end();
         return layout;
     }
