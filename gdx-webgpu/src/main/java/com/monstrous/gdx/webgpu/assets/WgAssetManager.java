@@ -68,7 +68,7 @@ public class WgAssetManager extends AssetManager {
 			setLoader(Model.class, ".g3dj", new WgG3dModelLoader(new JsonReader(), resolver));
 			setLoader(Model.class, ".g3db", new WgG3dModelLoader(new UBJsonReader(), resolver));
 			setLoader(Model.class, ".obj", new WgObjLoader(resolver));
-            setLoader(Model.class, ".gltf", new WgGLTFModelLoader(new JsonReader(), resolver));
+            setLoader(Model.class, ".gltf", new WgGLTFModelLoader(resolver));
 			setLoader(ShaderProgram.class, new ShaderProgramLoader(resolver));
 			setLoader(Cubemap.class, new CubemapLoader(resolver));
 		}

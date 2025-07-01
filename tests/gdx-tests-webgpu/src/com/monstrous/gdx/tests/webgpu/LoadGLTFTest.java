@@ -102,9 +102,9 @@ public class LoadGLTFTest extends GdxTest {
         long startLoad = System.currentTimeMillis();
         FileHandle file = Gdx.files.internal(modelFileName);
         if(file.extension().contentEquals("gltf"))
-            model = new WgGLTFModelLoader(new JsonReader()).loadModel(file);
+            model = new WgGLTFModelLoader().loadModel(file);
         else if(file.extension().contentEquals("glb"))
-            model = new WgGLBModelLoader(new JsonReader()).loadModel(file);
+            model = new WgGLBModelLoader().loadModel(file);
         else
             System.out.println("File extension not supported: "+modelFileName);
         long endLoad = System.currentTimeMillis();

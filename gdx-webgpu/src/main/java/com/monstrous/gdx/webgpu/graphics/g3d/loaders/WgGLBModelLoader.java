@@ -20,6 +20,7 @@ import com.badlogic.gdx.assets.loaders.FileHandleResolver;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.g3d.model.data.*;
 import com.badlogic.gdx.utils.BaseJsonReader;
+import com.badlogic.gdx.utils.JsonReader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.gltf.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -35,15 +36,13 @@ import java.nio.charset.StandardCharsets;
 
 
 public class WgGLBModelLoader extends WgModelLoader<WgModelLoader.ModelParameters> {
-    final BaseJsonReader reader;
 
-	public WgGLBModelLoader(final BaseJsonReader reader) {
-		this(reader, null);
+	public WgGLBModelLoader() {
+		this(null);
 	}
 
-	public WgGLBModelLoader(BaseJsonReader reader, FileHandleResolver resolver) {
+	public WgGLBModelLoader(FileHandleResolver resolver) {
 		super(resolver);
-        this.reader = reader;
 	}
 
 	@Override
@@ -61,7 +60,7 @@ public class WgGLBModelLoader extends WgModelLoader<WgModelLoader.ModelParameter
         GLTF gltf = parseBinaryFile(handle.name(), path, contents);
 
         /* Then convert it to ModelData. */
-		return new WgGLTFModelLoader(reader).load(gltf);
+		return new WgGLTFModelLoader().load(gltf);
 	}
 
     private static GLTF parseBinaryFile( String name, String path, byte[] contents ){

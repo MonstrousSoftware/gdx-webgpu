@@ -41,11 +41,11 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
     private final Map<GLTFPrimitive, String> meshMap = new HashMap<>();
     private int fallbackMaterialId;
 
-	public WgGLTFModelLoader(final BaseJsonReader reader) {
-		this(reader, null);
+	public WgGLTFModelLoader() {
+		this(null);
 	}
 
-	public WgGLTFModelLoader(BaseJsonReader reader, FileHandleResolver resolver) {
+	public WgGLTFModelLoader(FileHandleResolver resolver) {
 		super(resolver);
 	}
 
@@ -61,7 +61,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
         String json = handle.readString();
 
         /* Read file into a GLTF class hierarchy. */
-        GLTF gltf = ParserGLTF.parseJSON(json, path);
+        GLTF gltf = ParserGLTF.parseJSON( json, path);
         gltf.rawBuffer = new GLTFRawBuffer(gltf.buffers.get(0).uri);           // read .bin file, assume 1 buffer
 
         /* Then convert it to ModelData. */

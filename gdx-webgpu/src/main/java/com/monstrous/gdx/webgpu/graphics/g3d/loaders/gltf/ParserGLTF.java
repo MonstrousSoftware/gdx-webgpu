@@ -20,34 +20,23 @@ package com.monstrous.gdx.webgpu.graphics.g3d.loaders.gltf;
 
 // JSON parser of the GLTF file format into a set of GLTF class objects
 
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.BaseJsonReader;
 import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
 
+import java.io.StringReader;
+
 public class ParserGLTF {
 
-//    public static GLTF load(String filePath) {
-//        int slash = filePath.lastIndexOf('/');
-//        String path = filePath.substring(0, slash + 1);
-//        String name = filePath.substring(slash + 1);
-//        MaterialData materialData = null;
-//
-//        FileHandle handle = Gdx.files.internal(filePath);
-//        String contents = handle.readString();
-//
-//        GLTF gltf = parseJSON(contents, path);
-//        if(!gltf.buffers.isEmpty())
-//            gltf.rawBuffer = new GLTFRawBuffer(gltf.buffers.get(0).uri);           // read .bin file, assume 1 buffer
-//        return gltf;
-//    }
-
-    public static GLTF parseJSON(String jsonAsString, String path) {
+    public static GLTF parseJSON(String json, String path) {
         GLTF gltf = new GLTF();
 
-        JsonValue fromJson = new JsonReader().parse(jsonAsString);
+        JsonValue fromJson = new JsonReader().parse(json);
 
         JsonValue.JsonIterator ims = fromJson.iterator("images");
         if (ims != null) {
