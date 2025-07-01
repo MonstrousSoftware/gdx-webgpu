@@ -20,6 +20,7 @@ package com.monstrous.gdx.webgpu.graphics.g3d;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.monstrous.gdx.webgpu.graphics.WgMesh;
+import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.PBRTextureAttribute;
 import com.monstrous.gdx.webgpu.graphics.g3d.model.PBRModelTexture;
 import com.monstrous.gdx.webgpu.graphics.g3d.model.WgMeshPart;
@@ -141,7 +142,13 @@ public class WgModel extends Model {
 		if (mtl.textures != null) {
 			for (ModelTexture tex : mtl.textures) {
 				Texture texture;
-				if (textures.containsKey(tex.fileName)) {
+                if(tex instanceof PBRModelTexture && ((PBRModelTexture)tex).pixmap != null){
+                    // pixmap read from binary file
+                    texture = new WgTexture(((PBRModelTexture)tex).pixmap, tex.id);
+                    textures.put(tex.fileName, texture);    // "bufferView.N"
+                    disposables.add(texture);
+                }
+				else if (textures.containsKey(tex.fileName)) {
 					texture = textures.get(tex.fileName);
 				} else {
 					texture = textureProvider.load(tex.fileName);

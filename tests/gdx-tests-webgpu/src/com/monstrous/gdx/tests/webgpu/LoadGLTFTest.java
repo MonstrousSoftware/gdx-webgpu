@@ -38,6 +38,7 @@ import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
+import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLBModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLTFModelLoader;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 import com.monstrous.gdx.webgpu.webgpu.WGPUBackendType;
@@ -91,12 +92,18 @@ public class LoadGLTFTest extends GdxTest {
 		//modelFileName = "data/g3d/gltf/Cube/Cube.gltf";
         //modelFileName = "data/g3d/gltf/StanfordDragon/stanfordDragon.gltf";
         //modelFileName = "data/g3d/gltf/Cubes/cubes.gltf";
-        modelFileName = "data/g3d/gltf/AntiqueCamera/AntiqueCamera.gltf";
+        //modelFileName = "data/g3d/gltf/AntiqueCamera/AntiqueCamera.gltf";
         //modelFileName = "data/g3d/gltf/torus.gltf";
         //modelFileName = "data/g3d/gltf/Sponza/Sponza.gltf";
+        modelFileName = "data/g3d/gltf/waterbottle/waterbottle.glb";
 
         FileHandle file = Gdx.files.internal(modelFileName);
-        model = new WgGLTFModelLoader(new JsonReader()).loadModel(file);
+        if(file.extension().contentEquals("gltf"))
+            model = new WgGLTFModelLoader(new JsonReader()).loadModel(file);
+        else if(file.extension().contentEquals("glb"))
+            model = new WgGLBModelLoader(new JsonReader()).loadModel(file);
+        else
+            System.out.println("File extension not supported: "+modelFileName);
 		instance = new ModelInstance(model);
 
         BoundingBox bbox = new BoundingBox();

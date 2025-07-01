@@ -188,30 +188,30 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
             if(gltfMat.pbrMetallicRoughness.baseColorTexture >= 0){
                 int textureId = gltfMat.pbrMetallicRoughness.baseColorTexture;
                 GLTFImage image = gltf.images.get( gltf.textures.get(textureId).source );
-                ModelTexture tex = new ModelTexture();
+                PBRModelTexture tex = new PBRModelTexture();
                 tex.usage = ModelTexture.USAGE_DIFFUSE;
                 tex.id = gltfMat.name;
-                tex.fileName = image.uri;   // todo can be embedded in buffer
+                loadTexture(gltf, tex, image);
 
                 modelMaterial.textures.add(tex);
             }
             if(gltfMat.pbrMetallicRoughness.metallicRoughnessTexture >= 0){
                 int textureId = gltfMat.pbrMetallicRoughness.metallicRoughnessTexture;
                 GLTFImage image = gltf.images.get( gltf.textures.get(textureId).source );
-                ModelTexture tex = new ModelTexture();
+                PBRModelTexture tex = new PBRModelTexture();
                 tex.usage = PBRModelTexture.USAGE_METALLIC_ROUGHNESS;
                 tex.id = gltfMat.name;
-                tex.fileName = image.uri;   // todo can be embedded in buffer
+                loadTexture(gltf, tex, image);
 
                 modelMaterial.textures.add(tex);
             }
             if(gltfMat.normalTexture >= 0){
                 int textureId = gltfMat.normalTexture;
                 GLTFImage image = gltf.images.get( gltf.textures.get(textureId).source );
-                ModelTexture tex = new ModelTexture();
+                PBRModelTexture tex = new PBRModelTexture();
                 tex.usage = ModelTexture.USAGE_NORMAL;
                 tex.id = gltfMat.name;
-                tex.fileName = image.uri;   // todo can be embedded in buffer
+                loadTexture(gltf, tex, image);
 
                 modelMaterial.textures.add(tex);
             }
@@ -265,28 +265,28 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
         }
     }
 
+    /** load image information: either a filename or a Pixmap. */
+    private void loadTexture(GLTF gltf, PBRModelTexture tex, GLTFImage image){
+        if(image.uri != null ) {
+            if (image.uri.startsWith("data:")) {
+                throw new RuntimeException("GLTF: data uri not supported"); // todo
+            } else  {
+                tex.fileName = image.uri;
+            }
+        } else {
+            GLTFBufferView view = gltf.bufferViews.get(image.bufferView);
+            if(view.buffer != 0)
+                throw new RuntimeException("GLTF can only support buffer 0");
+            byte[] bytes = new byte[view.byteLength];
 
+            gltf.rawBuffer.byteBuffer.position(view.byteOffset);
+            gltf.rawBuffer.byteBuffer.get(bytes);
 
+            tex.pixmap = new Pixmap(bytes, 0, view.byteLength );
+            tex.fileName = "bufferView."+image.bufferView;  // create a unique 'filename' that can be used as key for caching
+        }
+    }
 
-
-//    private byte[] readImageData( GLTF gltf, int textureId )  {
-//        byte[] bytes;
-//
-//        GLTFImage image = gltf.images.get( gltf.textures.get(textureId).source );
-//        if(image.uri != null){
-//            bytes = Files.internal(image.uri).readAllBytes();
-//        } else {
-//            GLTFBufferView view = gltf.bufferViews.get(image.bufferView);
-//            if(view.buffer != 0)
-//                throw new RuntimeException("GLTF can only support buffer 0");
-//
-//            bytes = new byte[view.byteLength];
-//
-//            gltf.rawBuffer.byteBuffer.position(view.byteOffset);
-//            gltf.rawBuffer.byteBuffer.get(bytes);
-//        }
-//        return bytes;
-//    }
 
     private ModelNode addNode(ModelData modelData, GLTF gltf, GLTFNode gltfNode){
         ModelNode node = new ModelNode();

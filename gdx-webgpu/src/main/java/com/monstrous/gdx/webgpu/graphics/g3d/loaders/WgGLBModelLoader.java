@@ -37,8 +37,6 @@ import java.util.Map;
 
 
 public class WgGLBModelLoader extends WgModelLoader<WgModelLoader.ModelParameters> {
-    private final Map<GLTFPrimitive, String> meshMap = new HashMap<>();
-    //private final ArrayList<ModelNode> nodes = new ArrayList<>();
     final BaseJsonReader reader;
 
 	public WgGLBModelLoader(final BaseJsonReader reader) {
@@ -90,7 +88,7 @@ public class WgGLBModelLoader extends WgModelLoader<WgModelLoader.ModelParameter
         if(len != contents.length)
             throw new RuntimeException("GLB file length invalid: "+name);
 
-        // read chunk
+        // read JSON chunk
         int chunkLength = bb.getInt();
         int chunkType = bb.getInt();
 
@@ -111,6 +109,8 @@ public class WgGLBModelLoader extends WgModelLoader<WgModelLoader.ModelParameter
 
         bb.position(bb.position() + chunkLength);
 
+        // read BIN chunk
+        // todo the BIN chunk is optional
         chunkLength = bb.getInt();
         chunkType = bb.getInt();
         if(chunkType != 0x4E4942) // "BIN"
