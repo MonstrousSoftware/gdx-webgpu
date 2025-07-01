@@ -13,6 +13,7 @@ import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
+import com.monstrous.gdx.webgpu.graphics.g3d.attributes.PBRTextureAttribute;
 import com.monstrous.gdx.webgpu.webgpu.*;
 import com.monstrous.gdx.webgpu.wrappers.*;
 
@@ -98,6 +99,8 @@ public class WgDefaultShader implements Shader {
         binder.defineBinding("materialUniforms", 1, 0);
         binder.defineBinding("diffuseTexture", 1, 1);
         binder.defineBinding("diffuseSampler", 1, 2);
+        binder.defineBinding("metallicRoughnessTexture", 1, 3);
+        binder.defineBinding("metallicRoughnessSampler", 1, 4);
         binder.defineBinding("instanceUniforms", 2, 0);
         // define uniforms in uniform buffers with their offset
         // frame uniforms
@@ -343,9 +346,21 @@ public class WgDefaultShader implements Shader {
         } else {
             diffuseTexture = defaultTexture;
         }
-
         binder.setTexture("diffuseTexture", diffuseTexture.getTextureView());
         binder.setSampler("diffuseSampler", diffuseTexture.getSampler());
+
+        // metallic roughness texture
+        WgTexture metallicRoughnessTexture;
+        if(material.has(PBRTextureAttribute.MetallicRoughness)) {
+            TextureAttribute ta = (TextureAttribute) material.get(PBRTextureAttribute.MetallicRoughness);
+            assert ta != null;
+            Texture tex = ta.textureDescription.texture;
+            metallicRoughnessTexture = (WgTexture)tex;
+        } else {
+            metallicRoughnessTexture = defaultTexture;  // suitable?
+        }
+        binder.setTexture("metallicRoughnessTexture", metallicRoughnessTexture.getTextureView());
+        binder.setSampler("metallicRoughnessSampler", metallicRoughnessTexture.getSampler());
 
         materialBuffer.flush(); // write to GPU
         binder.bindGroup(renderPass, 1, numMaterials*materialBuffer.getUniformStride());
@@ -369,6 +384,8 @@ public class WgDefaultShader implements Shader {
         layout.addBuffer(0, WGPUShaderStage.Vertex|WGPUShaderStage.Fragment, WGPUBufferBindingType.Uniform, materialStride, true);
         layout.addTexture(1, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D, false);
         layout.addSampler(2, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering );
+        layout.addTexture(3, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D, false);
+        layout.addSampler(4, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering );
         layout.end();
         return layout;
     }

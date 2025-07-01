@@ -23,6 +23,7 @@ import com.badlogic.gdx.graphics.g3d.model.data.*;
 import com.badlogic.gdx.math.*;
 import com.badlogic.gdx.utils.*;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.gltf.*;
+import com.monstrous.gdx.webgpu.graphics.g3d.model.PBRModelTexture;
 import com.monstrous.gdx.webgpu.graphics.g3d.model.WgModelMeshPart;
 import org.jetbrains.annotations.NotNull;
 
@@ -61,7 +62,6 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
         /* Read file into a GLTF class hierarchy. */
         GLTF gltf = GLTFParser.parseJSON(json, path);
         gltf.rawBuffer = new GLTFRawBuffer(gltf.buffers.get(0).uri);           // read .bin file, assume 1 buffer
-
 
         /* Then convert it to ModelData. */
 		return load(gltf);
@@ -189,6 +189,16 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                 GLTFImage image = gltf.images.get( gltf.textures.get(textureId).source );
                 ModelTexture tex = new ModelTexture();
                 tex.usage = ModelTexture.USAGE_DIFFUSE;
+                tex.id = gltfMat.name;
+                tex.fileName = image.uri;   // todo can be embedded in buffer
+
+                modelMaterial.textures.add(tex);
+            }
+            if(gltfMat.pbrMetallicRoughness.metallicRoughnessTexture >= 0){
+                int textureId = gltfMat.pbrMetallicRoughness.metallicRoughnessTexture;
+                GLTFImage image = gltf.images.get( gltf.textures.get(textureId).source );
+                ModelTexture tex = new ModelTexture();
+                tex.usage = PBRModelTexture.USAGE_METALLIC_ROUGHNESS;
                 tex.id = gltfMat.name;
                 tex.fileName = image.uri;   // todo can be embedded in buffer
 

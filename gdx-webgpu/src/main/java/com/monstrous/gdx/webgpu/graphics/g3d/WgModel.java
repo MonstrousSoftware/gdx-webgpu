@@ -20,6 +20,8 @@ package com.monstrous.gdx.webgpu.graphics.g3d;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.monstrous.gdx.webgpu.graphics.WgMesh;
+import com.monstrous.gdx.webgpu.graphics.g3d.attributes.PBRTextureAttribute;
+import com.monstrous.gdx.webgpu.graphics.g3d.model.PBRModelTexture;
 import com.monstrous.gdx.webgpu.graphics.g3d.model.WgMeshPart;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
@@ -180,6 +182,9 @@ public class WgModel extends Model {
 					case ModelTexture.USAGE_REFLECTION:
 						result.set(new TextureAttribute(TextureAttribute.Reflection, descriptor, offsetU, offsetV, scaleU, scaleV));
 						break;
+                    case PBRModelTexture.USAGE_METALLIC_ROUGHNESS:
+                        result.set(new PBRTextureAttribute(PBRTextureAttribute.MetallicRoughness, descriptor, offsetU, offsetV, scaleU, scaleV));
+                        break;
 				}
 			}
 		}

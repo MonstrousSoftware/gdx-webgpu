@@ -32,9 +32,13 @@ struct MaterialUniforms {
 };
 
 @group(0) @binding(0) var<uniform> uFrame: FrameUniforms;
+
 @group(1) @binding(0) var<uniform> material: MaterialUniforms;
 @group(1) @binding(1) var diffuseTexture: texture_2d<f32>;
 @group(1) @binding(2) var diffuseSampler: sampler;
+@group(1) @binding(3) var metallicRoughnessTexture: texture_2d<f32>;        // not used yet
+@group(1) @binding(4) var metallicRoughnessSampler: sampler;
+
 @group(2) @binding(0) var<storage, read> instances: array<ModelUniforms>;
 
 
@@ -94,6 +98,7 @@ fn vs_main(in: VertexInput, @builtin(instance_index) instance: u32) -> VertexOut
 @fragment
 fn fs_main(in : VertexOutput) -> @location(0) vec4f {
 #ifdef TEXTURE_COORDINATE
+   //var color = in.color * textureSample(metallicRoughnessTexture, metallicRoughnessSampler, in.uv);
    var color = in.color * textureSample(diffuseTexture, diffuseSampler, in.uv);
 #else
    var color = in.color;

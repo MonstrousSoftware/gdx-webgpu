@@ -82,7 +82,7 @@ public class LoadGLTFTest extends GdxTest {
 
 		modelBatch = new WgModelBatch();
 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		cam.position.set(0, 1, 4);
+		cam.position.set(0, 0, 4);
 		cam.lookAt(0,1,0);
 		cam.near = 0.1f;
 		cam.far = 100f;
@@ -90,13 +90,16 @@ public class LoadGLTFTest extends GdxTest {
 		//modelFileName = "data/g3d/gltf/Cube/Cube.gltf";
         //modelFileName = "data/g3d/gltf/StanfordDragon/stanfordDragon.gltf";
         //modelFileName = "data/g3d/gltf/Cubes/cubes.gltf";
-        //modelFileName = "data/g3d/gltf/AntiqueCamera/AntiqueCamera.gltf";
+        modelFileName = "data/g3d/gltf/AntiqueCamera/AntiqueCamera.gltf";
         //modelFileName = "data/g3d/gltf/torus.gltf";
-        modelFileName = "data/g3d/gltf/Sponza/Sponza.gltf";
+        //modelFileName = "data/g3d/gltf/Sponza/Sponza.gltf";
 
         FileHandle file = Gdx.files.internal(modelFileName);
         model = new WgGLTFModelLoader(new JsonReader()).loadModel(file);
 		instance = new ModelInstance(model);
+
+        cam.position.z = 3 * instance.nodes.first().parts.first().meshPart.radius;
+        cam.position.y = instance.nodes.first().parts.first().meshPart.radius;
 
         numMeshes = instance.model.meshes.size;
         for(int i = 0; i < numMeshes; i++){
