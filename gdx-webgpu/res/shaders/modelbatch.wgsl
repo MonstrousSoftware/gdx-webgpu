@@ -44,6 +44,8 @@ struct MaterialUniforms {
 @group(1) @binding(4) var normalSampler: sampler;
 @group(1) @binding(5) var metallicRoughnessTexture: texture_2d<f32>;        // not used yet
 @group(1) @binding(6) var metallicRoughnessSampler: sampler;
+@group(1) @binding(7) var emissiveTexture: texture_2d<f32>;
+@group(1) @binding(8) var emissiveSampler: sampler;
 
 @group(2) @binding(0) var<storage, read> instances: array<ModelUniforms>;
 
@@ -186,8 +188,12 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
     let litColor = vec4f(color.rgb * radiance + specular, 1.0);
 
     color = litColor;
-#endif
+#endif // LIGHTING
+    let emissiveColor = textureSample(emissiveTexture, emissiveSampler, in.uv).rgb;
 
+    color = color + vec4f(emissiveColor, 0);
+
+    //return vec4f(emissiveColor, 1.0);
     //return vec4f(normal, 1.0);
     //return vec4f(uFrame.ambientLight.rgb, 1.0);
     //return material.diffuseColor;

@@ -27,6 +27,7 @@ public class WgDefaultShader implements Shader {
     private static String defaultShader;
     private final WgTexture defaultTexture;
     private final WgTexture defaultNormalTexture;
+    private final WgTexture defaultBlackTexture;
     public final Binder binder;
     private final WebGPUUniformBuffer uniformBuffer;
     private final int uniformBufferSize;
@@ -78,6 +79,9 @@ public class WgDefaultShader implements Shader {
         pixmap.setColor(Color.GREEN);
         pixmap.fill();
         defaultNormalTexture = new WgTexture(pixmap);
+        pixmap.setColor(Color.BLACK);
+        pixmap.fill();
+        defaultBlackTexture = new WgTexture(pixmap);
 
         // Create uniform buffer for global (per-frame) uniforms, e.g. projection matrix, camera position, etc.
         uniformBufferSize = (16 + 4 + 4 +4
@@ -108,6 +112,8 @@ public class WgDefaultShader implements Shader {
         binder.defineBinding("normalSampler", 1, 4);
         binder.defineBinding("metallicRoughnessTexture", 1, 5);
         binder.defineBinding("metallicRoughnessSampler", 1, 6);
+        binder.defineBinding("emissiveTexture", 1, 7);
+        binder.defineBinding("emissiveSampler", 1, 8);
         binder.defineBinding("instanceUniforms", 2, 0);
         // define uniforms in uniform buffers with their offset
         // frame uniforms
@@ -382,6 +388,19 @@ public class WgDefaultShader implements Shader {
         binder.setTexture("metallicRoughnessTexture", metallicRoughnessTexture.getTextureView());
         binder.setSampler("metallicRoughnessSampler", metallicRoughnessTexture.getSampler());
 
+        // metallic roughness texture
+        WgTexture emissiveTexture;
+        if(material.has(TextureAttribute.Emissive)) {
+            TextureAttribute ta = (TextureAttribute) material.get(TextureAttribute.Emissive);
+            assert ta != null;
+            Texture tex = ta.textureDescription.texture;
+            emissiveTexture = (WgTexture)tex;
+        } else {
+            emissiveTexture = defaultBlackTexture;
+        }
+        binder.setTexture("emissiveTexture", emissiveTexture.getTextureView());
+        binder.setSampler("emissiveSampler", emissiveTexture.getSampler());
+
         materialBuffer.flush(); // write to GPU
         binder.bindGroup(renderPass, 1, numMaterials*materialBuffer.getUniformStride());
 
@@ -408,6 +427,8 @@ public class WgDefaultShader implements Shader {
         layout.addSampler(4, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering );
         layout.addTexture(5, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D, false);
         layout.addSampler(6, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering );
+        layout.addTexture(7, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D, false);
+        layout.addSampler(8, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering );
         layout.end();
         return layout;
     }

@@ -181,9 +181,9 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
             if(gltfMat.pbrMetallicRoughness.baseColorFactor != null)
                 modelMaterial.diffuse = gltfMat.pbrMetallicRoughness.baseColorFactor;
 //            if(gltfMat.pbrMetallicRoughness.roughnessFactor >= 0)
-//                materialData.roughnessFactor = gltfMat.pbrMetallicRoughness.roughnessFactor;
+//                modelMaterial.roughnessFactor = gltfMat.pbrMetallicRoughness.roughnessFactor;
 //            if(gltfMat.pbrMetallicRoughness.metallicFactor >= 0)
-//                materialData.metallicFactor = gltfMat.pbrMetallicRoughness.metallicFactor;
+//                modelMaterial.metallicFactor = gltfMat.pbrMetallicRoughness.metallicFactor;
 
             if(gltfMat.pbrMetallicRoughness.baseColorTexture >= 0){
                 int textureId = gltfMat.pbrMetallicRoughness.baseColorTexture;
@@ -206,21 +206,29 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                 modelMaterial.textures.add(tex);
             }
             if(gltfMat.normalTexture >= 0){
-                int textureId = gltfMat.normalTexture;
-                GLTFImage image = gltf.images.get( gltf.textures.get(textureId).source );
+                GLTFImage image = gltf.images.get( gltf.textures.get(gltfMat.normalTexture).source );
                 PBRModelTexture tex = new PBRModelTexture();
                 tex.usage = ModelTexture.USAGE_NORMAL;
                 tex.id = gltfMat.name;
                 loadTexture(gltf, tex, image);
-
                 modelMaterial.textures.add(tex);
             }
-            // todo
-//            if(gltfMat.emissiveTexture >= 0)
-//                materialData.emissiveMapData =  readImageData(gltf, gltfMat.emissiveTexture);
-//            if(gltfMat.occlusionTexture >= 0)
-//                materialData.occlusionMapData =  readImageData(gltf, gltfMat.occlusionTexture);
-
+            if(gltfMat.emissiveTexture >= 0){
+                GLTFImage image = gltf.images.get( gltf.textures.get(gltfMat.emissiveTexture).source );
+                PBRModelTexture tex = new PBRModelTexture();
+                tex.usage = ModelTexture.USAGE_EMISSIVE;
+                tex.id = gltfMat.name;
+                loadTexture(gltf, tex, image);
+                modelMaterial.textures.add(tex);
+            }
+            if(gltfMat.occlusionTexture >= 0){
+                GLTFImage image = gltf.images.get( gltf.textures.get(gltfMat.occlusionTexture).source );
+                PBRModelTexture tex = new PBRModelTexture();
+                tex.usage = PBRModelTexture.USAGE_OCCLUSION;
+                tex.id = gltfMat.name;
+                loadTexture(gltf, tex, image);
+                modelMaterial.textures.add(tex);
+            }
 
             modelData.materials.add(modelMaterial);
         }
@@ -265,7 +273,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
         }
     }
 
-    /** load image information: either a filename or a Pixmap. */
+    /** load image information: either a filename (to be loaded later) or a Pixmap. */
     private void loadTexture(GLTF gltf, PBRModelTexture tex, GLTFImage image){
         if(image.uri != null ) {
             if (image.uri.startsWith("data:")) {
