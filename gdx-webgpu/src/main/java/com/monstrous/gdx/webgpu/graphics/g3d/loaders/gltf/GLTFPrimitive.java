@@ -10,8 +10,8 @@ public class GLTFPrimitive {
 
     public GLTFPrimitive() {
         attributes = new ArrayList<>();
-        indices = 0;
-        material = 0;
+        indices = -1;
+        material = -1;
         mode = 4;
     }
 }

@@ -39,6 +39,7 @@ import java.util.Map;
 
 public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParameters> {
     private final Map<GLTFPrimitive, String> meshMap = new HashMap<>();
+    private int fallbackMaterialId;
 
 	public WgGLTFModelLoader(final BaseJsonReader reader) {
 		this(reader, null);
@@ -60,7 +61,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
         String json = handle.readString();
 
         /* Read file into a GLTF class hierarchy. */
-        GLTF gltf = GLTFParser.parseJSON(json, path);
+        GLTF gltf = ParserGLTF.parseJSON(json, path);
         gltf.rawBuffer = new GLTFRawBuffer(gltf.buffers.get(0).uri);           // read .bin file, assume 1 buffer
 
         /* Then convert it to ModelData. */
@@ -232,6 +233,22 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
 
             modelData.materials.add(modelMaterial);
         }
+
+        // add default material as fallback for primitives without material
+        ModelMaterial modelMaterial = new ModelMaterial();
+        modelMaterial.textures = new Array<>();
+        modelMaterial.id = "default";
+        PBRModelTexture tex = new PBRModelTexture();
+        tex.usage = ModelTexture.USAGE_DIFFUSE;
+        tex.id = "default";
+        tex.pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888 );
+        tex.pixmap.setColor(Color.PURPLE);
+        tex.pixmap.fill();
+        tex.fileName = "default";
+        modelMaterial.textures.add(tex);
+        modelData.materials.add(modelMaterial);
+        fallbackMaterialId = modelData.materials.size-1;
+
         long endLoad = System.currentTimeMillis();
         System.out.println("Material loading/generation time (ms): "+(endLoad - startLoad));
     }
@@ -330,7 +347,8 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                 ModelNodePart nodePart = new ModelNodePart();
                 nodePart.meshPartId = meshMap.get(primitive);   // get id of ModelMeshPart
                 // cross reference to material.id (a String)
-                nodePart.materialId = modelData.materials.get(primitive.material).id;
+                int materialId =  primitive.material < 0 ? fallbackMaterialId :primitive.material;
+                nodePart.materialId = modelData.materials.get(materialId).id;
                 System.out.println("Node refers to mesh part :" + nodePart.meshPartId + " material: "+nodePart.materialId);
                 // todo
 //                nodePart.bones = 1;
@@ -376,7 +394,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
             boolean hasNormalMap = false;
 
             // if the primitive has a normal texture, the mesh will need tangents and binormals
-            if( gltf.materials.get(primitive.material).normalTexture >= 0 )
+            if( primitive.material >= 0 && gltf.materials.get(primitive.material).normalTexture >= 0 )
                 hasNormalMap = true;
 
             // todo adjust this based on the file contents:

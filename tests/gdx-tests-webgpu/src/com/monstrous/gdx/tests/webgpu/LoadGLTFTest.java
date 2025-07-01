@@ -95,7 +95,8 @@ public class LoadGLTFTest extends GdxTest {
         //modelFileName = "data/g3d/gltf/AntiqueCamera/AntiqueCamera.gltf";
         //modelFileName = "data/g3d/gltf/torus.gltf";
         //modelFileName = "data/g3d/gltf/Sponza/Sponza.gltf";
-        modelFileName = "data/g3d/gltf/waterbottle/waterbottle.glb";
+        //modelFileName = "data/g3d/gltf/waterbottle/waterbottle.glb";
+        modelFileName = "data/g3d/gltf/triangle.gltf";
 
         FileHandle file = Gdx.files.internal(modelFileName);
         if(file.extension().contentEquals("gltf"))

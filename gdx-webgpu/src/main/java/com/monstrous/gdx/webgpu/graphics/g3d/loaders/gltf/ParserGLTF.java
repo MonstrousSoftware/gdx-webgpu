@@ -27,7 +27,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
 
-public class GLTFParser {
+public class ParserGLTF {
 
 //    public static GLTF load(String filePath) {
 //        int slash = filePath.lastIndexOf('/');
@@ -178,8 +178,8 @@ public class GLTFParser {
                         JsonValue p = primitives.next();
 
                         primitive.mode = p.getInt("mode", 4);
-                        primitive.indices = p.getInt("indices", 0);
-                        primitive.material = p.getInt("material", 0);
+                        primitive.indices = p.getInt("indices", -1);
+                        primitive.material = p.getInt("material", -1);
 
                         JsonValue attribs = p.get("attributes");
                         JsonValue attrib = attribs.child;
@@ -204,7 +204,10 @@ public class GLTFParser {
                 if (buf.has("name"))
                     buffer.name = buf.get("name").asString();
                 if (buf.has("uri")) {
-                    buffer.uri = path +  buf.getString("uri");
+                    String uri = buf.getString("uri");
+                    if(!uri.startsWith("data:"))
+                        uri = path + uri;
+                    buffer.uri = uri;
                 }
                 //buffer.uri = path + buf.getString("uri");
                 buffer.byteLength = buf.getInt("byteLength");

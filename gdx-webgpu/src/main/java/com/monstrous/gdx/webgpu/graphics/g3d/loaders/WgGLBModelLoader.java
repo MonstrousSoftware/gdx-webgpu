@@ -28,8 +28,6 @@ import java.nio.ByteOrder;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
 
 /** Loader for glb model format (binary GLTF).
  *
@@ -121,7 +119,7 @@ public class WgGLBModelLoader extends WgModelLoader<WgModelLoader.ModelParameter
         ByteBuffer chunkBinaryData = bb.slice();
         chunkBinaryData.limit(chunkLength);
 
-        GLTF gltf = GLTFParser.parseJSON(json, path);
+        GLTF gltf = ParserGLTF.parseJSON(json, path);
         gltf.rawBuffer = new GLTFRawBuffer(chunkBinaryData);
         return gltf;
     }
