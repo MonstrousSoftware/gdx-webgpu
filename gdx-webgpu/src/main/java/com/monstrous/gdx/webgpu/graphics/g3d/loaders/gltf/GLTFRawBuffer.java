@@ -28,15 +28,6 @@ public class GLTFRawBuffer {
         }
         byteBuffer = ByteBuffer.wrap(data);
         byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
-
-        //byteBuffer.flip();
-        short i0 = byteBuffer.getShort();
-        short i1 = byteBuffer.getShort();
-        short i2 = byteBuffer.getShort();
-        for(int i =0; i < 9; i++){
-            float f = byteBuffer.getFloat();
-            System.out.println(f);
-        }
     }
 
     public GLTFRawBuffer(ByteBuffer byteBuffer) {

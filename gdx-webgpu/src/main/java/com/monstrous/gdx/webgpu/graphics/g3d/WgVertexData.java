@@ -127,7 +127,7 @@ public class WgVertexData implements VertexData {
 
     @Override
     public void dispose() {
-        Gdx.app.log("WebGPUVertexData", "dispose"+getNumMaxVertices());
+        //Gdx.app.log("WebGPUVertexData", "dispose"+getNumMaxVertices());
         BufferUtils.disposeUnsafeByteBuffer(byteBuffer);
         vertexBuffer.dispose();
     }

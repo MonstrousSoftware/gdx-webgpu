@@ -94,10 +94,12 @@ public class LoadGLTFTest extends GdxTest {
         //modelFileName = "data/g3d/gltf/Cubes/cubes.gltf";
         //modelFileName = "data/g3d/gltf/AntiqueCamera/AntiqueCamera.gltf";
         //modelFileName = "data/g3d/gltf/torus.gltf";
-        //modelFileName = "data/g3d/gltf/Sponza/Sponza.gltf";
+        modelFileName = "data/g3d/gltf/Sponza/Sponza.gltf";
         //modelFileName = "data/g3d/gltf/waterbottle/waterbottle.glb";
-        modelFileName = "data/g3d/gltf/triangle.gltf";
+        //modelFileName = "data/g3d/gltf/Buggy/Buggy.gltf";
+       // modelFileName = "data/g3d/gltf/triangle.gltf";
 
+        long startLoad = System.currentTimeMillis();
         FileHandle file = Gdx.files.internal(modelFileName);
         if(file.extension().contentEquals("gltf"))
             model = new WgGLTFModelLoader(new JsonReader()).loadModel(file);
@@ -105,6 +107,9 @@ public class LoadGLTFTest extends GdxTest {
             model = new WgGLBModelLoader(new JsonReader()).loadModel(file);
         else
             System.out.println("File extension not supported: "+modelFileName);
+        long endLoad = System.currentTimeMillis();
+        System.out.println("Model loading time (ms): "+(endLoad - startLoad));
+
 		instance = new ModelInstance(model);
 
         BoundingBox bbox = new BoundingBox();

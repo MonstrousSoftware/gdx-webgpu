@@ -1,5 +1,5 @@
-package com.monstrous.gdx.webgpu.graphics.g3d.shaders;
 
+package com.monstrous.gdx.webgpu.graphics.g3d.shaders;
 
 import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.Shader;

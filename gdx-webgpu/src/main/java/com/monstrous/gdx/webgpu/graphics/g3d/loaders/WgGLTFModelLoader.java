@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2011 See AUTHORS file.
+ * Copyright 2025 Monstrous Software.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -349,7 +349,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                 // cross reference to material.id (a String)
                 int materialId =  primitive.material < 0 ? fallbackMaterialId :primitive.material;
                 nodePart.materialId = modelData.materials.get(materialId).id;
-                System.out.println("Node refers to mesh part :" + nodePart.meshPartId + " material: "+nodePart.materialId);
+                //System.out.println("Node refers to mesh part :" + nodePart.meshPartId + " material: "+nodePart.materialId);
                 // todo
 //                nodePart.bones = 1;
 //                nodePart.uvMapping = 1;

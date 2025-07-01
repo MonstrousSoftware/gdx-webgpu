@@ -498,7 +498,7 @@ public class WgTexture extends Texture {
     public void dispose(){
 
         if(texture != null) {   // guard against double dispose
-            System.out.println("Destroy texture " + label);
+            //System.out.println("Destroy texture " + label);
             // todo released when?
             //LibGPU.webGPU.wgpuSamplerRelease(sampler);
             textureView.dispose();
