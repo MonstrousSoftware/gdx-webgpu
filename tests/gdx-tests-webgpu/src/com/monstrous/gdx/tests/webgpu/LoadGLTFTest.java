@@ -25,6 +25,7 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
+import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.JsonReader;
@@ -50,7 +51,7 @@ public class LoadGLTFTest extends GdxTest {
 
 	WgModelBatch modelBatch;
 	PerspectiveCamera cam;
-	PerspectiveCamController controller;
+    CameraInputController controller;
 	WgSpriteBatch batch;
 	WgBitmapFont font;
 	Model model;
@@ -84,20 +85,21 @@ public class LoadGLTFTest extends GdxTest {
 
 		modelBatch = new WgModelBatch();
 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		cam.position.set(0, 0, 4);
-		cam.lookAt(0,1,0);
-		cam.near = 0.1f;
+		cam.position.set(0, 0, 3f);
+		cam.lookAt(0,0,0);
+		cam.near = 0.001f;
 		cam.far = 100f;
 
-		//modelFileName = "data/g3d/gltf/Cube/Cube.gltf";
+		modelFileName = "data/g3d/gltf/Cube/Cube.gltf";
         //modelFileName = "data/g3d/gltf/StanfordDragon/stanfordDragon.gltf";
         //modelFileName = "data/g3d/gltf/Cubes/cubes.gltf";
         //modelFileName = "data/g3d/gltf/AntiqueCamera/AntiqueCamera.gltf";
         //modelFileName = "data/g3d/gltf/torus.gltf";
-        modelFileName = "data/g3d/gltf/Sponza/Sponza.gltf";
+        //modelFileName = "data/g3d/gltf/Sponza/Sponza.gltf";
         //modelFileName = "data/g3d/gltf/waterbottle/waterbottle.glb";
         //modelFileName = "data/g3d/gltf/Buggy/Buggy.gltf";
-       // modelFileName = "data/g3d/gltf/triangle.gltf";
+        //modelFileName = "data/g3d/gltf/triangle.gltf";
+        //modelFileName = "data/g3d/gltf/Avocado.glb";
 
         long startLoad = System.currentTimeMillis();
         FileHandle file = Gdx.files.internal(modelFileName);
@@ -112,12 +114,12 @@ public class LoadGLTFTest extends GdxTest {
 
 		instance = new ModelInstance(model);
 
-        BoundingBox bbox = new BoundingBox();
-        model.calculateBoundingBox(bbox);
-        cam.position.z = bbox.getHeight();
-        cam.position.y = bbox.getHeight() ;
-        cam.lookAt(0, bbox.getHeight() / 2f,0);
-        cam.update();
+//        BoundingBox bbox = new BoundingBox();
+//        model.calculateBoundingBox(bbox);
+//        cam.position.z = bbox.getHeight();
+//        cam.position.y = bbox.getHeight() ;
+//        cam.lookAt(0, bbox.getHeight() / 2f,0);
+//        cam.update();
 
         numMeshes = instance.model.meshes.size;
         for(int i = 0; i < numMeshes; i++){
@@ -125,7 +127,8 @@ public class LoadGLTFTest extends GdxTest {
             numIndices += instance.model.meshes.get(i).getNumIndices();
         }
 
-		controller = new PerspectiveCamController(cam);
+		controller = new CameraInputController(cam);
+
 		Gdx.input.setInputProcessor(controller);
         viewport = new ScreenViewport();
 		batch = new WgSpriteBatch();

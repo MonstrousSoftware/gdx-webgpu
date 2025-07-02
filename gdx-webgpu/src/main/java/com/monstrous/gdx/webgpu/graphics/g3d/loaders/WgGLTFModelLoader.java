@@ -25,7 +25,6 @@ import com.badlogic.gdx.utils.*;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.gltf.*;
 import com.monstrous.gdx.webgpu.graphics.g3d.model.PBRModelTexture;
 import com.monstrous.gdx.webgpu.graphics.g3d.model.WgModelMeshPart;
-import org.jetbrains.annotations.NotNull;
 
 
 import java.util.ArrayList;
@@ -51,14 +50,10 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
 
 	@Override
 	public ModelData loadModelData (FileHandle fileHandle, ModelParameters parameters) {
-		return parseModel(fileHandle);
-	}
-
-	public ModelData parseModel (@NotNull FileHandle handle) {
         // create path to find additional resources
-        int lastSlashPos = handle.path().lastIndexOf('/');
-        String path = handle.path().substring(0, lastSlashPos + 1);
-        String json = handle.readString();
+        int lastSlashPos = fileHandle.path().lastIndexOf('/');
+        String path = fileHandle.path().substring(0, lastSlashPos + 1);
+        String json = fileHandle.readString();
 
         /* Read file into a GLTF class hierarchy. */
         GLTF gltf = ParserGLTF.parseJSON( json, path);
@@ -192,7 +187,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                 PBRModelTexture tex = new PBRModelTexture();
                 tex.usage = ModelTexture.USAGE_DIFFUSE;
                 tex.id = gltfMat.name;
-                loadTexture(gltf, tex, image);
+                loadTexture(gltf, tex, image, textureId);
 
                 modelMaterial.textures.add(tex);
             }
@@ -202,7 +197,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                 PBRModelTexture tex = new PBRModelTexture();
                 tex.usage = PBRModelTexture.USAGE_METALLIC_ROUGHNESS;
                 tex.id = gltfMat.name;
-                loadTexture(gltf, tex, image);
+                loadTexture(gltf, tex, image, textureId);
 
                 modelMaterial.textures.add(tex);
             }
@@ -211,7 +206,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                 PBRModelTexture tex = new PBRModelTexture();
                 tex.usage = ModelTexture.USAGE_NORMAL;
                 tex.id = gltfMat.name;
-                loadTexture(gltf, tex, image);
+                loadTexture(gltf, tex, image, gltfMat.normalTexture);
                 modelMaterial.textures.add(tex);
             }
             if(gltfMat.emissiveTexture >= 0){
@@ -219,7 +214,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                 PBRModelTexture tex = new PBRModelTexture();
                 tex.usage = ModelTexture.USAGE_EMISSIVE;
                 tex.id = gltfMat.name;
-                loadTexture(gltf, tex, image);
+                loadTexture(gltf, tex, image, gltfMat.emissiveTexture);
                 modelMaterial.textures.add(tex);
             }
             if(gltfMat.occlusionTexture >= 0){
@@ -227,7 +222,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                 PBRModelTexture tex = new PBRModelTexture();
                 tex.usage = PBRModelTexture.USAGE_OCCLUSION;
                 tex.id = gltfMat.name;
-                loadTexture(gltf, tex, image);
+                loadTexture(gltf, tex, image, gltfMat.occlusionTexture);
                 modelMaterial.textures.add(tex);
             }
 
@@ -238,14 +233,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
         ModelMaterial modelMaterial = new ModelMaterial();
         modelMaterial.textures = new Array<>();
         modelMaterial.id = "default";
-        PBRModelTexture tex = new PBRModelTexture();
-        tex.usage = ModelTexture.USAGE_DIFFUSE;
-        tex.id = "default";
-        tex.pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888 );
-        tex.pixmap.setColor(Color.PURPLE);
-        tex.pixmap.fill();
-        tex.fileName = "default";
-        modelMaterial.textures.add(tex);
+        modelMaterial.diffuse = Color.PINK;
         modelData.materials.add(modelMaterial);
         fallbackMaterialId = modelData.materials.size-1;
 
@@ -291,7 +279,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
     }
 
     /** load image information: either a filename (to be loaded later) or a Pixmap. */
-    private void loadTexture(GLTF gltf, PBRModelTexture tex, GLTFImage image){
+    private void loadTexture(GLTF gltf, PBRModelTexture tex, GLTFImage image, int textureId){
         if(image.uri != null ) {
             if (image.uri.startsWith("data:")) {
                 throw new RuntimeException("GLTF: data uri not supported"); // todo
@@ -310,6 +298,38 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
             tex.pixmap = new Pixmap(bytes, 0, view.byteLength );
             tex.fileName = "bufferView."+image.bufferView;  // create a unique 'filename' that can be used as key for caching
         }
+        GLTFSampler sampler = gltf.samplers.get(gltf.textures.get(textureId).sampler);
+        tex.minFilter = convertFilter(sampler.minFilter);
+        tex.magFilter = convertFilter(sampler.magFilter);
+        tex.wrapS = convertWrap(sampler.wrapS);
+        tex.wrapT = convertWrap(sampler.wrapT);
+    }
+
+    /** convert from GL code to libgdx TextureFilter value */
+    Texture.TextureFilter convertFilter(int glFilter ){
+        Texture.TextureFilter filter;
+        switch(glFilter){
+            case GL20.GL_NEAREST: filter = Texture.TextureFilter.Nearest; break;
+            case GL20.GL_LINEAR: filter = Texture.TextureFilter.Linear; break;
+            case GL20.GL_LINEAR_MIPMAP_LINEAR: filter = Texture.TextureFilter.MipMap; break;
+            case GL20.GL_NEAREST_MIPMAP_NEAREST: filter = Texture.TextureFilter.MipMapNearestNearest; break;
+            case GL20.GL_LINEAR_MIPMAP_NEAREST: filter = Texture.TextureFilter.MipMapLinearNearest; break;
+            case GL20.GL_NEAREST_MIPMAP_LINEAR: filter = Texture.TextureFilter.MipMapNearestLinear; break;
+            default:filter = Texture.TextureFilter.Nearest; break;
+
+        }
+        return filter;
+    }
+
+    Texture.TextureWrap convertWrap( int glWrap ){
+        Texture.TextureWrap wrap;
+        switch(glWrap){
+            case GL20.GL_MIRRORED_REPEAT: wrap = Texture.TextureWrap.MirroredRepeat; break;
+            case GL20.GL_CLAMP_TO_EDGE: wrap = Texture.TextureWrap.ClampToEdge; break;
+            case GL20.GL_REPEAT:
+            default:                wrap = Texture.TextureWrap.Repeat; break;
+        }
+        return wrap;
     }
 
 

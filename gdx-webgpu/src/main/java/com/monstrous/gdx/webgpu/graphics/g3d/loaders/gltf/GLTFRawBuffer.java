@@ -11,10 +11,10 @@ import java.nio.ByteOrder;
 // to load a bin file
 public class GLTFRawBuffer {
     public String path;
-    public byte[] data;
     public ByteBuffer byteBuffer;
 
     public GLTFRawBuffer(String uri) {
+        byte[] data;
         if(uri.startsWith("data:")){
             this.path = "data uri"; // e.g.  "data:application/octet-stream;base64,AAABAAIAAAAAAAAAAAAAAAAAAAAAAIA/AAAAAAAAAAAAAAAAAACAPwAAAAA="
             int commaPosition = uri.indexOf(',');
@@ -32,7 +32,6 @@ public class GLTFRawBuffer {
 
     public GLTFRawBuffer(ByteBuffer byteBuffer) {
         this.path = "internal";
-
         this.byteBuffer = byteBuffer;
         byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
     }

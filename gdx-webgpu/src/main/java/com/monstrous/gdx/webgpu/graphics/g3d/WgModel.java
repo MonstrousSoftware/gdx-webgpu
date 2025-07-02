@@ -157,10 +157,18 @@ public class WgModel extends Model {
 				}
 
 				TextureDescriptor<Texture> descriptor = new TextureDescriptor<>(texture);
-				descriptor.minFilter = texture.getMinFilter();
-				descriptor.magFilter = texture.getMagFilter();
-				descriptor.uWrap = texture.getUWrap();
-				descriptor.vWrap = texture.getVWrap();
+                if(tex instanceof PBRModelTexture){
+                    PBRModelTexture pbrTex = (PBRModelTexture)tex;
+                    descriptor.minFilter = pbrTex.minFilter;
+                    descriptor.magFilter = pbrTex.magFilter;
+                    descriptor.uWrap = pbrTex.wrapS;
+                    descriptor.vWrap = pbrTex.wrapT;
+                } else {
+                    descriptor.minFilter = texture.getMinFilter();
+                    descriptor.magFilter = texture.getMagFilter();
+                    descriptor.uWrap = texture.getUWrap();
+                    descriptor.vWrap = texture.getVWrap();
+                }
 
 				float offsetU = tex.uvTranslation == null ? 0f : tex.uvTranslation.x;
 				float offsetV = tex.uvTranslation == null ? 0f : tex.uvTranslation.y;
