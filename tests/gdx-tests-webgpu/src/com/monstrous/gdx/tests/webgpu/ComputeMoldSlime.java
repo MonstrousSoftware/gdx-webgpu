@@ -149,7 +149,7 @@ public class ComputeMoldSlime extends GdxTest {
 
 
         // for simplicity, we use the same bind group layout for all steps, although the agents array is only used in step 1.
-        WebGPUBindGroupLayout bindGroupLayout = makeBindGroupLayout();
+        BindGroupLayout bindGroupLayout = makeBindGroupLayout();
         WebGPUPipelineLayout pipelineLayout = new WebGPUPipelineLayout("slime pipeline layout", bindGroupLayout);
         pipeline1 = new WebGPUComputePipeline(shader, "moveAgents", pipelineLayout);
         pipeline2 = new WebGPUComputePipeline(shader, "evaporate", pipelineLayout);
@@ -275,8 +275,8 @@ public class ComputeMoldSlime extends GdxTest {
 
 
 
-    private WebGPUBindGroupLayout makeBindGroupLayout(){
-        WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout();
+    private BindGroupLayout makeBindGroupLayout(){
+        BindGroupLayout layout = new BindGroupLayout();
         layout.begin();
         layout.addBuffer(0, WGPUShaderStage.Compute, WGPUBufferBindingType.Uniform,  uniformSize, false );
         layout.addBuffer(1, WGPUShaderStage.Compute, WGPUBufferBindingType.Storage, (long) agentSize * config.numAgents, false );
@@ -286,7 +286,7 @@ public class ComputeMoldSlime extends GdxTest {
         return layout;
     }
 
-    private WebGPUBindGroup makeBindGroup(WebGPUBindGroupLayout bindGroupLayout, WebGPUUniformBuffer uniforms, WebGPUBuffer agents, WebGPUTextureView inView, WebGPUTextureView textureView){
+    private WebGPUBindGroup makeBindGroup(BindGroupLayout bindGroupLayout, WebGPUUniformBuffer uniforms, WebGPUBuffer agents, WebGPUTextureView inView, WebGPUTextureView textureView){
         WebGPUBindGroup bg = new WebGPUBindGroup(bindGroupLayout);
         bg.begin();
         bg.setBuffer(0, uniforms);

@@ -6,17 +6,28 @@ group = 'com.badlogic.gdx.webgpu'
 version = '1.0'
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
+repositories {
+  mavenLocal()
 }
 
 dependencies {
+  api 'com.github.xpenatan.jWebGPU:webgpu-core:-SNAPSHOT'
+  api 'com.github.xpenatan.jWebGPU:webgpu-desktop:-SNAPSHOT'
+
   api "com.badlogicgames.gdx:gdx:$gdxVersion"
   implementation 'com.github.jnr:jnr-ffi:2.2.17'
+
+  // following is desktop only???
   implementation 'org.lwjgl:lwjgl-glfw:3.3.3'
   implementation 'org.lwjgl:lwjgl:3.3.3'
   implementation 'org.lwjgl:lwjgl-opengl:3.3.3'
   implementation 'org.jetbrains:annotations:24.0.0'
+
+
 
 }
 

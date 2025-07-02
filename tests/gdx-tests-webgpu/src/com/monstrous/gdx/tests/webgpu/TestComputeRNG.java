@@ -74,7 +74,7 @@ public class TestComputeRNG extends GdxTest {
 
 
         // make a pipeline
-        WebGPUBindGroupLayout bindGroupLayout = makeBindGroupLayout();
+        BindGroupLayout bindGroupLayout = makeBindGroupLayout();
         WebGPUBindGroup bindGroup = makeBindGroup(bindGroupLayout);
 
         WebGPUPipelineLayout pipelineLayout = new WebGPUPipelineLayout("compute pipeline layout", bindGroupLayout);
@@ -97,8 +97,8 @@ public class TestComputeRNG extends GdxTest {
 
 
 
-    private WebGPUBindGroupLayout makeBindGroupLayout(){
-        WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout();
+    private BindGroupLayout makeBindGroupLayout(){
+        BindGroupLayout layout = new BindGroupLayout();
         layout.begin();
         layout.addTexture(0, WGPUShaderStage.Compute, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D, false);
         layout.addStorageTexture(1, WGPUShaderStage.Compute, WGPUStorageTextureAccess.WriteOnly, WGPUTextureFormat.RGBA8Unorm, WGPUTextureViewDimension._2D);
@@ -106,7 +106,7 @@ public class TestComputeRNG extends GdxTest {
         return layout;
     }
 
-    private WebGPUBindGroup makeBindGroup(WebGPUBindGroupLayout bindGroupLayout){
+    private WebGPUBindGroup makeBindGroup(BindGroupLayout bindGroupLayout){
         WebGPUBindGroup bg = new WebGPUBindGroup(bindGroupLayout);
         bg.begin();
         bg.setTexture(0, textureViews[pingPong]);

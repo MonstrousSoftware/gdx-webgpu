@@ -32,7 +32,7 @@ import java.util.Map;
  */
 public class Binder implements Disposable {
     private final BindingDictionary bindMap;
-    private final Map<Integer, WebGPUBindGroupLayout> groupLayouts;
+    private final Map<Integer, BindGroupLayout> groupLayouts;
     private final Map<Integer, WebGPUBindGroup> groups;
     private final Map<Integer, BufferInfo> buffers;
     private WebGPUPipelineLayout pipelineLayout;
@@ -56,7 +56,7 @@ public class Binder implements Disposable {
         buffers = new HashMap<>();
     }
 
-    public void defineGroup(int groupId, WebGPUBindGroupLayout layout){
+    public void defineGroup(int groupId, BindGroupLayout layout){
         groupLayouts.put(groupId, layout);
     }
 
@@ -184,7 +184,7 @@ public class Binder implements Disposable {
     public WebGPUBindGroup getBindGroup(int groupId){
         WebGPUBindGroup bindGroup = groups.get(groupId);
         if(bindGroup == null){
-            WebGPUBindGroupLayout layout = groupLayouts.get(groupId);
+            BindGroupLayout layout = groupLayouts.get(groupId);
             if(layout == null) throw new RuntimeException("Group "+groupId+" not defined. Use defineGroup()");
             bindGroup = new WebGPUBindGroup(layout);
             groups.put(groupId, bindGroup);
@@ -197,11 +197,11 @@ public class Binder implements Disposable {
         // note: if label changes, this does not invalidate an existing pipeline layout
         // the method will return the cached layout with the original label.
         if(pipelineLayout == null){
-            WebGPUBindGroupLayout[] layouts = new WebGPUBindGroupLayout[groupLayouts.size()];
+            BindGroupLayout[] layouts = new BindGroupLayout[groupLayouts.size()];
 
             // does this need to be in sequential order of group id? Can group id's skip numbers?
             int i = 0;
-            for(WebGPUBindGroupLayout layout : groupLayouts.values())
+            for(BindGroupLayout layout : groupLayouts.values())
                 layouts[i++] = layout;
             pipelineLayout = new WebGPUPipelineLayout(label, layouts);
         }

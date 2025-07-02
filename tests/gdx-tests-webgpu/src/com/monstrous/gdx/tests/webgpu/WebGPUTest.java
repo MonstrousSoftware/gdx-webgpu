@@ -43,7 +43,7 @@ public class WebGPUTest {
 			gfx = (WgGraphics)Gdx.graphics;
             webgpu = gfx.getContext();
 			app = (WgDesktopApplication)Gdx.app;
-			webGPU = app.getWebGPU();
+			webGPU = gfx.getWebGPU();
 			pipeline = initPipeline();
 		}
 

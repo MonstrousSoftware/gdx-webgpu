@@ -49,7 +49,7 @@ public class WgSpriteBatch implements Batch {
     private WebGPUVertexBuffer vertexBuffer;
     private WebGPUIndexBuffer indexBuffer;
     private WebGPUUniformBuffer uniformBuffer;
-    private final WebGPUBindGroupLayout bindGroupLayout;
+    private final BindGroupLayout bindGroupLayout;
     private final VertexAttributes vertexAttributes;
     private final WebGPUPipelineLayout pipelineLayout;
     private final PipelineSpecification pipelineSpec;
@@ -1001,8 +1001,8 @@ public class WgSpriteBatch implements Batch {
         binder.setUniform("projectionViewTransform", combinedMatrix);
     }
 
-    private WebGPUBindGroupLayout createBindGroupLayout() {
-        WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("SpriteBatch bind group layout");
+    private BindGroupLayout createBindGroupLayout() {
+        BindGroupLayout layout = new BindGroupLayout("SpriteBatch bind group layout");
         layout.begin();
         layout.addBuffer(0, WGPUShaderStage.Vertex, WGPUBufferBindingType.Uniform, uniformBufferSize, true);
         layout.addTexture(1, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D, false);

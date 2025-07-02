@@ -6,35 +6,50 @@ import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Disposable;
+import com.github.xpenatan.webgpu.WGPUAdapterType;
+import com.github.xpenatan.webgpu.WGPUBackendType;
+import com.github.xpenatan.webgpu.WGPUCallbackMode;
+import com.github.xpenatan.webgpu.WGPUErrorType;
+import com.github.xpenatan.webgpu.WGPUFeatureName;
+import com.github.xpenatan.webgpu.WGPURequestAdapterStatus;
+import com.github.xpenatan.webgpu.WGPURequestDeviceStatus;
+import com.github.xpenatan.webgpu.WebGPUAdapter;
+import com.github.xpenatan.webgpu.WebGPUDevice;
+import com.github.xpenatan.webgpu.WebGPUQueue;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
-import com.monstrous.gdx.webgpu.utils.JavaWebGPU;
-import com.monstrous.gdx.webgpu.webgpu.*;
-import com.monstrous.gdx.webgpu.wrappers.*;
+import com.monstrous.gdx.webgpu.webgpu.WGPUSupportedLimits;
+import com.monstrous.gdx.webgpu.wrappers.GPUTimer;
 import jnr.ffi.Pointer;
+import com.github.xpenatan.webgpu.*;
 
 /** WebGPU graphics context. Used to initialize and terminate WebGPU and to render frames.
  * Also provides shared WebGPU resources, like the device, the default queue, the surface etc.
  */
 public class WebGPUContext implements WebGPUContextBase, Disposable {
 
+    public WebGPUInstance instance;
+    public WebGPUAdapter adapter;
     public WebGPUDevice device;
+    public WebGPUSurface surface;
     public WebGPUQueue queue;
-    public Pointer surface;
+    public WebGPUCommandEncoder encoder;
+    private final WebGPUCommandBuffer command;
+
+    public InitState initState;
+
     public WGPUTextureFormat surfaceFormat;
-    public Pointer targetView;
-    public WebGPUCommandEncoder commandEncoder;
+    public WebGPUTextureView targetView;
     public WgTexture depthTexture;
 
-    private final WebGPU_JNI webGPU;
+    //private final WebGPU_JNI webGPU;
     private WGPUSupportedLimits supportedLimits;
     private WgTexture multiSamplingTexture;
-    private final GPUTimer gpuTimer;
+    private  GPUTimer gpuTimer;
     private final Configuration config;
     private final Rectangle viewportRectangle = new Rectangle();
     private boolean scissorEnabled = false;
     private Rectangle scissor;
     private int width, height;
-    private float[] gpuTime = new float[GPUTimer.MAX_PASSES];
 
 
     public static class Configuration {
@@ -53,35 +68,161 @@ public class WebGPUContext implements WebGPUContextBase, Disposable {
         }
     }
 
-    public WebGPUContext(WebGPU_JNI webGPU, Configuration config) {
-        this.webGPU = webGPU;
+
+    public WebGPUContext(Configuration config) {
+        //this.webGPU = webGPU;
         this.config = config;
 
-        Pointer instance = webGPU.wgpuCreateInstance(null);
+        // create instance, adapter, device and queue
+        init();
 
-        surface = JavaWebGPU.getUtils().glfwGetWGPUSurface(instance, config.windowHandle);
-        WebGPUAdapter adapter = new WebGPUAdapter(instance, surface, config.requestedBackendType, WGPUPowerPreference.HighPerformance);
+        command = new WebGPUCommandBuffer();
 
-        device = new WebGPUDevice(adapter, config.gpuTimingEnabled);
+        if(surface != null) {
+            System.out.println("Surface created");
+            WebGPUSurfaceCapabilities surfaceCapabilities = new WebGPUSurfaceCapabilities();
+            surface.getCapabilities(adapter, surfaceCapabilities);
+            surfaceFormat = surfaceCapabilities.getFormats(0);
+            System.out.println("surfaceFormat: " + surfaceFormat);
+
+            // initSwapChain will be done via resize()
+
+            // Release the adapter only after it has been fully utilized
+            adapter.release();
+            adapter.dispose();
+            adapter = null;
+        }
+        else {
+            System.out.println("Surface not created");
+        }
+
+//        surface = JavaWebGPU.getUtils().glfwGetWGPUSurface(instance, config.windowHandle);
+//        WebGPUAdapter adapter = new WebGPUAdapter(instance, surface, config.requestedBackendType, WGPUPowerPreference.HighPerformance);
+
+       // device = new WebGPUDevice(adapter, config.gpuTimingEnabled);
 
         // Find out the preferred surface format of the window
-        WGPUSurfaceCapabilities caps = WGPUSurfaceCapabilities.createDirect();
-        webGPU.wgpuSurfaceGetCapabilities(surface, adapter.getHandle(), caps);
-        Pointer formats = caps.getFormats();
-        int format = formats.getInt(0);
-        surfaceFormat = WGPUTextureFormat.values()[format];
+//        WGPUSurfaceCapabilities caps = WGPUSurfaceCapabilities.createDirect();
+//        webGPU.wgpuSurfaceGetCapabilities(surface, adapter.getHandle(), caps);
+//        Pointer formats = caps.getFormats();
+//        int format = formats.getInt(0);
+//        surfaceFormat = WGPUTextureFormat.values()[format];
 
-        adapter.dispose();  // finished with adapter now that we have a device
+        // todo webGPU.wgpuInstanceRelease(instance); // we can release the instance now that we have the device
+        // do we need instance for processEvents?
 
-        webGPU.wgpuInstanceRelease(instance); // we can release the instance now that we have the device
+        //gpuTimer = new GPUTimer(device, config.gpuTimingEnabled);
 
-        queue = new WebGPUQueue(device);
-
-        gpuTimer = new GPUTimer(device, config.gpuTimingEnabled);
-
-        // create a swap chain via resize
     }
 
+    private void init() {
+        WebGPUInstance instance = WGPU.createInstance();
+        if(instance.isValid()) {
+            initState = InitState.INSTANCE_VALID;
+            this.instance = instance;
+            requestAdapter();
+        }
+        else {
+            initState = InitState.INSTANCE_NOT_VALID;
+            instance.dispose();
+        }
+    }
+
+    private void requestAdapter() {
+        WebGPURequestAdapterOptions op = WebGPURequestAdapterOptions.obtain();
+        RequestAdapterCallback callback = new RequestAdapterCallback() {
+            @Override
+            protected void onCallback(WGPURequestAdapterStatus status, WebGPUAdapter adapter) {
+                System.out.println("Adapter Status: " + status);
+                if(status == WGPURequestAdapterStatus.Success) {
+                    initState = InitState.ADAPTER_VALID;
+                    WebGPUContext.this.adapter = adapter;
+                    requestDevice();
+                }
+                else {
+                    initState = InitState.ADAPTER_NOT_VALID;
+                }
+            }
+        };
+        instance.requestAdapter(op, WGPUCallbackMode.AllowProcessEvents, callback);
+    }
+
+
+    private void requestDevice() {
+        WebGPUAdapterInfo info = WebGPUAdapterInfo.obtain();
+        if(adapter.getInfo(info)) {
+            WGPUBackendType backendType = info.getBackendType();
+            System.out.println("BackendType: " + backendType);
+            WGPUAdapterType adapterType = info.getAdapterType();
+            System.out.println("AdapterType: " + adapterType);
+            String vendor = info.getVendor().c_str();
+            System.out.println("Vendor: " + vendor);
+            String architecture = info.getArchitecture().c_str();
+            System.out.println("Architecture: " + architecture);
+            String description = info.getDescription().c_str();
+            System.out.println("Description: " + description);
+            String device = info.getDevice().c_str();
+            System.out.println("Device: " + device);
+            System.out.println("Has Feature DepthClipControl: " + adapter.hasFeature(WGPUFeatureName.DepthClipControl));
+        }
+
+        WebGPUDeviceDescriptor deviceDescriptor = WebGPUDeviceDescriptor.obtain();
+        WebGPULimits limits = WebGPULimits.obtain();
+        setDefaultLimits(limits);
+        deviceDescriptor.setRequiredLimits(limits);
+        deviceDescriptor.setLabel("My Device");
+
+        WGPUVectorFeatureName features = WGPUVectorFeatureName.obtain();
+        features.push_back(WGPUFeatureName.DepthClipControl);
+        deviceDescriptor.setRequiredFeatures(features);
+
+        deviceDescriptor.getDefaultQueue().setLabel("The default queue");
+
+        adapter.requestDevice(deviceDescriptor, WGPUCallbackMode.AllowProcessEvents, new RequestDeviceCallback() {
+            @Override
+            protected void onCallback(WGPURequestDeviceStatus status, WebGPUDevice device) {
+                System.out.println("Device Status: " + status);
+                if(status == WGPURequestDeviceStatus.Success) {
+                    initState = InitState.DEVICE_VALID;
+                    WebGPUContext.this.device = device;
+                    queue = device.getQueue();
+                    System.out.println("Platform: " + WGPU.getPlatformType());
+
+                    WebGPUSupportedFeatures features = WebGPUSupportedFeatures.obtain();
+                    device.getFeatures(features);
+                    int featureCount = features.getFeatureCount();
+                    System.out.println("Total Features: " + featureCount);
+                    for(int i = 0; i < featureCount; i++) {
+                        WGPUFeatureName featureName = features.getFeatureAt(i);
+                        System.out.println("Feature name: " + featureName);
+                    }
+                    features.dispose();
+
+                    WebGPULimits limits = WebGPULimits.obtain();
+                    device.getLimits(limits);
+                    System.out.println("Device limits: " + featureCount);
+                    System.out.println("MaxTextureDimension1D: " + limits.getMaxTextureDimension1D());
+                    System.out.println("MaxTextureDimension2D: " + limits.getMaxTextureDimension2D());
+                    System.out.println("MaxTextureDimension3D: " + limits.getMaxTextureDimension3D());
+                    System.out.println("MaxTextureArrayLayers: " + limits.getMaxTextureArrayLayers());
+                }
+                else {
+                    initState = InitState.DEVICE_NOT_VALID;
+                }
+            }
+        }, new UncapturedErrorCallback() {
+            @Override
+            protected void onCallback(WGPUErrorType errorType, String message) {
+                System.err.println("ErrorType: " + errorType);
+                System.err.println("Error Message: " + message);
+                initState = InitState.ERROR;
+            }
+        });
+    }
+
+    public boolean isReady() {
+        return initState == InitState.DEVICE_VALID;
+    }
 
     /** returns null if gpu timing is not enabled in application configuration. */
     @Override
@@ -97,69 +238,112 @@ public class WebGPUContext implements WebGPUContextBase, Disposable {
 
 
     public void renderFrame (ApplicationListener listener) {
+        WebGPUTextureView textureView = getNextSurfaceTextureView();
 
-        targetView = getNextSurfaceTextureView();
-        if (targetView.address() == 0) {
-            System.out.println("*** Invalid target view");
-            return;
-        }
+        WebGPUCommandEncoderDescriptor encoderDesc = WebGPUCommandEncoderDescriptor.obtain();
+        encoderDesc.setLabel("My command encoder");
+        device.createCommandEncoder(encoderDesc, encoder);
 
-        // obtain a command encoder
-        commandEncoder = new WebGPUCommandEncoder(device);
+        listener.render();
 
-        listener.render();	// call user code
+//        WebGPURenderPassColorAttachment renderPassColorAttachment = WebGPURenderPassColorAttachment.obtain();
+//        renderPassColorAttachment.setView(textureView);
+//        renderPassColorAttachment.setResolveTarget(null);
+//        renderPassColorAttachment.setLoadOp(WGPULoadOp.Clear);
+//        renderPassColorAttachment.setStoreOp(WGPUStoreOp.Store);
+//        renderPassColorAttachment.getClearValue().setColor(r, g, b, 1.0f);
+//
+//        WGPUVectorRenderPassColorAttachment colorAttachmentVector = WGPUVectorRenderPassColorAttachment.obtain();
+//        colorAttachmentVector.push_back(renderPassColorAttachment);
+//
+//        WebGPURenderPassDescriptor renderPassDesc  = WebGPURenderPassDescriptor.obtain();
+//        renderPassDesc.setColorAttachments(colorAttachmentVector);
+//        renderPassDesc.setDepthStencilAttachment(null);
+//        renderPassDesc.setTimestampWrites(null);
+//        encoder.beginRenderPass(renderPassDesc, renderPass);
+//
+//        renderPass.setPipeline(pipeline);
+//        renderPass.draw(3, 1, 0, 0);
+//
+//        renderPass.end();
+//        renderPass.release();
 
         // resolve time stamps after render pass end and before encoder finish
-        gpuTimer.resolveTimeStamps(commandEncoder);
+        // todo gpuTimer.resolveTimeStamps(encoder);
 
-        // finish command encoder to get a command buffer
-        WebGPUCommandBuffer commandBuffer = commandEncoder.finish();
-        commandEncoder.dispose();
-        commandEncoder = null;
-        queue.submit(commandBuffer);	// submit command buffer
-        commandBuffer.dispose();
+        WebGPUCommandBufferDescriptor cmdBufferDescriptor = WebGPUCommandBufferDescriptor.obtain();
+        cmdBufferDescriptor.setNextInChain(null);
+        cmdBufferDescriptor.setLabel("Command buffer");
+        encoder.finish(cmdBufferDescriptor, command);
+        encoder.release();
 
-        // fetch time stamps after submitting the command buffer
-        gpuTimer.fetchTimestamps();
+        queue.submit(1, command);
+        command.release();
 
-        // At the end of the frame
-        webGPU.wgpuTextureViewRelease(targetView);
-        webGPU.wgpuSurfacePresent(surface);
-        targetView = null;
-        device.tick();
+        textureView.release();
+
+        if(WGPU.getPlatformType() != WGPUPlatformType.WGPU_Web) {
+            surface.present();
+        }
     }
 
 
+//    public void renderFrameORIG (ApplicationListener listener) {
+//
+//        targetView = getNextSurfaceTextureView();
+//        if (targetView.address() == 0) {
+//            System.out.println("*** Invalid target view");
+//            return;
+//        }
+//
+//        // obtain a command encoder
+//        commandEncoder = new WebGPUCommandEncoder(device);
+//
+//        listener.render();	// call user code
+//
+//        // resolve time stamps after render pass end and before encoder finish
+//        gpuTimer.resolveTimeStamps(commandEncoder);
+//
+//        // finish command encoder to get a command buffer
+//        WebGPUCommandBuffer commandBuffer = commandEncoder.finish();
+//        commandEncoder.dispose();
+//        commandEncoder = null;
+//        queue.submit(commandBuffer);	// submit command buffer
+//        commandBuffer.dispose();
+//
+//        // fetch time stamps after submitting the command buffer
+//        gpuTimer.fetchTimestamps();
+//
+//        // At the end of the frame
+//        webGPU.wgpuTextureViewRelease(targetView);
+//        webGPU.wgpuSurfacePresent(surface);
+//        targetView = null;
+//        device.tick();
+//    }
 
-    private Pointer getNextSurfaceTextureView () {
-        // [...] Get the next surface texture
-        WGPUSurfaceTexture surfaceTexture = WGPUSurfaceTexture.createDirect();
-        webGPU.wgpuSurfaceGetCurrentTexture(surface, surfaceTexture);
-        // System.out.println("get current texture: "+surfaceTexture.status.get());
-        if (surfaceTexture.getStatus() != WGPUSurfaceGetCurrentTextureStatus.Success) {
-            System.out.println("*** No current texture");
-            return JavaWebGPU.createNullPointer();
-        }
+    private WebGPUTextureView getNextSurfaceTextureView() {
 
-        // [...] Create surface texture view
-        WGPUTextureViewDescriptor viewDescriptor = WGPUTextureViewDescriptor.createDirect();
-        viewDescriptor.setNextInChain();
+        WebGPUSurfaceTexture surfaceTextureOut = WebGPUSurfaceTexture.obtain();
+        surface.getCurrentTexture(surfaceTextureOut);
+
+        WebGPUTexture textureOut = WebGPUTexture.obtain();
+        surfaceTextureOut.getTexture(textureOut);
+
+        WGPUTextureFormat textureFormat = textureOut.getFormat();
+
+        WebGPUTextureViewDescriptor viewDescriptor = WebGPUTextureViewDescriptor.obtain();
         viewDescriptor.setLabel("Surface texture view");
-        Pointer tex = surfaceTexture.getTexture();
-        WGPUTextureFormat format = webGPU.wgpuTextureGetFormat(tex);
-        // System.out.println("Set format "+format);
-        viewDescriptor.setFormat(format);
+        viewDescriptor.setFormat(textureFormat);
         viewDescriptor.setDimension(WGPUTextureViewDimension._2D);
         viewDescriptor.setBaseMipLevel(0);
         viewDescriptor.setMipLevelCount(1);
         viewDescriptor.setBaseArrayLayer(0);
         viewDescriptor.setArrayLayerCount(1);
         viewDescriptor.setAspect(WGPUTextureAspect.All);
-        Pointer view = webGPU.wgpuTextureCreateView(surfaceTexture.getTexture(), viewDescriptor);
-
-        // we can release the texture now as the texture view now has its own reference to it
-        webGPU.wgpuTextureRelease(surfaceTexture.getTexture());
-        return view;
+        WebGPUTextureView textureViewOut = WebGPUTextureView.obtain();
+        textureOut.createView(viewDescriptor, textureViewOut);
+        textureOut.release();
+        return textureViewOut;
     }
 
     public void resize(int width, int height){
@@ -174,11 +358,11 @@ public class WebGPUContext implements WebGPUContextBase, Disposable {
         initSwapChain(width, height, config.vSyncEnabled);
         initDepthBuffer(width, height, config.numSamples);
 
-        if(config.numSamples > 1 ) {
-            if(multiSamplingTexture != null)
-                multiSamplingTexture.dispose();
-            multiSamplingTexture = new WgTexture("multisampling", width, height, false, true, surfaceFormat, config.numSamples);
-        }
+//        if(config.numSamples > 1 ) {
+//            if(multiSamplingTexture != null)
+//                multiSamplingTexture.dispose();
+//            multiSamplingTexture = new WgTexture("multisampling", width, height, false, true, surfaceFormat, config.numSamples);
+//        }
 
         if(scissor == null)
             scissor = new Rectangle();
@@ -231,36 +415,31 @@ public class WebGPUContext implements WebGPUContextBase, Disposable {
         return scissor;
     }
 
-
-
-    private void initSwapChain (int width, int height, boolean vsyncEnabled) {
-        // configure the surface
-        //System.out.println("initSwapChain: "+width+" x "+height);
-        WGPUSurfaceConfiguration config = WGPUSurfaceConfiguration.createDirect();
-        config.setNextInChain()
-            .setWidth(width)
-            .setHeight(height)
-            .setFormat(surfaceFormat)
-            .setViewFormatCount(0)
-            .setViewFormats(JavaWebGPU.createNullPointer())
-            .setUsage(WGPUTextureUsage.RenderAttachment)
-            .setDevice(device.getHandle())
-            .setPresentMode(vsyncEnabled ? WGPUPresentMode.Fifo : WGPUPresentMode.Immediate)
-            .setAlphaMode(WGPUCompositeAlphaMode.Auto);
-
-        webGPU.wgpuSurfaceConfigure(surface, config);
+    private void initSwapChain(int width, int height, boolean vsyncEnabled) {
+        WebGPUSurfaceConfiguration config = WebGPUSurfaceConfiguration.obtain();
+        config.setWidth(width);
+        config.setHeight(height);
+        config.setFormat(surfaceFormat);
+        config.setViewFormats(null);
+        config.setUsage(WGPUTextureUsage.RenderAttachment);
+        config.setDevice(device);
+        config.setPresentMode(vsyncEnabled ? WGPUPresentMode.Fifo : WGPUPresentMode.Immediate);
+        config.setAlphaMode(WGPUCompositeAlphaMode.Auto);
+        surface.configure(config);
     }
+
 
     private void exitSwapChain(){
         //System.out.println("exitSwapChain");
         if(surface != null)
-            webGPU.wgpuSurfaceUnconfigure(surface);
+            surface.unconfigure();
     }
 
     private void initDepthBuffer(int width, int height, int samples){
         //System.out.println("initDepthBuffer: "+width+" x "+height);
-        depthTexture = new WgTexture("depth texture", width, height, 1, WGPUTextureUsage.RenderAttachment,
-                WGPUTextureFormat.Depth24Plus, samples, WGPUTextureFormat.Depth24Plus );
+        // todo
+//        depthTexture = new WgTexture("depth texture", width, height, 1, WGPUTextureUsage.RenderAttachment,
+//                WGPUTextureFormat.Depth24Plus, samples, WGPUTextureFormat.Depth24Plus );
     }
 
     private void terminateDepthBuffer(){
@@ -279,14 +458,15 @@ public class WebGPUContext implements WebGPUContextBase, Disposable {
         device.dispose();
         gpuTimer.dispose();
 
-        webGPU.wgpuSurfaceRelease(surface);
+        surface.release();
+        command.dispose();
 
         terminateDepthBuffer();
     }
 
-    public WebGPU_JNI getWebGPU () {
-        return webGPU;
-    }
+//    public WebGPU_JNI getWebGPU () {
+//        return webGPU;
+//    }
 
     @Override
     public WebGPUDevice getDevice() {
@@ -304,22 +484,22 @@ public class WebGPUContext implements WebGPUContextBase, Disposable {
     }
 
     @Override
-    public Pointer getTargetView () {
+    public WebGPUTextureView getTargetView () {
         return targetView;
     }
 
     /** Push a texture view to use for output, instead of the screen. */
     @Override
-    public Pointer pushTargetView(WgTexture texture, Rectangle oldViewport) {
-        Pointer prevTargetView = targetView;
-        targetView = texture.getTextureView().getHandle();
+    public WebGPUTextureView pushTargetView(WgTexture texture, Rectangle oldViewport) {
+        WebGPUTextureView prevTargetView = targetView;
+      // todo   targetView = texture.getTextureView();
         oldViewport.set(getViewportRectangle());
         setViewportRectangle(0,0,texture.getWidth(), texture.getHeight());
         return prevTargetView;
     }
 
     @Override
-    public void popTargetView(Pointer prevTargetView, Rectangle oldViewport) {
+    public void popTargetView(WebGPUTextureView prevTargetView, Rectangle oldViewport) {
         setViewportRectangle(oldViewport);
         targetView = prevTargetView;
     }
@@ -338,7 +518,7 @@ public class WebGPUContext implements WebGPUContextBase, Disposable {
 
     @Override
     public WebGPUCommandEncoder getCommandEncoder () {
-        return commandEncoder;
+        return encoder;
     }
 
 
@@ -356,7 +536,7 @@ public class WebGPUContext implements WebGPUContextBase, Disposable {
     }
 
 
-    @Override
+
     public WGPUBackendType getRequestedBackendType() {
         return config.requestedBackendType;
     }
@@ -370,5 +550,58 @@ public class WebGPUContext implements WebGPUContextBase, Disposable {
         return multiSamplingTexture;
     }
 
+    final static int WGPU_LIMIT_U32_UNDEFINED = -1;
+    final static int WGPU_LIMIT_U64_UNDEFINED = -1;
 
+    public void setDefaultLimits (WebGPULimits limits) {
+        limits.setMaxTextureDimension1D(WGPU_LIMIT_U32_UNDEFINED);
+        limits.setMaxTextureDimension2D(WGPU_LIMIT_U32_UNDEFINED);
+        limits.setMaxTextureDimension3D(WGPU_LIMIT_U32_UNDEFINED);
+        limits.setMaxTextureArrayLayers(WGPU_LIMIT_U32_UNDEFINED);
+        limits.setMaxBindGroups(WGPU_LIMIT_U32_UNDEFINED);
+        limits.setMaxBindGroupsPlusVertexBuffers(WGPU_LIMIT_U32_UNDEFINED);
+        limits.setMaxBindingsPerBindGroup(WGPU_LIMIT_U32_UNDEFINED);
+        limits.setMaxDynamicUniformBuffersPerPipelineLayout(WGPU_LIMIT_U32_UNDEFINED);
+        limits.setMaxDynamicStorageBuffersPerPipelineLayout(WGPU_LIMIT_U32_UNDEFINED);
+        limits.setMaxSampledTexturesPerShaderStage(WGPU_LIMIT_U32_UNDEFINED);
+        limits.setMaxSamplersPerShaderStage(WGPU_LIMIT_U32_UNDEFINED);
+        limits.setMaxStorageBuffersPerShaderStage(WGPU_LIMIT_U32_UNDEFINED);
+        limits.setMaxStorageTexturesPerShaderStage(WGPU_LIMIT_U32_UNDEFINED);
+        limits.setMaxUniformBuffersPerShaderStage(WGPU_LIMIT_U32_UNDEFINED);
+        limits.setMaxUniformBufferBindingSize(WGPU_LIMIT_U64_UNDEFINED);
+        limits.setMaxStorageBufferBindingSize(WGPU_LIMIT_U64_UNDEFINED);
+        limits.setMinUniformBufferOffsetAlignment(WGPU_LIMIT_U32_UNDEFINED);
+        limits.setMinStorageBufferOffsetAlignment(WGPU_LIMIT_U32_UNDEFINED);
+        limits.setMaxVertexBuffers(WGPU_LIMIT_U32_UNDEFINED);
+        limits.setMaxBufferSize(WGPU_LIMIT_U64_UNDEFINED);
+        limits.setMaxVertexAttributes(WGPU_LIMIT_U32_UNDEFINED);
+        limits.setMaxVertexBufferArrayStride(WGPU_LIMIT_U32_UNDEFINED);
+//        limits.setMaxInterStageShaderComponents(WGPU_LIMIT_U32_UNDEFINED);
+        limits.setMaxInterStageShaderVariables(WGPU_LIMIT_U32_UNDEFINED);
+        limits.setMaxColorAttachments(WGPU_LIMIT_U32_UNDEFINED);
+        limits.setMaxColorAttachmentBytesPerSample(WGPU_LIMIT_U32_UNDEFINED);
+        limits.setMaxComputeWorkgroupStorageSize(WGPU_LIMIT_U32_UNDEFINED);
+        limits.setMaxComputeInvocationsPerWorkgroup(WGPU_LIMIT_U32_UNDEFINED);
+        limits.setMaxComputeWorkgroupSizeX(WGPU_LIMIT_U32_UNDEFINED);
+        limits.setMaxComputeWorkgroupSizeY(WGPU_LIMIT_U32_UNDEFINED);
+        limits.setMaxComputeWorkgroupSizeZ(WGPU_LIMIT_U32_UNDEFINED);
+        limits.setMaxComputeWorkgroupsPerDimension(WGPU_LIMIT_U32_UNDEFINED);
+    }
+
+    enum InitState {
+        NOT_INITIALIZED(0),
+        ERROR(1),
+        INSTANCE_VALID(2),
+        ADAPTER_VALID(3),
+        DEVICE_VALID(4),
+        INSTANCE_NOT_VALID(-1),
+        ADAPTER_NOT_VALID(-2),
+        DEVICE_NOT_VALID(-3);
+
+        int status;
+
+        InitState(int status) {
+            this.status = status;
+        }
+    }
 }

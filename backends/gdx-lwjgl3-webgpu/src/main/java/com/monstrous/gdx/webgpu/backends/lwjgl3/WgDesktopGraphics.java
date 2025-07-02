@@ -19,6 +19,7 @@ package com.monstrous.gdx.webgpu.backends.lwjgl3;
 import com.badlogic.gdx.AbstractGraphics;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Rectangle;
+import com.github.xpenatan.webgpu.WGPUBackendType;
 import com.monstrous.gdx.webgpu.application.WebGPUContextBase;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.Cursor.SystemCursor;
@@ -30,10 +31,6 @@ import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.utils.WgGL20;
-import com.monstrous.gdx.webgpu.webgpu.WGPUBackendType;
-import com.monstrous.gdx.webgpu.webgpu.WGPUTextureFormat;
-import com.monstrous.gdx.webgpu.webgpu.WebGPU_JNI;
-import com.monstrous.gdx.webgpu.wrappers.*;
 import jnr.ffi.Pointer;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.PointerBuffer;
@@ -69,7 +66,7 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
 	private int windowWidthBeforeFullscreen;
 	private int windowHeightBeforeFullscreen;
 	private DisplayMode displayModeBeforeFullscreen = null;
-	private final WebGPU_JNI webGPU;
+	//private final WebGPU_JNI webGPU;
 	public final WebGPUContext context;
 
 
@@ -102,9 +99,9 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
 		}
 	};
 
-	public WgDesktopGraphics(WgDesktopWindow window, WebGPU_JNI webGPU, long win32handle) {
+	public WgDesktopGraphics(WgDesktopWindow window, long win32handle) {
 		this.window = window;
-		this.webGPU = webGPU;
+//		this.webGPU = webGPU;
 
 		this.gl20 = new WgGL20();
 		this.gl30 = null;
@@ -120,7 +117,7 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
 				app.getConfiguration().vSyncEnabled,app.getConfiguration().enableGPUtiming, app.getConfiguration().backend);
 
 
-		this.context = new WebGPUContext(webGPU, config);
+		this.context = new WebGPUContext(config);
 		context.resize(getWidth(), getHeight());
         context.setViewportRectangle(0, 0, getWidth(), getHeight());
 
@@ -130,9 +127,10 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
 	}
 
 
-	public WebGPU_JNI getWebGPU () {
-		return webGPU;
-	}
+//    @Deprecated
+//	public WebGPU_JNI getWebGPU () {
+//		return null; //webGPU;
+//	}
 
     @Override
     public WebGPUContext getContext() {
@@ -140,115 +138,11 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
     }
 
 
-    // the following getters/setters are forwarded to context
-//
-//	@Override
-//	public WebGPUDevice getDevice() {
-//		return context.getDevice();
-//	}
-//
-//	@Override
-//	public WebGPUQueue getQueue() {
-//		return context.getQueue();
-//	}
-//
-//	@Override
-//	public WGPUTextureFormat getSurfaceFormat () {
-//		return context.getSurfaceFormat();
-//	}
-//
-//	@Override
-//	public Pointer getTargetView () {
-//		return context.getTargetView();
-//	}
-//
-//    @Override
-//    public Pointer pushTargetView(WgTexture outputTexture, Rectangle prevViewport) {
-//        return context.pushTargetView(outputTexture, prevViewport);
-//    }
-//
-//    @Override
-//    public void popTargetView(Pointer prevView, Rectangle prevViewport) {
-//        context.popTargetView(prevView, prevViewport);
-//    }
-//
-//    @Override
-//    public WgTexture pushDepthTexture(WgTexture depth) {
-//        return context.pushDepthTexture(depth);
-//    }
-//
-//    @Override
-//    public void popDepthTexture(WgTexture prevDepth) {
-//        context.popDepthTexture(prevDepth);
-//    }
-//
-//    @Override
-//	public WebGPUCommandEncoder getCommandEncoder () {
-//		return context.getCommandEncoder();
-//	}
-//
-//	@Override
-//	public WgTexture getDepthTexture () {
-//		return context.getDepthTexture();
-//	}
-
-//	public WgTexture getMultiSamplingTexture() {
-//		return context.getMultiSamplingTexture();
-//	}
-
-//	@Override
-//	public WGPUBackendType getRequestedBackendType() {
-//		return context.getRequestedBackendType();
-//	}
-//
-//	@Override
-//	public int getSamples() {
-//		return app.getConfiguration().samples;
-//	}
-
 
 	public WgDesktopWindow getWindow () {
 		return window;
 	}
 
-//    @Override
-//    public void setViewportRectangle(int x, int y, int w, int h){
-//        context.setViewportRectangle(x,y,w,h);
-//    }
-//    @Override
-//    public Rectangle getViewportRectangle(){
-//        return context.getViewportRectangle();
-//    }
-//
-//
-//    @Override
-//    public void enableScissor(boolean mode) {
-//        context.enableScissor(mode);
-//    }
-//    @Override
-//    public boolean isScissorEnabled(){
-//        return context.isScissorEnabled();
-//    }
-//
-//    @Override
-//    public void setScissor(int x, int y, int w, int h) {
-//        context.setScissor(x,y,w,h);
-//    }
-//
-//    @Override
-//    public Rectangle getScissor() {
-//        return context.getScissor();
-//    }
-//
-//    @Override
-//    public GPUTimer getGPUTimer() {
-//        return context.getGPUTimer();
-//    }
-
-//
-//    public float getAverageGPUtime(int pass){
-//        return gpuTime[pass];
-//    }
 
     void updateFramebufferInfo () {
 		GLFW.glfwGetFramebufferSize(window.getWindowHandle(), tmpBuffer, tmpBuffer2);

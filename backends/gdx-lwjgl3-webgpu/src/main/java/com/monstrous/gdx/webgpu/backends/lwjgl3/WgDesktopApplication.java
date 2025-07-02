@@ -58,7 +58,7 @@ public class WgDesktopApplication implements Application {
 
 
 
-	private WebGPU_JNI webGPU;
+	//private WebGPU_JNI webGPU;
 
 	static void initializeGlfw () {
 		if (errorCallback == null) {
@@ -82,7 +82,7 @@ public class WgDesktopApplication implements Application {
 
 		initializeGlfw();
 		setApplicationLogger(new Lwjgl3ApplicationLogger());
-		webGPU = JavaWebGPU.init();
+//		webGPU = JavaWebGPU.init();
 
 		this.config = config; // = WebGPUApplicationConfiguration.copy(config);
 		if (config.title == null) config.title = listener.getClass().getSimpleName();
@@ -230,9 +230,9 @@ public class WgDesktopApplication implements Application {
 		return currentWindow.getGraphics();
 	}
 
-	public WebGPU_JNI getWebGPU () {
-		return webGPU;
-	}
+//	public WebGPU_JNI getWebGPU () {
+//		return webGPU;
+//	}
 
 
 	@Override

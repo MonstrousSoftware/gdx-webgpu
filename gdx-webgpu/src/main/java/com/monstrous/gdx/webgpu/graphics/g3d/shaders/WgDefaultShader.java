@@ -30,8 +30,7 @@ import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.PBRTextureAttribute;
-import com.monstrous.gdx.webgpu.webgpu.*;
-import com.monstrous.gdx.webgpu.wrappers.*;
+
 
 
 import static com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888;

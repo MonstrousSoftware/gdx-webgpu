@@ -61,7 +61,7 @@ public class TestCompute extends GdxTest {
 
 
         // make a pipeline
-        WebGPUBindGroupLayout bindGroupLayout = makeBindGroupLayout();
+        BindGroupLayout bindGroupLayout = makeBindGroupLayout();
         WebGPUBindGroup bindGroup = makeBindGroup(bindGroupLayout, inputBuffer, outputBuffer);
 
         WebGPUPipelineLayout pipelineLayout = new WebGPUPipelineLayout("compute pipeline layout", bindGroupLayout);
@@ -83,8 +83,8 @@ public class TestCompute extends GdxTest {
     }
 
 
-    private WebGPUBindGroupLayout makeBindGroupLayout(){
-        WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout();
+    private BindGroupLayout makeBindGroupLayout(){
+        BindGroupLayout layout = new BindGroupLayout();
         layout.begin();
         layout.addBuffer(0, WGPUShaderStage.Compute, WGPUBufferBindingType.ReadOnlyStorage, BUFFER_SIZE, false);// input buffer
         layout.addBuffer(1, WGPUShaderStage.Compute, WGPUBufferBindingType.Storage, BUFFER_SIZE, false);// output buffer
@@ -92,7 +92,7 @@ public class TestCompute extends GdxTest {
         return layout;
     }
 
-    private WebGPUBindGroup makeBindGroup(WebGPUBindGroupLayout bindGroupLayout, WebGPUBuffer inputBuffer, WebGPUBuffer outputBuffer){
+    private WebGPUBindGroup makeBindGroup(BindGroupLayout bindGroupLayout, WebGPUBuffer inputBuffer, WebGPUBuffer outputBuffer){
         WebGPUBindGroup bg = new WebGPUBindGroup(bindGroupLayout);
         bg.begin();
         bg.setBuffer(0, inputBuffer);

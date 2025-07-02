@@ -45,7 +45,7 @@ public class WgDesktopWindow implements Disposable {
 	boolean focused = false;
 	boolean asyncResized = false;
 	private boolean requestRendering = false;
-	private WebGPU_JNI webGPU;
+//	private WebGPU_JNI webGPU;
 
 	private final GLFWWindowFocusCallback focusCallback = new GLFWWindowFocusCallback() {
 		@Override
@@ -198,7 +198,7 @@ public class WgDesktopWindow implements Disposable {
 		this.input = application.createInput(this);
 		long win32handle = GLFWNativeWin32.glfwGetWin32Window(getWindowHandle());
 
-		this.graphics = new WgDesktopGraphics(this, application.getWebGPU(), win32handle);
+		this.graphics = new WgDesktopGraphics(this,  win32handle);
 
 		GLFW.glfwSetWindowFocusCallback(windowHandle, focusCallback);
 		GLFW.glfwSetWindowIconifyCallback(windowHandle, iconifyCallback);
@@ -393,7 +393,7 @@ public class WgDesktopWindow implements Disposable {
 	}
 
 	boolean update () {
-		webGPU = application.getWebGPU();
+//		webGPU = application.getWebGPU();
 
 		if (!listenerInitialized) {
 			initializeListener();

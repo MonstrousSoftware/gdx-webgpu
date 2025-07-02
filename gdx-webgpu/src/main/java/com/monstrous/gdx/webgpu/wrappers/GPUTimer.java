@@ -19,8 +19,13 @@ package com.monstrous.gdx.webgpu.wrappers;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Disposable;
+import com.github.xpenatan.webgpu.WebGPUCommandEncoder;
+import com.github.xpenatan.webgpu.WebGPUDevice;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
-import com.monstrous.gdx.webgpu.webgpu.*;
+import com.monstrous.gdx.webgpu.webgpu.WGPUBufferMapAsyncStatus;
+import com.monstrous.gdx.webgpu.webgpu.WGPUBufferMapCallback;
+import com.monstrous.gdx.webgpu.webgpu.WGPUQuerySetDescriptor;
 import jnr.ffi.Pointer;
 
 /** Class to facilitate GPU benchmarking of render passes.
@@ -36,7 +41,7 @@ public class GPUTimer implements Disposable {
     private Pointer timeStampResolveBuffer;
     private Pointer timeStampMapBuffer;
     private boolean timeStampMapOngoing = false;
-    private WebGPU_JNI webGPU;
+    private WebGPUContext webgpu;
     private final WebGPUDevice device;
     private int passNumber;
     private int numPasses;
@@ -48,31 +53,33 @@ public class GPUTimer implements Disposable {
             return;
 
         WgGraphics gfx = (WgGraphics) Gdx.graphics;
-        webGPU = gfx.getWebGPU();
+        //webGPU = gfx.getWebGPU();
+        webgpu = gfx.getContext();
 
-        // Create timestamp queries
-        WGPUQuerySetDescriptor querySetDescriptor =  WGPUQuerySetDescriptor.createDirect();
-        querySetDescriptor.setNextInChain();
-        querySetDescriptor.setLabel("Timestamp Query Set");
-        querySetDescriptor.setType(WGPUQueryType.Timestamp);
-        querySetDescriptor.setCount(2*MAX_PASSES); // start and end time
-
-        timestampQuerySet = webGPU.wgpuDeviceCreateQuerySet(device.getHandle(), querySetDescriptor);
-
-        // Create buffer
-        WGPUBufferDescriptor bufferDesc = WGPUBufferDescriptor.createDirect();
-        bufferDesc.setLabel("timestamp resolve buffer");
-        bufferDesc.setUsage( WGPUBufferUsage.CopySrc | WGPUBufferUsage.QueryResolve );
-        bufferDesc.setSize(8*2*MAX_PASSES);     // space for 2 uint64's per pass
-        bufferDesc.setMappedAtCreation(0L);
-        timeStampResolveBuffer = webGPU.wgpuDeviceCreateBuffer(device.getHandle(), bufferDesc);
-
-        bufferDesc.setLabel("timestamp map buffer");
-        bufferDesc.setUsage( WGPUBufferUsage.CopyDst | WGPUBufferUsage.MapRead );
-        bufferDesc.setSize(8*2*MAX_PASSES);
-        timeStampMapBuffer = webGPU.wgpuDeviceCreateBuffer(device.getHandle(), bufferDesc);
-
-        passNumber = -1;
+//        // Create timestamp queries
+//        WGPUQuerySetDescriptor querySetDescriptor =  WGPUQuerySetDescriptor.obtain();
+//        querySetDescriptor.setNextInChain();
+//        querySetDescriptor.setLabel("Timestamp Query Set");
+//        querySetDescriptor.setType(WGPUQueryType.Timestamp);
+//        querySetDescriptor.setCount(2*MAX_PASSES); // start and end time
+//
+//        webgpu.device.createQuerySet(querySetDescriptor, timestampQuerySet);
+//        //timestampQuerySet = webGPU.wgpuDeviceCreateQuerySet(device, querySetDescriptor);
+//
+//        // Create buffer
+//        WGPUBufferDescriptor bufferDesc = WGPUBufferDescriptor.createDirect();
+//        bufferDesc.setLabel("timestamp resolve buffer");
+//        bufferDesc.setUsage( WGPUBufferUsage.CopySrc | WGPUBufferUsage.QueryResolve );
+//        bufferDesc.setSize(8*2*MAX_PASSES);     // space for 2 uint64's per pass
+//        bufferDesc.setMappedAtCreation(0L);
+//        timeStampResolveBuffer = webGPU.wgpuDeviceCreateBuffer(device.getHandle(), bufferDesc);
+//
+//        bufferDesc.setLabel("timestamp map buffer");
+//        bufferDesc.setUsage( WGPUBufferUsage.CopyDst | WGPUBufferUsage.MapRead );
+//        bufferDesc.setSize(8*2*MAX_PASSES);
+//        timeStampMapBuffer = webGPU.wgpuDeviceCreateBuffer(device.getHandle(), bufferDesc);
+//
+//        passNumber = -1;
 
     }
 
@@ -120,11 +127,11 @@ public class GPUTimer implements Disposable {
         if( !enabled || timeStampMapOngoing)
             return;
 
-        // Resolve the timestamp queries (write their result to the resolve buffer)
-        webGPU.wgpuCommandEncoderResolveQuerySet(encoder.getHandle(), timestampQuerySet, 0, 2*numPasses, timeStampResolveBuffer, 0);
-
-        // Copy to the map buffer
-        webGPU.wgpuCommandEncoderCopyBufferToBuffer(encoder.getHandle(), timeStampResolveBuffer, 0,  timeStampMapBuffer, 0,8*2*numPasses);
+//        // Resolve the timestamp queries (write their result to the resolve buffer)
+//        webGPU.wgpuCommandEncoderResolveQuerySet(encoder.getHandle(), timestampQuerySet, 0, 2*numPasses, timeStampResolveBuffer, 0);
+//
+//        // Copy to the map buffer
+//        webGPU.wgpuCommandEncoderCopyBufferToBuffer(encoder.getHandle(), timeStampResolveBuffer, 0,  timeStampMapBuffer, 0,8*2*numPasses);
 
 
     }
@@ -133,26 +140,26 @@ public class GPUTimer implements Disposable {
 
     // a lambda expression to define a callback function
     WGPUBufferMapCallback onTimestampBufferMapped = (WGPUBufferMapAsyncStatus status, Pointer userData) -> {
-        if(status == WGPUBufferMapAsyncStatus.Success) {
-            Pointer ram =  webGPU.wgpuBufferGetConstMappedRange(timeStampMapBuffer, 0, 8*2*MAX_PASSES);
-            for(int pass = 0; pass < numPasses; pass++) {
-                long start = ram.getLong(8L *2*pass);
-                long end = ram.getLong(8L *2*pass + 8);
-                long ns = end - start;
-                addTimeSample(pass, ns);
-            }
-            webGPU.wgpuBufferUnmap(timeStampMapBuffer);
-
-        }
-        timeStampMapOngoing = false;
+//        if(status == WGPUBufferMapAsyncStatus.Success) {
+//            Pointer ram =  webGPU.wgpuBufferGetConstMappedRange(timeStampMapBuffer, 0, 8*2*MAX_PASSES);
+//            for(int pass = 0; pass < numPasses; pass++) {
+//                long start = ram.getLong(8L *2*pass);
+//                long end = ram.getLong(8L *2*pass + 8);
+//                long ns = end - start;
+//                addTimeSample(pass, ns);
+//            }
+//            webGPU.wgpuBufferUnmap(timeStampMapBuffer);
+//
+//        }
+//        timeStampMapOngoing = false;
     };
 
     public void fetchTimestamps(){
-        if( !enabled || timeStampMapOngoing)
-            return;
-
-        timeStampMapOngoing = true;
-        webGPU.wgpuBufferMapAsync(timeStampMapBuffer, WGPUMapMode.Read, 0, 8*2*MAX_PASSES, onTimestampBufferMapped, null);
+//        if( !enabled || timeStampMapOngoing)
+//            return;
+//
+//        timeStampMapOngoing = true;
+//        webGPU.wgpuBufferMapAsync(timeStampMapBuffer, WGPUMapMode.Read, 0, 8*2*MAX_PASSES, onTimestampBufferMapped, null);
     }
 
     @Override
@@ -160,19 +167,19 @@ public class GPUTimer implements Disposable {
         if(!enabled)
             return;
         System.out.println("GPUTimer.dispose()");
-        while(timeStampMapOngoing) {
-            System.out.println("Waiting for time stamp map before disposing... ");
-            device.tick();
-        }
-
-        webGPU.wgpuQuerySetRelease(timestampQuerySet);
-        // the following causes a crash when uncommented
-        //webGPU.wgpuQuerySetDestroy(timestampQuerySet);
-
-        webGPU.wgpuBufferDestroy(timeStampMapBuffer);
-        webGPU.wgpuBufferRelease(timeStampMapBuffer);
-        webGPU.wgpuBufferDestroy(timeStampResolveBuffer);
-        webGPU.wgpuBufferRelease(timeStampResolveBuffer);
+//        while(timeStampMapOngoing) {
+//            System.out.println("Waiting for time stamp map before disposing... ");
+//            device.tick();
+//        }
+//
+//        webGPU.wgpuQuerySetRelease(timestampQuerySet);
+//        // the following causes a crash when uncommented
+//        //webGPU.wgpuQuerySetDestroy(timestampQuerySet);
+//
+//        webGPU.wgpuBufferDestroy(timeStampMapBuffer);
+//        webGPU.wgpuBufferRelease(timeStampMapBuffer);
+//        webGPU.wgpuBufferDestroy(timeStampResolveBuffer);
+//        webGPU.wgpuBufferRelease(timeStampResolveBuffer);
     }
 
     private final String[] names = new String[MAX_PASSES];
