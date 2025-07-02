@@ -30,8 +30,8 @@ import com.monstrous.gdx.tests.webgpu.utils.PerspectiveCamController;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.Pool;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplication;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
+import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
+import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplicationConfiguration;
 import com.monstrous.gdx.webgpu.graphics.WgMesh;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
@@ -57,11 +57,11 @@ public class ModelBatchRPTest extends GdxTest {
 	// launcher
 	public static void main (String[] argv) {
 
-		WgApplicationConfiguration config = new WgApplicationConfiguration();
+		WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
 		config.setWindowedMode(640, 480);
 		config.setTitle("WebGPUTest");
 
-		new WgApplication(new ModelBatchRPTest(), config);
+		new WgDesktopApplication(new ModelBatchRPTest(), config);
 	}
 
 	// application

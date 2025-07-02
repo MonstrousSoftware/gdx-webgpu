@@ -24,9 +24,10 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.math.Vector3;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.tests.webgpu.utils.PerspectiveCamController;
-import com.monstrous.gdx.webgpu.WebGPUGraphicsBase;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplication;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
+import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
+import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplicationConfiguration;
 import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
@@ -48,7 +49,8 @@ public class PostProcessing extends GdxTest {
 	WgBitmapFont font;
 	Model model;
 	ModelInstance instance;
-    WebGPUGraphicsBase gfx;
+    WgGraphics gfx;
+    WebGPUContext webgpu;
     WgFrameBuffer fbo;
     WgShaderProgram shader;
 
@@ -56,16 +58,17 @@ public class PostProcessing extends GdxTest {
 	// launcher
 	public static void main (String[] argv) {
 
-		WgApplicationConfiguration config = new WgApplicationConfiguration();
+		WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
 		config.setWindowedMode(640, 480);
 		config.setTitle("WebGPUTest");
 
-		new WgApplication(new PostProcessing(), config);
+		new WgDesktopApplication(new PostProcessing(), config);
 	}
 
 	// application
 	public void create () {
-        gfx = (WebGPUGraphicsBase)Gdx.graphics;
+        gfx = (WgGraphics)Gdx.graphics;
+        webgpu = gfx.getContext();
 
 		modelBatch = new WgModelBatch();
 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -84,7 +87,7 @@ public class PostProcessing extends GdxTest {
 		batch = new WgSpriteBatch();
 		font = new WgBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
 
-        fbo = new WgFrameBuffer(gfx.getSurfaceFormat(),  640, 480, true);
+        fbo = new WgFrameBuffer(webgpu.getSurfaceFormat(),  640, 480, true);
 
         shader = new WgShaderProgram(Gdx.files.internal("data/wgsl/sprite-greyscale.wgsl"));
 	}

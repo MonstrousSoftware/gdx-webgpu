@@ -1,4 +1,4 @@
-package com.monstrous.gdx.webgpu.wrappers;
+package com.monstrous.gdx.webgpu.application;
 
 
 
@@ -6,16 +6,17 @@ import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Disposable;
-import com.monstrous.gdx.webgpu.WebGPUGraphicsBase;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.utils.JavaWebGPU;
 import com.monstrous.gdx.webgpu.webgpu.*;
+import com.monstrous.gdx.webgpu.wrappers.*;
 import jnr.ffi.Pointer;
 
 /** WebGPU graphics context. Used to initialize and terminate WebGPU and to render frames.
+ * Also provides shared WebGPU resources, like the device, the default queue, the surface etc.
  */
-public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
-    private final WebGPU_JNI webGPU;
+public class WebGPUContext implements WebGPUContextBase, Disposable {
+
     public WebGPUDevice device;
     public WebGPUQueue queue;
     public Pointer surface;
@@ -23,6 +24,8 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
     public Pointer targetView;
     public WebGPUCommandEncoder commandEncoder;
     public WgTexture depthTexture;
+
+    private final WebGPU_JNI webGPU;
     private WGPUSupportedLimits supportedLimits;
     private WgTexture multiSamplingTexture;
     private final GPUTimer gpuTimer;
@@ -31,6 +34,7 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
     private boolean scissorEnabled = false;
     private Rectangle scissor;
     private int width, height;
+    private float[] gpuTime = new float[GPUTimer.MAX_PASSES];
 
 
     public static class Configuration {
@@ -49,7 +53,7 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
         }
     }
 
-    public WebGPUGraphicsContext(WebGPU_JNI webGPU, Configuration config) {
+    public WebGPUContext(WebGPU_JNI webGPU, Configuration config) {
         this.webGPU = webGPU;
         this.config = config;
 
@@ -83,6 +87,12 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
     @Override
     public GPUTimer getGPUTimer() {
         return gpuTimer;
+    }
+
+    @Override
+    // maybe smooth this to one value per second to keep values readable
+    public float getAverageGPUtime(int pass){
+        return gpuTimer.getAverageGPUtime(pass);
     }
 
 
@@ -119,10 +129,7 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
         device.tick();
     }
 
-    @Override
-    public float getAverageGPUtime(int pass){
-        return gpuTimer.getAverageGPUtime(pass);
-    }
+
 
     private Pointer getNextSurfaceTextureView () {
         // [...] Get the next surface texture
@@ -295,6 +302,7 @@ public class WebGPUGraphicsContext  implements WebGPUGraphicsBase, Disposable {
     public WGPUTextureFormat getSurfaceFormat () {
         return surfaceFormat;
     }
+
     @Override
     public Pointer getTargetView () {
         return targetView;

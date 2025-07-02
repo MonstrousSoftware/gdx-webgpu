@@ -23,7 +23,7 @@ import com.badlogic.gdx.graphics.Color;
 
 import java.util.Arrays;
 
-public class WgWindowConfiguration {
+public class WgDesktopWindowConfiguration {
 	int windowX = -1;
 	int windowY = -1;
 	int windowWidth = 640;
@@ -32,18 +32,18 @@ public class WgWindowConfiguration {
 	boolean windowResizable = true;
 	boolean windowDecorated = true;
 	boolean windowMaximized = false;
-	WgGraphics.WebGPUMonitor maximizedMonitor;
+	WgDesktopGraphics.WebGPUMonitor maximizedMonitor;
 	boolean autoIconify = true;
 	FileType windowIconFileType;
 	String[] windowIconPaths;
-	WgWindowListener windowListener;
-	WgGraphics.WebGPUDisplayMode fullscreenMode;
+	WgDesktopWindowListener windowListener;
+	WgDesktopGraphics.WebGPUDisplayMode fullscreenMode;
 	String title;
 	Color initialBackgroundColor = Color.BLACK;
 	boolean initialVisible = true;
 	boolean vSyncEnabled = true;
 
-	void setWindowConfiguration (WgWindowConfiguration config) {
+	void setWindowConfiguration (WgDesktopWindowConfiguration config) {
 		windowX = config.windowX;
 		windowY = config.windowY;
 		windowWidth = config.windowWidth;
@@ -98,7 +98,7 @@ public class WgWindowConfiguration {
 
 	/** @param monitor what monitor the window should maximize to */
 	public void setMaximizedMonitor (Graphics.Monitor monitor) {
-		this.maximizedMonitor = (WgGraphics.WebGPUMonitor)monitor;
+		this.maximizedMonitor = (WgDesktopGraphics.WebGPUMonitor)monitor;
 	}
 
 	/** @param autoIconify whether the window should automatically iconify and restore previous video mode on input focus loss.
@@ -138,15 +138,15 @@ public class WgWindowConfiguration {
 		windowIconPaths = filePaths;
 	}
 
-	/** Sets the {@link WgWindowListener} which will be informed about iconficiation, focus loss and window close events. */
-	public void setWindowListener (WgWindowListener windowListener) {
+	/** Sets the {@link WgDesktopWindowListener} which will be informed about iconficiation, focus loss and window close events. */
+	public void setWindowListener (WgDesktopWindowListener windowListener) {
 		this.windowListener = windowListener;
 	}
 
 	/** Sets the app to use fullscreen mode. Use the static methods like {@link Lwjgl3ApplicationConfiguration#getDisplayMode()} on
 	 * this class to enumerate connected monitors and their fullscreen display modes. */
 	public void setFullscreenMode (DisplayMode mode) {
-		this.fullscreenMode = (WgGraphics.WebGPUDisplayMode)mode;
+		this.fullscreenMode = (WgDesktopGraphics.WebGPUDisplayMode)mode;
 	}
 
 	/** Sets the window title. If null, the application listener's class name is used. */

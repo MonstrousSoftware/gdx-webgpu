@@ -8,8 +8,8 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.math.Vector3;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplication;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
+import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
+import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplicationConfiguration;
 import com.monstrous.gdx.webgpu.graphics.WgMesh;
 import com.monstrous.gdx.webgpu.graphics.g3d.model.WgMeshPart;
 import com.monstrous.gdx.webgpu.graphics.utils.WgMeshBuilder;
@@ -25,13 +25,13 @@ public class WebGPUTestMeshBuilder {
 	// launcher
 	public static void main (String[] argv) {
 
-		WgApplicationConfiguration config = new WgApplicationConfiguration();
+		WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
 		config.setWindowedMode(640, 480);
 		config.setTitle("WebGPUTest");
 		//config.backend = WGPUBackendType.D3D12;
 		config.enableGPUtiming = false;
 
-		new WgApplication(new TestApp(), config);
+		new WgDesktopApplication(new TestApp(), config);
 	}
 
 	// application

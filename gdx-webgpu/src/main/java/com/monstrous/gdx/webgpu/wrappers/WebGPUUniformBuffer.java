@@ -17,13 +17,16 @@
 package com.monstrous.gdx.webgpu.wrappers;
 
 import com.badlogic.gdx.Gdx;
-import com.monstrous.gdx.webgpu.WebGPUGraphicsBase;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.Vector4;
+import com.monstrous.gdx.webgpu.webgpu.WebGPU_JNI;
 import jnr.ffi.Pointer;
 
 /** Uniform buffer, optionally to be used with dynamic offsets
@@ -43,7 +46,6 @@ import jnr.ffi.Pointer;
  */
 
 public class WebGPUUniformBuffer extends WebGPUBuffer {
-
     private final int contentSize;
     private final int uniformStride;
     private final int maxSlices;
@@ -107,8 +109,8 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
     private static int calculateStride(int contentSize, int maxSlices){
         int stride = 0;
         if(maxSlices > 1) { // do we use dynamic offsets?
-            WebGPUGraphicsBase gfx = (WebGPUGraphicsBase) Gdx.graphics;
-            int uniformAlignment = (int) gfx.getDevice().getSupportedLimits().getLimits().getMinUniformBufferOffsetAlignment();
+            WebGPUContext webgpu = ((WgGraphics) Gdx.graphics).getContext();
+            int uniformAlignment =  (int) webgpu.device.getSupportedLimits().getLimits().getMinUniformBufferOffsetAlignment();
             stride = ceilToNextMultiple(contentSize, uniformAlignment);
         }
         return stride;

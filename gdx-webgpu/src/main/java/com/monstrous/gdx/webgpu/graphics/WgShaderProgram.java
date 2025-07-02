@@ -18,7 +18,9 @@ package com.monstrous.gdx.webgpu.graphics;
 
 
 import com.badlogic.gdx.Gdx;
-import com.monstrous.gdx.webgpu.WebGPUGraphicsBase;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.webgpu.WGPUSType;
 import com.monstrous.gdx.webgpu.webgpu.WGPUShaderModuleDescriptor;
 import com.monstrous.gdx.webgpu.webgpu.WGPUShaderModuleWGSLDescriptor;
@@ -28,8 +30,10 @@ import com.badlogic.gdx.utils.Disposable;
 import jnr.ffi.Pointer;
 
 public class WgShaderProgram implements Disposable {
-    WebGPUGraphicsBase gfx = (WebGPUGraphicsBase) Gdx.graphics;
-    WebGPU_JNI webGPU = gfx.getWebGPU();
+
+    private final WgGraphics gfx = (WgGraphics) Gdx.graphics;
+    private final WebGPU_JNI webGPU = gfx.getWebGPU();
+    private final WebGPUContext webgpu = gfx.getContext();
     private String name;
     private Pointer shaderModule;
 
@@ -64,7 +68,7 @@ public class WgShaderProgram implements Disposable {
 
             shaderDesc.getNextInChain().set(shaderCodeDesc.getPointerTo());
 
-        shaderModule = webGPU.wgpuDeviceCreateShaderModule(gfx.getDevice().getHandle(), shaderDesc);
+        shaderModule = webGPU.wgpuDeviceCreateShaderModule(webgpu.device.getHandle(), shaderDesc);
         if(shaderModule == null)
             throw new RuntimeException("ShaderModule: compile failed "+name);
 

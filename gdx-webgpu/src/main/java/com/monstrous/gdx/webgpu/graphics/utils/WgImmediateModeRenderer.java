@@ -17,7 +17,8 @@
 package com.monstrous.gdx.webgpu.graphics.utils;
 
 import com.badlogic.gdx.Gdx;
-import com.monstrous.gdx.webgpu.WebGPUGraphicsBase;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.graphics.Color;
@@ -69,7 +70,8 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 	private Pointer vertexDataPtr;
 	private FloatBuffer vertexData;
 	private WebGPUPipeline prevPipeline;
-	private WebGPUGraphicsBase gfx;
+	private WgGraphics gfx;
+    private WebGPUContext webgpu;
 
 	public WgImmediateModeRenderer(boolean hasNormals, boolean hasColors, int numTexCoords) {
 		this(5000, hasNormals, hasColors, numTexCoords, createDefaultShader(hasNormals, hasColors, numTexCoords));
@@ -85,7 +87,8 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 	public WgImmediateModeRenderer(int maxVertices, boolean hasNormals, boolean hasColors, int numTexCoords,
                                    ShaderProgram shader) {
 
-		gfx = (WebGPUGraphicsBase) Gdx.graphics;
+		gfx = (WgGraphics) Gdx.graphics;
+        webgpu = gfx.getContext();
 
 		this.maxVertices = maxVertices;
 
@@ -152,7 +155,7 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 		pipelineSpec.setCullMode(WGPUCullMode.None);
 
 
-		renderPass = RenderPassBuilder.create("ImmediateModeRenderer", null, gfx.getSamples());
+		renderPass = RenderPassBuilder.create("ImmediateModeRenderer", null, webgpu.getSamples());
 	}
 
 	public void color (Color color) {
@@ -206,7 +209,7 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 		int numBytes = numVertices * vertexSize * Float.BYTES;
 
 		// copy vertex data to GPU vertex buffer
-		gfx.getQueue().writeBuffer(vertexBuffer, 0, vertexDataPtr, numBytes);
+		webgpu.queue.writeBuffer(vertexBuffer, 0, vertexDataPtr, numBytes);
 
 		// Set vertex buffer while encoding the render pass
 		renderPass.setVertexBuffer( 0, vertexBuffer.getHandle(), 0, numBytes);

@@ -1,4 +1,4 @@
-package com.monstrous.gdx.webgpu;
+package com.monstrous.gdx.webgpu.application;
 
 import com.badlogic.gdx.math.Rectangle;
 import com.monstrous.gdx.webgpu.webgpu.WGPUBackendType;
@@ -8,7 +8,7 @@ import com.monstrous.gdx.webgpu.wrappers.*;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import jnr.ffi.Pointer;
 
-public interface WebGPUGraphicsBase {
+public interface WebGPUContextBase {
 
     WebGPU_JNI getWebGPU ();
 

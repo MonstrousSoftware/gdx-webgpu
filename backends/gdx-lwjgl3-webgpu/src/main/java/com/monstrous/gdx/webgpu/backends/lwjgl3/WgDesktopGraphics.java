@@ -19,13 +19,15 @@ package com.monstrous.gdx.webgpu.backends.lwjgl3;
 import com.badlogic.gdx.AbstractGraphics;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Rectangle;
-import com.monstrous.gdx.webgpu.WebGPUGraphicsBase;
+import com.monstrous.gdx.webgpu.application.WebGPUContextBase;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.Cursor.SystemCursor;
 import com.badlogic.gdx.graphics.glutils.GLVersion;
 import com.badlogic.gdx.graphics.glutils.HdpiMode;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.utils.Disposable;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.utils.WgGL20;
 import com.monstrous.gdx.webgpu.webgpu.WGPUBackendType;
@@ -41,9 +43,9 @@ import org.lwjgl.system.Configuration;
 
 import java.nio.IntBuffer;
 
-public class WgGraphics extends AbstractGraphics implements WebGPUGraphicsBase, Disposable {
-	final WgWindow window;
-	final WgApplication app;
+public class WgDesktopGraphics implements WgGraphics, Disposable {
+	final WgDesktopWindow window;
+	final WgDesktopApplication app;
 	GL20 gl20;
 	private GL30 gl30;
 	private GL31 gl31;
@@ -68,8 +70,8 @@ public class WgGraphics extends AbstractGraphics implements WebGPUGraphicsBase, 
 	private int windowHeightBeforeFullscreen;
 	private DisplayMode displayModeBeforeFullscreen = null;
 	private final WebGPU_JNI webGPU;
-	public final WebGPUGraphicsContext context;
-    private float[] gpuTime = new float[GPUTimer.MAX_PASSES];
+	public final WebGPUContext context;
+
 
 
 
@@ -85,7 +87,7 @@ public class WgGraphics extends AbstractGraphics implements WebGPUGraphicsBase, 
 					return;
 				}
 				window.makeCurrent();
-				setViewportRectangle(0, 0, backBufferWidth, backBufferHeight);
+				context.setViewportRectangle(0, 0, backBufferWidth, backBufferHeight);
 				window.getListener().resize(getWidth(), getHeight());
 				update();
 				context.resize(getWidth(), getHeight());
@@ -100,7 +102,7 @@ public class WgGraphics extends AbstractGraphics implements WebGPUGraphicsBase, 
 		}
 	};
 
-	public WgGraphics(WgWindow window, WebGPU_JNI webGPU, long win32handle) {
+	public WgDesktopGraphics(WgDesktopWindow window, WebGPU_JNI webGPU, long win32handle) {
 		this.window = window;
 		this.webGPU = webGPU;
 
@@ -110,17 +112,17 @@ public class WgGraphics extends AbstractGraphics implements WebGPUGraphicsBase, 
 		this.gl32 = null;
 		updateFramebufferInfo();
 
-		app = (WgApplication) Gdx.app;
+		app = (WgDesktopApplication) Gdx.app;
 		Gdx.graphics = this;
         Gdx.gl = this.gl20;
 
-		WebGPUGraphicsContext.Configuration config = new WebGPUGraphicsContext.Configuration(win32handle, app.getConfiguration().samples,
+		WebGPUContext.Configuration config = new WebGPUContext.Configuration(win32handle, app.getConfiguration().samples,
 				app.getConfiguration().vSyncEnabled,app.getConfiguration().enableGPUtiming, app.getConfiguration().backend);
 
 
-		this.context = new WebGPUGraphicsContext(webGPU, config);
+		this.context = new WebGPUContext(webGPU, config);
 		context.resize(getWidth(), getHeight());
-        setViewportRectangle(0, 0, getWidth(), getHeight());
+        context.setViewportRectangle(0, 0, getWidth(), getHeight());
 
 		// initiateGL();
 
@@ -132,125 +134,130 @@ public class WgGraphics extends AbstractGraphics implements WebGPUGraphicsBase, 
 		return webGPU;
 	}
 
-
-	// the following getters/setters are forwarded to context
-
-	@Override
-	public WebGPUDevice getDevice() {
-		return context.getDevice();
-	}
-
-	@Override
-	public WebGPUQueue getQueue() {
-		return context.getQueue();
-	}
-
-	@Override
-	public WGPUTextureFormat getSurfaceFormat () {
-		return context.getSurfaceFormat();
-	}
-
-	@Override
-	public Pointer getTargetView () {
-		return context.getTargetView();
-	}
-
     @Override
-    public Pointer pushTargetView(WgTexture outputTexture, Rectangle prevViewport) {
-        return context.pushTargetView(outputTexture, prevViewport);
+    public WebGPUContext getContext() {
+        return context;
     }
 
-    @Override
-    public void popTargetView(Pointer prevView, Rectangle prevViewport) {
-        context.popTargetView(prevView, prevViewport);
-    }
 
-    @Override
-    public WgTexture pushDepthTexture(WgTexture depth) {
-        return context.pushDepthTexture(depth);
-    }
+    // the following getters/setters are forwarded to context
+//
+//	@Override
+//	public WebGPUDevice getDevice() {
+//		return context.getDevice();
+//	}
+//
+//	@Override
+//	public WebGPUQueue getQueue() {
+//		return context.getQueue();
+//	}
+//
+//	@Override
+//	public WGPUTextureFormat getSurfaceFormat () {
+//		return context.getSurfaceFormat();
+//	}
+//
+//	@Override
+//	public Pointer getTargetView () {
+//		return context.getTargetView();
+//	}
+//
+//    @Override
+//    public Pointer pushTargetView(WgTexture outputTexture, Rectangle prevViewport) {
+//        return context.pushTargetView(outputTexture, prevViewport);
+//    }
+//
+//    @Override
+//    public void popTargetView(Pointer prevView, Rectangle prevViewport) {
+//        context.popTargetView(prevView, prevViewport);
+//    }
+//
+//    @Override
+//    public WgTexture pushDepthTexture(WgTexture depth) {
+//        return context.pushDepthTexture(depth);
+//    }
+//
+//    @Override
+//    public void popDepthTexture(WgTexture prevDepth) {
+//        context.popDepthTexture(prevDepth);
+//    }
+//
+//    @Override
+//	public WebGPUCommandEncoder getCommandEncoder () {
+//		return context.getCommandEncoder();
+//	}
+//
+//	@Override
+//	public WgTexture getDepthTexture () {
+//		return context.getDepthTexture();
+//	}
 
-    @Override
-    public void popDepthTexture(WgTexture prevDepth) {
-        context.popDepthTexture(prevDepth);
-    }
+//	public WgTexture getMultiSamplingTexture() {
+//		return context.getMultiSamplingTexture();
+//	}
 
-    @Override
-	public WebGPUCommandEncoder getCommandEncoder () {
-		return context.getCommandEncoder();
-	}
-
-	@Override
-	public WgTexture getDepthTexture () {
-		return context.getDepthTexture();
-	}
-
-	public WgTexture getMultiSamplingTexture() {
-		return context.getMultiSamplingTexture();
-	}
-
-	@Override
-	public WGPUBackendType getRequestedBackendType() {
-		return context.getRequestedBackendType();
-	}
-
-	@Override
-	public int getSamples() {
-		return app.getConfiguration().samples;
-	}
+//	@Override
+//	public WGPUBackendType getRequestedBackendType() {
+//		return context.getRequestedBackendType();
+//	}
+//
+//	@Override
+//	public int getSamples() {
+//		return app.getConfiguration().samples;
+//	}
 
 
-	public WgWindow getWindow () {
+	public WgDesktopWindow getWindow () {
 		return window;
 	}
 
-    @Override
-    public void setViewportRectangle(int x, int y, int w, int h){
-        context.setViewportRectangle(x,y,w,h);
-    }
-    @Override
-    public Rectangle getViewportRectangle(){
-        return context.getViewportRectangle();
-    }
+//    @Override
+//    public void setViewportRectangle(int x, int y, int w, int h){
+//        context.setViewportRectangle(x,y,w,h);
+//    }
+//    @Override
+//    public Rectangle getViewportRectangle(){
+//        return context.getViewportRectangle();
+//    }
+//
+//
+//    @Override
+//    public void enableScissor(boolean mode) {
+//        context.enableScissor(mode);
+//    }
+//    @Override
+//    public boolean isScissorEnabled(){
+//        return context.isScissorEnabled();
+//    }
+//
+//    @Override
+//    public void setScissor(int x, int y, int w, int h) {
+//        context.setScissor(x,y,w,h);
+//    }
+//
+//    @Override
+//    public Rectangle getScissor() {
+//        return context.getScissor();
+//    }
+//
+//    @Override
+//    public GPUTimer getGPUTimer() {
+//        return context.getGPUTimer();
+//    }
 
-
-    @Override
-    public void enableScissor(boolean mode) {
-        context.enableScissor(mode);
-    }
-    @Override
-    public boolean isScissorEnabled(){
-        return context.isScissorEnabled();
-    }
-
-    @Override
-    public void setScissor(int x, int y, int w, int h) {
-        context.setScissor(x,y,w,h);
-    }
-
-    @Override
-    public Rectangle getScissor() {
-        return context.getScissor();
-    }
-
-    @Override
-    public GPUTimer getGPUTimer() {
-        return context.getGPUTimer();
-    }
-
-    @Override
-    public float getAverageGPUtime(int pass){
-        return gpuTime[pass];
-    }
+//
+//    public float getAverageGPUtime(int pass){
+//        return gpuTime[pass];
+//    }
 
     void updateFramebufferInfo () {
 		GLFW.glfwGetFramebufferSize(window.getWindowHandle(), tmpBuffer, tmpBuffer2);
 		this.backBufferWidth = tmpBuffer.get(0);
 		this.backBufferHeight = tmpBuffer2.get(0);
 		GLFW.glfwGetWindowSize(window.getWindowHandle(), tmpBuffer, tmpBuffer2);
-		WgGraphics.this.logicalWidth = tmpBuffer.get(0);
-		WgGraphics.this.logicalHeight = tmpBuffer2.get(0);
-		WgApplicationConfiguration config = window.getConfig();
+		WgDesktopGraphics.this.logicalWidth = tmpBuffer.get(0);
+		WgDesktopGraphics.this.logicalHeight = tmpBuffer2.get(0);
+		WgDesktopApplicationConfiguration config = window.getConfig();
 		bufferFormat = new BufferFormat(config.r, config.g, config.b, config.a, config.depth, config.stencil, config.samples,
 			false);
 	}
@@ -270,9 +277,9 @@ public class WgGraphics extends AbstractGraphics implements WebGPUGraphicsBase, 
 			frames = 0;
 			frameCounterStart = time;
             // request average gpu time once per second to keep it readable
-            for(int i = 0; i < context.getGPUTimer().getNumPasses(); i++)
-            //for(int i = 0; i < GPUTimer.MAX_PASSES; i++)
-                gpuTime[i] = context.getAverageGPUtime(i);
+//            for(int i = 0; i < context.getGPUTimer().getNumPasses(); i++)
+//            //for(int i = 0; i < GPUTimer.MAX_PASSES; i++)
+//                gpuTime[i] = context.getAverageGPUtime(i);
 		}
 		frames++;
 		frameId++;
@@ -351,17 +358,23 @@ public class WgGraphics extends AbstractGraphics implements WebGPUGraphicsBase, 
 		}
 	}
 
-	@Override
-	public int getBackBufferWidth () {
-		return backBufferWidth;
-	}
+    @Override
+    public int getBackBufferWidth() {
+        return backBufferWidth;
+    }
 
-	@Override
-	public int getBackBufferHeight () {
-		return backBufferHeight;
-	}
+    @Override
+    public int getBackBufferHeight() {
+        return backBufferHeight;
+    }
 
-	public int getLogicalWidth () {
+    @Override
+    public float getBackBufferScale () {
+        return getBackBufferWidth() / (float)getWidth();
+    }
+
+
+    public int getLogicalWidth () {
 		return logicalWidth;
 	}
 
@@ -379,7 +392,12 @@ public class WgGraphics extends AbstractGraphics implements WebGPUGraphicsBase, 
 		return deltaTime;
 	}
 
-	public void resetDeltaTime () {
+    @Override
+    public float getRawDeltaTime() {
+        return 0;
+    }
+
+    public void resetDeltaTime () {
 		resetDeltaTime = true;
 	}
 
@@ -426,14 +444,19 @@ public class WgGraphics extends AbstractGraphics implements WebGPUGraphicsBase, 
 		return mode.height / (float)sizeY * 10;
 	}
 
-	@Override
+    @Override
+    public float getDensity() {
+        return 0;
+    }
+
+    @Override
 	public boolean supportsDisplayModeChange () {
 		return true;
 	}
 
 	@Override
 	public Monitor getPrimaryMonitor () {
-		return WgApplicationConfiguration.toWebGPUMonitor(GLFW.glfwGetPrimaryMonitor());
+		return WgDesktopApplicationConfiguration.toWebGPUMonitor(GLFW.glfwGetPrimaryMonitor());
 	}
 
 	@Override
@@ -470,29 +493,29 @@ public class WgGraphics extends AbstractGraphics implements WebGPUGraphicsBase, 
 		PointerBuffer glfwMonitors = GLFW.glfwGetMonitors();
 		Monitor[] monitors = new Monitor[glfwMonitors.limit()];
 		for (int i = 0; i < glfwMonitors.limit(); i++) {
-			monitors[i] = WgApplicationConfiguration.toWebGPUMonitor(glfwMonitors.get(i));
+			monitors[i] = WgDesktopApplicationConfiguration.toWebGPUMonitor(glfwMonitors.get(i));
 		}
 		return monitors;
 	}
 
 	@Override
 	public DisplayMode[] getDisplayModes () {
-		return WgApplicationConfiguration.getDisplayModes(getMonitor());
+		return WgDesktopApplicationConfiguration.getDisplayModes(getMonitor());
 	}
 
 	@Override
 	public DisplayMode[] getDisplayModes (Monitor monitor) {
-		return WgApplicationConfiguration.getDisplayModes(monitor);
+		return WgDesktopApplicationConfiguration.getDisplayModes(monitor);
 	}
 
 	@Override
 	public DisplayMode getDisplayMode () {
-		return WgApplicationConfiguration.getDisplayMode(getMonitor());
+		return WgDesktopApplicationConfiguration.getDisplayMode(getMonitor());
 	}
 
 	@Override
 	public DisplayMode getDisplayMode (Monitor monitor) {
-		return WgApplicationConfiguration.getDisplayMode(monitor);
+		return WgDesktopApplicationConfiguration.getDisplayMode(monitor);
 	}
 
 	@Override
@@ -560,7 +583,7 @@ public class WgGraphics extends AbstractGraphics implements WebGPUGraphicsBase, 
 			boolean centerWindow = false;
 			if (width != logicalWidth || height != logicalHeight) {
 				centerWindow = true; // recenter the window since its size changed
-				newPos = WgApplicationConfiguration.calculateCenteredWindowPosition((WebGPUMonitor)getMonitor(), width, height);
+				newPos = WgDesktopApplicationConfiguration.calculateCenteredWindowPosition((WebGPUMonitor)getMonitor(), width, height);
 			}
 			GLFW.glfwSetWindowSize(window.getWindowHandle(), width, height);
 			if (centerWindow) {
@@ -572,7 +595,7 @@ public class WgGraphics extends AbstractGraphics implements WebGPUGraphicsBase, 
 			}
 			if (width != windowWidthBeforeFullscreen || height != windowHeightBeforeFullscreen) { // center the window since its size
 				// changed
-				GridPoint2 newPos = WgApplicationConfiguration.calculateCenteredWindowPosition((WebGPUMonitor)getMonitor(), width,
+				GridPoint2 newPos = WgDesktopApplicationConfiguration.calculateCenteredWindowPosition((WebGPUMonitor)getMonitor(), width,
 					height);
 				GLFW.glfwSetWindowMonitor(window.getWindowHandle(), 0, newPos.x, newPos.y, width, height,
 					displayModeBeforeFullscreen.refreshRate);
@@ -652,17 +675,17 @@ public class WgGraphics extends AbstractGraphics implements WebGPUGraphicsBase, 
 
 	@Override
 	public Cursor newCursor (Pixmap pixmap, int xHotspot, int yHotspot) {
-		return new WgCursor(getWindow(), pixmap, xHotspot, yHotspot);
+		return new WgDesktopCursor(getWindow(), pixmap, xHotspot, yHotspot);
 	}
 
 	@Override
 	public void setCursor (Cursor cursor) {
-		GLFW.glfwSetCursor(getWindow().getWindowHandle(), ((WgCursor)cursor).glfwCursor);
+		GLFW.glfwSetCursor(getWindow().getWindowHandle(), ((WgDesktopCursor)cursor).glfwCursor);
 	}
 
 	@Override
 	public void setSystemCursor (SystemCursor systemCursor) {
-		WgCursor.setSystemCursor(getWindow().getWindowHandle(), systemCursor);
+		WgDesktopCursor.setSystemCursor(getWindow().getWindowHandle(), systemCursor);
 	}
 
 	@Override

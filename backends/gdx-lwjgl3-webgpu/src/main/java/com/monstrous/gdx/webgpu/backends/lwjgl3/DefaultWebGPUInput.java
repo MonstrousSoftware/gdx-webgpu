@@ -25,7 +25,7 @@ import com.badlogic.gdx.input.NativeInputConfiguration;
 import org.lwjgl.glfw.*;
 
 public class DefaultWebGPUInput extends AbstractInput implements Lwjgl3Input {
-	final WgWindow window;
+	final WgDesktopWindow window;
 	private InputProcessor inputProcessor;
 	final InputEventQueue eventQueue = new InputEventQueue();
 
@@ -121,7 +121,7 @@ public class DefaultWebGPUInput extends AbstractInput implements Lwjgl3Input {
 		}
 	};
 
-	public DefaultWebGPUInput (WgWindow window) {
+	public DefaultWebGPUInput (WgDesktopWindow window) {
 		this.window = window;
 		windowHandleChanged(window.getWindowHandle());
 	}

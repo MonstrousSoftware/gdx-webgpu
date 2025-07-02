@@ -2,7 +2,7 @@ package com.monstrous.gdx.webgpu.wrappers;
 
 
 import com.badlogic.gdx.Gdx;
-import com.monstrous.gdx.webgpu.WebGPUGraphicsBase;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.webgpu.WGPUCommandEncoderDescriptor;
 import com.monstrous.gdx.webgpu.webgpu.WebGPU_JNI;
 import com.badlogic.gdx.utils.Disposable;
@@ -14,7 +14,7 @@ public class WebGPUCommandEncoder implements Disposable {
     private final Pointer encoder;
 
     public WebGPUCommandEncoder(WebGPUDevice device) {
-        WebGPUGraphicsBase gfx = (WebGPUGraphicsBase) Gdx.graphics;
+        WgGraphics gfx = (WgGraphics) Gdx.graphics;
         webGPU = gfx.getWebGPU();
 
         // create a command encoder

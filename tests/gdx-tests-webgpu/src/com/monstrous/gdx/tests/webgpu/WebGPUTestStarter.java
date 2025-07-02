@@ -27,13 +27,12 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTestWrapper;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplication;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgGraphics;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgWindowConfiguration;
+import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
+import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplicationConfiguration;
+import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopGraphics;
+import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopWindowConfiguration;
 import com.monstrous.gdx.webgpu.scene2d.WgSkin;
 import com.monstrous.gdx.webgpu.scene2d.WgStage;
-import com.monstrous.gdx.webgpu.webgpu.WGPUBackendType;
 
 
 // test starter
@@ -45,10 +44,10 @@ public class WebGPUTestStarter {
 	 * @param argv command line arguments */
 	public static void main (String[] argv) {
 
-		WgApplicationConfiguration config = new WgApplicationConfiguration();
+		WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
 		config.setWindowedMode(320, 640);
 
-		new WgApplication(new TestChooser(), config);
+		new WgDesktopApplication(new TestChooser(), config);
 	}
 
 	static class TestChooser extends ApplicationAdapter {
@@ -92,14 +91,14 @@ public class WebGPUTestStarter {
 					@Override
 					public void changed (ChangeEvent event, Actor actor) {
 						ApplicationListener test = WebGPUTests.newTest(testName);
-						WgWindowConfiguration winConfig = new WgWindowConfiguration();
+						WgDesktopWindowConfiguration winConfig = new WgDesktopWindowConfiguration();
 						winConfig.setTitle(testName);
 						winConfig.setWindowedMode(640, 480);
-						winConfig.setWindowPosition(((WgGraphics)Gdx.graphics).getWindow().getPositionX() + 40,
-							((WgGraphics)Gdx.graphics).getWindow().getPositionY() + 40);
+						winConfig.setWindowPosition(((WgDesktopGraphics)Gdx.graphics).getWindow().getPositionX() + 40,
+							((WgDesktopGraphics)Gdx.graphics).getWindow().getPositionY() + 40);
 						winConfig.useVsync(false);
 						Gdx.app.setLogLevel(Application.LOG_DEBUG);
-						((WgApplication)Gdx.app).newWindow(new GdxTestWrapper(test, false), winConfig);
+						((WgDesktopApplication)Gdx.app).newWindow(new GdxTestWrapper(test, false), winConfig);
 						System.out.println("Started test: " + testName);
 						prefs.putString("LastTest", testName);
 						prefs.flush();

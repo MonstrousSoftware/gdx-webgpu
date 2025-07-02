@@ -2,7 +2,7 @@ package com.monstrous.gdx.webgpu.wrappers;
 
 
 import com.badlogic.gdx.Gdx;
-import com.monstrous.gdx.webgpu.WebGPUGraphicsBase;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.utils.JavaWebGPU;
 import com.monstrous.gdx.webgpu.webgpu.WGPUComputePassDescriptor;
 import com.monstrous.gdx.webgpu.webgpu.WebGPU_JNI;
@@ -14,7 +14,7 @@ public class WebGPUComputePass implements Disposable {
     private final Pointer computePass;
 
     public WebGPUComputePass(WebGPUCommandEncoder commandEncoder) {
-        WebGPUGraphicsBase gfx = (WebGPUGraphicsBase) Gdx.graphics;
+        WgGraphics gfx = (WgGraphics) Gdx.graphics;
         webGPU = gfx.getWebGPU();
 
         // Create a compute pass

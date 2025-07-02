@@ -14,7 +14,7 @@ import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplication;
+import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 
@@ -34,7 +34,7 @@ public class ASimpleGame extends GdxTest {
     Rectangle dropRectangle;
 
     public static void main (String[] argv) {
-        new WgApplication(new ASimpleGame());
+        new WgDesktopApplication(new ASimpleGame());
     }
 
     @Override

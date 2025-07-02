@@ -24,18 +24,15 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.math.Vector3;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.tests.webgpu.utils.PerspectiveCamController;
-import com.monstrous.gdx.webgpu.WebGPUGraphicsBase;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplication;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
-import com.monstrous.gdx.webgpu.graphics.WgTexture;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
+import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
+import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplicationConfiguration;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgObjLoader;
 import com.monstrous.gdx.webgpu.graphics.utils.WgFrameBuffer;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
-import com.monstrous.gdx.webgpu.webgpu.WGPUTextureFormat;
-import com.monstrous.gdx.webgpu.webgpu.WGPUTextureUsage;
 
 /** Demonstrate wgFrameBuffer use.
  * todo support other formats
@@ -52,23 +49,23 @@ public class FrameBufferTest extends GdxTest {
 	WgBitmapFont font;
 	Model model;
 	ModelInstance instance;
-    WebGPUGraphicsBase gfx;
+    WgGraphics gfx;
     WgFrameBuffer fbo;
 
 
 	// launcher
 	public static void main (String[] argv) {
 
-		WgApplicationConfiguration config = new WgApplicationConfiguration();
+		WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
 		config.setWindowedMode(640, 480);
 		config.setTitle("WebGPUTest");
 
-		new WgApplication(new FrameBufferTest(), config);
+		new WgDesktopApplication(new FrameBufferTest(), config);
 	}
 
 	// application
 	public void create () {
-        gfx = (WebGPUGraphicsBase)Gdx.graphics;
+        gfx = (WgGraphics)Gdx.graphics;
 
 		modelBatch = new WgModelBatch();
 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -87,7 +84,7 @@ public class FrameBufferTest extends GdxTest {
 		batch = new WgSpriteBatch();
 		font = new WgBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
 
-        fbo = new WgFrameBuffer(gfx.getSurfaceFormat(),  640, 480, true);
+        fbo = new WgFrameBuffer(gfx.getContext().getSurfaceFormat(),  640, 480, true);
 	}
 
 	public void render () {

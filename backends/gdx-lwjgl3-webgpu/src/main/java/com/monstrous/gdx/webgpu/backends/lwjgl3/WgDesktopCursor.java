@@ -27,18 +27,18 @@ import org.lwjgl.glfw.GLFWImage;
 import java.util.HashMap;
 import java.util.Map;
 
-public class WgCursor implements Cursor {
-	static final Array<WgCursor> cursors = new Array<WgCursor>();
+public class WgDesktopCursor implements Cursor {
+	static final Array<WgDesktopCursor> cursors = new Array<WgDesktopCursor>();
 	static final Map<SystemCursor, Long> systemCursors = new HashMap<SystemCursor, Long>();
 
 	private static int inputModeBeforeNoneCursor = -1;
 
-	final WgWindow window;
+	final WgDesktopWindow window;
 	Pixmap pixmapCopy;
 	GLFWImage glfwImage;
 	final long glfwCursor;
 
-	WgCursor(WgWindow window, Pixmap pixmap, int xHotspot, int yHotspot) {
+	WgDesktopCursor(WgDesktopWindow window, Pixmap pixmap, int xHotspot, int yHotspot) {
 		this.window = window;
 		if (pixmap.getFormat() != Pixmap.Format.RGBA8888) {
 			throw new GdxRuntimeException("Cursor image pixmap is not in RGBA8888 format.");
@@ -88,9 +88,9 @@ public class WgCursor implements Cursor {
 		GLFW.glfwDestroyCursor(glfwCursor);
 	}
 
-	static void dispose (WgWindow window) {
+	static void dispose (WgDesktopWindow window) {
 		for (int i = cursors.size - 1; i >= 0; i--) {
-			WgCursor cursor = cursors.get(i);
+			WgDesktopCursor cursor = cursors.get(i);
 			if (cursor.window.equals(window)) {
 				cursors.removeIndex(i).dispose();
 			}

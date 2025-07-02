@@ -17,8 +17,10 @@
 package com.monstrous.gdx.webgpu.wrappers;
 
 import com.badlogic.gdx.Gdx;
-import com.monstrous.gdx.webgpu.WebGPUGraphicsBase;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.ShaderPrefix;
 import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
 import com.badlogic.gdx.utils.Disposable;
@@ -26,7 +28,9 @@ import com.monstrous.gdx.webgpu.webgpu.*;
 import jnr.ffi.Pointer;
 
 public class WebGPUPipeline implements Disposable {
-    private final WebGPU_JNI webGPU;
+    private final WgGraphics gfx = (WgGraphics) Gdx.graphics;
+    private final WebGPU_JNI webGPU = gfx.getWebGPU();
+    private final WebGPUContext webgpu = gfx.getContext();
     private Pointer pipelineLayout;
     private Pointer pipeline;
     public PipelineSpecification specification;
@@ -38,9 +42,6 @@ public class WebGPUPipeline implements Disposable {
     }
 
     public WebGPUPipeline(Pointer pipelineLayout, PipelineSpecification spec) {
-        WebGPUGraphicsBase gfx = (WebGPUGraphicsBase) Gdx.graphics;
-        webGPU = gfx.getWebGPU();
-
         this.pipelineLayout = pipelineLayout;
 
         // if the specification does not already have a shader, create one from the source file, customized to the vertex attributes.
@@ -154,7 +155,7 @@ public class WebGPUPipeline implements Disposable {
         pipelineDesc.getMultisample().setAlphaToCoverageEnabled(0);
 
         pipelineDesc.setLayout(pipelineLayout);
-        pipeline = webGPU.wgpuDeviceCreateRenderPipeline(gfx.getDevice().getHandle(), pipelineDesc);
+        pipeline = webGPU.wgpuDeviceCreateRenderPipeline(webgpu.device.getHandle(), pipelineDesc);
 
         if(pipeline == null)
             throw new RuntimeException("Pipeline creation failed");

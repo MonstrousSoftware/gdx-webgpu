@@ -2,7 +2,9 @@ package com.monstrous.gdx.webgpu.wrappers;
 
 
 import com.badlogic.gdx.Gdx;
-import com.monstrous.gdx.webgpu.WebGPUGraphicsBase;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.webgpu.WGPUBindGroupDescriptor;
 import com.monstrous.gdx.webgpu.webgpu.WGPUBindGroupEntry;
 import com.monstrous.gdx.webgpu.webgpu.WebGPU_JNI;
@@ -38,7 +40,8 @@ import java.util.Map;
 public class WebGPUBindGroup implements Disposable {
     private final WebGPU_JNI webGPU;
     private Pointer handle = null;
-    private final WebGPUGraphicsBase gfx;
+    private final WgGraphics gfx;
+    private final WebGPUContext webgpu;
 
     private final WebGPUBindGroupLayout layout;
     private final WGPUBindGroupDescriptor bindGroupDescriptor;
@@ -49,8 +52,10 @@ public class WebGPUBindGroup implements Disposable {
 
 
     public WebGPUBindGroup(WebGPUBindGroupLayout layout) {
-        gfx = (WebGPUGraphicsBase) Gdx.graphics;
+        gfx = (WgGraphics) Gdx.graphics;
         webGPU = gfx.getWebGPU();
+        webgpu = gfx.getContext();
+
 
         this.layout = layout;
         numEntries = layout.getEntryCount();
@@ -161,7 +166,7 @@ public class WebGPUBindGroup implements Disposable {
             }
             //System.out.println("Creating bind group");
             bindGroupDescriptor.setEntries(entryArray);
-            handle = webGPU.wgpuDeviceCreateBindGroup(gfx.getDevice().getHandle(), bindGroupDescriptor);
+            handle = webGPU.wgpuDeviceCreateBindGroup(webgpu.device.getHandle(), bindGroupDescriptor);
             dirty = false;
         }
         return handle;

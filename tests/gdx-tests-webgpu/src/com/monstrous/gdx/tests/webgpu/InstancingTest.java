@@ -32,14 +32,13 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
-import com.monstrous.gdx.tests.webgpu.utils.PerspectiveCamController;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.monstrous.gdx.webgpu.WebGPUGraphicsBase;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.assets.WgAssetManager;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplication;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
+import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
+import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplicationConfiguration;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
@@ -73,25 +72,25 @@ public class InstancingTest extends GdxTest {
 	WgStage stage;
 	WgSkin skin;
 	WgAssetManager assets;
-    WebGPUGraphicsBase gfx;
+    WgGraphics gfx;
 
 
 	// launcher
 	public static void main (String[] argv) {
 
-		WgApplicationConfiguration config = new WgApplicationConfiguration();
+		WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
 		config.setWindowedMode(640, 480);
 		config.setTitle("WebGPUTest");
 		config.useVsync(false);
 		config.backend = WGPUBackendType.Vulkan;
 		config.enableGPUtiming = false;
 
-		new WgApplication(new InstancingTest(), config);
+		new WgDesktopApplication(new InstancingTest(), config);
 	}
 
 	// application
 	public void create () {
-        gfx = (WebGPUGraphicsBase) Gdx.graphics;
+        gfx = (WgGraphics) Gdx.graphics;
 
 		WgDefaultShader.Config config = new WgDefaultShader.Config();
 		config.maxInstances = MAX_INSTANCES;

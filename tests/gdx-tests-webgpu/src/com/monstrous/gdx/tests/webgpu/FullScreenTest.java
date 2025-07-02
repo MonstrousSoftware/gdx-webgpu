@@ -7,8 +7,8 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplication;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgGraphics;
+import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
+import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopGraphics;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
@@ -22,7 +22,7 @@ public class FullScreenTest extends GdxTest {
     private int savedWidth, savedHeight;
 
     public static void main (String[] argv) {
-        new WgApplication(new FullScreenTest());
+        new WgDesktopApplication(new FullScreenTest());
     }
 
     @Override
@@ -41,7 +41,7 @@ public class FullScreenTest extends GdxTest {
         }
         if(Gdx.input.isKeyJustPressed(Input.Keys.F11)){
             boolean fullScreen = Gdx.graphics.isFullscreen();
-            WgGraphics.DisplayMode currentMode = Gdx.graphics.getDisplayMode();
+            WgDesktopGraphics.DisplayMode currentMode = Gdx.graphics.getDisplayMode();
             if (fullScreen)
                 Gdx.graphics.setWindowedMode(savedWidth, savedHeight);
             else {

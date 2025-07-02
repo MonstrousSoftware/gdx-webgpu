@@ -5,7 +5,8 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
-import com.monstrous.gdx.webgpu.WebGPUGraphicsBase;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.Binder;
 import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
 import com.badlogic.gdx.graphics.*;
@@ -34,7 +35,8 @@ public class WgSpriteBatch implements Batch {
     private final static int VERTS_PER_SPRITE = 4;
     private final static int INDICES_PER_SPRITE = 6;
 
-    private final WebGPUGraphicsBase gfx;
+    private final WgGraphics gfx;
+    private final WebGPUContext webgpu;
     private final WgShaderProgram specificShader;
     private final int maxSprites;
     private boolean drawing;
@@ -87,7 +89,8 @@ public class WgSpriteBatch implements Batch {
      * @param specificShader    specific ShaderProgram to use, must be compatible with "sprite.wgsl". Leave null to use the default shader.
      */
     public WgSpriteBatch(int maxSprites, WgShaderProgram specificShader) {
-        gfx = (WebGPUGraphicsBase) Gdx.graphics;
+        gfx = (WgGraphics) Gdx.graphics;
+        webgpu = gfx.getContext();
 
         this.maxSprites = maxSprites;
         this.specificShader = specificShader;
@@ -309,8 +312,8 @@ public class WgSpriteBatch implements Batch {
     }
 
     public void begin(Color clearColor) {
-        renderPass = RenderPassBuilder.create("SpriteBatch", clearColor, gfx.getSamples());
-        Rectangle view = gfx.getViewportRectangle();
+        renderPass = RenderPassBuilder.create("SpriteBatch", clearColor, webgpu.getSamples());
+        Rectangle view = webgpu.getViewportRectangle();
         renderPass.setViewport(view.x, view.y, view.width, view.height, 0, 1);
 
 
@@ -334,7 +337,7 @@ public class WgSpriteBatch implements Batch {
         pipelineSpec.disableDepthTest();
 
         pipelineSpec.vertexAttributes = vertexAttributes;
-        pipelineSpec.numSamples = gfx.getSamples();
+        pipelineSpec.numSamples = webgpu.getSamples();
 
         // don't reset the matrices because setProjectionMatrix() and setTransformMatrix()
         // may be called before begin() and need to be respected.

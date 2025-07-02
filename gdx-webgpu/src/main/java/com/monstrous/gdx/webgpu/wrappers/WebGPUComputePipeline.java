@@ -18,7 +18,9 @@ package com.monstrous.gdx.webgpu.wrappers;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Disposable;
-import com.monstrous.gdx.webgpu.WebGPUGraphicsBase;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
 import com.monstrous.gdx.webgpu.webgpu.WGPUComputePipelineDescriptor;
 import com.monstrous.gdx.webgpu.webgpu.WebGPU_JNI;
@@ -26,12 +28,15 @@ import jnr.ffi.Pointer;
 
 public class WebGPUComputePipeline implements Disposable {
     private final WebGPU_JNI webGPU;
+    private final WgGraphics gfx;
+    private final WebGPUContext webgpu;
     private final Pointer pipeline;
 
 
     public WebGPUComputePipeline(WgShaderProgram shader, String entryPoint, WebGPUPipelineLayout layout) {
-        WebGPUGraphicsBase gfx = (WebGPUGraphicsBase) Gdx.graphics;
+        gfx = (WgGraphics) Gdx.graphics;
         webGPU = gfx.getWebGPU();
+        webgpu = gfx.getContext();
 
         WGPUComputePipelineDescriptor pipelineDesc = WGPUComputePipelineDescriptor.createDirect();
 
@@ -44,7 +49,7 @@ public class WebGPUComputePipeline implements Disposable {
 
         pipelineDesc.setLayout(layout.getHandle());
 
-        pipeline = webGPU.wgpuDeviceCreateComputePipeline(gfx.getDevice().getHandle(), pipelineDesc);
+        pipeline = webGPU.wgpuDeviceCreateComputePipeline(webgpu.device.getHandle(), pipelineDesc);
 
         if(pipeline == null)
             throw new RuntimeException("Compute pipeline creation failed");

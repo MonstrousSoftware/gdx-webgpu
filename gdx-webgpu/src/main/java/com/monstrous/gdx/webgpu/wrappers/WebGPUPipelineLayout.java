@@ -2,7 +2,9 @@ package com.monstrous.gdx.webgpu.wrappers;
 
 
 import com.badlogic.gdx.Gdx;
-import com.monstrous.gdx.webgpu.WebGPUGraphicsBase;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.utils.JavaWebGPU;
 import com.monstrous.gdx.webgpu.webgpu.WGPUPipelineLayoutDescriptor;
 import com.monstrous.gdx.webgpu.webgpu.WebGPU_JNI;
@@ -15,12 +17,12 @@ import java.nio.ByteBuffer;
 import static org.lwjgl.system.MemoryStack.stackPush;
 
 public class WebGPUPipelineLayout implements Disposable {
-    private final WebGPU_JNI webGPU;
+    private final WgGraphics gfx = (WgGraphics) Gdx.graphics;
+    private final WebGPU_JNI webGPU = gfx.getWebGPU();
+    private final WebGPUContext webgpu = gfx.getContext();
     private final Pointer handle;
 
     public WebGPUPipelineLayout(String label, WebGPUBindGroupLayout... bindGroupLayouts ) {
-        WebGPUGraphicsBase gfx = (WebGPUGraphicsBase) Gdx.graphics;
-        webGPU = gfx.getWebGPU();
 
         int count = bindGroupLayouts.length;
         try (MemoryStack stack = stackPush()) {
@@ -33,7 +35,7 @@ public class WebGPUPipelineLayout implements Disposable {
             pipelineLayoutDesc.setLabel(label);
             pipelineLayoutDesc.setBindGroupLayoutCount(count);
             pipelineLayoutDesc.setBindGroupLayouts(JavaWebGPU.createByteBufferPointer(pLayouts));  // expects an array of layouts in native memory
-            handle = webGPU.wgpuDeviceCreatePipelineLayout(gfx.getDevice().getHandle(), pipelineLayoutDesc);
+            handle = webGPU.wgpuDeviceCreatePipelineLayout(webgpu.device.getHandle(), pipelineLayoutDesc);
         } // free malloced memory
     }
 

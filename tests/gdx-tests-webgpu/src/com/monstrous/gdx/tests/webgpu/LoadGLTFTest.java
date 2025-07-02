@@ -27,15 +27,13 @@ import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.math.collision.BoundingBox;
-import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
-import com.monstrous.gdx.tests.webgpu.utils.PerspectiveCamController;
-import com.monstrous.gdx.webgpu.WebGPUGraphicsBase;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplication;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
+import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
+import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplicationConfiguration;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
@@ -61,14 +59,15 @@ public class LoadGLTFTest extends GdxTest {
     int numMeshes;
     int numVerts;
     int numIndices;
-    WebGPUGraphicsBase gfx;
+    WgGraphics gfx;
+    WebGPUContext webgpu;
     private Viewport viewport;
 
 
 	// launcher
 	public static void main (String[] argv) {
 
-		WgApplicationConfiguration config = new WgApplicationConfiguration();
+		WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
 		config.setWindowedMode(1200, 800);
 		config.setTitle("WebGPUTest");
         config.useVsync(false);
@@ -76,12 +75,13 @@ public class LoadGLTFTest extends GdxTest {
         config.enableGPUtiming = true;
         //config.samples = 4;
 
-		new WgApplication(new LoadGLTFTest(), config);
+		new WgDesktopApplication(new LoadGLTFTest(), config);
 	}
 
 	// application
 	public void create () {
-        gfx = (WebGPUGraphicsBase) Gdx.graphics;
+        gfx = (WgGraphics) Gdx.graphics;
+        webgpu = gfx.getContext();
 
 		modelBatch = new WgModelBatch();
 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -170,8 +170,8 @@ public class LoadGLTFTest extends GdxTest {
         font.draw(batch, "FPS: "+Gdx.graphics.getFramesPerSecond() ,0, y -= 20);
         font.draw(batch, "delta time: "+(int)(1000000/(Gdx.graphics.getFramesPerSecond()+0.001f))+" microseconds",0, y -= 20);
 
-        for(int pass = 0; pass < gfx.getGPUTimer().getNumPasses(); pass++)
-            font.draw(batch, "GPU time (pass "+pass+" "+gfx.getGPUTimer().getPassName(pass)+") : "+(int)gfx.getAverageGPUtime(pass)+ " microseconds" ,0, y -= 20);
+        for(int pass = 0; pass < webgpu.getGPUTimer().getNumPasses(); pass++)
+            font.draw(batch, "GPU time (pass "+pass+" "+webgpu.getGPUTimer().getPassName(pass)+") : "+(int)webgpu.getAverageGPUtime(pass)+ " microseconds" ,0, y -= 20);
         batch.end();
 
 	}

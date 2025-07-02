@@ -14,9 +14,9 @@ import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplication;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgGraphics;
+import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
+import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplicationConfiguration;
+import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopGraphics;
 import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
@@ -47,7 +47,7 @@ public class ComputeMoldSlime extends GdxTest {
     private WgSpriteBatch batch;
     private WgBitmapFont font;
 
-    private WgGraphics gfx;
+    private WgDesktopGraphics gfx;
     private WebGPUComputePipeline pipeline1, pipeline2, pipeline3;
     private WgTexture texture, texture2;
     private WebGPUBindGroup bindGroupMove, bindGroupEvap, bindGroupBlur;
@@ -71,18 +71,18 @@ public class ComputeMoldSlime extends GdxTest {
 
 
     public static void main (String[] argv) {
-        WgApplicationConfiguration config = new WgApplicationConfiguration();
+        WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
         config.setWindowedMode(800, 600);
         config.setTitle("Compute Shader Slime Mold");
 
-        new WgApplication(new ComputeMoldSlime(), config);
+        new WgDesktopApplication(new ComputeMoldSlime(), config);
     }
 
     @Override
     public void create() {
         batch = new WgSpriteBatch();
         font = new WgBitmapFont();
-        gfx = (WgGraphics) Gdx.graphics;
+        gfx = (WgDesktopGraphics) Gdx.graphics;
         // start the simulation on resize()
 
         config = new Config();
@@ -124,7 +124,7 @@ public class ComputeMoldSlime extends GdxTest {
         // Create input and output textures
 
         // create a queue
-        queue = new WebGPUQueue(gfx.getDevice());
+        queue = new WebGPUQueue(gfx.context.device);
 
 
 
@@ -187,7 +187,7 @@ public class ComputeMoldSlime extends GdxTest {
         uniforms.flush();
 
 
-        WebGPUCommandEncoder encoder = new WebGPUCommandEncoder(gfx.getDevice());
+        WebGPUCommandEncoder encoder = new WebGPUCommandEncoder(gfx.context.device);
 
         // Step 1. move agents
         WebGPUComputePass pass = encoder.beginComputePass();
@@ -313,7 +313,7 @@ public class ComputeMoldSlime extends GdxTest {
 
         if(Gdx.input.isKeyJustPressed(Input.Keys.F11)){
             boolean fullScreen = Gdx.graphics.isFullscreen();
-            WgGraphics.DisplayMode currentMode = Gdx.graphics.getDisplayMode();
+            WgDesktopGraphics.DisplayMode currentMode = Gdx.graphics.getDisplayMode();
             if (fullScreen)
                 Gdx.graphics.setWindowedMode(savedWidth, savedHeight);
             else {

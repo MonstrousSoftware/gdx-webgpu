@@ -18,7 +18,9 @@ package com.monstrous.gdx.webgpu.wrappers;
 
 
 import com.badlogic.gdx.Gdx;
-import com.monstrous.gdx.webgpu.WebGPUGraphicsBase;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.webgpu.WGPUBufferDescriptor;
 import com.monstrous.gdx.webgpu.webgpu.WebGPU_JNI;
 import com.badlogic.gdx.utils.Disposable;
@@ -36,11 +38,13 @@ public class WebGPUBuffer implements Disposable {
     protected final WebGPU_JNI webGPU;
     private Pointer handle;
     private final long bufferSize;
-    protected WebGPUGraphicsBase gfx;
+    protected WgGraphics gfx;
+    protected WebGPUContext webgpu;
 
     public WebGPUBuffer(String label, long usage, long bufferSize){
-        gfx = (WebGPUGraphicsBase) Gdx.graphics;
+        gfx = (WgGraphics) Gdx.graphics;
         webGPU = gfx.getWebGPU();
+        webgpu = gfx.getContext();
 
         this.bufferSize = bufferSize;
 
@@ -50,7 +54,7 @@ public class WebGPUBuffer implements Disposable {
         bufferDesc.setUsage( usage );
         bufferDesc.setSize( bufferSize );
         bufferDesc.setMappedAtCreation(0L);
-        this.handle = webGPU.wgpuDeviceCreateBuffer(gfx.getDevice().getHandle(), bufferDesc);
+        this.handle = webGPU.wgpuDeviceCreateBuffer(webgpu.device.getHandle(), bufferDesc);
     }
 
     public Pointer getHandle(){
@@ -63,7 +67,7 @@ public class WebGPUBuffer implements Disposable {
 
     public void write(int destOffset, Pointer data, int dataSize){
         if(destOffset + dataSize > bufferSize) throw new RuntimeException("Overflow in Buffer.write().");
-        gfx.getQueue().writeBuffer(this, destOffset, data, dataSize);
+        webgpu.queue.writeBuffer(this, destOffset, data, dataSize);
     }
 
     @Override

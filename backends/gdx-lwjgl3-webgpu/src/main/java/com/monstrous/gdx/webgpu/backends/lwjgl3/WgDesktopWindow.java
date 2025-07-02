@@ -27,16 +27,16 @@ import org.lwjgl.glfw.*;
 
 import java.nio.IntBuffer;
 
-public class WgWindow implements Disposable {
+public class WgDesktopWindow implements Disposable {
 	private long windowHandle;
 	final ApplicationListener listener;
 	private final Array<LifecycleListener> lifecycleListeners;
-	final WgApplication application;
+	final WgDesktopApplication application;
 	private boolean listenerInitialized = false;
-	WgWindowListener windowListener;
-	private WgGraphics graphics;
+	WgDesktopWindowListener windowListener;
+	private WgDesktopGraphics graphics;
 	private Lwjgl3Input input;
-	private final WgApplicationConfiguration config;
+	private final WgDesktopApplicationConfiguration config;
 	private final Array<Runnable> runnables = new Array<Runnable>();
 	private final Array<Runnable> executedRunnables = new Array<Runnable>();
 	private final IntBuffer tmpBuffer;
@@ -78,7 +78,7 @@ public class WgWindow implements Disposable {
 							listener.pause();
 						}
 					}
-					WgWindow.this.focused = focused;
+					WgDesktopWindow.this.focused = focused;
 				}
 			});
 		}
@@ -93,7 +93,7 @@ public class WgWindow implements Disposable {
 					if (windowListener != null) {
 						windowListener.iconified(iconified);
 					}
-					WgWindow.this.iconified = iconified;
+					WgDesktopWindow.this.iconified = iconified;
 					if (iconified) {
 						if (config.pauseWhenMinimized) {
 							synchronized (lifecycleListeners) {
@@ -181,8 +181,8 @@ public class WgWindow implements Disposable {
 		}
 	};
 
-	WgWindow(ApplicationListener listener, Array<LifecycleListener> lifecycleListeners, WgApplicationConfiguration config,
-             WgApplication application) {
+	WgDesktopWindow(ApplicationListener listener, Array<LifecycleListener> lifecycleListeners, WgDesktopApplicationConfiguration config,
+					WgDesktopApplication application) {
 		this.listener = listener;
 		this.lifecycleListeners = lifecycleListeners;
 		this.windowListener = config.windowListener;
@@ -198,7 +198,7 @@ public class WgWindow implements Disposable {
 		this.input = application.createInput(this);
 		long win32handle = GLFWNativeWin32.glfwGetWin32Window(getWindowHandle());
 
-		this.graphics = new WgGraphics(this, application.getWebGPU(), win32handle);
+		this.graphics = new WgDesktopGraphics(this, application.getWebGPU(), win32handle);
 
 		GLFW.glfwSetWindowFocusCallback(windowHandle, focusCallback);
 		GLFW.glfwSetWindowIconifyCallback(windowHandle, iconifyCallback);
@@ -217,12 +217,12 @@ public class WgWindow implements Disposable {
 		return listener;
 	}
 
-	/** @return the {@link WgWindowListener} set on this window **/
-	public WgWindowListener getWindowListener () {
+	/** @return the {@link WgDesktopWindowListener} set on this window **/
+	public WgDesktopWindowListener getWindowListener () {
 		return windowListener;
 	}
 
-	public void setWindowListener (WgWindowListener listener) {
+	public void setWindowListener (WgDesktopWindowListener listener) {
 		this.windowListener = listener;
 	}
 
@@ -375,7 +375,7 @@ public class WgWindow implements Disposable {
 			maxHeight > -1 ? maxHeight : GLFW.GLFW_DONT_CARE);
 	}
 
-	WgGraphics getGraphics () {
+	WgDesktopGraphics getGraphics () {
 		return graphics;
 	}
 
@@ -451,7 +451,7 @@ public class WgWindow implements Disposable {
 		return GLFW.glfwWindowShouldClose(windowHandle);
 	}
 
-	WgApplicationConfiguration getConfig () {
+	WgDesktopApplicationConfiguration getConfig () {
 		return config;
 	}
 
@@ -476,7 +476,7 @@ public class WgWindow implements Disposable {
 	public void dispose () {
 		listener.pause();
 		listener.dispose();
-		WgCursor.dispose(this);
+		WgDesktopCursor.dispose(this);
 		graphics.dispose();
 		input.dispose();
 		GLFW.glfwSetWindowFocusCallback(windowHandle, null);
@@ -506,7 +506,7 @@ public class WgWindow implements Disposable {
 		if (this == obj) return true;
 		if (obj == null) return false;
 		if (getClass() != obj.getClass()) return false;
-		WgWindow other = (WgWindow)obj;
+		WgDesktopWindow other = (WgDesktopWindow)obj;
 		if (windowHandle != other.windowHandle) return false;
 		return true;
 	}

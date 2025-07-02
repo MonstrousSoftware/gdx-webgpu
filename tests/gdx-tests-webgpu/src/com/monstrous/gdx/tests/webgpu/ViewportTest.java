@@ -11,8 +11,8 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplication;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
+import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
+import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplicationConfiguration;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
@@ -30,10 +30,10 @@ public class ViewportTest extends GdxTest {
 
     // launcher
     public static void main (String[] argv) {
-        WgApplicationConfiguration config = new WgApplicationConfiguration();
+        WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
         config.setWindowedMode(1200, 480);
 
-        new WgApplication(new ViewportTest(), config);
+        new WgDesktopApplication(new ViewportTest(), config);
     }
 
     // demonstrate a custom viewport that shows the content only in a box at the centre of the screen

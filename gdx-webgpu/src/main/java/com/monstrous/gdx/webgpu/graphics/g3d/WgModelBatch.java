@@ -6,7 +6,7 @@ import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.RenderableProvider;
 import com.badlogic.gdx.graphics.g3d.utils.RenderableSorter;
-import com.monstrous.gdx.webgpu.WebGPUGraphicsBase;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDefaultShader;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDefaultShaderProvider;
 import com.badlogic.gdx.graphics.*;
@@ -85,8 +85,8 @@ public class WgModelBatch implements Disposable {
         drawing = true;
         this.camera = camera;
 
-        WebGPUGraphicsBase gfx = (WebGPUGraphicsBase) Gdx.graphics;
-        renderPass = RenderPassBuilder.create("ModelBatch", clearColor, gfx.getSamples());
+        WgGraphics gfx = (WgGraphics) Gdx.graphics;
+        renderPass = RenderPassBuilder.create("ModelBatch", clearColor, gfx.getContext().getSamples());
 
         renderables.clear();
         shaderSwitches = 0;

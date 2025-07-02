@@ -2,7 +2,7 @@ package com.monstrous.gdx.webgpu.wrappers;
 
 
 import com.badlogic.gdx.Gdx;
-import com.monstrous.gdx.webgpu.WebGPUGraphicsBase;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.utils.JavaWebGPU;
 import com.monstrous.gdx.webgpu.webgpu.WebGPU_JNI;
 import com.badlogic.gdx.utils.Disposable;
@@ -18,7 +18,7 @@ public class WebGPUQueue implements Disposable {
     private final Pointer queue;
 
     public WebGPUQueue(WebGPUDevice device) {
-        WebGPUGraphicsBase gfx = (WebGPUGraphicsBase) Gdx.graphics;
+        WgGraphics gfx = (WgGraphics) Gdx.graphics;
         webGPU = gfx.getWebGPU();
         queue = webGPU.wgpuDeviceGetQueue(device.getHandle());
     }

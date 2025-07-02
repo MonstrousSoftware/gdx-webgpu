@@ -33,7 +33,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplication;
+import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgParticleEffect;
 import com.monstrous.gdx.webgpu.scene2d.WgSkin;
@@ -53,7 +53,7 @@ public class ParticleEmittersTest extends GdxTest {
 
     // launcher
     public static void main (String[] argv) {
-        new WgApplication(new ParticleEmittersTest());
+        new WgDesktopApplication(new ParticleEmittersTest());
     }
 
 	@Override

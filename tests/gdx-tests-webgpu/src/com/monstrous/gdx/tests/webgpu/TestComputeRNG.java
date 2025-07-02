@@ -5,8 +5,8 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplication;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgGraphics;
+import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
+import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopGraphics;
 import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
@@ -24,21 +24,21 @@ public class TestComputeRNG extends GdxTest {
     private WgSpriteBatch batch;
     private WgBitmapFont font;
 
-    private WgGraphics gfx;
+    private WgDesktopGraphics gfx;
     private WebGPUComputePipeline pipeline;
     private WgTexture[] textures;
     private WebGPUTextureView[] textureViews;
     private int pingPong;
 
     public static void main (String[] argv) {
-        new WgApplication(new TestComputeRNG());
+        new WgDesktopApplication(new TestComputeRNG());
     }
 
     @Override
     public void create() {
         batch = new WgSpriteBatch();
         font = new WgBitmapFont();
-        gfx = (WgGraphics)Gdx.graphics;
+        gfx = (WgDesktopGraphics)Gdx.graphics;
 
         textures = new WgTexture[2];
 
@@ -120,10 +120,10 @@ public class TestComputeRNG extends GdxTest {
     private void compute(WebGPUBindGroup bindGroup) {
 
         // create a queue
-        WebGPUQueue queue = new WebGPUQueue(gfx.getDevice());
+        WebGPUQueue queue = new WebGPUQueue(gfx.context.device);
 
 
-        WebGPUCommandEncoder encoder = new WebGPUCommandEncoder(gfx.getDevice());
+        WebGPUCommandEncoder encoder = new WebGPUCommandEncoder(gfx.context.device);
 
         WebGPUComputePass pass = encoder.beginComputePass();
 

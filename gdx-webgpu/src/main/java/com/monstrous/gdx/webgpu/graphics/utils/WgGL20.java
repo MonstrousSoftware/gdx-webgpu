@@ -3,7 +3,8 @@ package com.monstrous.gdx.webgpu.graphics.utils;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.math.Rectangle;
-import com.monstrous.gdx.webgpu.WebGPUGraphicsBase;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 
 import java.nio.Buffer;
 import java.nio.FloatBuffer;
@@ -16,41 +17,47 @@ import java.nio.IntBuffer;
  */
 public class WgGL20 implements GL20 {
 
+
+
     @Override
     public void glViewport(int x, int y, int width, int height) {
-        WebGPUGraphicsBase gfx = (WebGPUGraphicsBase)Gdx.graphics;
-        Rectangle view = gfx.getViewportRectangle();
+        WgGraphics gfx = (WgGraphics)Gdx.graphics;
+        WebGPUContext webgpu = gfx.getContext();
+        Rectangle view = webgpu.getViewportRectangle();
         if(x != view.x || y != view.y || width != view.width || height != view.height){
             Gdx.app.log("glViewport", "x=" + x + " y=" + y + " w=" + width + " h=" + height);
-            gfx.setViewportRectangle(x,y,width, height);
+            webgpu.setViewportRectangle(x,y,width, height);
         }
     }
 
     @Override
     public void glScissor(int x, int y, int width, int height) {
+        WgGraphics gfx = (WgGraphics)Gdx.graphics;
+        WebGPUContext webgpu = gfx.getContext();
         // note: we are not testing for glEnable(GL_SCISSOR_TEST)/glDisable(GL_SCISSOR_TEST)
 
-        WebGPUGraphicsBase gfx = (WebGPUGraphicsBase)Gdx.graphics;
-        Rectangle scissor = gfx.getScissor();
+        Rectangle scissor = webgpu.getScissor();
         if(x != scissor.x || y != scissor.y || width != scissor.width || height != scissor.height){
             Gdx.app.log("glScissor", "x=" + x + " y=" + y + " w=" + width + " h=" + height);
-            gfx.setScissor(x,y,width, height);
+            webgpu.setScissor(x,y,width, height);
         }
     }
 
     @Override
     public void glEnable(int cap) {
         if(cap == GL20.GL_SCISSOR_TEST){
-            WebGPUGraphicsBase gfx = (WebGPUGraphicsBase)Gdx.graphics;
-            gfx.enableScissor(true);
+            WgGraphics gfx = (WgGraphics)Gdx.graphics;
+            WebGPUContext webgpu = gfx.getContext();
+            webgpu.enableScissor(true);
         }
     }
 
     @Override
     public void glDisable(int cap) {
         if(cap == GL20.GL_SCISSOR_TEST){
-            WebGPUGraphicsBase gfx = (WebGPUGraphicsBase)Gdx.graphics;
-            gfx.enableScissor(false);
+            WgGraphics gfx = (WgGraphics)Gdx.graphics;
+            WebGPUContext webgpu = gfx.getContext();
+            webgpu.enableScissor(false);
         }
 
     }

@@ -2,7 +2,7 @@ package com.monstrous.gdx.webgpu.wrappers;
 
 
 import com.badlogic.gdx.Gdx;
-import com.monstrous.gdx.webgpu.WebGPUGraphicsBase;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.utils.Disposable;
 import com.monstrous.gdx.webgpu.webgpu.*;
@@ -14,7 +14,7 @@ public class WebGPUAdapter implements Disposable {
     private final WGPUSupportedLimits supportedLimits;
 
     public WebGPUAdapter(Pointer instance, Pointer surface, WGPUBackendType backendType, WGPUPowerPreference powerPreference) {
-        WebGPUGraphicsBase gfx = (WebGPUGraphicsBase)Gdx.graphics;
+        WgGraphics gfx = (WgGraphics)Gdx.graphics;
         webGPU = gfx.getWebGPU();
 
         WGPURequestAdapterOptions options = WGPURequestAdapterOptions.createDirect();
@@ -29,7 +29,7 @@ public class WebGPUAdapter implements Disposable {
         // Get Adapter
         adapter = getAdapterSync(instance, options);
         if(adapter == null){
-            System.out.println("Configured adapter back end ("+ gfx.getRequestedBackendType()+") not available, requesting fallback");
+            System.out.println("Configured adapter back end not available, requesting fallback");
             options.setBackendType(WGPUBackendType.Undefined);
             options.setPowerPreference(powerPreference);
             adapter = getAdapterSync(instance, options);

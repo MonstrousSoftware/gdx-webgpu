@@ -20,7 +20,7 @@ package com.monstrous.gdx.webgpu.wrappers;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g3d.Environment;
-import com.monstrous.gdx.webgpu.WebGPUGraphicsBase;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.monstrous.gdx.webgpu.webgpu.*;
@@ -74,8 +74,8 @@ public class PipelineSpecification {
         indexFormat = WGPUIndexFormat.Uint16;
         topology =  WGPUPrimitiveTopology.TriangleList;
         isDepthPass = false;
-        WebGPUGraphicsBase gfx = (WebGPUGraphicsBase) Gdx.graphics;
-        colorFormat = gfx.getSurfaceFormat();
+        WgGraphics gfx = (WgGraphics) Gdx.graphics;
+        colorFormat = gfx.getContext().getSurfaceFormat();
         depthFormat = WGPUTextureFormat.Depth24Plus;       // todo get from adapter?
         numSamples = 1;
         isSkyBox = false;

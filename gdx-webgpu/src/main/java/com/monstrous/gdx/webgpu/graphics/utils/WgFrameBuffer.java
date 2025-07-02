@@ -5,7 +5,8 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.monstrous.gdx.webgpu.WebGPUGraphicsBase;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.webgpu.WGPUTextureFormat;
 import com.monstrous.gdx.webgpu.webgpu.WGPUTextureUsage;
@@ -16,7 +17,8 @@ import jnr.ffi.Pointer;
 /** This frame buffer is nestable */
 public class WgFrameBuffer implements Disposable {
 
-    private final WebGPUGraphicsBase gfx;
+    private final WgGraphics gfx;
+    private final WebGPUContext webgpu;
     private boolean hasDepth;
     private final WgTexture colorTexture;
     private final WgTexture depthTexture;
@@ -28,7 +30,8 @@ public class WgFrameBuffer implements Disposable {
     /** note: requires WGPUTextureFormat instead of Pixmap.Format */
     public WgFrameBuffer(WGPUTextureFormat format, int width, int height, boolean hasDepth) {
         this.hasDepth = hasDepth;
-        gfx = (WebGPUGraphicsBase) Gdx.graphics;
+        gfx = (WgGraphics) Gdx.graphics;
+        webgpu = gfx.getContext();
 
         final int textureUsage = WGPUTextureUsage.TextureBinding | WGPUTextureUsage.CopyDst|WGPUTextureUsage.RenderAttachment | WGPUTextureUsage.CopySrc;
         colorTexture = new WgTexture("fbo color", width, height, 1, textureUsage, format, 1, format);
@@ -42,16 +45,16 @@ public class WgFrameBuffer implements Disposable {
     }
 
     public void begin(){
-        originalView = gfx.pushTargetView(colorTexture, originalViewportRectangle);
+        originalView = webgpu.pushTargetView(colorTexture, originalViewportRectangle);
         if(hasDepth)
-            originalDepthTexture = gfx.pushDepthTexture(depthTexture);
+            originalDepthTexture = webgpu.pushDepthTexture(depthTexture);
         //viewport.apply();
     }
 
     public void end() {
-        gfx.popTargetView(originalView, originalViewportRectangle);
+        webgpu.popTargetView(originalView, originalViewportRectangle);
         if(hasDepth)
-            gfx.popDepthTexture(originalDepthTexture);
+            webgpu.popDepthTexture(originalDepthTexture);
     }
 
     public Texture getColorBufferTexture(){

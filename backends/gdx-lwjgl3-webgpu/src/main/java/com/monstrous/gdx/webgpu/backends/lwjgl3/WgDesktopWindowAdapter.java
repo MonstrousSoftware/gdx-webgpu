@@ -2,12 +2,12 @@
 package com.monstrous.gdx.webgpu.backends.lwjgl3;
 
 
-/** Convenience implementation of {@link WgWindowListener}. Derive from this class and only overwrite the methods you are
+/** Convenience implementation of {@link WgDesktopWindowListener}. Derive from this class and only overwrite the methods you are
  * interested in.
  * @author badlogic */
-public class WgWindowAdapter implements WgWindowListener {
+public class WgDesktopWindowAdapter implements WgDesktopWindowListener {
 	@Override
-	public void created (WgWindow window) {
+	public void created (WgDesktopWindow window) {
 	}
 
 	@Override

@@ -38,7 +38,7 @@ import org.lwjgl.glfw.GLFWVidMode.Buffer;
 import java.io.PrintStream;
 import java.nio.IntBuffer;
 
-public class WgApplicationConfiguration extends WgWindowConfiguration {
+public class WgDesktopApplicationConfiguration extends WgDesktopWindowConfiguration {
 	public static PrintStream errorStream = System.err;
 
 	boolean disableAudio = false;
@@ -70,13 +70,13 @@ public class WgApplicationConfiguration extends WgWindowConfiguration {
 
 	HdpiMode hdpiMode = HdpiMode.Logical;
 
-	static WgApplicationConfiguration copy (WgApplicationConfiguration config) {
-		WgApplicationConfiguration copy = new WgApplicationConfiguration();
+	static WgDesktopApplicationConfiguration copy (WgDesktopApplicationConfiguration config) {
+		WgDesktopApplicationConfiguration copy = new WgDesktopApplicationConfiguration();
 		copy.set(config);
 		return copy;
 	}
 
-	void set (WgApplicationConfiguration config) {
+	void set (WgDesktopApplicationConfiguration config) {
 		super.setWindowConfiguration(config);
 		disableAudio = config.disableAudio;
 		audioDeviceSimultaneousSources = config.audioDeviceSimultaneousSources;
@@ -196,28 +196,28 @@ public class WgApplicationConfiguration extends WgWindowConfiguration {
 
 	/** @return the currently active {@link DisplayMode} of the primary monitor */
 	public static DisplayMode getDisplayMode () {
-		WgApplication.initializeGlfw();
+		WgDesktopApplication.initializeGlfw();
 		GLFWVidMode videoMode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
-		return new WgGraphics.WebGPUDisplayMode(GLFW.glfwGetPrimaryMonitor(), videoMode.width(), videoMode.height(),
+		return new WgDesktopGraphics.WebGPUDisplayMode(GLFW.glfwGetPrimaryMonitor(), videoMode.width(), videoMode.height(),
 			videoMode.refreshRate(), videoMode.redBits() + videoMode.greenBits() + videoMode.blueBits());
 	}
 
 	/** @return the currently active {@link DisplayMode} of the given monitor */
 	public static DisplayMode getDisplayMode (Monitor monitor) {
-		WgApplication.initializeGlfw();
-		GLFWVidMode videoMode = GLFW.glfwGetVideoMode(((WgGraphics.WebGPUMonitor)monitor).monitorHandle);
-		return new WgGraphics.WebGPUDisplayMode(((WgGraphics.WebGPUMonitor)monitor).monitorHandle, videoMode.width(), videoMode.height(),
+		WgDesktopApplication.initializeGlfw();
+		GLFWVidMode videoMode = GLFW.glfwGetVideoMode(((WgDesktopGraphics.WebGPUMonitor)monitor).monitorHandle);
+		return new WgDesktopGraphics.WebGPUDisplayMode(((WgDesktopGraphics.WebGPUMonitor)monitor).monitorHandle, videoMode.width(), videoMode.height(),
 			videoMode.refreshRate(), videoMode.redBits() + videoMode.greenBits() + videoMode.blueBits());
 	}
 
 	/** @return the available {@link DisplayMode}s of the primary monitor */
 	public static DisplayMode[] getDisplayModes () {
-		WgApplication.initializeGlfw();
+		WgDesktopApplication.initializeGlfw();
 		Buffer videoModes = GLFW.glfwGetVideoModes(GLFW.glfwGetPrimaryMonitor());
 		DisplayMode[] result = new DisplayMode[videoModes.limit()];
 		for (int i = 0; i < result.length; i++) {
 			GLFWVidMode videoMode = videoModes.get(i);
-			result[i] = new WgGraphics.WebGPUDisplayMode(GLFW.glfwGetPrimaryMonitor(), videoMode.width(), videoMode.height(),
+			result[i] = new WgDesktopGraphics.WebGPUDisplayMode(GLFW.glfwGetPrimaryMonitor(), videoMode.width(), videoMode.height(),
 				videoMode.refreshRate(), videoMode.redBits() + videoMode.greenBits() + videoMode.blueBits());
 		}
 		return result;
@@ -225,12 +225,12 @@ public class WgApplicationConfiguration extends WgWindowConfiguration {
 
 	/** @return the available {@link DisplayMode}s of the given {@link Monitor} */
 	public static DisplayMode[] getDisplayModes (Monitor monitor) {
-		WgApplication.initializeGlfw();
-		Buffer videoModes = GLFW.glfwGetVideoModes(((WgGraphics.WebGPUMonitor)monitor).monitorHandle);
+		WgDesktopApplication.initializeGlfw();
+		Buffer videoModes = GLFW.glfwGetVideoModes(((WgDesktopGraphics.WebGPUMonitor)monitor).monitorHandle);
 		DisplayMode[] result = new DisplayMode[videoModes.limit()];
 		for (int i = 0; i < result.length; i++) {
 			GLFWVidMode videoMode = videoModes.get(i);
-			result[i] = new WgGraphics.WebGPUDisplayMode(((WgGraphics.WebGPUMonitor)monitor).monitorHandle, videoMode.width(),
+			result[i] = new WgDesktopGraphics.WebGPUDisplayMode(((WgDesktopGraphics.WebGPUMonitor)monitor).monitorHandle, videoMode.width(),
 				videoMode.height(), videoMode.refreshRate(), videoMode.redBits() + videoMode.greenBits() + videoMode.blueBits());
 		}
 		return result;
@@ -238,13 +238,13 @@ public class WgApplicationConfiguration extends WgWindowConfiguration {
 
 	/** @return the primary {@link Monitor} */
 	public static Monitor getPrimaryMonitor () {
-		WgApplication.initializeGlfw();
+		WgDesktopApplication.initializeGlfw();
 		return toWebGPUMonitor(GLFW.glfwGetPrimaryMonitor());
 	}
 
 	/** @return the connected {@link Monitor}s */
 	public static Monitor[] getMonitors () {
-		WgApplication.initializeGlfw();
+		WgDesktopApplication.initializeGlfw();
 		PointerBuffer glfwMonitors = GLFW.glfwGetMonitors();
 		Monitor[] monitors = new Monitor[glfwMonitors.limit()];
 		for (int i = 0; i < glfwMonitors.limit(); i++) {
@@ -253,17 +253,17 @@ public class WgApplicationConfiguration extends WgWindowConfiguration {
 		return monitors;
 	}
 
-	static WgGraphics.WebGPUMonitor toWebGPUMonitor (long glfwMonitor) {
+	static WgDesktopGraphics.WebGPUMonitor toWebGPUMonitor (long glfwMonitor) {
 		IntBuffer tmp = BufferUtils.createIntBuffer(1);
 		IntBuffer tmp2 = BufferUtils.createIntBuffer(1);
 		GLFW.glfwGetMonitorPos(glfwMonitor, tmp, tmp2);
 		int virtualX = tmp.get(0);
 		int virtualY = tmp2.get(0);
 		String name = GLFW.glfwGetMonitorName(glfwMonitor);
-		return new WgGraphics.WebGPUMonitor(glfwMonitor, virtualX, virtualY, name);
+		return new WgDesktopGraphics.WebGPUMonitor(glfwMonitor, virtualX, virtualY, name);
 	}
 
-	static GridPoint2 calculateCenteredWindowPosition (WgGraphics.WebGPUMonitor monitor, int newWidth, int newHeight) {
+	static GridPoint2 calculateCenteredWindowPosition (WgDesktopGraphics.WebGPUMonitor monitor, int newWidth, int newHeight) {
 		IntBuffer tmp = BufferUtils.createIntBuffer(1);
 		IntBuffer tmp2 = BufferUtils.createIntBuffer(1);
 		IntBuffer tmp3 = BufferUtils.createIntBuffer(1);

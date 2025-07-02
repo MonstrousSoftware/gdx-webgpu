@@ -5,9 +5,11 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
-import com.monstrous.gdx.webgpu.WebGPUGraphicsBase;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplication;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
+import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
+import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplicationConfiguration;
 import com.monstrous.gdx.webgpu.utils.JavaWebGPU;
 import com.monstrous.gdx.webgpu.webgpu.*;
 import com.monstrous.gdx.webgpu.wrappers.RenderPassBuilder;
@@ -20,25 +22,27 @@ public class WebGPUTest {
 	// launcher
 	public static void main (String[] argv) {
 
-		WgApplicationConfiguration config = new WgApplicationConfiguration();
+		WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
 		config.setWindowedMode(640, 480);
 		config.setTitle("WebGPUTest");
 		//config.backend = WGPUBackendType.D3D12;
 		config.enableGPUtiming = false;
 
-		new WgApplication(new TestApp(), config);
+		new WgDesktopApplication(new TestApp(), config);
 	}
 
 	// application
 	static class TestApp extends ApplicationAdapter {
-		private WgApplication app;
-		private WebGPUGraphicsBase gfx;
+		private WgDesktopApplication app;
+		private WgGraphics gfx;
 		private WebGPU_JNI webGPU;
+        private WebGPUContext webgpu;
 		private Pointer pipeline;
 
 		public void create () {
-			gfx = (WebGPUGraphicsBase)Gdx.graphics;
-			app = (WgApplication)Gdx.app;
+			gfx = (WgGraphics)Gdx.graphics;
+            webgpu = gfx.getContext();
+			app = (WgDesktopApplication)Gdx.app;
 			webGPU = app.getWebGPU();
 			pipeline = initPipeline();
 		}
@@ -49,7 +53,7 @@ public class WebGPUTest {
 
 				 ApplicationListener listener = new TestApp();
 
-				 WgApplicationConfiguration config = new WgApplicationConfiguration();
+				 WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
 				 config.setWindowedMode(200, 200);
 				 config.setTitle("Child Window");
 				 app.newWindow(listener, config);
@@ -119,7 +123,7 @@ public class WebGPUTest {
 
 			WGPUColorTargetState colorTarget = WGPUColorTargetState.createDirect();
 
-			colorTarget.setFormat(gfx.getSurfaceFormat()); // match output surface
+			colorTarget.setFormat(webgpu.getSurfaceFormat()); // match output surface
 			colorTarget.setBlend(blendState);
 			colorTarget.setWriteMask(WGPUColorWriteMask.All);
 
@@ -135,7 +139,7 @@ public class WebGPUTest {
 			pipelineDesc.getMultisample().setAlphaToCoverageEnabled(0);
 
 			pipelineDesc.setLayout(JavaWebGPU.createNullPointer());
-			pipeline = webGPU.wgpuDeviceCreateRenderPipeline(gfx.getDevice().getHandle(), pipelineDesc);
+			pipeline = webGPU.wgpuDeviceCreateRenderPipeline(webgpu.device.getHandle(), pipelineDesc);
 			if (pipeline.address() == 0) throw new RuntimeException("Pipeline creation failed");
 
 			// We no longer need to access the shader module
@@ -168,7 +172,7 @@ public class WebGPUTest {
 
 			shaderDesc.getNextInChain().set(shaderCodeDesc.getPointerTo());
 
-			Pointer shaderModule = webGPU.wgpuDeviceCreateShaderModule(gfx.getDevice().getHandle(), shaderDesc);
+			Pointer shaderModule = webGPU.wgpuDeviceCreateShaderModule(webgpu.device.getHandle(), shaderDesc);
 			if (shaderModule.address() == 0) throw new RuntimeException("ShaderModule: compile failed.");
 			return shaderModule;
 		}

@@ -19,7 +19,7 @@ package com.monstrous.gdx.webgpu.wrappers;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Disposable;
-import com.monstrous.gdx.webgpu.WebGPUGraphicsBase;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.webgpu.*;
 import jnr.ffi.Pointer;
 
@@ -47,7 +47,7 @@ public class GPUTimer implements Disposable {
         if(!enabled)
             return;
 
-        WebGPUGraphicsBase gfx = (WebGPUGraphicsBase) Gdx.graphics;
+        WgGraphics gfx = (WgGraphics) Gdx.graphics;
         webGPU = gfx.getWebGPU();
 
         // Create timestamp queries

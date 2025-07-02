@@ -6,8 +6,8 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplication;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
+import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
+import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplicationConfiguration;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.webgpu.WGPUBackendType;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
@@ -34,7 +34,7 @@ public class SpriteBatchTest extends GdxTest {
     // launcher
     public static void main (String[] argv) {
 
-        WgApplicationConfiguration config = new WgApplicationConfiguration();
+        WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
         config.setWindowedMode(640, 480);
         config.setTitle("WebGPUTest");
         config.backend = WGPUBackendType.Vulkan;
@@ -42,7 +42,7 @@ public class SpriteBatchTest extends GdxTest {
         config.enableGPUtiming = false;
         config.useVsync(false);
 
-        new WgApplication(new SpriteBatchTest(), config);
+        new WgDesktopApplication(new SpriteBatchTest(), config);
     }
 
     @Override

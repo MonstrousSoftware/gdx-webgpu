@@ -2,7 +2,7 @@ package com.monstrous.gdx.webgpu.wrappers;
 
 
 import com.badlogic.gdx.Gdx;
-import com.monstrous.gdx.webgpu.WebGPUGraphicsBase;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.badlogic.gdx.utils.Disposable;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.webgpu.*;
@@ -30,7 +30,7 @@ public class WebGPUTextureView implements Disposable {
 
     public WebGPUTextureView(WgTexture texture, WGPUTextureAspect aspect, WGPUTextureViewDimension dimension, WGPUTextureFormat format,
                              int baseMipLevel, int mipLevelCount, int baseArrayLayer, int arrayLayerCount) {
-        WebGPUGraphicsBase gfx = (WebGPUGraphicsBase) Gdx.graphics;
+        WgGraphics gfx = (WgGraphics) Gdx.graphics;
         webGPU = gfx.getWebGPU();
 
         this.aspect = aspect;

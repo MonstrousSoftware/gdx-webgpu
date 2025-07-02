@@ -35,10 +35,10 @@ import java.io.File;
 import static org.lwjgl.glfw.GLFW.GLFW_CLIENT_API;
 import static org.lwjgl.glfw.GLFW.GLFW_NO_API;
 
-public class WgApplication implements WgApplicationBase {
-	private final WgApplicationConfiguration config;
-	final Array<WgWindow> windows = new Array<WgWindow>();
-	private volatile WgWindow currentWindow;
+public class WgDesktopApplication implements Application {
+	private final WgDesktopApplicationConfiguration config;
+	final Array<WgDesktopWindow> windows = new Array<WgDesktopWindow>();
+	private volatile WgDesktopWindow currentWindow;
 	private Lwjgl3Audio audio;
 	private final Files files;
 	private final Net net;
@@ -63,7 +63,7 @@ public class WgApplication implements WgApplicationBase {
 	static void initializeGlfw () {
 		if (errorCallback == null) {
 			Lwjgl3NativesLoader.load();
-			errorCallback = GLFWErrorCallback.createPrint(WgApplicationConfiguration.errorStream);
+			errorCallback = GLFWErrorCallback.createPrint(WgDesktopApplicationConfiguration.errorStream);
 			GLFW.glfwSetErrorCallback(errorCallback);
 			if (SharedLibraryLoader.os == Os.MacOsX)
 				GLFW.glfwInitHint(GLFW.GLFW_ANGLE_PLATFORM_TYPE, GLFW.GLFW_ANGLE_PLATFORM_TYPE_METAL);
@@ -74,11 +74,11 @@ public class WgApplication implements WgApplicationBase {
 		}
 	}
 
-	public WgApplication(ApplicationListener listener) {
-		this(listener, new WgApplicationConfiguration());
+	public WgDesktopApplication(ApplicationListener listener) {
+		this(listener, new WgDesktopApplicationConfiguration());
 	}
 
-	public WgApplication(ApplicationListener listener, WgApplicationConfiguration config) {
+	public WgDesktopApplication(ApplicationListener listener, WgDesktopApplicationConfiguration config) {
 
 		initializeGlfw();
 		setApplicationLogger(new Lwjgl3ApplicationLogger());
@@ -124,7 +124,7 @@ public class WgApplication implements WgApplicationBase {
 	}
 
 	protected void loop () {
-		Array<WgWindow> closedWindows = new Array<WgWindow>();
+		Array<WgDesktopWindow> closedWindows = new Array<WgDesktopWindow>();
 		while (running && windows.size > 0) {
 			// FIXME put it on a separate thread
 			audio.update();
@@ -132,7 +132,7 @@ public class WgApplication implements WgApplicationBase {
 			boolean haveWindowsRendered = false;
 			closedWindows.clear();
 			int targetFramerate = -2;
-			for (WgWindow window : windows) {
+			for (WgDesktopWindow window : windows) {
 				window.makeCurrent();
 				currentWindow = window;
 
@@ -159,12 +159,12 @@ public class WgApplication implements WgApplicationBase {
 			if (shouldRequestRendering) {
 				// Must follow Runnables execution so changes done by Runnables are reflected
 				// in the following render.
-				for (WgWindow window : windows) {
+				for (WgDesktopWindow window : windows) {
 					if (!window.getGraphics().isContinuousRendering()) window.requestRendering();
 				}
 			}
 
-			for (WgWindow closedWindow : closedWindows) {
+			for (WgDesktopWindow closedWindow : closedWindows) {
 				if (windows.size == 1) {
 					// Lifecycle listener methods have to be called before ApplicationListener methods. The
 					// application will be disposed when _all_ windows have been disposed, which is the case,
@@ -202,14 +202,14 @@ public class WgApplication implements WgApplicationBase {
 				lifecycleListener.dispose();
 			}
 		}
-		for (WgWindow window : windows) {
+		for (WgDesktopWindow window : windows) {
 			window.dispose();
 		}
 		windows.clear();
 	}
 
 	protected void cleanup () {
-		WgCursor.disposeSystemCursors();
+		WgDesktopCursor.disposeSystemCursors();
 		audio.dispose();
 		errorCallback.free();
 		errorCallback = null;
@@ -368,14 +368,12 @@ public class WgApplication implements WgApplicationBase {
 		}
 	}
 
-	@Override
-	public Lwjgl3Audio createAudio (WgApplicationConfiguration config) {
+	public Lwjgl3Audio createAudio (WgDesktopApplicationConfiguration config) {
 		return new OpenALLwjgl3Audio(config.audioDeviceSimultaneousSources, config.audioDeviceBufferCount,
 			config.audioDeviceBufferSize);
 	}
 
-	@Override
-	public Lwjgl3Input createInput (WgWindow window) {
+	public Lwjgl3Input createInput (WgDesktopWindow window) {
 		return new DefaultWebGPUInput(window);
 	}
 
@@ -383,24 +381,24 @@ public class WgApplication implements WgApplicationBase {
 		return new Lwjgl3Files();
 	}
 
-	public WgApplicationConfiguration getConfiguration(){
+	public WgDesktopApplicationConfiguration getConfiguration(){
 		return config;
 	}
 
-	/** Creates a new {@link WgWindow} using the provided listener and {@link WgWindowConfiguration}.
+	/** Creates a new {@link WgDesktopWindow} using the provided listener and {@link WgDesktopWindowConfiguration}.
 	 *
-	 * This function only just instantiates a {@link WgWindow} and returns immediately. The actual window creation is postponed
+	 * This function only just instantiates a {@link WgDesktopWindow} and returns immediately. The actual window creation is postponed
 	 * with {@link Application#postRunnable(Runnable)} until after all existing windows are updated. */
-	public WgWindow newWindow (ApplicationListener listener, WgWindowConfiguration config) {
-		WgApplicationConfiguration appConfig = WgApplicationConfiguration.copy(this.config);
+	public WgDesktopWindow newWindow (ApplicationListener listener, WgDesktopWindowConfiguration config) {
+		WgDesktopApplicationConfiguration appConfig = WgDesktopApplicationConfiguration.copy(this.config);
 		appConfig.setWindowConfiguration(config);
 		if (appConfig.title == null) appConfig.title = listener.getClass().getSimpleName();
 		return createWindow(appConfig, listener);
 	}
 
-	private WgWindow createWindow (final WgApplicationConfiguration config, ApplicationListener listener) {
-		final WgWindow window = new WgWindow(listener, lifecycleListeners, config, this);
-		WgWindow save = currentWindow;
+	private WgDesktopWindow createWindow (final WgDesktopApplicationConfiguration config, ApplicationListener listener) {
+		final WgDesktopWindow window = new WgDesktopWindow(listener, lifecycleListeners, config, this);
+		WgDesktopWindow save = currentWindow;
 		currentWindow = window;
 		createWindow(window, config);
 		windows.add(window);
@@ -412,7 +410,7 @@ public class WgApplication implements WgApplicationBase {
 		return window;
 	}
 
-	void createWindow (WgWindow window, WgApplicationConfiguration config) {
+	void createWindow (WgDesktopWindow window, WgDesktopApplicationConfiguration config) {
 		long windowHandle = createGlfwWindow(config, 0);
 		window.create(windowHandle);
 		window.setVisible(config.initialVisible);
@@ -427,7 +425,7 @@ public class WgApplication implements WgApplicationBase {
 
 	}
 
-	static long createGlfwWindow (WgApplicationConfiguration config, long sharedContextWindow) {
+	static long createGlfwWindow (WgDesktopApplicationConfiguration config, long sharedContextWindow) {
 		GLFW.glfwDefaultWindowHints();
 		GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GLFW.GLFW_FALSE);
 		GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, config.windowResizable ? GLFW.GLFW_TRUE : GLFW.GLFW_FALSE);
@@ -488,7 +486,7 @@ public class WgApplication implements WgApplicationBase {
 		if (windowHandle == 0) {
 			throw new GdxRuntimeException("Couldn't create window");
 		}
-		WgWindow.setSizeLimits(windowHandle, config.windowMinWidth, config.windowMinHeight, config.windowMaxWidth,
+		WgDesktopWindow.setSizeLimits(windowHandle, config.windowMinWidth, config.windowMinHeight, config.windowMaxWidth,
 			config.windowMaxHeight);
 		if (config.fullscreenMode == null) {
 			if (GLFW.glfwGetPlatform() != GLFW.GLFW_PLATFORM_WAYLAND) {
@@ -503,8 +501,8 @@ public class WgApplication implements WgApplicationBase {
 						monitorHandle = config.maximizedMonitor.monitorHandle;
 					}
 
-					GridPoint2 newPos = WgApplicationConfiguration.calculateCenteredWindowPosition(
-						WgApplicationConfiguration.toWebGPUMonitor(monitorHandle), windowWidth, windowHeight);
+					GridPoint2 newPos = WgDesktopApplicationConfiguration.calculateCenteredWindowPosition(
+						WgDesktopApplicationConfiguration.toWebGPUMonitor(monitorHandle), windowWidth, windowHeight);
 					GLFW.glfwSetWindowPos(windowHandle, newPos.x, newPos.y);
 				} else {
 					GLFW.glfwSetWindowPos(windowHandle, config.windowX, config.windowY);
@@ -516,7 +514,7 @@ public class WgApplication implements WgApplicationBase {
 			}
 		}
 		if (config.windowIconPaths != null) {
-			WgWindow.setIcon(windowHandle, config.windowIconPaths, config.windowIconFileType);
+			WgDesktopWindow.setIcon(windowHandle, config.windowIconPaths, config.windowIconFileType);
 		}
 
 		return windowHandle;

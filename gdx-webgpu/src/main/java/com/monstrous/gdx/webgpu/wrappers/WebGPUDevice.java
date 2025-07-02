@@ -2,7 +2,7 @@ package com.monstrous.gdx.webgpu.wrappers;
 
 
 import com.badlogic.gdx.Gdx;
-import com.monstrous.gdx.webgpu.WebGPUGraphicsBase;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.utils.Disposable;
 import com.monstrous.gdx.webgpu.webgpu.*;
@@ -17,7 +17,7 @@ public class WebGPUDevice implements Disposable {
     private final WGPUSupportedLimits supportedLimits;
 
     public WebGPUDevice(WebGPUAdapter adapter, boolean gpuTimingEnabled) {
-        WebGPUGraphicsBase gfx = (WebGPUGraphicsBase) Gdx.graphics;
+        WgGraphics gfx = (WgGraphics) Gdx.graphics;
         webGPU = gfx.getWebGPU();
 
         // set required limits for device

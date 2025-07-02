@@ -35,10 +35,11 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
-import com.monstrous.gdx.webgpu.WebGPUGraphicsBase;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.assets.WgAssetManager;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplication;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgApplicationConfiguration;
+import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
+import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplicationConfiguration;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
@@ -67,25 +68,27 @@ public class GPUTimerTest extends GdxTest {
 	WgStage stage;
 	WgSkin skin;
 	WgAssetManager assets;
-    WebGPUGraphicsBase gfx;
+    WgGraphics gfx;
+    WebGPUContext webgpu;
 
 
 	// launcher
 	public static void main (String[] argv) {
 
-		WgApplicationConfiguration config = new WgApplicationConfiguration();
+		WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
 		config.setWindowedMode(640, 480);
 		config.setTitle("WebGPUTest");
 		config.useVsync(false);
 		config.backend = WGPUBackendType.Vulkan;
 		config.enableGPUtiming = true;
 
-		new WgApplication(new GPUTimerTest(), config);
+		new WgDesktopApplication(new GPUTimerTest(), config);
 	}
 
 	// application
 	public void create () {
-        gfx = (WebGPUGraphicsBase) Gdx.graphics;
+        gfx = (WgGraphics) Gdx.graphics;
+        webgpu = gfx.getContext();
 
 		WgDefaultShader.Config config = new WgDefaultShader.Config();
 		config.maxInstances = MAX_INSTANCES;
@@ -227,8 +230,8 @@ public class GPUTimerTest extends GdxTest {
 		font.draw(batch, "FPS: "+Gdx.graphics.getFramesPerSecond() ,0, y -= 20);
         font.draw(batch, "delta time: "+(int)(1000000/(Gdx.graphics.getFramesPerSecond()+0.001f))+" microseconds",0, y -= 20);
 
-        for(int pass = 0; pass < gfx.getGPUTimer().getNumPasses(); pass++)
-            font.draw(batch, "GPU time (pass "+pass+" "+gfx.getGPUTimer().getPassName(pass)+") : "+(int)gfx.getAverageGPUtime(pass)+ " microseconds" ,0, y -= 20);
+        for(int pass = 0; pass < webgpu.getGPUTimer().getNumPasses(); pass++)
+            font.draw(batch, "GPU time (pass "+pass+" "+webgpu.getGPUTimer().getPassName(pass)+") : "+(int)webgpu.getAverageGPUtime(pass)+ " microseconds" ,0, y -= 20);
 		batch.end();
 
 		stage.act();

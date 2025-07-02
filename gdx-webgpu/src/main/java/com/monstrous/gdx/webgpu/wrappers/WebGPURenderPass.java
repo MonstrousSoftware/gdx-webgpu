@@ -17,7 +17,7 @@
 package com.monstrous.gdx.webgpu.wrappers;
 
 import com.badlogic.gdx.Gdx;
-import com.monstrous.gdx.webgpu.WebGPUGraphicsBase;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.utils.JavaWebGPU;
 import com.monstrous.gdx.webgpu.webgpu.WGPUIndexFormat;
 import com.monstrous.gdx.webgpu.webgpu.WGPUTextureFormat;
@@ -42,7 +42,7 @@ public class WebGPURenderPass  {
     // don't call this directly, use RenderPassBuilder.create()
     WebGPURenderPass(Pointer renderPass, RenderPassType type, WGPUTextureFormat textureFormat, WGPUTextureFormat depthFormat, int sampleCount, int targetWidth, int targetHeight) {
         super();
-        WebGPUGraphicsBase gfx = (WebGPUGraphicsBase) Gdx.graphics;
+        WgGraphics gfx = (WgGraphics) Gdx.graphics;
         webGPU = gfx.getWebGPU();
 
         this.renderPass = renderPass;

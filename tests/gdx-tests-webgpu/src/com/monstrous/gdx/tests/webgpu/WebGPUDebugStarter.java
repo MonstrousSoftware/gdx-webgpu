@@ -102,7 +102,7 @@ public class WebGPUDebugStarter {
 						if (character == 'c') {
 							Gdx.input.setCursorCatched(!Gdx.input.isCursorCatched());
 						}
-						WgWindow window = ((WgGraphics)Gdx.graphics).getWindow();
+						WgDesktopWindow window = ((WgDesktopGraphics)Gdx.graphics).getWindow();
 						if (character == 'v') {
 							window.setVisible(false);
 						}
@@ -167,11 +167,11 @@ public class WebGPUDebugStarter {
 				Gdx.app.log("Test", "disposing");
 			}
 		};
-		WgApplicationConfiguration config = new WgApplicationConfiguration();
+		WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
 		config.setWindowedMode(640, 480);
-		config.setWindowListener(new WgWindowListener() {
+		config.setWindowListener(new WgDesktopWindowListener() {
 			@Override
-			public void created (WgWindow window) {
+			public void created (WgDesktopWindow window) {
 				Gdx.app.log("Window", "created");
 			}
 
@@ -213,11 +213,11 @@ public class WebGPUDebugStarter {
 				Gdx.app.log("Window", "refreshRequested");
 			}
 		});
-		for (DisplayMode mode : WgApplicationConfiguration.getDisplayModes()) {
+		for (DisplayMode mode : WgDesktopApplicationConfiguration.getDisplayModes()) {
 			System.out.println(mode.width + "x" + mode.height);
 		}
 
 		System.setProperty("java.awt.headless", "true");
-		new WgApplication(test, config);
+		new WgDesktopApplication(test, config);
 	}
 }

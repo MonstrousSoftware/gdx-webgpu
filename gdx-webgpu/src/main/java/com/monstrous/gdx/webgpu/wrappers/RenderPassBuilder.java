@@ -18,7 +18,8 @@ package com.monstrous.gdx.webgpu.wrappers;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Rectangle;
-import com.monstrous.gdx.webgpu.WebGPUGraphicsBase;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.graphics.Color;
@@ -46,8 +47,8 @@ public class RenderPassBuilder {
     }
 
     public static WebGPURenderPass create(String name, Color clearColor, int sampleCount) {
-        WebGPUGraphicsBase gfx = (WebGPUGraphicsBase)Gdx.graphics;
-        return create(name,clearColor, null, gfx.getDepthTexture(), sampleCount);
+        WgGraphics gfx = (WgGraphics)Gdx.graphics;
+        return create(name,clearColor, null, gfx.getContext().getDepthTexture(), sampleCount);
     }
 
     public static WebGPURenderPass create(String name, Color clearColor, WgTexture colorTexture, WgTexture depthTexture, int sampleCount){
@@ -67,8 +68,10 @@ public class RenderPassBuilder {
      */
     public static WebGPURenderPass create(String name, Color clearColor, WgTexture outTexture,
                                           WgTexture depthTexture, int sampleCount, RenderPassType passType) {
-        WebGPUGraphicsBase gfx = (WebGPUGraphicsBase) Gdx.graphics;
-        if (gfx.getCommandEncoder() == null)
+        WgGraphics gfx = (WgGraphics) Gdx.graphics;
+        WebGPUContext webgpu = gfx.getContext();
+
+        if (gfx.getContext().getCommandEncoder() == null)
             throw new RuntimeException("Encoder must be set before calling WebGPURenderPass.create()");
 
         WGPUTextureFormat colorFormat = WGPUTextureFormat.Undefined;
@@ -107,13 +110,13 @@ public class RenderPassBuilder {
 
             if (outTexture == null) {
                 if (sampleCount > 1) {
-                    renderPassColorAttachment.setView(gfx.getMultiSamplingTexture().getTextureView().getHandle());
-                    renderPassColorAttachment.setResolveTarget(gfx.getTargetView());
+                    renderPassColorAttachment.setView(webgpu.getMultiSamplingTexture().getTextureView().getHandle());
+                    renderPassColorAttachment.setResolveTarget(webgpu.getTargetView());
                 } else {
-                    renderPassColorAttachment.setView(gfx.getTargetView());
+                    renderPassColorAttachment.setView(webgpu.getTargetView());
                     renderPassColorAttachment.setResolveTarget(JavaWebGPU.createNullPointer());
                 }
-                colorFormat = gfx.getSurfaceFormat();
+                colorFormat = webgpu.getSurfaceFormat();
 
             } else {
                 renderPassColorAttachment.setView(outTexture.getTextureView().getHandle());
@@ -145,7 +148,7 @@ public class RenderPassBuilder {
             renderPassDescriptor.setDepthStencilAttachment(depthStencilAttachment);
         }
 
-        GPUTimer timer = gfx.getGPUTimer();
+        GPUTimer timer = gfx.getContext().getGPUTimer();
         if (timer.isEnabled()) {
             timer.addPass(name);  // announce a new render pass for this frame (this determines the index values)
             // create a query
@@ -158,17 +161,17 @@ public class RenderPassBuilder {
         }
 
 
-        Pointer renderPassPtr = gfx.getWebGPU().wgpuCommandEncoderBeginRenderPass(gfx.getCommandEncoder().getHandle(), renderPassDescriptor);
+        Pointer renderPassPtr = gfx.getWebGPU().wgpuCommandEncoderBeginRenderPass(webgpu.getCommandEncoder().getHandle(), renderPassDescriptor);
         WebGPURenderPass pass = new WebGPURenderPass(renderPassPtr, passType, colorFormat, depthTexture.getFormat(), sampleCount,
                 outTexture == null ? Gdx.graphics.getWidth() : outTexture.getWidth(),
                 outTexture == null ? Gdx.graphics.getHeight() : outTexture.getHeight());
 
         // todo may change over time
-        Rectangle view = gfx.getViewportRectangle();
+        Rectangle view = webgpu.getViewportRectangle();
         pass.setViewport(view.x, view.y, view.width, view.height, 0, 1);
 
-        if(gfx.isScissorEnabled()) {
-            Rectangle scissor = gfx.getScissor();
+        if(webgpu.isScissorEnabled()) {
+            Rectangle scissor = webgpu.getScissor();
             pass.setScissorRect((int) scissor.x, (int) scissor.y, (int) scissor.width, (int) scissor.height);
         }
 
