@@ -3,6 +3,7 @@ plugins {
     id 'application'
 }
 
+
 group = 'com.monstrous'
 version = '1.0'
 

@@ -15,10 +15,10 @@ include ":backends:gdx-lwjgl3-webgpu"
 
 
 include ":tests"
-include ":tests:gdx-tests-android"
 include ":tests:gdx-tests-webgpu"
+include ":tests:test-api"
+include ":tests:gdx-tests-android"
 
-include ":demo"
 
-include 'tests:gdx-tests'
-include 'tests:test-api'
+include ':api-test'
+include ':api-new-test'

@@ -113,5 +113,8 @@ Gdx-webgpu supports models with 32 bit indexing (int type) supporting 2 billion 
 03/07:
 Note: some classes use BufferUtils or MemoryStack from LWJGL3. Does that make them platform dependent?
 
+- Added module api-new-test to render a triangle via jWebGPU. Uses com.github.xpenatan.jWebGPU repo which is still under development but should
+provide multi-platform support as opposed to the Java-to-WebGPU which is desktop only.
+
 
 	

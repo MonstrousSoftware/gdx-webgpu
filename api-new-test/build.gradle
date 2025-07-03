@@ -1,0 +1,45 @@
+plugins {
+  id 'java'
+  id 'application'
+}
+
+
+apply from: "../dependencies.gradle"
+
+java {
+  sourceCompatibility = versions.java
+  targetCompatibility = versions.java
+}
+
+repositories {
+  mavenLocal()
+  //mavenCentral()
+}
+
+group = 'com.badlogicgames.gdx'
+version = 'unspecified'
+
+project.ext.lwjglVersion = "3.3.4"
+project.ext.lwjglNatives = "natives-windows"
+
+dependencies {
+  api 'com.github.xpenatan.jWebGPU:webgpu-core:-SNAPSHOT'
+  api 'com.github.xpenatan.jWebGPU:webgpu-desktop:-SNAPSHOT'
+
+  implementation platform("org.lwjgl:lwjgl-bom:$lwjglVersion")
+
+  implementation "org.lwjgl:lwjgl"
+  implementation "org.lwjgl:lwjgl-glfw"
+
+  runtimeOnly "org.lwjgl:lwjgl::$lwjglNatives"
+}
+
+application {
+  mainClass = 'com.github.xpenatan.webgpu.demo.app.MainDesktop'
+}
+
+run {
+  setIgnoreExitValue(true)
+}
+
+
