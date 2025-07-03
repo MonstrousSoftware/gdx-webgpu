@@ -1,0 +1,23 @@
+
+plugins {
+  id 'java'
+}
+
+apply from: "../../dependencies.gradle"
+
+java {
+  sourceCompatibility = versions.java
+  targetCompatibility = versions.java
+}
+
+dependencies {
+  implementation "com.badlogicgames.gdx:gdx:$gdxVersion"
+  implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
+  implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+  implementation project(':gdx-webgpu2')
+  implementation 'org.lwjgl:lwjgl-glfw:3.3.3'
+  implementation 'org.lwjgl:lwjgl:3.3.3'
+ // implementation 'com.github.jnr:jnr-ffi:2.2.17'
+}
+
+

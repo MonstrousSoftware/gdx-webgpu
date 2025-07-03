@@ -86,6 +86,7 @@ public class HelloTriangle implements ApplicationListener {
         WebGPUTextureView textureView = GetNextSurfaceTextureView(wgpu);
 
         WebGPUCommandEncoderDescriptor encoderDesc = WebGPUCommandEncoderDescriptor.obtain();
+        encoderDesc.setNextInChain(null);
         encoderDesc.setLabel("My command encoder");
         wgpu.device.createCommandEncoder(encoderDesc, encoder);
 

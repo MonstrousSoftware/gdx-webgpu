@@ -14,7 +14,7 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.monstrous.gdx.webgpu.backends.lwjgl3;
+package com.monstrous.gdx.webgpu.backends.desktop;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
@@ -23,10 +23,10 @@ import com.badlogic.gdx.graphics.glutils.GLVersion;
 import com.badlogic.gdx.graphics.glutils.HdpiMode;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.utils.Disposable;
-import com.monstrous.gdx.webgpu.application.WebGPUApplication;
+
+import com.monstrous.gdx.webgpu.application.WebGPUApplication2;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.utils.WgGL20;
-import com.monstrous.gdx.webgpu.webgpu.WebGPU_JNI;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.GLFW;
@@ -61,8 +61,7 @@ public class WgDesktopGraphics extends WgGraphics implements Disposable {
 	private int windowWidthBeforeFullscreen;
 	private int windowHeightBeforeFullscreen;
 	private DisplayMode displayModeBeforeFullscreen = null;
-	private final WebGPU_JNI webGPU;
-	public final WebGPUApplication context;
+	public final WebGPUApplication2 context;
 
 
 
@@ -94,10 +93,9 @@ public class WgDesktopGraphics extends WgGraphics implements Disposable {
 		}
 	};
 
-	public WgDesktopGraphics(WgDesktopWindow window, WebGPU_JNI webGPU, long win32handle) {
+	public WgDesktopGraphics(WgDesktopWindow window, long win32handle) {
 
 		this.window = window;
-		this.webGPU = webGPU;
 
 		this.gl20 = new WgGL20();
 		this.gl30 = null;
@@ -109,36 +107,34 @@ public class WgDesktopGraphics extends WgGraphics implements Disposable {
 		Gdx.graphics = this;
         Gdx.gl = this.gl20;
 
-		WebGPUApplication.Configuration config = new WebGPUApplication.Configuration(win32handle, app.getConfiguration().samples,
-				app.getConfiguration().vSyncEnabled,app.getConfiguration().enableGPUtiming, app.getConfiguration().backend);
+		WebGPUApplication2.Configuration config = new WebGPUApplication2.Configuration(
+            win32handle,
+            app.getConfiguration().samples,
+			app.getConfiguration().vSyncEnabled,
+            app.getConfiguration().enableGPUtiming,
+            null );//app.getConfiguration().backend);
 
 
-		this.context = new WebGPUApplication(webGPU, config);
+		this.context = new WebGPUApplication2(config);
         this.webgpu = context;
 
 		context.resize(getWidth(), getHeight());
-        context.setViewportRectangle(0, 0, getWidth(), getHeight());
+       // context.setViewportRectangle(0, 0, getWidth(), getHeight());
 
 		// initiateGL();
 
 		GLFW.glfwSetFramebufferSizeCallback(window.getWindowHandle(), resizeCallback);
 	}
 
-
-	public WebGPU_JNI getWebGPU () {
-		return webGPU;
-	}
-
     @Override
-    public WebGPUApplication getContext() {
+    public WebGPUApplication2 getContext() {
         return context;
     }
-
-
 
 	public WgDesktopWindow getWindow () {
 		return window;
 	}
+
 
     void updateFramebufferInfo () {
 		GLFW.glfwGetFramebufferSize(window.getWindowHandle(), tmpBuffer, tmpBuffer2);
@@ -153,6 +149,8 @@ public class WgDesktopGraphics extends WgGraphics implements Disposable {
 	}
 
 	void update () {
+        context.update();
+
 		long time = System.nanoTime();
 		if (lastFrameTime == -1) lastFrameTime = time;
 		if (resetDeltaTime) {
@@ -582,7 +580,6 @@ public class WgDesktopGraphics extends WgGraphics implements Disposable {
 	public void dispose () {
 		this.resizeCallback.free();
 		context.dispose();
-		//exitWebGPU();
 	}
 
 	public static class WebGPUDisplayMode extends DisplayMode {

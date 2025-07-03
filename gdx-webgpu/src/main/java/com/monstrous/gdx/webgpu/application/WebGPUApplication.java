@@ -193,6 +193,7 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
         targetView = getNextSurfaceTextureView();
     }
 
+
     public void setViewportRectangle(int x, int y, int w, int h){
         viewportRectangle.set(x,y,w,h);
     }

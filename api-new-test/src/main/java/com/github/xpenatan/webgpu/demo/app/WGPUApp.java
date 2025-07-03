@@ -28,6 +28,8 @@ public class WGPUApp {
 
     private void requestAdapter() {
         WebGPURequestAdapterOptions op = WebGPURequestAdapterOptions.obtain();
+        WGPUBackendType backend = WGPUBackendType.Vulkan;
+        op.setBackendType(backend);
         RequestAdapterCallback callback = new RequestAdapterCallback() {
             @Override
             protected void onCallback(WGPURequestAdapterStatus status, WebGPUAdapter adapter) {
