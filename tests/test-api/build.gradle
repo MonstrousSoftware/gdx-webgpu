@@ -1,0 +1,25 @@
+plugins {
+  id 'java'
+  id 'application'
+}
+
+apply from: "../../dependencies.gradle"
+
+application {
+  mainClass = 'main.java.HelloTriangle'
+}
+
+run {
+  setIgnoreExitValue(true)
+}
+
+dependencies {
+  implementation project(":gdx-webgpu")
+  implementation project(":backends:gdx-lwjgl3-webgpu")
+  implementation 'com.github.jnr:jnr-ffi:2.2.17'
+  implementation 'org.lwjgl:lwjgl-glfw:3.3.3'
+
+  // needed for BufferUtils
+  implementation 'org.lwjgl:lwjgl:3.3.3'
+}
+

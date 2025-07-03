@@ -3,6 +3,13 @@ plugins {
   id 'java'
 }
 
+apply from: "../../dependencies.gradle"
+
+java {
+  sourceCompatibility = versions.java
+  targetCompatibility = versions.java
+}
+
 dependencies {
   implementation "com.badlogicgames.gdx:gdx:$gdxVersion"
   implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
@@ -13,11 +20,4 @@ dependencies {
   implementation 'com.github.jnr:jnr-ffi:2.2.17'
 }
 
-group = 'com.badlogicgames.gdx'
-version = "$gdxVersion"
 
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
-}

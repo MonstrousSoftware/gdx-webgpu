@@ -21,3 +21,4 @@ include ":tests:gdx-tests-webgpu"
 include ":demo"
 
 include 'tests:gdx-tests'
+include 'tests:test-api'

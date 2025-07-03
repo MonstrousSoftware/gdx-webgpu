@@ -14,7 +14,7 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.monstrous.gdx.tests.webgpu;
+package main.java;
 
 
 import com.monstrous.gdx.webgpu.utils.JavaWebGPU;
@@ -25,6 +25,7 @@ import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWNativeWin32;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.system.MemoryStack;
+import org.lwjgl.system.MemoryUtil;
 
 import java.nio.IntBuffer;
 
@@ -484,14 +485,14 @@ public class HelloTriangle {
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API); // because we will use webgpu
 
 		// Create the window
-		window = glfwCreateWindow(width, height, title, NULL, NULL);
+		window = glfwCreateWindow(width, height, title, MemoryUtil.NULL, MemoryUtil.NULL);
 
-		if (window == NULL) throw new RuntimeException("Failed to create the GLFW window");
+		if (window == MemoryUtil.NULL) throw new RuntimeException("Failed to create the GLFW window");
 
 		windowHandle = GLFWNativeWin32.glfwGetWin32Window(window);
 
 		// Get the thread stack and push a new frame
-		try (MemoryStack stack = stackPush()) {
+		try (MemoryStack stack = MemoryStack.stackPush()) {
 			IntBuffer pWidth = stack.mallocInt(1); // int*
 			IntBuffer pHeight = stack.mallocInt(1); // int*
 

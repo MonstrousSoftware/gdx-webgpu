@@ -2,22 +2,21 @@ plugins {
   id 'java'
 }
 
-group = 'com.badlogic.gdx.webgpu'
-version = '1.0'
+apply from: "../dependencies.gradle"
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = versions.java
+    targetCompatibility = versions.java
 }
 
 dependencies {
   api "com.badlogicgames.gdx:gdx:$gdxVersion"
   implementation 'com.github.jnr:jnr-ffi:2.2.17'
-  implementation 'org.lwjgl:lwjgl-glfw:3.3.3'
-  implementation 'org.lwjgl:lwjgl:3.3.3'
-  implementation 'org.lwjgl:lwjgl-opengl:3.3.3'
-  implementation 'org.jetbrains:annotations:24.0.0'
 
+  // need this for MemoryStack in e.g. RenderPass, is it platform dependent?
+  implementation 'org.lwjgl:lwjgl:3.3.3'
+
+  implementation 'org.jetbrains:annotations:24.0.0'
 }
 
 sourceSets.main.resources.srcDirs = ["res"]
