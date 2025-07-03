@@ -18,6 +18,7 @@ package com.monstrous.gdx.webgpu.backends.lwjgl3;
 
 import com.badlogic.gdx.*;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Input;
+import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Window;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.utils.*;
 import com.monstrous.gdx.webgpu.webgpu.WebGPU_JNI;
@@ -45,7 +46,6 @@ public class WgDesktopWindow implements Disposable {
 	boolean focused = false;
 	boolean asyncResized = false;
 	private boolean requestRendering = false;
-	private WebGPU_JNI webGPU;
 
 	private final GLFWWindowFocusCallback focusCallback = new GLFWWindowFocusCallback() {
 		@Override
@@ -393,8 +393,6 @@ public class WgDesktopWindow implements Disposable {
 	}
 
 	boolean update () {
-		webGPU = application.getWebGPU();
-
 		if (!listenerInitialized) {
 			initializeListener();
 		}
