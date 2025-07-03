@@ -16,25 +16,17 @@
 
 package com.monstrous.gdx.webgpu.backends.lwjgl3;
 
-import com.badlogic.gdx.AbstractGraphics;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.math.Rectangle;
-import com.monstrous.gdx.webgpu.application.WebGPUContextBase;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.Cursor.SystemCursor;
 import com.badlogic.gdx.graphics.glutils.GLVersion;
 import com.badlogic.gdx.graphics.glutils.HdpiMode;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.utils.Disposable;
-import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WebGPUApplication;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
-import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.utils.WgGL20;
-import com.monstrous.gdx.webgpu.webgpu.WGPUBackendType;
-import com.monstrous.gdx.webgpu.webgpu.WGPUTextureFormat;
 import com.monstrous.gdx.webgpu.webgpu.WebGPU_JNI;
-import com.monstrous.gdx.webgpu.wrappers.*;
-import jnr.ffi.Pointer;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.GLFW;
@@ -43,7 +35,7 @@ import org.lwjgl.system.Configuration;
 
 import java.nio.IntBuffer;
 
-public class WgDesktopGraphics implements WgGraphics, Disposable {
+public class WgDesktopGraphics extends WgGraphics implements Disposable {
 	final WgDesktopWindow window;
 	final WgDesktopApplication app;
 	GL20 gl20;
@@ -70,7 +62,7 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
 	private int windowHeightBeforeFullscreen;
 	private DisplayMode displayModeBeforeFullscreen = null;
 	private final WebGPU_JNI webGPU;
-	public final WebGPUContext context;
+	public final WebGPUApplication context;
 
 
 
@@ -103,6 +95,7 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
 	};
 
 	public WgDesktopGraphics(WgDesktopWindow window, WebGPU_JNI webGPU, long win32handle) {
+
 		this.window = window;
 		this.webGPU = webGPU;
 
@@ -116,11 +109,13 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
 		Gdx.graphics = this;
         Gdx.gl = this.gl20;
 
-		WebGPUContext.Configuration config = new WebGPUContext.Configuration(win32handle, app.getConfiguration().samples,
+		WebGPUApplication.Configuration config = new WebGPUApplication.Configuration(win32handle, app.getConfiguration().samples,
 				app.getConfiguration().vSyncEnabled,app.getConfiguration().enableGPUtiming, app.getConfiguration().backend);
 
 
-		this.context = new WebGPUContext(webGPU, config);
+		this.context = new WebGPUApplication(webGPU, config);
+        this.webgpu = context;
+
 		context.resize(getWidth(), getHeight());
         context.setViewportRectangle(0, 0, getWidth(), getHeight());
 
@@ -135,7 +130,7 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
 	}
 
     @Override
-    public WebGPUContext getContext() {
+    public WebGPUApplication getContext() {
         return context;
     }
 

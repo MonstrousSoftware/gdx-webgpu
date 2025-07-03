@@ -18,8 +18,7 @@ package com.monstrous.gdx.webgpu.wrappers;
 
 
 import com.badlogic.gdx.Gdx;
-import com.monstrous.gdx.webgpu.application.WebGPUContext;
-import com.monstrous.gdx.webgpu.application.WgGraphics;
+import com.monstrous.gdx.webgpu.application.WebGPUApplication;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.webgpu.WGPUBufferDescriptor;
 import com.monstrous.gdx.webgpu.webgpu.WebGPU_JNI;
@@ -39,7 +38,7 @@ public class WebGPUBuffer implements Disposable {
     private Pointer handle;
     private final long bufferSize;
     protected WgGraphics gfx;
-    protected WebGPUContext webgpu;
+    protected WebGPUApplication webgpu;
 
     public WebGPUBuffer(String label, long usage, long bufferSize){
         gfx = (WgGraphics) Gdx.graphics;

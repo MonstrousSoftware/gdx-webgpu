@@ -2,8 +2,7 @@ package com.monstrous.gdx.webgpu.wrappers;
 
 
 import com.badlogic.gdx.Gdx;
-import com.monstrous.gdx.webgpu.application.WebGPUContext;
-import com.monstrous.gdx.webgpu.application.WgGraphics;
+import com.monstrous.gdx.webgpu.application.WebGPUApplication;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.utils.JavaWebGPU;
 import com.monstrous.gdx.webgpu.webgpu.WGPUPipelineLayoutDescriptor;
@@ -19,7 +18,7 @@ import static org.lwjgl.system.MemoryStack.stackPush;
 public class WebGPUPipelineLayout implements Disposable {
     private final WgGraphics gfx = (WgGraphics) Gdx.graphics;
     private final WebGPU_JNI webGPU = gfx.getWebGPU();
-    private final WebGPUContext webgpu = gfx.getContext();
+    private final WebGPUApplication webgpu = gfx.getContext();
     private final Pointer handle;
 
     public WebGPUPipelineLayout(String label, WebGPUBindGroupLayout... bindGroupLayouts ) {

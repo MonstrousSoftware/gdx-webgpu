@@ -18,7 +18,7 @@ package com.monstrous.gdx.webgpu.wrappers;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Rectangle;
-import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WebGPUApplication;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.utils.JavaWebGPU;
@@ -69,7 +69,7 @@ public class RenderPassBuilder {
     public static WebGPURenderPass create(String name, Color clearColor, WgTexture outTexture,
                                           WgTexture depthTexture, int sampleCount, RenderPassType passType) {
         WgGraphics gfx = (WgGraphics) Gdx.graphics;
-        WebGPUContext webgpu = gfx.getContext();
+        WebGPUApplication webgpu = gfx.getContext();
 
         if (gfx.getContext().getCommandEncoder() == null)
             throw new RuntimeException("Encoder must be set before calling WebGPURenderPass.create()");

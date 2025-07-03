@@ -5,7 +5,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WebGPUApplication;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.webgpu.WGPUTextureFormat;
@@ -18,7 +18,7 @@ import jnr.ffi.Pointer;
 public class WgFrameBuffer implements Disposable {
 
     private final WgGraphics gfx;
-    private final WebGPUContext webgpu;
+    private final WebGPUApplication webgpu;
     private boolean hasDepth;
     private final WgTexture colorTexture;
     private final WgTexture depthTexture;

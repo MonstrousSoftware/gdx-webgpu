@@ -35,7 +35,7 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
-import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WebGPUApplication;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.assets.WgAssetManager;
 import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
@@ -69,7 +69,7 @@ public class GPUTimerTest extends GdxTest {
 	WgSkin skin;
 	WgAssetManager assets;
     WgGraphics gfx;
-    WebGPUContext webgpu;
+    WebGPUApplication webgpu;
 
 
 	// launcher

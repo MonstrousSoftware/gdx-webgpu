@@ -18,8 +18,7 @@ package com.monstrous.gdx.webgpu.wrappers;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Disposable;
-import com.monstrous.gdx.webgpu.application.WebGPUContext;
-import com.monstrous.gdx.webgpu.application.WgGraphics;
+import com.monstrous.gdx.webgpu.application.WebGPUApplication;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
 import com.monstrous.gdx.webgpu.webgpu.WGPUComputePipelineDescriptor;
@@ -29,7 +28,7 @@ import jnr.ffi.Pointer;
 public class WebGPUComputePipeline implements Disposable {
     private final WebGPU_JNI webGPU;
     private final WgGraphics gfx;
-    private final WebGPUContext webgpu;
+    private final WebGPUApplication webgpu;
     private final Pointer pipeline;
 
 

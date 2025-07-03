@@ -109,4 +109,9 @@ To use asynchronous loading via the asset manager:
 LibGDX only support shorts as index values (i.e. 16 bit) for up to 32K index values. Some models will exceed that value, e.g. the Stanford Dragon has 131K index values.
 Gdx-webgpu supports models with 32 bit indexing (int type) supporting 2 billion index values.	
 
+
+03/07:
+Note: some classes use BufferUtils or MemoryStack from LWJGL3. Does that make them platform dependent?
+
+
 	

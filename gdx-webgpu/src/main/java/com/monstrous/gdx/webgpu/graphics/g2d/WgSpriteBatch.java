@@ -5,7 +5,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
-import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WebGPUApplication;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.Binder;
 import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
@@ -36,7 +36,7 @@ public class WgSpriteBatch implements Batch {
     private final static int INDICES_PER_SPRITE = 6;
 
     private final WgGraphics gfx;
-    private final WebGPUContext webgpu;
+    private final WebGPUApplication webgpu;
     private final WgShaderProgram specificShader;
     private final int maxSprites;
     private boolean drawing;

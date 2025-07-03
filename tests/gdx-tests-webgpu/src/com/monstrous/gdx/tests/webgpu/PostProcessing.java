@@ -24,7 +24,7 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.math.Vector3;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.tests.webgpu.utils.PerspectiveCamController;
-import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WebGPUApplication;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
 import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplicationConfiguration;
@@ -50,7 +50,7 @@ public class PostProcessing extends GdxTest {
 	Model model;
 	ModelInstance instance;
     WgGraphics gfx;
-    WebGPUContext webgpu;
+    WebGPUApplication webgpu;
     WgFrameBuffer fbo;
     WgShaderProgram shader;
 

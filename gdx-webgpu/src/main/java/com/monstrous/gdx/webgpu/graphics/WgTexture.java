@@ -17,8 +17,8 @@
 package com.monstrous.gdx.webgpu.graphics;
 
 import com.badlogic.gdx.Gdx;
+import com.monstrous.gdx.webgpu.application.WebGPUApplication;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
-import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgTextureData;
 import com.monstrous.gdx.webgpu.utils.JavaWebGPU;
@@ -34,7 +34,7 @@ import java.nio.ByteBuffer;
 
 public class WgTexture extends Texture {
 
-    private final WebGPUContext webgpu = ((WgGraphics) Gdx.graphics).getContext();
+    private final WebGPUContext webgpu = ((WgGraphics) Gdx.graphics).webgpu;
     private final WebGPU_JNI webGPU = ((WgGraphics) Gdx.graphics).getWebGPU();
     protected int mipLevelCount;
     private Pointer texture;

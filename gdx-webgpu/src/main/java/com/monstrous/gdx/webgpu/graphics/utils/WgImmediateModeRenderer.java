@@ -18,7 +18,7 @@ package com.monstrous.gdx.webgpu.graphics.utils;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
-import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WebGPUApplication;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.utils.JavaWebGPU;
@@ -67,7 +67,7 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 	private FloatBuffer vertexData;
 	private WebGPUPipeline prevPipeline;
 	private WgGraphics gfx;
-    private WebGPUContext webgpu;
+    private WebGPUApplication webgpu;
 
 	public WgImmediateModeRenderer(boolean hasNormals, boolean hasColors, int numTexCoords) {
 		this(5000, hasNormals, hasColors, numTexCoords, createDefaultShader(hasNormals, hasColors, numTexCoords));

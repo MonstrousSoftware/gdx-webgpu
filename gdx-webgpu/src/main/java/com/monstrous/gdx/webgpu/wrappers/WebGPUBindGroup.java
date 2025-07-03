@@ -2,8 +2,7 @@ package com.monstrous.gdx.webgpu.wrappers;
 
 
 import com.badlogic.gdx.Gdx;
-import com.monstrous.gdx.webgpu.application.WebGPUContext;
-import com.monstrous.gdx.webgpu.application.WgGraphics;
+import com.monstrous.gdx.webgpu.application.WebGPUApplication;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.webgpu.WGPUBindGroupDescriptor;
 import com.monstrous.gdx.webgpu.webgpu.WGPUBindGroupEntry;
@@ -41,7 +40,7 @@ public class WebGPUBindGroup implements Disposable {
     private final WebGPU_JNI webGPU;
     private Pointer handle = null;
     private final WgGraphics gfx;
-    private final WebGPUContext webgpu;
+    private final WebGPUApplication webgpu;
 
     private final WebGPUBindGroupLayout layout;
     private final WGPUBindGroupDescriptor bindGroupDescriptor;

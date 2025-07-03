@@ -18,8 +18,7 @@ package com.monstrous.gdx.webgpu.graphics;
 
 
 import com.badlogic.gdx.Gdx;
-import com.monstrous.gdx.webgpu.application.WebGPUContext;
-import com.monstrous.gdx.webgpu.application.WgGraphics;
+import com.monstrous.gdx.webgpu.application.WebGPUApplication;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.webgpu.WGPUSType;
 import com.monstrous.gdx.webgpu.webgpu.WGPUShaderModuleDescriptor;
@@ -33,7 +32,7 @@ public class WgShaderProgram implements Disposable {
 
     private final WgGraphics gfx = (WgGraphics) Gdx.graphics;
     private final WebGPU_JNI webGPU = gfx.getWebGPU();
-    private final WebGPUContext webgpu = gfx.getContext();
+    private final WebGPUApplication webgpu = gfx.getContext();
     private String name;
     private Pointer shaderModule;
 

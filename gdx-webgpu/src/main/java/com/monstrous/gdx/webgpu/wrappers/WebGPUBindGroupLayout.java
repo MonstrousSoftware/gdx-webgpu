@@ -2,10 +2,9 @@ package com.monstrous.gdx.webgpu.wrappers;
 
 
 import com.badlogic.gdx.Gdx;
-import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WebGPUApplication;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.badlogic.gdx.utils.Disposable;
-import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.webgpu.*;
 import jnr.ffi.Pointer;
 
@@ -18,7 +17,7 @@ import java.util.Map;
 public class WebGPUBindGroupLayout implements Disposable {
     private final WgGraphics gfx = (WgGraphics) Gdx.graphics;
     private final WebGPU_JNI webGPU = gfx.getWebGPU();
-    private final WebGPUContext webgpu = gfx.getContext();
+    private final WebGPUApplication webgpu = gfx.getContext();
     private Pointer handle = null;
     private final String label;
     private final Map<Integer, WGPUBindGroupLayoutEntry> entries;   // map from bindingId

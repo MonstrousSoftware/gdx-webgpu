@@ -5,8 +5,7 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
-import com.monstrous.gdx.webgpu.application.WebGPUContext;
-import com.monstrous.gdx.webgpu.application.WgGraphics;
+import com.monstrous.gdx.webgpu.application.WebGPUApplication;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
 import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplicationConfiguration;
@@ -36,7 +35,7 @@ public class WebGPUTest {
 		private WgDesktopApplication app;
 		private WgGraphics gfx;
 		private WebGPU_JNI webGPU;
-        private WebGPUContext webgpu;
+        private WebGPUApplication webgpu;
 		private Pointer pipeline;
 
 		public void create () {
