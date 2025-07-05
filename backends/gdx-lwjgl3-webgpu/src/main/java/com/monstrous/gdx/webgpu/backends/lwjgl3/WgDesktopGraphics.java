@@ -166,6 +166,8 @@ public class WgDesktopGraphics extends WgGraphics implements Disposable {
 			fps = frames;
 			frames = 0;
 			frameCounterStart = time;
+
+            context.secondsTick();
             // request average gpu time once per second to keep it readable
 //            for(int i = 0; i < context.getGPUTimer().getNumPasses(); i++)
 //            //for(int i = 0; i < GPUTimer.MAX_PASSES; i++)

@@ -57,5 +57,6 @@ public abstract class WebGPUContext {
 
     abstract GPUTimer getGPUTimer();
     abstract float getAverageGPUtime(int pass);
+    abstract void secondsTick();
 
 }

@@ -17,8 +17,10 @@
 package com.monstrous.gdx.tests.webgpu;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.utils.ScreenUtils;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
 import com.monstrous.gdx.webgpu.graphics.utils.WgImmediateModeRenderer;
@@ -49,6 +51,7 @@ public class ImmediateModeRendererTest extends GdxTest {
 //		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 //		Gdx.gl.glEnable(GL20.GL_TEXTURE_2D);
 		//texture.bind();
+        ScreenUtils.clear(Color.TEAL, true);
 		renderer.begin(projMatrix, GL20.GL_TRIANGLES);
 		renderer.setTexture(texture);
 		renderer.texCoord(0, 0);

@@ -34,7 +34,7 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
     private boolean scissorEnabled = false;
     private Rectangle scissor;
     private int width, height;
-    //private float[] gpuTime = new float[GPUTimer.MAX_PASSES];
+    private float[] gpuTime = new float[GPUTimer.MAX_PASSES];
 
 
     public static class Configuration {
@@ -90,9 +90,18 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
     }
 
     @Override
-    // maybe smooth this to one value per second to keep values readable
+    // smoothed to one value per second to keep values readable
     public float getAverageGPUtime(int pass){
-        return gpuTimer.getAverageGPUtime(pass);
+        return gpuTime[pass];
+    }
+
+    /** called once per second. Used to gather statistics */
+    @Override
+    public void secondsTick() {
+        //  request average gpu time once per second to keep it readable
+        for(int i = 0; i < getGPUTimer().getNumPasses(); i++) {
+            gpuTime[i] = gpuTimer.getAverageGPUtime(i);
+        }
     }
 
 

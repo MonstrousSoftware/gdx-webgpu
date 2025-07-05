@@ -211,7 +211,7 @@ public class GPUTimerTest extends GdxTest {
 			instance.transform.rotate(Vector3.Y, 15f*delta);
 
         viewport.apply();
-		WgScreenUtils.clear(Color.TEAL);
+		WgScreenUtils.clear(Color.TEAL, true);
 
 		cam.update();
 		modelBatch.begin(cam);

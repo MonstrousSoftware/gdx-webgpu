@@ -151,7 +151,7 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 		pipelineSpec.setCullMode(WGPUCullMode.None);
 
 
-		renderPass = RenderPassBuilder.create("ImmediateModeRenderer", null, webgpu.getSamples());
+		renderPass = RenderPassBuilder.create("ImmediateModeRenderer", null, false, webgpu.getSamples());
 	}
 
 	public void color (Color color) {
