@@ -48,10 +48,8 @@ public class ImmediateModeRendererTest extends GdxTest {
 
 	@Override
 	public void render () {
-//		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-//		Gdx.gl.glEnable(GL20.GL_TEXTURE_2D);
-		//texture.bind();
         ScreenUtils.clear(Color.TEAL, true);
+
 		renderer.begin(projMatrix, GL20.GL_TRIANGLES);
 		renderer.setTexture(texture);
 		renderer.texCoord(0, 0);

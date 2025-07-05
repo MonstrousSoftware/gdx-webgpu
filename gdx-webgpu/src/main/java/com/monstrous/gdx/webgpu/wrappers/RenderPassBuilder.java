@@ -144,7 +144,6 @@ public class RenderPassBuilder {
 
         if (passType != RenderPassType.NO_DEPTH) {
             depthStencilAttachment.setDepthClearValue(1.0f);
-            // if we just did a depth prepass, don't clear the depth buffer
             depthStencilAttachment.setDepthLoadOp( clearDepth ? WGPULoadOp.Clear : WGPULoadOp.Load);
             //depthStencilAttachment.setDepthLoadOp(passType == RenderPassType.COLOR_PASS_AFTER_DEPTH_PREPASS ? WGPULoadOp.Load : WGPULoadOp.Clear);
             depthStencilAttachment.setDepthStoreOp(WGPUStoreOp.Store);

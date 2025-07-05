@@ -133,8 +133,8 @@ public class WebGPUPipeline implements Disposable {
                     depthStencilState.setDepthWriteEnabled(1L);
                 } else {
                     // this is the usual depth compare: smaller values are closer, near plane has z = 0.0 and far plane has z = 1.0
-                    // so render if the fragment z is less than the depth buffer value
-                    depthStencilState.setDepthCompare(WGPUCompareFunction.Less);
+                    // so render if the fragment z is less or equal than the depth buffer value
+                    depthStencilState.setDepthCompare(WGPUCompareFunction.LessEqual);
                     depthStencilState.setDepthWriteEnabled(1L); // true
                 }
             }
