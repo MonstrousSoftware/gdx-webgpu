@@ -32,6 +32,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
+import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 
 public abstract class BaseG3dTest extends GdxTest {
 	public AssetManager assets;
@@ -110,7 +111,7 @@ public abstract class BaseG3dTest extends GdxTest {
 
 		inputController.update();
 
-		ScreenUtils.clear(bgColor, true);
+		WgScreenUtils.clear(bgColor, true);
 
 		render(instances);
 	}

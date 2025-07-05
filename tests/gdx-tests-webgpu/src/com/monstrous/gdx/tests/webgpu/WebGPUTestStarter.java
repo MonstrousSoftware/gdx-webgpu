@@ -46,6 +46,7 @@ public class WebGPUTestStarter {
 
 		WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
 		config.setWindowedMode(320, 640);
+        config.enableGPUtiming = true;
 
 		new WgDesktopApplication(new TestChooser(), config);
 	}
