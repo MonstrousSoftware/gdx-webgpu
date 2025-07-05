@@ -16,30 +16,37 @@
 
 package com.monstrous.gdx.webgpu.maps.tiled.renderers;
 
-
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.tiled.TiledMap;
-import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
+import com.badlogic.gdx.maps.tiled.TiledMapImageLayer;
+import com.badlogic.gdx.maps.tiled.TiledMapTile;
+import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
+import com.badlogic.gdx.maps.tiled.renderers.BatchTiledMapRenderer;
+import com.badlogic.gdx.maps.tiled.renderers.HexagonalTiledMapRenderer;
+import com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 
-/** Derived from OrthogonalTiledMapRenderer to force use of WgSpriteBatch */
-public class WgOrthogonalTiledMapRenderer extends OrthogonalTiledMapRenderer {
+import static com.badlogic.gdx.graphics.g2d.Batch.*;
 
-	public WgOrthogonalTiledMapRenderer(TiledMap map) {
-		this(map, 1.0f);
+public class WgHexagonalTiledMapRenderer extends HexagonalTiledMapRenderer {
+
+
+	public WgHexagonalTiledMapRenderer(TiledMap map) {
+        this(map, 1.0f);
 	}
 
-	public WgOrthogonalTiledMapRenderer(TiledMap map, Batch batch) {
+	public WgHexagonalTiledMapRenderer(TiledMap map, float unitScale) {
+		super(map, unitScale, new WgSpriteBatch());
+		this.ownsBatch = true;
+	}
+
+	public WgHexagonalTiledMapRenderer(TiledMap map, Batch batch) {
 		super(map, batch);
 	}
 
-	public WgOrthogonalTiledMapRenderer(TiledMap map, float unitScale) {
-		this(map, unitScale, new WgSpriteBatch());
-        this.ownsBatch = true;
-	}
-
-	public WgOrthogonalTiledMapRenderer(TiledMap map, float unitScale, Batch batch) {
+	public WgHexagonalTiledMapRenderer(TiledMap map, float unitScale, Batch batch) {
 		super(map, unitScale, batch);
 	}
-
 }
