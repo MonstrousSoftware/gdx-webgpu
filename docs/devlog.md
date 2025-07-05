@@ -116,5 +116,14 @@ Note: some classes use BufferUtils or MemoryStack from LWJGL3. Does that make th
 - Added module api-new-test to render a triangle via jWebGPU. Uses com.github.xpenatan.jWebGPU repo which is still under development but should
 provide multi-platform support as opposed to the Java-to-WebGPU which is desktop only.
 
+- Created alternative modules to migrate to jWebGPU backend:
+  - gdx-desktop-webgpu
+  - gdx-webgpu2
+  - gdx-tests-webgpu2
+
+Once the migration is complete the original modules will be deleted and the latter two modules will be renamed to lose the -2 postfix.
+
+05/07: Made some subclasses for Tiled loading/rendering.  The logic is untouched, just need to make sure they use WgSpriteBatch and
+WgTexture.  SuperKoalio demo works now.
 
 	
