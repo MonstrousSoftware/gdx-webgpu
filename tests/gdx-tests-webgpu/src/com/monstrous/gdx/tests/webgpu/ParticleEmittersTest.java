@@ -107,7 +107,7 @@ public class ParticleEmittersTest extends GdxTest {
 		ui.act();
 		spriteBatch.getProjectionMatrix().setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		float delta = Gdx.graphics.getDeltaTime();
-		//Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
 		spriteBatch.begin(Color.BLACK);
 		for (ParticleEffect e : effects)
 			e.draw(spriteBatch, delta);

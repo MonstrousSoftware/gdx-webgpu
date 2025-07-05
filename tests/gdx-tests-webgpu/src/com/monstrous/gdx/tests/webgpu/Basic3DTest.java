@@ -36,6 +36,7 @@ import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
 import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplicationConfiguration;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
+import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 
 public class Basic3DTest extends GdxTest {
 	public PerspectiveCamera cam;
@@ -78,8 +79,8 @@ public class Basic3DTest extends GdxTest {
 	public void render () {
 		inputController.update();
 
-		Gdx.gl.glViewport(0, 0, Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight());
-		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+
+        WgScreenUtils.clear(Color.TEAL, true);
 
 		modelBatch.begin(cam);
 		modelBatch.render(instance, environment);
@@ -92,9 +93,6 @@ public class Basic3DTest extends GdxTest {
 		model.dispose();
 	}
 
-	public boolean needsGL20 () {
-		return true;
-	}
 
 	public void resume () {
 	}

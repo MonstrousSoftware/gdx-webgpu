@@ -86,7 +86,7 @@ public class ModelBatchRPTest extends GdxTest {
 		renderableProvider.update(delta);
 
 
-		WgScreenUtils.clear(Color.TEAL);
+		WgScreenUtils.clear(Color.TEAL, true);
 
 		cam.update();
 		modelBatch.begin(cam);

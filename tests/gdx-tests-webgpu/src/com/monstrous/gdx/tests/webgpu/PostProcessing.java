@@ -99,7 +99,7 @@ public class PostProcessing extends GdxTest {
 
         fbo.begin();
 
-            WgScreenUtils.clear(Color.TEAL);
+            WgScreenUtils.clear(Color.TEAL, true);
 
             cam.update();
             modelBatch.begin(cam);

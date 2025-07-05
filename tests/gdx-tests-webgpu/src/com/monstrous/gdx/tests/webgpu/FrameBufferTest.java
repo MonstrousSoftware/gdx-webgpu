@@ -92,9 +92,10 @@ public class FrameBufferTest extends GdxTest {
 		instance.transform.rotate(Vector3.Y, 15f*delta);
 
 
+        // render into frame buffer
         fbo.begin();
 
-            WgScreenUtils.clear(Color.TEAL);
+            WgScreenUtils.clear(Color.TEAL, true);
 
             cam.update();
             modelBatch.begin(cam);
@@ -103,7 +104,8 @@ public class FrameBufferTest extends GdxTest {
 
         fbo.end();
 
-
+        // display 2 copies of the frame buffer
+        WgScreenUtils.clear(Color.ORANGE);
 		batch.begin();
         batch.draw(fbo.getColorBufferTexture(), 20, 100, 256, 180);
         batch.draw(fbo.getColorBufferTexture(), 320+20, 100, 256, 180);

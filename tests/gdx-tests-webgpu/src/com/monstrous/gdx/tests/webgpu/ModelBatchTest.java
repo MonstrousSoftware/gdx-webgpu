@@ -103,7 +103,7 @@ public class ModelBatchTest extends GdxTest {
 		renderable.worldTransform.rotate(Vector3.Y, delta*15f);
 		renderable2.worldTransform.rotate(Vector3.Y, -delta*15f);
 
-		WgScreenUtils.clear(Color.TEAL);
+		WgScreenUtils.clear(Color.TEAL, true);
 
 		cam.update();
 		modelBatch.begin(cam);

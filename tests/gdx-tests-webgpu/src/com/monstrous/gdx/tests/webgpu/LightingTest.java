@@ -262,7 +262,7 @@ public class LightingTest extends GdxTest {
 		for(ModelInstance instance : instances)
 			instance.transform.rotate(Vector3.Y, 15f*delta);
 
-		WgScreenUtils.clear(Color.TEAL);
+		WgScreenUtils.clear(Color.TEAL, true);
 
 		cam.update();
 		modelBatch.begin(cam);

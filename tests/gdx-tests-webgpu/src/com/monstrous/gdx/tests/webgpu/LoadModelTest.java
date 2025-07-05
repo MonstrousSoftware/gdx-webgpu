@@ -176,7 +176,7 @@ public class LoadModelTest extends GdxTest {
 		if(loaded)
 			instance.transform.rotate(Vector3.Y, 15f*delta);
 
-		WgScreenUtils.clear(Color.TEAL);
+		WgScreenUtils.clear(Color.TEAL,true);
 
 		cam.update();
 		modelBatch.begin(cam);
