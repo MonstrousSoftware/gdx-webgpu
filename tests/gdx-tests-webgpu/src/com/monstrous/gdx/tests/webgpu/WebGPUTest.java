@@ -60,7 +60,7 @@ public class WebGPUTest {
 
 
 			// create a render pass
-			WebGPURenderPass pass = RenderPassBuilder.create("my pass", Color.CORAL, null,  null, 1, RenderPassType.NO_DEPTH);
+			WebGPURenderPass pass = RenderPassBuilder.create("my pass", Color.CORAL, true, null,  null, 1, RenderPassType.NO_DEPTH);
 
 			// Select which render pipeline to use
 			pass.setPipeline(pipeline);
