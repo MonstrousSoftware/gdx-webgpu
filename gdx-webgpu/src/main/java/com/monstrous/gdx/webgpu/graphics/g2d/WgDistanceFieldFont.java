@@ -36,40 +36,42 @@ import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
  * <p>
  * Attention: The batch is flushed before and after each string is rendered.
  * @author Florian Falkner */
+// note: smoothing uniform not supported.
+
 public class WgDistanceFieldFont extends WgBitmapFont {
 //	private float distanceFieldSmoothing;
 //
-//	public WgDistanceFieldFont(BitmapFontData data, Array<TextureRegion> pageRegions, boolean integer) {
-//		super(data, pageRegions, integer);
-//	}
-//
-//	public WgDistanceFieldFont(BitmapFontData data, TextureRegion region, boolean integer) {
-//		super(data, region, integer);
-//	}
-//
-//	public WgDistanceFieldFont(FileHandle fontFile, boolean flip) {
-//		super(fontFile, flip);
-//	}
-//
-//	public WgDistanceFieldFont(FileHandle fontFile, FileHandle imageFile, boolean flip, boolean integer) {
-//		super(fontFile, imageFile, flip, integer);
-//	}
-//
-//	public WgDistanceFieldFont(FileHandle fontFile, FileHandle imageFile, boolean flip) {
-//		super(fontFile, imageFile, flip);
-//	}
-//
+	public WgDistanceFieldFont(BitmapFontData data, Array<TextureRegion> pageRegions, boolean integer) {
+		super(data, pageRegions, integer);
+	}
+
+	public WgDistanceFieldFont(BitmapFontData data, TextureRegion region, boolean integer) {
+		super(data, region, integer);
+	}
+
+	public WgDistanceFieldFont(FileHandle fontFile, boolean flip) {
+		super(fontFile, flip);
+	}
+
+	public WgDistanceFieldFont(FileHandle fontFile, FileHandle imageFile, boolean flip, boolean integer) {
+		super(fontFile, imageFile, flip, integer);
+	}
+
+	public WgDistanceFieldFont(FileHandle fontFile, FileHandle imageFile, boolean flip) {
+		super(fontFile, imageFile, flip);
+	}
+
 //	public WgDistanceFieldFont(FileHandle fontFile, TextureRegion region, boolean flip) {
 //		super(fontFile, region, flip);
 //	}
-//
+
 //	public WgDistanceFieldFont(FileHandle fontFile, TextureRegion region) {
 //		super(fontFile, region);
 //	}
-//
-//	public WgDistanceFieldFont(FileHandle fontFile) {
-//		super(fontFile);
-//	}
+
+	public WgDistanceFieldFont(FileHandle fontFile) {
+		super(fontFile);
+	}
 //
 //	protected void load (BitmapFontData data) {
 //		super.load(data);
@@ -96,9 +98,9 @@ public class WgDistanceFieldFont extends WgBitmapFont {
 //		this.distanceFieldSmoothing = distanceFieldSmoothing;
 //	}
 //
-//	static public WgShaderProgram createDistanceFieldShader () {
-//        return new WgShaderProgram(Gdx.files.internal("spriteBatch-sdf.wgsl"));
-//	}
+	static public WgShaderProgram createDistanceFieldShader () {
+        return new WgShaderProgram(Gdx.files.internal("shaders/spritebatch-sdf.wgsl"));
+	}
 //
 //	/** Provides a font cache that uses distance field shader for rendering fonts. Attention: breaks batching because uniform is
 //	 * needed for smoothing factor, so a flush is performed before and after every font rendering.

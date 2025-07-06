@@ -7,6 +7,7 @@ import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
 import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
+import com.monstrous.gdx.webgpu.graphics.g2d.WgDistanceFieldFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 
 // demonstrates use of SDF font
@@ -22,20 +23,19 @@ public class DistanceFontTest extends GdxTest {
 
     @Override
     public void create () {
-        shader = new WgShaderProgram(Gdx.files.internal("shaders/spritebatch-sdf.wgsl"));
-        //shader = new WgShaderProgram(Gdx.files.internal("shaders/spritebatch.wgsl"));
-        batch = new WgSpriteBatch(1000, shader);
 
-
-        font = new WgBitmapFont(Gdx.files.classpath("lsans32-sdf.fnt"));
+        shader = WgDistanceFieldFont.createDistanceFieldShader();
+        batch = new WgSpriteBatch();
+        font = new WgDistanceFieldFont(Gdx.files.classpath("lsans32-sdf.fnt"));
     }
 
 		@Override
 		public void render () {
 
 			batch.begin();
-           // batch.setShader(shader);
+            batch.setShader(shader);
 			font.draw(batch, "Hello, world!", 200, 200);
+            batch.setShader((WgShaderProgram) null);
 			batch.end();
 		}
 
