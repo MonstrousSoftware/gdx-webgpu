@@ -75,7 +75,10 @@ public class WebGPUTests {
         FullScreenTest.class,
         GPUTimerTest.class,
         FrameBufferTest.class,
-        PostProcessing.class
+        PostProcessing.class,
+        SuperKoalio.class,
+        DistanceFontTest.class,
+        DepthClearTest.class
 
 		// @on
 
