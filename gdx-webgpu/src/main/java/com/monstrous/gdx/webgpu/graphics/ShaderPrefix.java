@@ -19,6 +19,7 @@ package com.monstrous.gdx.webgpu.graphics;
 
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.Environment;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 
 public class ShaderPrefix {
     private static StringBuffer sb = new StringBuffer();
@@ -52,6 +53,11 @@ public class ShaderPrefix {
             if ((mask & VertexAttributes.Usage.Normal) != 0 && environment != null) {
                 // only perform lighting calculations if we have vertex normals and an environment
                 sb.append("#define LIGHTING\n");
+            }
+        }
+        if(environment != null){
+            if((environment.getMask() & ColorAttribute.Fog) != 0){
+                sb.append("#define FOG\n");
             }
         }
 //        if (environment != null && !environment.depthPass && environment.renderShadows) {

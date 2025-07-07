@@ -4,7 +4,6 @@
 
 // Note this is an uber shader with conditional compilation depending on #define values from the shader prefix
 
-#define FOG
 
 struct DirectionalLight {
     color: vec4f,
