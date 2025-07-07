@@ -4,6 +4,8 @@
 
 // Note this is an uber shader with conditional compilation depending on #define values from the shader prefix
 
+#define FOG
+
 struct DirectionalLight {
     color: vec4f,
     direction: vec4f
@@ -21,6 +23,7 @@ struct FrameUniforms {
     pointLights : array<PointLight, 3>,     // todo don't use hard coded constant for array size
     ambientLight: vec4f,
     cameraPosition: vec4f,
+    fogColor: vec4f,
     numDirectionalLights: f32,
     numPointLights: f32,
 };
@@ -78,7 +81,11 @@ struct VertexOutput {
     @location(5) tangent: vec3f,
     @location(6) bitangent: vec3f,
 #endif
+#ifdef FOG
+    @location(7) fogDepth: f32,
+#endif
 };
+
 
 @vertex
 fn vs_main(in: VertexInput, @builtin(instance_index) instance: u32) -> VertexOutput {
@@ -110,6 +117,12 @@ fn vs_main(in: VertexInput, @builtin(instance_index) instance: u32) -> VertexOut
 #ifdef NORMAL_MAP
     out.tangent = in.tangent;
     out.bitangent = in.bitangent;
+#endif
+
+#ifdef FOG
+    let flen:vec3f = uFrame.cameraPosition.xyz - worldPosition.xyz;
+    let fog:f32 = dot(flen, flen) * uFrame.cameraPosition.w;
+    out.fogDepth = min(fog, 1.0);
 #endif
 
    return out;
@@ -193,9 +206,14 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
 
     color = color + vec4f(emissiveColor, 0);
 
+#ifdef FOG
+    color = vec4f(mix(color.rgb, uFrame.fogColor.rgb, in.fogDepth), 1);
+#endif
+
     //return vec4f(emissiveColor, 1.0);
     //return vec4f(normal, 1.0);
     //return vec4f(uFrame.ambientLight.rgb, 1.0);
     //return material.diffuseColor;
+    //return vec4f(in.fogDepth, 0, 0, 1);
     return color;
 };

@@ -22,6 +22,7 @@ import com.badlogic.gdx.graphics.g3d.attributes.*;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Vector4;
 import com.badlogic.gdx.utils.Array;
 import com.monstrous.gdx.webgpu.graphics.Binder;
 import com.monstrous.gdx.webgpu.graphics.WgMesh;
@@ -64,6 +65,7 @@ public class WgDefaultShader implements Shader {
     protected DirectionalLight[] directionalLights;
     protected int numPointLights;
     protected PointLight[] pointLights;
+    private final Vector4 tmpVec4 = new Vector4();
 
 
     public static class Config {
@@ -100,7 +102,7 @@ public class WgDefaultShader implements Shader {
         defaultBlackTexture = new WgTexture(pixmap);
 
         // Create uniform buffer for global (per-frame) uniforms, e.g. projection matrix, camera position, etc.
-        uniformBufferSize = (16 + 4 + 4 +4
+        uniformBufferSize = (16 + 4 + 4 +4+4
                 +8*config.maxDirectionalLights
                 +12*config.maxPointLights)* Float.BYTES;
         uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize, WGPUBufferUsage.CopyDst | WGPUBufferUsage.Uniform);
@@ -152,6 +154,7 @@ public class WgDefaultShader implements Shader {
         }
         binder.defineUniform("ambientLight", 0, 0, offset); offset += 4*4;
         binder.defineUniform("cameraPosition", 0, 0, offset); offset += 4*4;
+        binder.defineUniform("fogColor", 0, 0, offset); offset += 4*4;
         binder.defineUniform("numDirectionalLights", 0, 0, offset); offset += 4;
         binder.defineUniform("numPointLights", 0, 0, offset); offset += 4;
 
@@ -239,7 +242,10 @@ public class WgDefaultShader implements Shader {
 //        projection.set(shiftDepthMatrix).mul(camera.projection);
 //        combined.set(projection).mul(camera.view);
         binder.setUniform("projectionViewTransform", camera.combined);
-        binder.setUniform("cameraPosition", camera.position);
+
+        // pass a special value in the w component of camera position that is used by the fog calculation
+        tmpVec4.set(camera.position.x, camera.position.y, camera.position.z, 1.1881f / (camera.far * camera.far));
+        binder.setUniform("cameraPosition", tmpVec4);
         uniformBuffer.flush();
 
         // bind group 0 (frame) once per frame
@@ -529,5 +535,9 @@ public class WgDefaultShader implements Shader {
         final ColorAttribute ambient = lights.get(ColorAttribute.class,ColorAttribute.AmbientLight);
         if(ambient != null)
             binder.setUniform("ambientLight", ambient.color);
+
+        final ColorAttribute fog = lights.get(ColorAttribute.class,ColorAttribute.Fog);
+        if(fog != null)
+            binder.setUniform("fogColor", fog.color);
     }
 }
