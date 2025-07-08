@@ -54,10 +54,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
     private final WebGPUUniformBuffer instanceBuffer;
     private final WebGPUUniformBuffer materialBuffer;
     private final int materialSize;
-//    public int numMaterials;
     private final WebGPUPipeline pipeline;            // a shader has one pipeline
-//    public int numRenderables;
-//    public int drawCalls;
     private WebGPURenderPass renderPass;
     private final VertexAttributes vertexAttributes;
     private final Matrix4 combined;
@@ -104,6 +101,8 @@ public class WgDefaultShader extends WgShader implements Disposable {
         pixmap.fill();
         defaultBlackTexture = new WgTexture(pixmap);
 
+        boolean hasShadowMap = renderable.environment != null && renderable.environment.shadowMap != null;
+
         // Create uniform buffer for global (per-frame) uniforms, e.g. projection matrix, camera position, etc.
         uniformBufferSize = (16 + 16 + 4 + 4 +4+4
                 +8*config.maxDirectionalLights
@@ -120,14 +119,14 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
         binder = new Binder();
         // define groups
-        binder.defineGroup(0, createFrameBindGroupLayout(uniformBufferSize));
+        binder.defineGroup(0, createFrameBindGroupLayout(uniformBufferSize, hasShadowMap));
         binder.defineGroup(1, createMaterialBindGroupLayout(materialSize));
         binder.defineGroup(2, createInstancingBindGroupLayout());
 
         // define bindings in the groups
         // must match with shader code
         binder.defineBinding("uniforms", 0, 0);
-        if(renderable.environment.shadowMap != null) {
+        if(hasShadowMap) {
             binder.defineBinding("shadowMap", 0, 1);
             binder.defineBinding("shadowSampler", 0, 2);
         }
@@ -444,14 +443,14 @@ public class WgDefaultShader extends WgShader implements Disposable {
         //prevMaterial = material;
     }
 
-    private WebGPUBindGroupLayout createFrameBindGroupLayout(int uniformBufferSize) {
+    private WebGPUBindGroupLayout createFrameBindGroupLayout(int uniformBufferSize, boolean hasShadowMap) {
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch bind group layout (frame)");
         layout.begin();
         layout.addBuffer(0, WGPUShaderStage.Vertex|WGPUShaderStage.Fragment, WGPUBufferBindingType.Uniform, uniformBufferSize, false);
-
-        layout.addTexture(1, WGPUShaderStage.Vertex|WGPUShaderStage.Fragment, WGPUTextureSampleType.Depth, WGPUTextureViewDimension._2D, false);
-
-        layout.addSampler(2, WGPUShaderStage.Vertex|WGPUShaderStage.Fragment, WGPUSamplerBindingType.Comparison );
+        if(hasShadowMap) {
+            layout.addTexture(1, WGPUShaderStage.Fragment, WGPUTextureSampleType.Depth, WGPUTextureViewDimension._2D, false);
+            layout.addSampler(2, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Comparison);
+        }
         layout.end();
         return layout;
     }
@@ -565,11 +564,6 @@ public class WgDefaultShader extends WgShader implements Disposable {
             binder.setSampler("shadowSampler", shadowMap.getDepthSampler());
 
         }
-//        else {
-//            binder.setUniform("shadowProjViewTransform", dummyMatrix);
-//            //binder.setTexture("shadowMap", defaultTexture.getTextureView());
-//            binder.setSampler("shadowSampler", defaultTexture.getDepthSampler());
-//        }
     }
 
 
