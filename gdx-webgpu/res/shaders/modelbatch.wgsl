@@ -18,6 +18,7 @@ struct PointLight {
 
 struct FrameUniforms {
     projectionViewTransform: mat4x4f,
+    shadowProjViewTransform: mat4x4f,
     directionalLights : array<DirectionalLight, 3>,     // todo don't use hard coded constant for array size
     pointLights : array<PointLight, 3>,     // todo don't use hard coded constant for array size
     ambientLight: vec4f,
@@ -37,8 +38,14 @@ struct MaterialUniforms {
     //dummy: vec3f
 };
 
+// frame bindings
 @group(0) @binding(0) var<uniform> uFrame: FrameUniforms;
+#ifdef SHADOW_MAP
+    @group(0) @binding(1) var shadowMap: texture_depth_2d;
+    @group(0) @binding(2) var shadowSampler: sampler_comparison;
+#endif
 
+// material bindings
 @group(1) @binding(0) var<uniform> material: MaterialUniforms;
 @group(1) @binding(1) var diffuseTexture: texture_2d<f32>;
 @group(1) @binding(2) var diffuseSampler: sampler;
@@ -49,6 +56,7 @@ struct MaterialUniforms {
 @group(1) @binding(7) var emissiveTexture: texture_2d<f32>;
 @group(1) @binding(8) var emissiveSampler: sampler;
 
+// renderables
 @group(2) @binding(0) var<storage, read> instances: array<ModelUniforms>;
 
 
@@ -82,6 +90,9 @@ struct VertexOutput {
 #endif
 #ifdef FOG
     @location(7) fogDepth: f32,
+#endif
+#ifdef SHADOW_MAP
+    @location(8)  shadowPos: vec3f,
 #endif
 };
 
@@ -124,6 +135,18 @@ fn vs_main(in: VertexInput, @builtin(instance_index) instance: u32) -> VertexOut
     out.fogDepth = min(fog, 1.0);
 #endif
 
+#ifdef SHADOW_MAP
+  // XY is in (-1, 1) space, Z is in (0, 1) space
+  let posFromLight = uFrame.shadowProjViewTransform * worldPosition;
+
+  // Convert XY to (0, 1)
+  // Y is flipped because texture coords are Y-down.
+  out.shadowPos = vec3(
+    posFromLight.xy * vec2(0.5, -0.5) + vec2(0.5),
+    posFromLight.z
+  );
+#endif
+
    return out;
 }
 
@@ -136,6 +159,13 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
    var color = in.color * textureSample(diffuseTexture, diffuseSampler, in.uv);
 #else
    var color = in.color;
+#endif
+
+
+#ifdef SHADOW_MAP
+    let visibility = getShadowNess(in.shadowPos);
+#else
+    let visibility = 1.0;
 #endif
 
 #ifdef LIGHTING
@@ -162,8 +192,9 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
 
     let shininess : f32 = material.shininess;
 
+    let ambient : vec3f = uFrame.ambientLight.rgb;
 
-    var radiance : vec3f = uFrame.ambientLight.rgb;
+    var radiance : vec3f = vec3f(0);
     var specular : vec3f = vec3f(0);
     let viewVec : vec3f = normalize(uFrame.cameraPosition.xyz - in.worldPos.xyz);
 
@@ -197,7 +228,8 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
         specular += irradiance *  light.color.rgb * pow(halfDotView, shininess);
     }
 
-    let litColor = vec4f(color.rgb * radiance + specular, 1.0);
+
+    let litColor = vec4f( color.rgb * (ambient + visibility * radiance) + visibility*specular, 1.0);
 
     color = litColor;
 #endif // LIGHTING
@@ -209,10 +241,40 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
     color = vec4f(mix(color.rgb, uFrame.fogColor.rgb, in.fogDepth), 1);
 #endif
 
+
+
+
     //return vec4f(emissiveColor, 1.0);
     //return vec4f(normal, 1.0);
     //return vec4f(uFrame.ambientLight.rgb, 1.0);
     //return material.diffuseColor;
     //return vec4f(in.fogDepth, 0, 0, 1);
+
     return color;
 };
+
+#ifdef SHADOW_MAP
+// returns value 0..1 for the amount of "sunlight"
+fn getShadowNess( shadowPos:vec3f ) -> f32 {
+
+    // PCF filtering: take 9 samples and use the average value
+    let shadowDepthTextureSize = 4096.0; // should be push constant
+    let oneOverDepthTextureSize = 1.0 / shadowDepthTextureSize;
+    let bias = 0.007;
+    var visibility = 0.0;
+    for( var y = -1; y <= 1; y++){
+        for( var x = -1; x <= 1; x++){
+        let offset = vec2f(vec2(x,y))*oneOverDepthTextureSize;
+            // returns 0 or 1
+            visibility += textureSampleCompare(shadowMap, shadowSampler, shadowPos.xy+offset, shadowPos.z - bias);
+        }
+    }
+    visibility /= 9.0;  // divide by nr of samples
+    return visibility;
+}
+
+fn getShadowSingleSample( shadowPos:vec3f ) -> f32 {
+    let bias = 0.007;
+    return textureSampleCompare(shadowMap, shadowSampler, shadowPos.xy, shadowPos.z - bias);
+}
+#endif

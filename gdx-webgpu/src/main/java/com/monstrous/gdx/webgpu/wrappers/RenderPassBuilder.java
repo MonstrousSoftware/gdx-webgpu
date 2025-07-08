@@ -56,9 +56,14 @@ public class RenderPassBuilder {
         return create(name,clearColor, clearDepth,null,  gfx.getContext().getDepthTexture(), sampleCount);
     }
 
+    public static WebGPURenderPass create(String name, Color clearColor, boolean clearDepth, int sampleCount, RenderPassType passType) {
+        WgGraphics gfx = (WgGraphics)Gdx.graphics;
+        return create(name,clearColor, clearDepth,null,  gfx.getContext().getDepthTexture(), sampleCount, passType);
+    }
+
 
     public static WebGPURenderPass create(String name, Color clearColor, boolean clearDepth, WgTexture colorTexture, WgTexture depthTexture, int sampleCount){
-        return create(name, clearColor, clearDepth, colorTexture, depthTexture, sampleCount, RenderPassType.COLOR_PASS);
+        return create(name, clearColor, clearDepth, colorTexture, depthTexture, sampleCount, RenderPassType.COLOR_AND_DEPTH);
     }
 
 
@@ -97,7 +102,8 @@ public class RenderPassBuilder {
         renderPassDescriptor.setLabel(name);
 
 
-        if (passType == RenderPassType.COLOR_PASS ||
+        if (passType == RenderPassType.COLOR_AND_DEPTH ||
+            passType == RenderPassType.COLOR_PASS ||
             passType == RenderPassType.COLOR_PASS_AFTER_DEPTH_PREPASS ||
             passType == RenderPassType.SHADOW_PASS ||
             passType == RenderPassType.NO_DEPTH) {

@@ -5,15 +5,19 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.RenderableProvider;
+import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.utils.RenderableSorter;
+import com.badlogic.gdx.graphics.g3d.utils.ShaderProvider;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDefaultShader;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDefaultShaderProvider;
 import com.badlogic.gdx.graphics.*;
 
 import com.badlogic.gdx.utils.*;
+import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgShader;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgDefaultRenderableSorter;
 import com.monstrous.gdx.webgpu.wrappers.RenderPassBuilder;
+import com.monstrous.gdx.webgpu.wrappers.RenderPassType;
 import com.monstrous.gdx.webgpu.wrappers.WebGPURenderPass;
 
 
@@ -25,7 +29,8 @@ public class WgModelBatch implements Disposable {
     private WgDefaultShader.Config config;
     private boolean drawing;
     private WebGPURenderPass renderPass;
-    private WgDefaultShaderProvider shaderProvider;
+    private ShaderProvider shaderProvider;
+    private boolean ownsShaderProvider;
     private final Array<Renderable> renderables;
     protected final RenderablePool renderablesPool = new RenderablePool();
     private Camera camera;
@@ -66,6 +71,21 @@ public class WgModelBatch implements Disposable {
         drawing = false;
 
         shaderProvider = new WgDefaultShaderProvider(config);
+        ownsShaderProvider = true;
+        renderables = new Array<>();
+        this.sorter = new WgDefaultRenderableSorter();
+    }
+
+    public WgModelBatch(ShaderProvider shaderProvider) {
+        this(shaderProvider, null);
+    }
+
+    public WgModelBatch(ShaderProvider shaderProvider, WgDefaultShader.Config config) {
+        this.config = config == null ? new WgDefaultShader.Config() : config;
+        drawing = false;
+
+        this.shaderProvider = shaderProvider;
+        ownsShaderProvider = false;
         renderables = new Array<>();
         this.sorter = new WgDefaultRenderableSorter();
     }
@@ -76,17 +96,27 @@ public class WgModelBatch implements Disposable {
     }
 
     public void begin(final Camera camera){
-        begin(camera, null);
+        begin(camera, null, true, RenderPassType.COLOR_AND_DEPTH);
     }
 
     public void begin(final Camera camera, final Color clearColor) {
+        begin(camera, clearColor, true, RenderPassType.COLOR_AND_DEPTH);
+    }
+
+    public void begin(final Camera camera, final Color clearColor, boolean clearDepth){
+        begin(camera, clearColor, clearDepth, RenderPassType.COLOR_AND_DEPTH);
+    }
+
+    // extra param for now to identify depth pass so that render pass is created without color attachment
+    // can we detect this another way?
+    public void begin(final Camera camera, final Color clearColor, boolean clearDepth, RenderPassType passType) {
         if (drawing)
             throw new RuntimeException("Must end() before begin()");
         drawing = true;
         this.camera = camera;
 
         WgGraphics gfx = (WgGraphics) Gdx.graphics;
-        renderPass = RenderPassBuilder.create("ModelBatch", clearColor, gfx.getContext().getSamples());
+        renderPass = RenderPassBuilder.create("ModelBatch", clearColor, clearDepth, gfx.getContext().getSamples(), passType);
 
         renderables.clear();
         shaderSwitches = 0;
@@ -137,7 +167,7 @@ public class WgModelBatch implements Disposable {
             throw new ArrayIndexOutOfBoundsException("Too many renderables");
         sorter.sort(camera, renderables);
 
-        WgDefaultShader currentShader = null;
+        WgShader currentShader = null;
         for(Renderable renderable : renderables) {
             if (currentShader != renderable.shader) {
                 if (currentShader != null) {
@@ -147,7 +177,7 @@ public class WgModelBatch implements Disposable {
                     drawCalls += currentShader.drawCalls;
                     shaderSwitches++;
                 }
-                currentShader = (WgDefaultShader) renderable.shader;
+                currentShader = (WgShader) renderable.shader;
                 currentShader.begin(camera, renderable, renderPass);
             }
             currentShader.render(renderable);
@@ -173,7 +203,8 @@ public class WgModelBatch implements Disposable {
 
     @Override
     public void dispose(){
-        shaderProvider.dispose();
+        if(ownsShaderProvider)
+            shaderProvider.dispose();
     }
 
 

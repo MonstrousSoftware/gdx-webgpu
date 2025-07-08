@@ -14,7 +14,6 @@
  * limitations under the License.
  ******************************************************************************/
 
-
 ext {
 	mainTestClass = "com.monstrous.gdx.tests.webgpu.WebGPUTestStarter"
 	ext.j2w_version = "1.01"

@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 /** Manages bind groups and provides methods for binding by uniform name.
- * todo performance; uniform is fully rewritten for each setUniform
  */
 public class Binder implements Disposable {
     private final BindingDictionary bindMap;

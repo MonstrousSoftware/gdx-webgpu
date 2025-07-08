@@ -59,6 +59,9 @@ public class ShaderPrefix {
             if((environment.getMask() & ColorAttribute.Fog) != 0){
                 sb.append("#define FOG\n");
             }
+            if(environment.shadowMap != null){
+                sb.append("#define SHADOW_MAP\n");
+            }
         }
 //        if (environment != null && !environment.depthPass && environment.renderShadows) {
 //            sb.append("#define SHADOWS\n");

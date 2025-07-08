@@ -24,6 +24,7 @@ import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector4;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Disposable;
 import com.monstrous.gdx.webgpu.graphics.Binder;
 import com.monstrous.gdx.webgpu.graphics.WgMesh;
 import com.badlogic.gdx.graphics.*;
@@ -33,28 +34,30 @@ import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.PBRTextureAttribute;
 import com.monstrous.gdx.webgpu.webgpu.*;
 import com.monstrous.gdx.webgpu.wrappers.*;
+import jnr.ffi.Pointer;
 
 
 import static com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888;
 
 /** Default shader to render renderables  */
-public class WgDefaultShader implements Shader {
+public class WgDefaultShader extends WgShader implements Disposable {
 
     private final Config config;
     private static String defaultShader;
     private final WgTexture defaultTexture;
     private final WgTexture defaultNormalTexture;
     private final WgTexture defaultBlackTexture;
+    private final Matrix4 dummyMatrix = new Matrix4();
     public final Binder binder;
     private final WebGPUUniformBuffer uniformBuffer;
     private final int uniformBufferSize;
     private final WebGPUUniformBuffer instanceBuffer;
     private final WebGPUUniformBuffer materialBuffer;
     private final int materialSize;
-    public int numMaterials;
+//    public int numMaterials;
     private final WebGPUPipeline pipeline;            // a shader has one pipeline
-    public int numRenderables;
-    public int drawCalls;
+//    public int numRenderables;
+//    public int drawCalls;
     private WebGPURenderPass renderPass;
     private final VertexAttributes vertexAttributes;
     private final Matrix4 combined;
@@ -102,7 +105,7 @@ public class WgDefaultShader implements Shader {
         defaultBlackTexture = new WgTexture(pixmap);
 
         // Create uniform buffer for global (per-frame) uniforms, e.g. projection matrix, camera position, etc.
-        uniformBufferSize = (16 + 4 + 4 +4+4
+        uniformBufferSize = (16 + 16 + 4 + 4 +4+4
                 +8*config.maxDirectionalLights
                 +12*config.maxPointLights)* Float.BYTES;
         uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize, WGPUBufferUsage.CopyDst | WGPUBufferUsage.Uniform);
@@ -120,9 +123,16 @@ public class WgDefaultShader implements Shader {
         binder.defineGroup(0, createFrameBindGroupLayout(uniformBufferSize));
         binder.defineGroup(1, createMaterialBindGroupLayout(materialSize));
         binder.defineGroup(2, createInstancingBindGroupLayout());
+
         // define bindings in the groups
         // must match with shader code
         binder.defineBinding("uniforms", 0, 0);
+        if(renderable.environment.shadowMap != null) {
+            binder.defineBinding("shadowMap", 0, 1);
+            binder.defineBinding("shadowSampler", 0, 2);
+        }
+
+
         binder.defineBinding("materialUniforms", 1, 0);
         binder.defineBinding("diffuseTexture", 1, 1);
         binder.defineBinding("diffuseSampler", 1, 2);
@@ -137,6 +147,7 @@ public class WgDefaultShader implements Shader {
         // frame uniforms
         int offset = 0;
         binder.defineUniform("projectionViewTransform", 0, 0, offset); offset += 16*4;
+        binder.defineUniform("shadowProjViewTransform", 0, 0, offset); offset += 16*4;
 
         for(int i = 0; i < config.maxDirectionalLights; i++) {
             binder.defineUniform("dirLight["+i+"].color", 0, 0, offset);
@@ -248,14 +259,16 @@ public class WgDefaultShader implements Shader {
         binder.setUniform("cameraPosition", tmpVec4);
         uniformBuffer.flush();
 
+        // todo: different shaders may overwrite lighting uniforms if renderables have other environments ...
+        bindLights(renderable.environment);
+
         // bind group 0 (frame) once per frame
         binder.bindGroup(renderPass, 0);
 
         // idem for group 2 (instances), we will fill in the buffer as we go
         binder.bindGroup(renderPass, 2);
 
-        // todo: different shaders may overwrite lighting uniforms if renderables have other environments ...
-        bindLights(renderable.environment);
+
 
         numRenderables = 0;
         numMaterials = 0;
@@ -435,6 +448,10 @@ public class WgDefaultShader implements Shader {
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch bind group layout (frame)");
         layout.begin();
         layout.addBuffer(0, WGPUShaderStage.Vertex|WGPUShaderStage.Fragment, WGPUBufferBindingType.Uniform, uniformBufferSize, false);
+
+        layout.addTexture(1, WGPUShaderStage.Vertex|WGPUShaderStage.Fragment, WGPUTextureSampleType.Depth, WGPUTextureViewDimension._2D, false);
+
+        layout.addSampler(2, WGPUShaderStage.Vertex|WGPUShaderStage.Fragment, WGPUSamplerBindingType.Comparison );
         layout.end();
         return layout;
     }
@@ -487,7 +504,7 @@ public class WgDefaultShader implements Shader {
     /** place lighting information in frame uniform buffer:
      * ambient light, directional lights, point lights.
      */
-    private void bindLights( Environment lights){
+    private void bindLights( Environment lights ){
         if(lights == null)
             return;
         final DirectionalLightsAttribute dla = lights.get(DirectionalLightsAttribute.class, DirectionalLightsAttribute.Type);
@@ -539,5 +556,21 @@ public class WgDefaultShader implements Shader {
         final ColorAttribute fog = lights.get(ColorAttribute.class,ColorAttribute.Fog);
         if(fog != null)
             binder.setUniform("fogColor", fog.color);
+
+        if ( lights.shadowMap != null) {
+            binder.setUniform("shadowProjViewTransform", lights.shadowMap.getProjViewTrans());
+
+            WgTexture shadowMap = (WgTexture)(lights.shadowMap.getDepthMap().texture);
+            binder.setTexture("shadowMap", shadowMap.getTextureView());
+            binder.setSampler("shadowSampler", shadowMap.getDepthSampler());
+
+        }
+//        else {
+//            binder.setUniform("shadowProjViewTransform", dummyMatrix);
+//            //binder.setTexture("shadowMap", defaultTexture.getTextureView());
+//            binder.setSampler("shadowSampler", defaultTexture.getDepthSampler());
+//        }
     }
+
+
 }

@@ -29,13 +29,16 @@ import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.tests.webgpu.utils.PerspectiveCamController;
 import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
 import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplicationConfiguration;
+import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.environment.WgDirectionalShadowLight;
+import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDepthShaderProvider;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
+import com.monstrous.gdx.webgpu.wrappers.RenderPassType;
 
 /** Shadow demo.
  * */
@@ -49,9 +52,15 @@ public class ShadowTest extends GdxTest {
 	WgBitmapFont font;
     Model box;
     Model ground;
+    Model lightModel;
+    ModelInstance lightInstance;
     Array<ModelInstance> instances;
     Environment environment;
+    Environment emptyEnvironment;
     WgDirectionalShadowLight shadowLight;
+    Vector3 lightPos;
+    Color lightColor = Color.BLUE;
+    WgShaderProgram depthShader;
 
 
 	// launcher
@@ -71,14 +80,10 @@ public class ShadowTest extends GdxTest {
 		cam.near = 0.1f;
         cam.lookAt(0,0,0);
 
-
-
-        shadowBatch = new WgModelBatch();   // to do provider
-
 		controller = new PerspectiveCamController(cam);
 		Gdx.input.setInputProcessor(controller);
 		batch = new WgSpriteBatch();
-		font = new WgBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
+		font = new WgBitmapFont();
 
 		//
 		// Create some renderables
@@ -89,80 +94,74 @@ public class ShadowTest extends GdxTest {
         WgTexture texture2 = new WgTexture(Gdx.files.internal("data/badlogic.jpg"), true);
         texture2.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear);
         Material mat = new Material(TextureAttribute.createDiffuse(texture2));
-        Material mat2 = new Material(ColorAttribute.createDiffuse(Color.GREEN));
+        Material mat2 = new Material(ColorAttribute.createDiffuse(Color.OLIVE));
         long attribs = VertexAttributes.Usage.Position | VertexAttributes.Usage.TextureCoordinates | VertexAttributes.Usage.Normal ;
         box = modelBuilder.createBox(1, 1, 1, mat, attribs);
 
         long attribs2 = VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.ColorPacked;
-        ground = modelBuilder.createBox(5, 0.1f, 6, mat2, attribs2);
+        ground = modelBuilder.createBox(8, 0.1f, 9, mat2, attribs2);
 
+        lightPos = new Vector3(-.75f, 2f, -0.25f);
+        Vector3 vec = new Vector3(lightPos).nor();
+
+        lightModel = modelBuilder.createArrow( vec, Vector3.Zero,
+            new Material(ColorAttribute.createDiffuse(lightColor)),  VertexAttributes.Usage.Position | VertexAttributes.Usage.ColorPacked);
+
+
+        lightInstance = new ModelInstance(lightModel,lightPos);
 
         instances.add(new ModelInstance(box,0,1.0f,0));
+        instances.add(new ModelInstance(box,2,0.5f,0));
+        instances.add(new ModelInstance(box,0,1.0f,-2));
+        instances.add(new ModelInstance(box,-2,1.0f,0));
         instances.add(new ModelInstance(ground,0,0,0));
 
+
         environment = new Environment();
+        emptyEnvironment = new Environment();
 
         float level = 0.3f;
-        ColorAttribute ambient =  ColorAttribute.createAmbientLight(level, level, level, 1f);
+        ColorAttribute ambient =  ColorAttribute.createAmbientLight(level, level, 0, 1f);
         environment.set(ambient);
 
         DirectionalLight dirLight1 = new DirectionalLight();
-        dirLight1.setDirection(0.3f,-0.8f,0.1f);
-        dirLight1.setColor(Color.BLUE);
+        dirLight1.setDirection(-lightPos.x, -lightPos.y, -lightPos.z);
+        dirLight1.setColor(2f, 2f, 4f, 1f);// color * intensity
         environment.add(dirLight1);
 
 
-        final int MAP = 1024;
-        final int VP = 8;
-        final float DEPTH = 20f;
-        shadowLight = new WgDirectionalShadowLight(MAP, MAP, VP, VP, 0f, DEPTH);
+        final int MAP = 4096;   // resolution of shadow map texture
+        final int VIEWPORT = 8; // depth and width of shadow volume in world units
+        final float DEPTH = 20f; // length of shadow volume in world units along light direction
+        shadowLight = new WgDirectionalShadowLight(MAP, MAP, VIEWPORT, VIEWPORT, 0f, DEPTH);
         shadowLight.setDirection(dirLight1.direction);
         shadowLight.set(dirLight1);
+        environment.shadowMap = shadowLight;
+
+        shadowBatch = new WgModelBatch(new WgDepthShaderProvider());
 	}
 
 	public void render () {
 		float delta = Gdx.graphics.getDeltaTime();
         instances.get(0).transform.rotate(Vector3.Y, 15f*delta);
-
-
-
 		cam.update();
 
-        Vector3 focalPoint = new Vector3(0, 0, 0);
+        Vector3 focalPoint = new Vector3(0, 0, 0);  // central position for shadow volume
+
         shadowLight.begin(focalPoint, Vector3.Zero);
-		shadowBatch.begin(shadowLight.getCamera(), Color.RED);
+		shadowBatch.begin(shadowLight.getCamera(), Color.BLUE, true); //, RenderPassType.DEPTH_ONLY);
         shadowBatch.render(instances);
         shadowBatch.end();
         shadowLight.end();
 
-//        Vector3 coord = new Vector3(0,0,0);
-//        //shadowLight.getCamera().project(coord);
-//        coord.prj(shadowLight.getCamera().combined);
-//        System.out.println("0,0,0 project to :"+coord);
-//
-//        coord.set(0,2,0);
-//        coord.prj(shadowLight.getCamera().combined);
-//        System.out.println("0,2,0 project to :"+coord);
-//
-//        coord.set(0,-2,0);
-//        coord.prj(shadowLight.getCamera().combined);
-//        System.out.println("0,-2,0 project to :"+coord);
-//
-//        coord.set(0,10,0);
-//        coord.prj(shadowLight.getCamera().combined);
-//        System.out.println("0,10,0 project to :"+coord);
-//
-//        coord.set(0,-10,0);
-//        coord.prj(shadowLight.getCamera().combined);
-//        System.out.println("0,-10,0 project to :"+coord);
-
-        WgScreenUtils.clear(Color.TEAL);
+        WgScreenUtils.clear(Color.TEAL, true);
         modelBatch.begin(cam);
         modelBatch.render(instances, environment);
+        modelBatch.render(lightInstance, environment);
         modelBatch.end();
 
 		batch.begin();
-        batch.draw(shadowLight.getDepthMap(), 0, 0, 256, 256);
+        //batch.draw(shadowLight.getFrameBufferColor(), 0, 0, 256, 256);
 		font.draw(batch, "fps: " + Gdx.graphics.getFramesPerSecond(), 0, 20);
 		batch.end();
 	}

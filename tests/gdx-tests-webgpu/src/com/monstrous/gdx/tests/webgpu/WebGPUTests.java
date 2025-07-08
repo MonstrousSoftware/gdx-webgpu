@@ -78,7 +78,9 @@ public class WebGPUTests {
         PostProcessing.class,
         SuperKoalio.class,
         DistanceFontTest.class,
-        DepthClearTest.class
+        DepthClearTest.class,
+        FogTest.class,
+        ShadowTest.class
 
 		// @on
 

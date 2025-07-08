@@ -39,6 +39,7 @@ public class WgTexture extends Texture {
     private Pointer texture;
     private WebGPUTextureView textureView;
     private Pointer sampler;
+    private Pointer depthSampler;
     protected WGPUTextureFormat format;
     protected String label;
     private int numSamples;
@@ -294,6 +295,27 @@ public class WgTexture extends Texture {
         sampler = webGPU.wgpuDeviceCreateSampler(webgpu.device.getHandle(), samplerDesc);
 
     }
+
+    public Pointer getDepthSampler(){
+        if(depthSampler == null) {
+            // Create a sampler
+            WGPUSamplerDescriptor samplerDesc = WGPUSamplerDescriptor.createDirect();
+            samplerDesc.setAddressModeU(WGPUAddressMode.ClampToEdge);
+            samplerDesc.setAddressModeV(WGPUAddressMode.ClampToEdge);
+            samplerDesc.setAddressModeW(WGPUAddressMode.ClampToEdge);
+            samplerDesc.setMagFilter(WGPUFilterMode.Linear);
+            samplerDesc.setMinFilter(WGPUFilterMode.Linear);
+            samplerDesc.setMipmapFilter(WGPUMipmapFilterMode.Linear);
+
+            samplerDesc.setLodMinClamp(0);
+            samplerDesc.setLodMaxClamp(1);
+            samplerDesc.setCompare(WGPUCompareFunction.Less);
+            samplerDesc.setMaxAnisotropy(1);
+            depthSampler = webGPU.wgpuDeviceCreateSampler(webgpu.device.getHandle(), samplerDesc);
+        }
+        return depthSampler;
+    }
+
 
     /** convert from LibGDX enum value to WebGPU enum value */
     private WGPUFilterMode convertFilter(TextureFilter filter ){

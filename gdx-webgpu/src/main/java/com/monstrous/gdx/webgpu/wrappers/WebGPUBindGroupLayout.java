@@ -98,6 +98,7 @@ public class WebGPUBindGroupLayout implements Disposable {
             entryArray[i++] = entry;
         bindGroupLayoutDesc.setEntries( entryArray );
 
+        System.out.println("Create binding layout : "+entries.size() + "  "+label);
         handle = webGPU.wgpuDeviceCreateBindGroupLayout(webgpu.device.getHandle(), bindGroupLayoutDesc);
     }
 
