@@ -38,9 +38,4 @@ fn vs_main(in: VertexInput, @builtin(instance_index) instance: u32) -> VertexOut
    return out;
 }
 
-@fragment
-fn fs_main(in : VertexOutput) -> @location(0) vec4f {
-    let depth: f32 = in.position.z/20;
-    return vec4f(depth ,depth,depth, 1);
-}
 

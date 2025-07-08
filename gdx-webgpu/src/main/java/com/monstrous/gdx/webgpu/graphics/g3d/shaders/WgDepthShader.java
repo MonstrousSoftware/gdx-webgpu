@@ -19,24 +19,17 @@ package com.monstrous.gdx.webgpu.graphics.g3d.shaders;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.*;
-import com.badlogic.gdx.graphics.g3d.attributes.*;
-import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
-import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.math.Matrix4;
-import com.badlogic.gdx.math.Vector4;
-import com.badlogic.gdx.utils.Array;
 import com.monstrous.gdx.webgpu.graphics.Binder;
 import com.monstrous.gdx.webgpu.graphics.WgMesh;
-import com.monstrous.gdx.webgpu.graphics.WgTexture;
-import com.monstrous.gdx.webgpu.graphics.g3d.attributes.PBRTextureAttribute;
 import com.monstrous.gdx.webgpu.webgpu.*;
 import com.monstrous.gdx.webgpu.wrappers.*;
 
 import static com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888;
 
-/** Default shader to render renderables  */
+/** Depth shader to render renderables to a depth buffer */
 public class WgDepthShader extends WgShader {
 
     private final WgDefaultShader.Config config;
@@ -45,15 +38,9 @@ public class WgDepthShader extends WgShader {
     private final WebGPUUniformBuffer uniformBuffer;
     private final int uniformBufferSize;
     private final WebGPUUniformBuffer instanceBuffer;
-    private final WebGPUPipeline pipeline;            // a shader has one pipeline
-//    public int numRenderables;
-//    public int drawCalls;
+    private final WebGPUPipeline pipeline;
     private WebGPURenderPass renderPass;
     private final VertexAttributes vertexAttributes;
-    private final Matrix4 combined;
-    private final Matrix4 projection;
-    private final Matrix4 shiftDepthMatrix;
-
 
 
     public WgDepthShader(final Renderable renderable) {
@@ -63,10 +50,9 @@ public class WgDepthShader extends WgShader {
     public WgDepthShader(final Renderable renderable, WgDefaultShader.Config config) {
         this.config = config;
 
-        // Create uniform buffer for global (per-frame) uniforms, e.g. projection matrix
+        // Create uniform buffer for global (per-frame) uniforms, i.e. projection matrix
         uniformBufferSize = 16* Float.BYTES;
         uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize, WGPUBufferUsage.CopyDst | WGPUBufferUsage.Uniform);
-
 
         binder = new Binder();
         // define groups
@@ -76,24 +62,23 @@ public class WgDepthShader extends WgShader {
         // define bindings in the groups
         // must match with shader code
         binder.defineBinding("uniforms", 0, 0);
-
         binder.defineBinding("instanceUniforms", 1, 0);
+
         // define uniforms in uniform buffers with their offset
         // frame uniforms
         int offset = 0;
         binder.defineUniform("projectionViewTransform", 0, 0, offset); offset += 16*4;
 
-
-
-        System.out.println("offset:"+offset+" "+uniformBufferSize);
+        // sanity check
         if(offset > uniformBufferSize) throw new RuntimeException("Mismatch in frame uniform buffer size");
+
         // set binding 0 to uniform buffer
         binder.setBuffer("uniforms", uniformBuffer, 0, uniformBufferSize);
 
         int instanceSize = 16*Float.BYTES;      // data size per instance
 
         // for now we use a uniform buffer, but we organize data as an array of modelMatrix
-        // we are not using dynamic offsets, but we will index the array in teh shader code using the instance_index
+        // we are not using dynamic offsets, but we will index the array in the shader code using the instance_index
         instanceBuffer = new WebGPUUniformBuffer(instanceSize*config.maxInstances, WGPUBufferUsage.CopyDst | WGPUBufferUsage.Storage);
 
         binder.setBuffer("instanceUniforms", instanceBuffer, 0, (long) instanceSize *config.maxInstances);
@@ -107,8 +92,8 @@ public class WgDepthShader extends WgShader {
         PipelineSpecification pipelineSpec = new PipelineSpecification(vertexAttributes, getDefaultShaderSource());
         pipelineSpec.name = "DepthBatch pipeline";
         // no fragment shader
-//        pipelineSpec.colorFormat = WGPUTextureFormat.Undefined;
-//        pipelineSpec.fragmentShaderEntryPoint = null;
+        pipelineSpec.colorFormat = WGPUTextureFormat.Undefined;
+        pipelineSpec.fragmentShaderEntryPoint = null;
 
         // default blending values
         pipelineSpec.enableBlending();
@@ -118,17 +103,11 @@ public class WgDepthShader extends WgShader {
             pipelineSpec.topology = WGPUPrimitiveTopology.LineList;
 
         pipeline = new WebGPUPipeline(pipelineLayout, pipelineSpec);
-
-        projection = new Matrix4();
-        combined = new Matrix4();
-        // matrix to transform OpenGL projection to WebGPU projection by modifying the Z scale
-        shiftDepthMatrix = new Matrix4().scl(1,1,-0.5f).trn(0,0,0.5f);
     }
 
     @Override
     public void init() {
         // todo some constructor stuff to init()?
-
     }
 
 
@@ -137,6 +116,7 @@ public class WgDepthShader extends WgShader {
         throw new IllegalArgumentException("Use begin(Camera, WebGPURenderPass)");
     }
 
+    @Override
     public void begin(Camera camera, Renderable renderable, WebGPURenderPass renderPass){
         this.renderPass = renderPass;
 
@@ -145,12 +125,8 @@ public class WgDepthShader extends WgShader {
         //
          // todo: we are working here with an OpenGL projection matrix, which provides a different Z range than for WebGPU.
 
-//        projection.set(camera.projection);
-//        projection.set(shiftDepthMatrix).mul(camera.projection);
-//        combined.set(projection).mul(camera.view);
         binder.setUniform("projectionViewTransform", camera.combined);
         uniformBuffer.flush();
-
 
         // bind group 0 (frame) once per frame
         binder.bindGroup(renderPass, 0);
@@ -181,7 +157,7 @@ public class WgDepthShader extends WgShader {
 
     private final Attributes combinedAttributes = new Attributes();
 
-
+    @Override
     public void render (Renderable renderable) {
         if (renderable.worldTransform.det3x3() == 0) return;
         combinedAttributes.clear();
@@ -194,6 +170,7 @@ public class WgDepthShader extends WgShader {
     private int firstInstance;
     private int instanceCount;
 
+    @Override
     public void render (Renderable renderable, Attributes attributes) {
         if(numRenderables > config.maxInstances) {
             Gdx.app.error("WgDepthShader", "Too many instances, max is " + config.maxInstances);
@@ -225,24 +202,19 @@ public class WgDepthShader extends WgShader {
 
     // to combine instances in single draw call if they have same mesh part
     private void renderBatch(MeshPart meshPart, int numInstances, int numRenderables){
-        //System.out.println("numInstances: "+numInstances);
         final WgMesh mesh = (WgMesh) meshPart.mesh;
         // use an instance offset to find the right modelMatrix in the instanceBuffer
         mesh.render(renderPass, meshPart.primitiveType, meshPart.offset, meshPart.size, numInstances, numRenderables);
-        // we can't use the following statement, because meshPart was unmodified and doesn't know about WebGPUMesh
-        // and we're not using WebGPUMeshPart because then we need to modify Renderable.
-        //renderable.meshPart.render(renderPass);
         drawCalls++;
     }
 
+    @Override
     public void end(){
         if(prevRenderable != null) {
             renderBatch(prevRenderable.meshPart, instanceCount, firstInstance);
         }
         instanceBuffer.flush();
     }
-
-
 
     private WebGPUBindGroupLayout createFrameBindGroupLayout(int uniformBufferSize) {
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("WgDepthShader bind group layout (frame)");
@@ -267,7 +239,6 @@ public class WgDepthShader extends WgShader {
             defaultShader = Gdx.files.classpath("shaders/depthshader.wgsl").readString();
         }
         return defaultShader;
-
     }
 
     @Override

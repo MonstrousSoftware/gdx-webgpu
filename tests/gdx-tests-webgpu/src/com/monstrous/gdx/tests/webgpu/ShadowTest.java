@@ -27,6 +27,9 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.tests.webgpu.utils.PerspectiveCamController;
+import com.monstrous.gdx.webgpu.application.WebGPUApplication;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
 import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplicationConfiguration;
 import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
@@ -38,6 +41,7 @@ import com.monstrous.gdx.webgpu.graphics.g3d.environment.WgDirectionalShadowLigh
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDepthShaderProvider;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
+import com.monstrous.gdx.webgpu.webgpu.WGPUBackendType;
 import com.monstrous.gdx.webgpu.wrappers.RenderPassType;
 
 /** Shadow demo.
@@ -59,8 +63,7 @@ public class ShadowTest extends GdxTest {
     Environment emptyEnvironment;
     WgDirectionalShadowLight shadowLight;
     Vector3 lightPos;
-    Color lightColor = Color.BLUE;
-    WgShaderProgram depthShader;
+    WebGPUContext webgpu;
 
 
 	// launcher
@@ -69,11 +72,17 @@ public class ShadowTest extends GdxTest {
 		WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
 		config.setWindowedMode(640, 480);
 		config.setTitle("WebGPUTest");
+        config.enableGPUtiming = true;
+        //config.backend = WGPUBackendType.Vulkan;
+        config.useVsync(false);
 
 		new WgDesktopApplication(new ShadowTest(), config);
 	}
 
 	public void create () {
+        WgGraphics gfx = (WgGraphics) Gdx.graphics;
+        webgpu = gfx.getContext();
+
 		modelBatch = new WgModelBatch();
 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		cam.position.set(0, 1, 5);
@@ -105,7 +114,7 @@ public class ShadowTest extends GdxTest {
         Vector3 vec = new Vector3(lightPos).nor();
 
         lightModel = modelBuilder.createArrow( vec, Vector3.Zero,
-            new Material(ColorAttribute.createDiffuse(lightColor)),  VertexAttributes.Usage.Position | VertexAttributes.Usage.ColorPacked);
+            new Material(ColorAttribute.createDiffuse(Color.BLUE)),  VertexAttributes.Usage.Position | VertexAttributes.Usage.ColorPacked);
 
 
         lightInstance = new ModelInstance(lightModel,lightPos);
@@ -130,7 +139,7 @@ public class ShadowTest extends GdxTest {
         environment.add(dirLight1);
 
 
-        final int MAP = 4096;   // resolution of shadow map texture
+        final int MAP = 1024;   // resolution of shadow map texture (may affect frame rate)
         final int VIEWPORT = 8; // depth and width of shadow volume in world units
         final float DEPTH = 20f; // length of shadow volume in world units along light direction
         shadowLight = new WgDirectionalShadowLight(MAP, MAP, VIEWPORT, VIEWPORT, 0f, DEPTH);
@@ -149,21 +158,24 @@ public class ShadowTest extends GdxTest {
         Vector3 focalPoint = new Vector3(0, 0, 0);  // central position for shadow volume
 
         shadowLight.begin(focalPoint, Vector3.Zero);
-		shadowBatch.begin(shadowLight.getCamera(), Color.BLUE, true); //, RenderPassType.DEPTH_ONLY);
+		shadowBatch.begin(shadowLight.getCamera(), Color.BLUE, true, RenderPassType.DEPTH_ONLY);
         shadowBatch.render(instances);
         shadowBatch.end();
         shadowLight.end();
 
-        WgScreenUtils.clear(Color.TEAL, true);
-        modelBatch.begin(cam);
+        //WgScreenUtils.clear(Color.TEAL, true);
+        modelBatch.begin(cam,Color.TEAL, true);
         modelBatch.render(instances, environment);
         modelBatch.render(lightInstance, environment);
         modelBatch.end();
 
 		batch.begin();
-        //batch.draw(shadowLight.getFrameBufferColor(), 0, 0, 256, 256);
-		font.draw(batch, "fps: " + Gdx.graphics.getFramesPerSecond(), 0, 20);
-		batch.end();
+        float y = 200;
+		font.draw(batch, "fps: " + Gdx.graphics.getFramesPerSecond(), 0, y -= 20);
+        for(int pass = 0; pass < webgpu.getGPUTimer().getNumPasses(); pass++)
+            font.draw(batch, "GPU time (pass "+pass+" "+webgpu.getGPUTimer().getPassName(pass)+") : "+(int)webgpu.getAverageGPUtime(pass)+ " microseconds" ,0, y -= 20);
+
+        batch.end();
 	}
 
 	@Override
@@ -171,6 +183,7 @@ public class ShadowTest extends GdxTest {
 		cam.viewportWidth = width;
 		cam.viewportHeight = height;
 		cam.update();
+        batch.getProjectionMatrix().setToOrtho2D(0,0, width, height);
 	}
 
 	@Override

@@ -55,8 +55,8 @@ public abstract class WebGPUContext {
     abstract void setScissor(int x, int y, int w, int h);
     abstract Rectangle getScissor();
 
-    abstract GPUTimer getGPUTimer();
-    abstract float getAverageGPUtime(int pass);
+    abstract public GPUTimer getGPUTimer();
+    public abstract float getAverageGPUtime(int pass);
     abstract void secondsTick();
 
 }
