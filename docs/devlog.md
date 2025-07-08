@@ -126,6 +126,8 @@ Once the migration is complete the original modules will be deleted and the latt
 05/07: Made some subclasses for Tiled loading/rendering.  The logic is untouched, just need to make sure they use WgSpriteBatch and
 WgTexture.  SuperKoalio demo works now.
 
+07/07: Fog working.
+
 08/07: Shadows working.
 
 
