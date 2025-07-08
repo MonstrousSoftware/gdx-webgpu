@@ -17,9 +17,8 @@
 package com.monstrous.gdx.webgpu.wrappers;
 
 import com.badlogic.gdx.Gdx;
-import com.monstrous.gdx.webgpu.application.WebGPUApplication;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
-
 import com.monstrous.gdx.webgpu.graphics.ShaderPrefix;
 import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
 import com.badlogic.gdx.utils.Disposable;
@@ -29,28 +28,24 @@ import jnr.ffi.Pointer;
 public class WebGPUPipeline implements Disposable {
     private final WgGraphics gfx = (WgGraphics) Gdx.graphics;
     private final WebGPU_JNI webGPU = gfx.getWebGPU();
-    private final WebGPUApplication webgpu = gfx.getContext();
-    private Pointer pipelineLayout;
-    private Pointer pipeline;
+    private final WebGPUContext webgpu = gfx.getContext();
+    private final Pointer pipeline;
     public PipelineSpecification specification;
-    private WgShaderProgram shader;
-    private boolean ownsShader;
+    private final WgShaderProgram shader;
+    private final boolean ownsShader;
 
     public WebGPUPipeline(WebGPUPipelineLayout pipelineLayout, PipelineSpecification spec) {
-        this(pipelineLayout == null ? (Pointer)null : pipelineLayout.getHandle(), spec);
+        this(pipelineLayout == null ? null : pipelineLayout.getHandle(), spec);
     }
 
     public WebGPUPipeline(Pointer pipelineLayout, PipelineSpecification spec) {
-        this.pipelineLayout = pipelineLayout;
-
         // if the specification does not already have a shader, create one from the source file, customized to the vertex attributes.
         if(spec.shader != null) {
             shader = spec.shader;   // make use of the shader in the spec
             ownsShader = false;     // we don't have to dispose it
         } else {
             String prefix = ShaderPrefix.buildPrefix(spec.vertexAttributes, spec.environment);
-            //System.out.println("Shader Source ["+spec.shaderSource+"] Prefix: ["+prefix+"]");
-            System.out.println("Compiling shader Source [] Prefix: ["+prefix+"]");
+            //System.out.println("Compiling shader Source [] Prefix: ["+prefix+"]");
             shader = new WgShaderProgram(spec.name, spec.shaderSource, prefix);
             spec.shader = shader;
             spec.recalcHash();
@@ -61,7 +56,6 @@ public class WebGPUPipeline implements Disposable {
         Pointer shaderModule = shader.getHandle();
         WGPUVertexBufferLayout vertexBufferLayout = spec.vertexAttributes == null ? null : WebGPUVertexLayout.buildVertexBufferLayout(spec.vertexAttributes);
 
-
         WGPURenderPipelineDescriptor pipelineDesc = WGPURenderPipelineDescriptor.createDirect();        // todo worth reusing these?
 
         pipelineDesc.setNextInChain();
@@ -70,9 +64,9 @@ public class WebGPUPipeline implements Disposable {
         pipelineDesc.getVertex().setBufferCount(vertexBufferLayout != null ? 1 : 0);
         pipelineDesc.getVertex().setBuffers(vertexBufferLayout);
 
-        WGPUConstantEntry entry = WGPUConstantEntry.createDirect();
-        entry.setKey("numDirLights");
-        entry.setValue(3f);
+//        WGPUConstantEntry entry = WGPUConstantEntry.createDirect();
+//        entry.setKey("numDirLights");
+//        entry.setValue(3f);
 
         pipelineDesc.getVertex().setModule(shaderModule);
         pipelineDesc.getVertex().setEntryPoint(spec.vertexShaderEntryPoint);
@@ -117,7 +111,7 @@ public class WebGPUPipeline implements Disposable {
         }
 
         WGPUDepthStencilState depthStencilState = WGPUDepthStencilState.createDirect();
-        setDefault(depthStencilState);
+        setDefaultStencilState(depthStencilState);
 
         if (spec.isSkyBox) {
             depthStencilState.setDepthCompare(WGPUCompareFunction.LessEqual);// we are clearing to 1.0 and rendering at 1.0, i.e. at max distance
@@ -165,18 +159,10 @@ public class WebGPUPipeline implements Disposable {
     }
 
     public boolean canRender(PipelineSpecification spec){    // perhaps we need more params
-
-
         // crude check, to be refined
         int h = spec.hashCode();
         int h2 = this.specification.hashCode();
         return h == h2;
-        //return spec.hashCode() == this.specification.hashCode();
-        // could be too strict, e.g. name changes or different instances of same shader
-
-//        return (spec.vertexAttributes.attributes.size() == this.specification.vertexAttributes.attributes.size() &&
-//               spec.vertexAttributes.hasNormalMap == this.specification.vertexAttributes.hasNormalMap &&
-//                spec.hasDepth == this.specification.hasDepth);
     }
 
     public Pointer getHandle(){
@@ -185,22 +171,12 @@ public class WebGPUPipeline implements Disposable {
 
     @Override
     public void dispose() {
-        //LibGPU.webGPU.PipelineLayoutRelease(pipelineLayout);
         webGPU.wgpuRenderPipelineRelease(pipeline);
         if(ownsShader)
             shader.dispose();
     }
 
-
-    private void setDefault(WGPUStencilFaceState stencilFaceState) {
-        stencilFaceState.setCompare( WGPUCompareFunction.Always);
-        stencilFaceState.setFailOp( WGPUStencilOperation.Keep);
-        stencilFaceState.setDepthFailOp( WGPUStencilOperation.Keep);
-        stencilFaceState.setPassOp( WGPUStencilOperation.Keep);
-    }
-
-
-    private void setDefault(WGPUDepthStencilState  depthStencilState ) {
+    private void setDefaultStencilState(WGPUDepthStencilState  depthStencilState ) {
         depthStencilState.setFormat(WGPUTextureFormat.Undefined);
         depthStencilState.setDepthWriteEnabled(0L);
         depthStencilState.setDepthCompare(WGPUCompareFunction.Always);
@@ -209,9 +185,14 @@ public class WebGPUPipeline implements Disposable {
         depthStencilState.setDepthBias(0);
         depthStencilState.setDepthBiasSlopeScale(0);
         depthStencilState.setDepthBiasClamp(0);
-        setDefault(depthStencilState.getStencilFront());
-        setDefault(depthStencilState.getStencilBack());
+        setDefaultStencilFaceState(depthStencilState.getStencilFront());
+        setDefaultStencilFaceState(depthStencilState.getStencilBack());
     }
 
-
+    private void setDefaultStencilFaceState(WGPUStencilFaceState stencilFaceState) {
+        stencilFaceState.setCompare( WGPUCompareFunction.Always);
+        stencilFaceState.setFailOp( WGPUStencilOperation.Keep);
+        stencilFaceState.setDepthFailOp( WGPUStencilOperation.Keep);
+        stencilFaceState.setPassOp( WGPUStencilOperation.Keep);
+    }
 }

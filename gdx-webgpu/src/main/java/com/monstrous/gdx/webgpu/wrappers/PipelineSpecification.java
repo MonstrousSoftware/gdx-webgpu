@@ -16,8 +16,6 @@
 
 package com.monstrous.gdx.webgpu.wrappers;
 
-
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
@@ -122,6 +120,8 @@ public class PipelineSpecification {
         this.colorFormat = spec.colorFormat;
         this.depthFormat = spec.depthFormat;
         this.numSamples = spec.numSamples;
+        this.fragmentShaderEntryPoint = spec.fragmentShaderEntryPoint;
+        this.vertexShaderEntryPoint = spec.vertexShaderEntryPoint;
         recalcHash();
     }
 
@@ -188,7 +188,6 @@ public class PipelineSpecification {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        PipelineSpecification that = (PipelineSpecification) o;
         return hash == ((PipelineSpecification) o).hash;
     }
 
