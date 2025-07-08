@@ -26,7 +26,7 @@ import com.github.xpenatan.webgpu.*;
 public class WebGPUVertexLayout {
 
     /** create a vertex buffer layout object from the VertexAttributes */
-    public static WebGPUVertexBufferLayout buildVertexBufferLayout(VertexAttributes attributes ){
+    public static WGPUVertexBufferLayout buildVertexBufferLayout(VertexAttributes attributes ){
 
         WGPUVectorVertexAttribute attribs = WGPUVectorVertexAttribute.obtain();
 
@@ -34,7 +34,7 @@ public class WebGPUVertexLayout {
         for(VertexAttribute attrib : attributes ){
             WGPUVertexFormat format = convertFormat(attrib);
 
-            WebGPUVertexAttribute attribute = WebGPUVertexAttribute.obtain();
+            WGPUVertexAttribute attribute = WGPUVertexAttribute.obtain();
             attribute.setFormat(format);
             attribute.setOffset(offset);
             attribute.setShaderLocation(getLocation(attrib.usage));
@@ -42,7 +42,7 @@ public class WebGPUVertexLayout {
             offset += getSize(format);
         }
 
-        WebGPUVertexBufferLayout vertexBufferLayout = WebGPUVertexBufferLayout.obtain();
+        WGPUVertexBufferLayout vertexBufferLayout = WGPUVertexBufferLayout.obtain();
         vertexBufferLayout.setAttributes(attribs);
         vertexBufferLayout.setArrayStride(offset);
         vertexBufferLayout.setStepMode(WGPUVertexStepMode.Vertex);

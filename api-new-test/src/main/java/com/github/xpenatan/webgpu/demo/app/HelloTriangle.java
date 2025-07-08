@@ -1,27 +1,27 @@
 package com.github.xpenatan.webgpu.demo.app;
 
-import com.github.xpenatan.webgpu.WebGPUBlendState;
-import com.github.xpenatan.webgpu.WebGPUColorTargetState;
-import com.github.xpenatan.webgpu.WebGPUCommandBuffer;
-import com.github.xpenatan.webgpu.WebGPUCommandBufferDescriptor;
-import com.github.xpenatan.webgpu.WebGPUCommandEncoder;
-import com.github.xpenatan.webgpu.WebGPUCommandEncoderDescriptor;
-import com.github.xpenatan.webgpu.WebGPUFragmentState;
+import com.github.xpenatan.webgpu.WGPUBlendState;
+import com.github.xpenatan.webgpu.WGPUColorTargetState;
+import com.github.xpenatan.webgpu.WGPUCommandBuffer;
+import com.github.xpenatan.webgpu.WGPUCommandBufferDescriptor;
+import com.github.xpenatan.webgpu.WGPUCommandEncoder;
+import com.github.xpenatan.webgpu.WGPUCommandEncoderDescriptor;
+import com.github.xpenatan.webgpu.WGPUFragmentState;
 import com.github.xpenatan.webgpu.WGPUPlatformType;
-import com.github.xpenatan.webgpu.WebGPURenderPassColorAttachment;
-import com.github.xpenatan.webgpu.WebGPURenderPassDescriptor;
-import com.github.xpenatan.webgpu.WebGPURenderPassEncoder;
-import com.github.xpenatan.webgpu.WebGPURenderPipeline;
-import com.github.xpenatan.webgpu.WebGPURenderPipelineDescriptor;
-import com.github.xpenatan.webgpu.WebGPUShaderModule;
-import com.github.xpenatan.webgpu.WebGPUShaderModuleDescriptor;
-import com.github.xpenatan.webgpu.WebGPUShaderSourceWGSL;
-import com.github.xpenatan.webgpu.WebGPUSurfaceCapabilities;
-import com.github.xpenatan.webgpu.WebGPUSurfaceConfiguration;
-import com.github.xpenatan.webgpu.WebGPUSurfaceTexture;
-import com.github.xpenatan.webgpu.WebGPUTexture;
-import com.github.xpenatan.webgpu.WebGPUTextureView;
-import com.github.xpenatan.webgpu.WebGPUTextureViewDescriptor;
+import com.github.xpenatan.webgpu.WGPURenderPassColorAttachment;
+import com.github.xpenatan.webgpu.WGPURenderPassDescriptor;
+import com.github.xpenatan.webgpu.WGPURenderPassEncoder;
+import com.github.xpenatan.webgpu.WGPURenderPipeline;
+import com.github.xpenatan.webgpu.WGPURenderPipelineDescriptor;
+import com.github.xpenatan.webgpu.WGPUShaderModule;
+import com.github.xpenatan.webgpu.WGPUShaderModuleDescriptor;
+import com.github.xpenatan.webgpu.WGPUShaderSourceWGSL;
+import com.github.xpenatan.webgpu.WGPUSurfaceCapabilities;
+import com.github.xpenatan.webgpu.WGPUSurfaceConfiguration;
+import com.github.xpenatan.webgpu.WGPUSurfaceTexture;
+import com.github.xpenatan.webgpu.WGPUTexture;
+import com.github.xpenatan.webgpu.WGPUTextureView;
+import com.github.xpenatan.webgpu.WGPUTextureViewDescriptor;
 import com.github.xpenatan.webgpu.WGPUVectorColorTargetState;
 import com.github.xpenatan.webgpu.WGPUVectorRenderPassColorAttachment;
 import com.github.xpenatan.webgpu.WGPU;
@@ -45,12 +45,12 @@ import com.github.xpenatan.webgpu.WGPUTextureViewDimension;
 
 public class HelloTriangle implements ApplicationListener {
 
-    private WebGPURenderPipeline pipeline;
+    private WGPURenderPipeline pipeline;
     private WGPUTextureFormat surfaceFormat;
 
-    private WebGPUCommandEncoder encoder;
-    private WebGPURenderPassEncoder renderPass;
-    private WebGPUCommandBuffer command;
+    private WGPUCommandEncoder encoder;
+    private WGPURenderPassEncoder renderPass;
+    private WGPUCommandBuffer command;
 
     private float r = 0.0f;
     private float g = 0.0f;
@@ -58,15 +58,15 @@ public class HelloTriangle implements ApplicationListener {
 
     @Override
     public void create(WGPUApp wgpu) {
-        encoder = new WebGPUCommandEncoder();
-        renderPass = new WebGPURenderPassEncoder();
-        command = new WebGPUCommandBuffer();
+        encoder = new WGPUCommandEncoder();
+        renderPass = new WGPURenderPassEncoder();
+        command = new WGPUCommandBuffer();
 
         if(wgpu.surface != null) {
             System.out.println("Surface created");
-            WebGPUSurfaceCapabilities surfaceCapabilities = new WebGPUSurfaceCapabilities();
+            WGPUSurfaceCapabilities surfaceCapabilities = new WGPUSurfaceCapabilities();
             wgpu.surface.getCapabilities(wgpu.adapter, surfaceCapabilities);
-            surfaceFormat = surfaceCapabilities.getFormats(0);
+            surfaceFormat = surfaceCapabilities.getFormats().get(0);
             System.out.println("surfaceFormat: " + surfaceFormat);
             initSwapChain(wgpu);
 
@@ -83,14 +83,14 @@ public class HelloTriangle implements ApplicationListener {
 
     @Override
     public void render(WGPUApp wgpu) {
-        WebGPUTextureView textureView = GetNextSurfaceTextureView(wgpu);
+        WGPUTextureView textureView = GetNextSurfaceTextureView(wgpu);
 
-        WebGPUCommandEncoderDescriptor encoderDesc = WebGPUCommandEncoderDescriptor.obtain();
+        WGPUCommandEncoderDescriptor encoderDesc = WGPUCommandEncoderDescriptor.obtain();
         encoderDesc.setNextInChain(null);
         encoderDesc.setLabel("My command encoder");
         wgpu.device.createCommandEncoder(encoderDesc, encoder);
 
-        WebGPURenderPassColorAttachment renderPassColorAttachment = WebGPURenderPassColorAttachment.obtain();
+        WGPURenderPassColorAttachment renderPassColorAttachment = WGPURenderPassColorAttachment.obtain();
         renderPassColorAttachment.setView(textureView);
         renderPassColorAttachment.setResolveTarget(null);
         renderPassColorAttachment.setLoadOp(WGPULoadOp.Clear);
@@ -100,7 +100,7 @@ public class HelloTriangle implements ApplicationListener {
         WGPUVectorRenderPassColorAttachment colorAttachmentVector = WGPUVectorRenderPassColorAttachment.obtain();
         colorAttachmentVector.push_back(renderPassColorAttachment);
 
-        WebGPURenderPassDescriptor renderPassDesc  = WebGPURenderPassDescriptor.obtain();
+        WGPURenderPassDescriptor renderPassDesc  = WGPURenderPassDescriptor.obtain();
         renderPassDesc.setColorAttachments(colorAttachmentVector);
         renderPassDesc.setDepthStencilAttachment(null);
         renderPassDesc.setTimestampWrites(null);
@@ -112,7 +112,7 @@ public class HelloTriangle implements ApplicationListener {
         renderPass.end();
         renderPass.release();
 
-        WebGPUCommandBufferDescriptor cmdBufferDescriptor = WebGPUCommandBufferDescriptor.obtain();
+        WGPUCommandBufferDescriptor cmdBufferDescriptor = WGPUCommandBufferDescriptor.obtain();
         cmdBufferDescriptor.setNextInChain(null);
         cmdBufferDescriptor.setLabel("Command buffer");
         encoder.finish(cmdBufferDescriptor, command);
@@ -134,14 +134,14 @@ public class HelloTriangle implements ApplicationListener {
         this.b = b;
     }
 
-    private WebGPUTextureView GetNextSurfaceTextureView(WGPUApp wgpu) {
-        WebGPUTextureView textureViewOut = WebGPUTextureView.obtain();
-        WebGPUSurfaceTexture surfaceTextureOut = WebGPUSurfaceTexture.obtain();
+    private WGPUTextureView GetNextSurfaceTextureView(WGPUApp wgpu) {
+        WGPUTextureView textureViewOut = WGPUTextureView.obtain();
+        WGPUSurfaceTexture surfaceTextureOut = WGPUSurfaceTexture.obtain();
         wgpu.surface.getCurrentTexture(surfaceTextureOut);
-        WebGPUTexture textureOut = WebGPUTexture.obtain();
+        WGPUTexture textureOut = WGPUTexture.obtain();
         surfaceTextureOut.getTexture(textureOut);
         WGPUTextureFormat textureFormat = textureOut.getFormat();
-        WebGPUTextureViewDescriptor viewDescriptor = WebGPUTextureViewDescriptor.obtain();
+        WGPUTextureViewDescriptor viewDescriptor = WGPUTextureViewDescriptor.obtain();
         viewDescriptor.setLabel("Surface texture view");
         viewDescriptor.setFormat(textureFormat);
         viewDescriptor.setDimension(WGPUTextureViewDimension._2D);
@@ -157,7 +157,7 @@ public class HelloTriangle implements ApplicationListener {
 
     private void initSwapChain(WGPUApp wgpu) {
         boolean vsyncEnabled = true;
-        WebGPUSurfaceConfiguration config = WebGPUSurfaceConfiguration.obtain();
+        WGPUSurfaceConfiguration config = WGPUSurfaceConfiguration.obtain();
         config.setWidth(wgpu.width);
         config.setHeight(wgpu.height);
         config.setFormat(surfaceFormat);
@@ -170,9 +170,9 @@ public class HelloTriangle implements ApplicationListener {
     }
 
     public void initPipeline(WGPUApp wgpu) {
-        WebGPUShaderModule shaderModule = makeShaderModule(wgpu);
+        WGPUShaderModule shaderModule = makeShaderModule(wgpu);
 
-        WebGPURenderPipelineDescriptor pipelineDesc = WebGPURenderPipelineDescriptor.obtain();
+        WGPURenderPipelineDescriptor pipelineDesc = WGPURenderPipelineDescriptor.obtain();
         pipelineDesc.setLabel("my pipeline");
 
         pipelineDesc.getVertex().setBuffers(null);
@@ -185,14 +185,14 @@ public class HelloTriangle implements ApplicationListener {
         pipelineDesc.getPrimitive().setFrontFace(WGPUFrontFace.CCW);
         pipelineDesc.getPrimitive().setCullMode(WGPUCullMode.None);
 
-        WebGPUFragmentState fragmentState = WebGPUFragmentState.obtain();
+        WGPUFragmentState fragmentState = WGPUFragmentState.obtain();
         fragmentState.setNextInChain(null);
         fragmentState.setModule(shaderModule);
         fragmentState.setEntryPoint("fs_main");
         fragmentState.setConstants(null);
 
         // blending
-        WebGPUBlendState blendState = WebGPUBlendState.obtain();
+        WGPUBlendState blendState = WGPUBlendState.obtain();
         blendState.getColor().setSrcFactor(WGPUBlendFactor.SrcAlpha);
         blendState.getColor().setDstFactor(WGPUBlendFactor.OneMinusSrcAlpha);
         blendState.getColor().setOperation(WGPUBlendOperation.Add);
@@ -200,7 +200,7 @@ public class HelloTriangle implements ApplicationListener {
         blendState.getAlpha().setDstFactor(WGPUBlendFactor.Zero);
         blendState.getAlpha().setOperation(WGPUBlendOperation.Add);
 
-        WebGPUColorTargetState colorTarget = WebGPUColorTargetState.obtain();
+        WGPUColorTargetState colorTarget = WGPUColorTargetState.obtain();
         colorTarget.setFormat(surfaceFormat); // match output surface
         colorTarget.setBlend(blendState);
         colorTarget.setWriteMask(WGPUColorWriteMask.All);
@@ -216,7 +216,7 @@ public class HelloTriangle implements ApplicationListener {
         pipelineDesc.getMultisample().setAlphaToCoverageEnabled(false);
         pipelineDesc.setLayout(null);
 
-        pipeline = new WebGPURenderPipeline();
+        pipeline = new WGPURenderPipeline();
         wgpu.device.createRenderPipeline(pipelineDesc, pipeline);
 
         shaderModule.release();
@@ -224,19 +224,19 @@ public class HelloTriangle implements ApplicationListener {
         System.out.println("RenderPipeline created");
     }
 
-    public WebGPUShaderModule makeShaderModule(WGPUApp wgpu) {
+    public WGPUShaderModule makeShaderModule(WGPUApp wgpu) {
         String shaderSource = readShaderSource();
 
-        WebGPUShaderModuleDescriptor shaderDesc = WebGPUShaderModuleDescriptor.obtain();
+        WGPUShaderModuleDescriptor shaderDesc = WGPUShaderModuleDescriptor.obtain();
         shaderDesc.setLabel("triangle shader");
 
-        WebGPUShaderSourceWGSL shaderCodeDesc = WebGPUShaderSourceWGSL.obtain();
+        WGPUShaderSourceWGSL shaderCodeDesc = WGPUShaderSourceWGSL.obtain();
         shaderCodeDesc.getChain().setNext(null);
         shaderCodeDesc.getChain().setSType(WGPUSType.ShaderSourceWGSL);
         shaderCodeDesc.setCode(shaderSource);
 
         shaderDesc.setNextInChain(shaderCodeDesc.getChain());
-        WebGPUShaderModule shaderModule = WebGPUShaderModule.obtain();
+        WGPUShaderModule shaderModule = WGPUShaderModule.obtain();
         wgpu.device.createShaderModule(shaderDesc, shaderModule);
         return shaderModule;
     }
