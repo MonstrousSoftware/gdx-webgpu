@@ -9,13 +9,13 @@ import java.util.ArrayList;
 public class WebGPUVertexBuffer extends WebGPUBuffer {
 
     /** size in bytes */
-    public WebGPUVertexBuffer(int bufferSize) {
-        this(WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Vertex), bufferSize);
+    public WebGPUVertexBuffer(int bufferSizeInBytes) {
+        this(WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Vertex), bufferSizeInBytes);
     }
 
     /** size in bytes */
-    public WebGPUVertexBuffer(WGPUBufferUsage usage, int bufferSize) {
-        super("vertex buffer", usage, bufferSize);
+    public WebGPUVertexBuffer(WGPUBufferUsage usage, int bufferSizeInBytes) {
+        super("vertex buffer", usage, bufferSizeInBytes);
     }
 
     public void setVertices(float[] vertexData) {

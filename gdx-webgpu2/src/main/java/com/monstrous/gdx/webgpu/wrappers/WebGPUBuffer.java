@@ -38,7 +38,7 @@ import com.monstrous.gdx.webgpu.application.WgGraphics;
  */
 public class WebGPUBuffer implements Disposable {
     protected WGPUBuffer buffer;
-    private final long bufferSize;
+    private final int bufferSize;
     protected WgGraphics gfx;
     protected WebGPUContext webgpu;
 
@@ -62,7 +62,7 @@ public class WebGPUBuffer implements Disposable {
         return buffer;
     }
 
-    public long getSize(){
+    public int getSize(){
         return bufferSize;
     }
 

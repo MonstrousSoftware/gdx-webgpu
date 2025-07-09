@@ -24,6 +24,11 @@ public class WebGPUIndexBuffer extends WebGPUBuffer {
         setIndices(0, indexValues, offset, indexCount);
     }
 
+    public WebGPUIndexBuffer(short[] indexValues) {
+        this(WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Index), align(indexValues.length*2), 2);
+        setIndices(0, indexValues, 0, indexValues.length);
+    }
+
 //    public WebGPUIndexBuffer(WGPUShortBuffer shortBuffer) {
 //        this(shortBuffer.array(), shortBuffer.arrayOffset(), shortBuffer.limit());      // to be tested....
 //    }
