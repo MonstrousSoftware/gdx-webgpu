@@ -4,7 +4,7 @@ package com.monstrous.gdx.webgpu.wrappers;
 import com.badlogic.gdx.utils.Array;
 import com.github.xpenatan.webgpu.*;
 
-public class WebGPUIndexBuffer extends WgBuffer {
+public class WebGPUIndexBuffer extends WebGPUBuffer {
 
     private int indexSizeInBytes;   // 2 or 4
     private int indexCount;

@@ -23,8 +23,6 @@ import com.github.xpenatan.webgpu.WGPUBuffer;
 import com.github.xpenatan.webgpu.WGPUBufferDescriptor;
 import com.github.xpenatan.webgpu.WGPUBufferUsage;
 import com.github.xpenatan.webgpu.WGPUByteBuffer;
-import com.github.xpenatan.webgpu.WGPUBuffer;
-import com.github.xpenatan.webgpu.WGPUBufferDescriptor;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 
@@ -38,13 +36,13 @@ import com.monstrous.gdx.webgpu.application.WgGraphics;
  * bufferSize: in bytes, to be aligned if necessary
  * usage: one or more flags in combination, e.g. WGPUBufferUsage.CopyDst | WGPUBufferUsage.Uniform
  */
-public class WgBuffer implements Disposable {
+public class WebGPUBuffer implements Disposable {
     protected WGPUBuffer buffer;
     private final long bufferSize;
     protected WgGraphics gfx;
     protected WebGPUContext webgpu;
 
-    public WgBuffer(String label, WGPUBufferUsage usage, int bufferSize){
+    public WebGPUBuffer(String label, WGPUBufferUsage usage, int bufferSize){
         gfx = (WgGraphics) Gdx.graphics;
         webgpu = gfx.getContext();
 

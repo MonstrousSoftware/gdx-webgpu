@@ -2,6 +2,8 @@ package com.monstrous.gdx.webgpu.application;
 
 import com.badlogic.gdx.math.Rectangle;
 import com.github.xpenatan.webgpu.*;
+import com.monstrous.gdx.webgpu.graphics.WgTexture;
+import com.monstrous.gdx.webgpu.wrappers.GPUTimer;
 
 public abstract class WebGPUContext {
     public WGPUInstance instance;
@@ -12,45 +14,45 @@ public abstract class WebGPUContext {
     public WGPUCommandEncoder encoder;
     public WGPUTextureFormat surfaceFormat;
     public WGPUTextureView targetView;
-//    public WgTexture depthTexture;
+    public WgTexture depthTexture;
 
     abstract WGPUDevice getDevice ();
     abstract WGPUQueue getQueue ();
-    abstract WGPUTextureFormat getSurfaceFormat ();
-    abstract WGPUTextureView getTargetView ();
+    public abstract WGPUTextureFormat getSurfaceFormat();
+    public abstract WGPUTextureView getTargetView();
 
     /** Use provided texture for output (must have usage RenderAttachment).
      *
      * @param texture texture to use for output
-     * @param oldViewport previous viewport dimensions
+     * @param oldViewport out: previous viewport dimensions
      * @return Pointer of previous TextureView
      */
-//    abstract WebGPUTextureView pushTargetView(WgTexture texture, Rectangle oldViewport);
+    public abstract WGPUTextureView pushTargetView(WgTexture texture, Rectangle oldViewport);
 
     /** Restore previous output target.
      *
      * @param prevPointer TextureView returned by pushTargetView()
-     * @param prevViewport Viewport rectangle returned by pushTargetView()
+     * @param prevViewport in: Viewport rectangle returned by pushTargetView()
      */
-    abstract void popTargetView(WGPUTextureView prevPointer, Rectangle prevViewport);
+    public abstract void popTargetView(WGPUTextureView prevPointer, Rectangle prevViewport);
 
     abstract WGPUCommandEncoder getCommandEncoder ();
-//    abstract WgTexture getDepthTexture ();
-//    abstract WgTexture pushDepthTexture(WgTexture depth);
-//    abstract void popDepthTexture(WgTexture prevDepth);
+    public abstract WgTexture getDepthTexture ();
+    public abstract WgTexture pushDepthTexture(WgTexture depth);
+    public abstract void popDepthTexture(WgTexture prevDepth);
     //abstract WGPUBackendType getRequestedBackendType();
-    abstract  int getSamples();
-//    abstract WgTexture getMultiSamplingTexture();
+    public abstract  int getSamples();
+    public abstract WgTexture getMultiSamplingTexture();
 
-    abstract public void setViewportRectangle(int x, int y, int w, int h);
-    abstract public Rectangle getViewportRectangle();
+    public abstract void setViewportRectangle(int x, int y, int w, int h);
+    public abstract Rectangle getViewportRectangle();
 
     public abstract void enableScissor(boolean mode);
-    abstract boolean isScissorEnabled();
+    public abstract boolean isScissorEnabled();
     public abstract void setScissor(int x, int y, int w, int h);
     public abstract Rectangle getScissor();
 
-    //abstract GPUTimer getGPUTimer();
-    //abstract float getAverageGPUtime(int pass);
+    public abstract GPUTimer getGPUTimer();
+    public abstract float getAverageGPUtime(int pass);
 
 }

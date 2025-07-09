@@ -19,12 +19,12 @@ package main.java;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopApplication;
-import com.monstrous.gdx.webgpu.wrappers.PipelineSpecification;
-import com.monstrous.gdx.webgpu.wrappers.WebGPUPipeline;
+import com.monstrous.gdx.webgpu.wrappers.*;
 
 
 // Render a triangle in a window

@@ -6,7 +6,7 @@ import com.github.xpenatan.webgpu.WGPUByteBuffer;
 import com.github.xpenatan.webgpu.WGPUFloatBuffer;
 import java.util.ArrayList;
 
-public class WebGPUVertexBuffer extends WgBuffer {
+public class WebGPUVertexBuffer extends WebGPUBuffer {
 
     /** size in bytes */
     public WebGPUVertexBuffer(int bufferSize) {

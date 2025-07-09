@@ -17,6 +17,8 @@ import com.github.xpenatan.webgpu.WGPUAdapter;
 import com.github.xpenatan.webgpu.WGPUDevice;
 import com.github.xpenatan.webgpu.WGPUQueue;
 import com.github.xpenatan.webgpu.*;
+import com.monstrous.gdx.webgpu.graphics.WgTexture;
+import com.monstrous.gdx.webgpu.wrappers.GPUTimer;
 
 /** WebGPU graphics context and implementation of application life cycle. Used to initialize and terminate WebGPU and to render frames.
  * Also provides shared WebGPU resources, like the device, the default queue, the surface etc.
@@ -25,14 +27,15 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
 
     private InitState initState;
 
-    //private WgTexture multiSamplingTexture;
-    //private final GPUTimer gpuTimer;
+    private WgTexture multiSamplingTexture;
+    private final GPUTimer gpuTimer;
     private final Configuration config;
     private final Rectangle viewportRectangle = new Rectangle();
     private boolean scissorEnabled = false;
     private Rectangle scissor;
     private int width, height;
     private final WGPUCommandBuffer command;
+    private final float[] gpuTime = new float[GPUTimer.MAX_PASSES];
 
     public static class Configuration {
         public long windowHandle;
@@ -102,7 +105,7 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
         // todo webGPU.wgpuInstanceRelease(instance); // we can release the instance now that we have the device
         // do we need instance for processEvents?
 
-        //gpuTimer = new GPUTimer(device, config.gpuTimingEnabled);
+        gpuTimer = new GPUTimer(device, config.gpuTimingEnabled);
 
         encoder = new WGPUCommandEncoder();
         while(!isReady())
@@ -222,21 +225,27 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
         return initState == InitState.DEVICE_VALID;
     }
 
+
     /** returns null if gpu timing is not enabled in application configuration. */
-//    @Override
-//    public GPUTimer getGPUTimer() {
-//        return gpuTimer;
-//    }
+    @Override
+    public GPUTimer getGPUTimer() {
+        return gpuTimer;
+    }
 
-//    @Override
-//    // maybe smooth this to one value per second to keep values readable
-//    public float getAverageGPUtime(int pass){
-//        return gpuTimer.getAverageGPUtime(pass);
-//    }
-//
+    @Override
+    // smoothed to one value per second to keep values readable
+    public float getAverageGPUtime(int pass){
+        return gpuTime[pass];
+    }
 
-
-
+    /** called once per second. Used to gather statistics */
+    // todo called?
+    public void secondsTick() {
+        //  request average gpu time once per second to keep it readable
+        for(int i = 0; i < getGPUTimer().getNumPasses(); i++) {
+            gpuTime[i] = gpuTimer.getAverageGPUtime(i);
+        }
+    }
 
 
     public void renderFrame (ApplicationListener listener) {
@@ -253,30 +262,8 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
 
         listener.render();
 
-//        WebGPURenderPassColorAttachment renderPassColorAttachment = WebGPURenderPassColorAttachment.obtain();
-//        renderPassColorAttachment.setView(textureView);
-//        renderPassColorAttachment.setResolveTarget(null);
-//        renderPassColorAttachment.setLoadOp(WGPULoadOp.Clear);
-//        renderPassColorAttachment.setStoreOp(WGPUStoreOp.Store);
-//        renderPassColorAttachment.getClearValue().setColor(r, g, b, 1.0f);
-//
-//        WGPUVectorRenderPassColorAttachment colorAttachmentVector = WGPUVectorRenderPassColorAttachment.obtain();
-//        colorAttachmentVector.push_back(renderPassColorAttachment);
-//
-//        WebGPURenderPassDescriptor renderPassDesc  = WebGPURenderPassDescriptor.obtain();
-//        renderPassDesc.setColorAttachments(colorAttachmentVector);
-//        renderPassDesc.setDepthStencilAttachment(null);
-//        renderPassDesc.setTimestampWrites(null);
-//        encoder.beginRenderPass(renderPassDesc, renderPass);
-//
-//        renderPass.setPipeline(pipeline);
-//        renderPass.draw(3, 1, 0, 0);
-//
-//        renderPass.end();
-//        renderPass.release();
-
         // resolve time stamps after render pass end and before encoder finish
-        // todo gpuTimer.resolveTimeStamps(encoder);
+        gpuTimer.resolveTimeStamps(encoder);
 
         WGPUCommandBufferDescriptor cmdBufferDescriptor = WGPUCommandBufferDescriptor.obtain();
         cmdBufferDescriptor.setNextInChain(null);
@@ -343,11 +330,11 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
         initSwapChain(width, height, config.vSyncEnabled);
         initDepthBuffer(width, height, config.numSamples);
 
-//        if(config.numSamples > 1 ) {
-//            if(multiSamplingTexture != null)
-//                multiSamplingTexture.dispose();
-//            multiSamplingTexture = new WgTexture("multisampling", width, height, false, true, surfaceFormat, config.numSamples);
-//        }
+        if(config.numSamples > 1 ) {
+            if(multiSamplingTexture != null)
+                multiSamplingTexture.dispose();
+            multiSamplingTexture = new WgTexture("multisampling", width, height, false, true, surfaceFormat, config.numSamples);
+        }
 
         if(scissor == null)
             scissor = new Rectangle();
@@ -425,17 +412,16 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
 
     private void initDepthBuffer(int width, int height, int samples){
         //System.out.println("initDepthBuffer: "+width+" x "+height);
-        // todo
-//        depthTexture = new WgTexture("depth texture", width, height, 1, WGPUTextureUsage.RenderAttachment,
-//                WGPUTextureFormat.Depth24Plus, samples, WGPUTextureFormat.Depth24Plus );
+        depthTexture = new WgTexture("depth texture", width, height, 1, WGPUTextureUsage.RenderAttachment,
+                WGPUTextureFormat.Depth24Plus, samples, WGPUTextureFormat.Depth24Plus );
     }
 
     private void terminateDepthBuffer(){
-//        // Destroy the depth texture
-//        if(depthTexture != null) {
-//            depthTexture.dispose();
-//        }
-//        depthTexture = null;
+        // Destroy the depth texture
+        if(depthTexture != null) {
+            depthTexture.dispose();
+        }
+        depthTexture = null;
     }
 
 
@@ -444,7 +430,7 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
         exitSwapChain();
         queue.dispose();
         device.dispose();
-        //gpuTimer.dispose();
+        gpuTimer.dispose();
 
         surface.release();
         command.dispose();
@@ -452,9 +438,6 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
         terminateDepthBuffer();
     }
 
-//    public WebGPU_JNI getWebGPU () {
-//        return webGPU;
-//    }
 
     @Override
     public WGPUDevice getDevice() {
@@ -476,14 +459,14 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
         return targetView;
     }
     /** Push a texture view to use for output, instead of the screen. */
-//    @Override
-//    public WebGPUTextureView pushTargetView(WgTexture texture, Rectangle oldViewport) {
-//        WebGPUTextureView prevTargetView = targetView;
-//        // todo   targetView = texture.getTextureView();
-//        oldViewport.set(getViewportRectangle());
-//        setViewportRectangle(0,0,texture.getWidth(), texture.getHeight());
-//        return prevTargetView;
-//    }
+    @Override
+    public WGPUTextureView pushTargetView(WgTexture texture, Rectangle oldViewport) {
+        WGPUTextureView prevTargetView = targetView;
+        targetView = texture.getTextureView();
+        oldViewport.set(getViewportRectangle());
+        setViewportRectangle(0,0,texture.getWidth(), texture.getHeight());
+        return prevTargetView;
+    }
 
     @Override
     public void popTargetView(WGPUTextureView prevTargetView, Rectangle oldViewport) {
@@ -491,11 +474,17 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
         targetView = prevTargetView;
     }
 
+    @Override
+    public WgTexture pushDepthTexture(WgTexture depth) {
+        WgTexture prevDepth = depthTexture;
+        depthTexture = depth;
+        return prevDepth;
+    }
 
-//    @Override
-//    public void popDepthTexture(WgTexture prevDepth) {
-//        depthTexture  = prevDepth;
-//    }
+    @Override
+    public void popDepthTexture(WgTexture prevDepth) {
+        depthTexture  = prevDepth;
+    }
 
     @Override
     public WGPUCommandEncoder getCommandEncoder () {
@@ -511,10 +500,10 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
 //        this.supportedLimits = supportedLimits;
 //    }
 
-//    @Override
-//    public WgTexture getDepthTexture () {
-//        return depthTexture;
-//    }
+    @Override
+    public WgTexture getDepthTexture () {
+        return depthTexture;
+    }
 
 
 //    @Override
@@ -527,9 +516,9 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
         return config.numSamples;
     }
 
-//    public WgTexture getMultiSamplingTexture() {
-//        return multiSamplingTexture;
-//    }
+    public WgTexture getMultiSamplingTexture() {
+        return multiSamplingTexture;
+    }
 
 
     final static int WGPU_LIMIT_U32_UNDEFINED = -1;
@@ -580,7 +569,7 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
         ADAPTER_NOT_VALID(-2),
         DEVICE_NOT_VALID(-3);
 
-        int status;
+        final int status;
 
         InitState(int status) {
             this.status = status;

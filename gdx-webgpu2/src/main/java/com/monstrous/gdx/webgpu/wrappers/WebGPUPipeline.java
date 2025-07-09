@@ -34,7 +34,7 @@ public class WebGPUPipeline implements Disposable {
 
     public WebGPUPipeline(WGPUPipelineLayout pipelineLayout, PipelineSpecification spec) {
         // if the specification does not already have a shader, create one from the source file, customized to the vertex attributes.
-        if(spec.shader != null) {
+        if (spec.shader != null) {
             shader = spec.shader;   // make use of the shader in the spec
             ownsShader = false;     // we don't have to dispose it
         } else {
@@ -54,7 +54,7 @@ public class WebGPUPipeline implements Disposable {
         pipelineDesc.setLabel(spec.name);
 
         WGPUVectorVertexBufferLayout bufferLayout = WGPUVectorVertexBufferLayout.obtain();
-        if(vertexBufferLayout != null)
+        if (vertexBufferLayout != null)
             bufferLayout.push_back(vertexBufferLayout);
         pipelineDesc.getVertex().setBuffers(bufferLayout);
 
@@ -77,7 +77,7 @@ public class WebGPUPipeline implements Disposable {
 
             // blending
             WGPUBlendState blendState = null;
-            if(spec.blendingEnabled) {
+            if (spec.blendingEnabled) {
                 blendState = WGPUBlendState.obtain();
                 blendState.getColor().setSrcFactor(spec.blendSrcColor);
                 blendState.getColor().setDstFactor(spec.blendDstColor);
@@ -131,10 +131,9 @@ public class WebGPUPipeline implements Disposable {
             depthStencilState.setStencilWriteMask(0);
 
             pipelineDesc.setDepthStencil(depthStencilState);
+        } else {
+            pipelineDesc.setDepthStencil(null); // no depth or stencil buffer
         }
-
-
-        pipelineDesc.setDepthStencil(null); // no depth or stencil buffer
         pipelineDesc.getMultisample().setCount(spec.numSamples);
         pipelineDesc.getMultisample().setMask(-1);
         pipelineDesc.getMultisample().setAlphaToCoverageEnabled(false);

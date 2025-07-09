@@ -16,18 +16,15 @@
 
 package com.monstrous.gdx.webgpu.graphics;
 
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.utils.Disposable;
-import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.github.xpenatan.webgpu.WGPUSType;
 import com.github.xpenatan.webgpu.WGPUShaderModule;
 import com.github.xpenatan.webgpu.WGPUShaderModuleDescriptor;
 import com.github.xpenatan.webgpu.WGPUShaderSourceWGSL;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
-
 
 public class WgShaderProgram implements Disposable {
 
@@ -64,11 +61,9 @@ public class WgShaderProgram implements Disposable {
         shaderCodeDesc.setCode(processedSource);
 
         shaderDesc.setNextInChain(shaderCodeDesc.getChain());
-        shaderModule = WGPUShaderModule.obtain();
+        shaderModule = new WGPUShaderModule();
         webgpu.device.createShaderModule(shaderDesc, shaderModule);
-        // todo how to detect compile errors?
-//        if(shaderModule == null)
-//            throw new GdxRuntimeException("WgShaderProgram: compile failed "+name);
+        // compile errors will invoke the error callback
 
         //System.out.println(name+": "+processedSource);
     }
