@@ -4,20 +4,20 @@ import com.badlogic.gdx.math.Rectangle;
 import com.github.xpenatan.webgpu.*;
 
 public abstract class WebGPUContext {
-    public WebGPUInstance instance;
-    public WebGPUAdapter adapter;
-    public WebGPUDevice device;
-    public WebGPUSurface surface;
-    public WebGPUQueue queue;
-    public WebGPUCommandEncoder encoder;
+    public WGPUInstance instance;
+    public WGPUAdapter adapter;
+    public WGPUDevice device;
+    public WGPUSurface surface;
+    public WGPUQueue queue;
+    public WGPUCommandEncoder encoder;
     public WGPUTextureFormat surfaceFormat;
-    public WebGPUTextureView targetView;
+    public WGPUTextureView targetView;
 //    public WgTexture depthTexture;
 
-    abstract WebGPUDevice getDevice ();
-    abstract WebGPUQueue getQueue ();
+    abstract WGPUDevice getDevice ();
+    abstract WGPUQueue getQueue ();
     abstract WGPUTextureFormat getSurfaceFormat ();
-    abstract WebGPUTextureView getTargetView ();
+    abstract WGPUTextureView getTargetView ();
 
     /** Use provided texture for output (must have usage RenderAttachment).
      *
@@ -32,9 +32,9 @@ public abstract class WebGPUContext {
      * @param prevPointer TextureView returned by pushTargetView()
      * @param prevViewport Viewport rectangle returned by pushTargetView()
      */
-    abstract void popTargetView(WebGPUTextureView prevPointer, Rectangle prevViewport);
+    abstract void popTargetView(WGPUTextureView prevPointer, Rectangle prevViewport);
 
-    abstract WebGPUCommandEncoder getCommandEncoder ();
+    abstract WGPUCommandEncoder getCommandEncoder ();
 //    abstract WgTexture getDepthTexture ();
 //    abstract WgTexture pushDepthTexture(WgTexture depth);
 //    abstract void popDepthTexture(WgTexture prevDepth);

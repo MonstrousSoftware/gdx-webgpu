@@ -35,8 +35,8 @@ import com.monstrous.gdx.webgpu.wrappers.WebGPUPipeline;
 public class HelloTrianglePipeline extends ApplicationAdapter {
 
     public WebGPUContext webgpu;
-    private WebGPURenderPipeline pipeline;
-    private WebGPURenderPassEncoder renderPass;
+    private WGPURenderPipeline pipeline;
+    private WGPURenderPassEncoder renderPass;
 
     public static void main(String[] argv) {
         new WgDesktopApplication(new HelloTrianglePipeline());
@@ -47,13 +47,13 @@ public class HelloTrianglePipeline extends ApplicationAdapter {
         WgGraphics gfx = (WgGraphics) Gdx.graphics;
         webgpu = gfx.getContext();
         pipeline = initPipeline();
-        renderPass = new WebGPURenderPassEncoder();
+        renderPass = new WGPURenderPassEncoder();
     }
 
     @Override
     public void render() {
         // create a render pass
-        WebGPURenderPassDescriptor renderPassDesc = getRenderPassDescriptor();
+        WGPURenderPassDescriptor renderPassDesc = getRenderPassDescriptor();
         webgpu.encoder.beginRenderPass(renderPassDesc, renderPass);
 
         // draw using render pass
@@ -65,8 +65,8 @@ public class HelloTrianglePipeline extends ApplicationAdapter {
         renderPass.release();
     }
 
-    private WebGPURenderPassDescriptor getRenderPassDescriptor(){
-        WebGPURenderPassColorAttachment renderPassColorAttachment = WebGPURenderPassColorAttachment.obtain();
+    private WGPURenderPassDescriptor getRenderPassDescriptor(){
+        WGPURenderPassColorAttachment renderPassColorAttachment = WGPURenderPassColorAttachment.obtain();
         renderPassColorAttachment.setView(webgpu.targetView);
         renderPassColorAttachment.setResolveTarget(null);
         renderPassColorAttachment.setLoadOp(WGPULoadOp.Clear);
@@ -76,7 +76,7 @@ public class HelloTrianglePipeline extends ApplicationAdapter {
         WGPUVectorRenderPassColorAttachment colorAttachmentVector = WGPUVectorRenderPassColorAttachment.obtain();
         colorAttachmentVector.push_back(renderPassColorAttachment);
 
-        WebGPURenderPassDescriptor renderPassDesc  = WebGPURenderPassDescriptor.obtain();
+        WGPURenderPassDescriptor renderPassDesc  = WGPURenderPassDescriptor.obtain();
         renderPassDesc.setColorAttachments(colorAttachmentVector);
         renderPassDesc.setDepthStencilAttachment(null);
         renderPassDesc.setTimestampWrites(null);
@@ -95,7 +95,7 @@ public class HelloTrianglePipeline extends ApplicationAdapter {
         pipeline.dispose();
     }
 
-    public WebGPURenderPipeline initPipeline() {
+    public WGPURenderPipeline initPipeline() {
         PipelineSpecification spec = new PipelineSpecification();
         spec.shaderSource = readShaderSource();
 

@@ -19,10 +19,12 @@ package com.monstrous.gdx.webgpu.wrappers;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Disposable;
+import com.github.xpenatan.webgpu.WGPUBuffer;
+import com.github.xpenatan.webgpu.WGPUBufferDescriptor;
 import com.github.xpenatan.webgpu.WGPUBufferUsage;
 import com.github.xpenatan.webgpu.WGPUByteBuffer;
-import com.github.xpenatan.webgpu.WebGPUBuffer;
-import com.github.xpenatan.webgpu.WebGPUBufferDescriptor;
+import com.github.xpenatan.webgpu.WGPUBuffer;
+import com.github.xpenatan.webgpu.WGPUBufferDescriptor;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 
@@ -37,7 +39,7 @@ import com.monstrous.gdx.webgpu.application.WgGraphics;
  * usage: one or more flags in combination, e.g. WGPUBufferUsage.CopyDst | WGPUBufferUsage.Uniform
  */
 public class WgBuffer implements Disposable {
-    protected WebGPUBuffer buffer;
+    protected WGPUBuffer buffer;
     private final long bufferSize;
     protected WgGraphics gfx;
     protected WebGPUContext webgpu;
@@ -49,16 +51,16 @@ public class WgBuffer implements Disposable {
         this.bufferSize = bufferSize;
 
         // Create uniform buffer
-        WebGPUBufferDescriptor bufferDesc = WebGPUBufferDescriptor.obtain();
+        WGPUBufferDescriptor bufferDesc = WGPUBufferDescriptor.obtain();
         bufferDesc.setLabel( label );
         bufferDesc.setUsage( usage );
         bufferDesc.setSize( bufferSize );
         bufferDesc.setMappedAtCreation(false);
-        buffer = new WebGPUBuffer();
+        buffer = new WGPUBuffer();
         webgpu.device.createBuffer(bufferDesc, buffer);
     }
 
-    public WebGPUBuffer getBuffer(){
+    public WGPUBuffer getBuffer(){
         return buffer;
     }
 

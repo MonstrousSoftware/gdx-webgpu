@@ -13,9 +13,9 @@ import com.github.xpenatan.webgpu.WGPUErrorType;
 import com.github.xpenatan.webgpu.WGPUFeatureName;
 import com.github.xpenatan.webgpu.WGPURequestAdapterStatus;
 import com.github.xpenatan.webgpu.WGPURequestDeviceStatus;
-import com.github.xpenatan.webgpu.WebGPUAdapter;
-import com.github.xpenatan.webgpu.WebGPUDevice;
-import com.github.xpenatan.webgpu.WebGPUQueue;
+import com.github.xpenatan.webgpu.WGPUAdapter;
+import com.github.xpenatan.webgpu.WGPUDevice;
+import com.github.xpenatan.webgpu.WGPUQueue;
 import com.github.xpenatan.webgpu.*;
 
 /** WebGPU graphics context and implementation of application life cycle. Used to initialize and terminate WebGPU and to render frames.
@@ -32,7 +32,7 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
     private boolean scissorEnabled = false;
     private Rectangle scissor;
     private int width, height;
-    private final WebGPUCommandBuffer command;
+    private final WGPUCommandBuffer command;
 
     public static class Configuration {
         public long windowHandle;
@@ -62,7 +62,7 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
         while(!isReady())
             update();
 
-        command = new WebGPUCommandBuffer();
+        command = new WGPUCommandBuffer();
 
         while(!isReady())
             update();
@@ -71,9 +71,9 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
 
         if(surface != null) {
             System.out.println("Surface created");
-            WebGPUSurfaceCapabilities surfaceCapabilities = new WebGPUSurfaceCapabilities();
+            WGPUSurfaceCapabilities surfaceCapabilities = new WGPUSurfaceCapabilities();
             surface.getCapabilities(adapter, surfaceCapabilities);
-            surfaceFormat = surfaceCapabilities.getFormats(0);
+            surfaceFormat = surfaceCapabilities.getFormats().get(0);
             System.out.println("surfaceFormat: " + surfaceFormat);
 
             // initSwapChain will be done via resize()
@@ -104,7 +104,7 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
 
         //gpuTimer = new GPUTimer(device, config.gpuTimingEnabled);
 
-        encoder = new WebGPUCommandEncoder();
+        encoder = new WGPUCommandEncoder();
         while(!isReady())
             update();
 //        initSwapChain(640, 480, true);
@@ -113,7 +113,7 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
 
     private void init() {
 
-        WebGPUInstance instance = WGPU.createInstance();
+        WGPUInstance instance = WGPU.createInstance();
         if(instance.isValid()) {
             initState = InitState.INSTANCE_VALID;
             this.instance = instance;
@@ -126,11 +126,11 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
     }
 
     private void requestAdapter() {
-        WebGPURequestAdapterOptions op = WebGPURequestAdapterOptions.obtain();
+        WGPURequestAdapterOptions op = WGPURequestAdapterOptions.obtain();
         //op.setBackendType(WGPUBackendType.Vulkan);
         RequestAdapterCallback callback = new RequestAdapterCallback() {
             @Override
-            protected void onCallback(WGPURequestAdapterStatus status, WebGPUAdapter adapter) {
+            protected void onCallback(WGPURequestAdapterStatus status, WGPUAdapter adapter) {
                 System.out.println("Adapter Status: " + status);
                 if(status == WGPURequestAdapterStatus.Success) {
                     initState = InitState.ADAPTER_VALID;
@@ -147,7 +147,7 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
 
 
     private void requestDevice() {
-        WebGPUAdapterInfo info = WebGPUAdapterInfo.obtain();
+        WGPUAdapterInfo info = WGPUAdapterInfo.obtain();
         if(adapter.getInfo(info)) {
             WGPUBackendType backendType = info.getBackendType();
             System.out.println("BackendType: " + backendType);
@@ -164,8 +164,8 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
             System.out.println("Has Feature DepthClipControl: " + adapter.hasFeature(WGPUFeatureName.DepthClipControl));
         }
 
-        WebGPUDeviceDescriptor deviceDescriptor = WebGPUDeviceDescriptor.obtain();
-        WebGPULimits limits = WebGPULimits.obtain();
+        WGPUDeviceDescriptor deviceDescriptor = WGPUDeviceDescriptor.obtain();
+        WGPULimits limits = WGPULimits.obtain();
         setDefaultLimits(limits);
         deviceDescriptor.setRequiredLimits(limits);
         deviceDescriptor.setLabel("My Device");
@@ -178,7 +178,7 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
 
         adapter.requestDevice(deviceDescriptor, WGPUCallbackMode.AllowProcessEvents, new RequestDeviceCallback() {
             @Override
-            protected void onCallback(WGPURequestDeviceStatus status, WebGPUDevice device) {
+            protected void onCallback(WGPURequestDeviceStatus status, WGPUDevice device) {
                 System.out.println("Device Status: " + status);
                 if(status == WGPURequestDeviceStatus.Success) {
                     initState = InitState.DEVICE_VALID;
@@ -186,7 +186,7 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
                     queue = device.getQueue();
                     System.out.println("Platform: " + WGPU.getPlatformType());
 
-                    WebGPUSupportedFeatures features = WebGPUSupportedFeatures.obtain();
+                    WGPUSupportedFeatures features = WGPUSupportedFeatures.obtain();
                     device.getFeatures(features);
                     int featureCount = features.getFeatureCount();
                     System.out.println("Total Features: " + featureCount);
@@ -196,7 +196,7 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
                     }
                     features.dispose();
 
-                    WebGPULimits limits = WebGPULimits.obtain();
+                    WGPULimits limits = WGPULimits.obtain();
                     device.getLimits(limits);
                     System.out.println("Device limits: " + featureCount);
                     System.out.println("MaxTextureDimension1D: " + limits.getMaxTextureDimension1D());
@@ -247,7 +247,7 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
             return;
         }
 
-        WebGPUCommandEncoderDescriptor encoderDesc = WebGPUCommandEncoderDescriptor.obtain();
+        WGPUCommandEncoderDescriptor encoderDesc = WGPUCommandEncoderDescriptor.obtain();
         encoderDesc.setLabel("My command encoder");
         device.createCommandEncoder(encoderDesc, encoder);
 
@@ -278,7 +278,7 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
         // resolve time stamps after render pass end and before encoder finish
         // todo gpuTimer.resolveTimeStamps(encoder);
 
-        WebGPUCommandBufferDescriptor cmdBufferDescriptor = WebGPUCommandBufferDescriptor.obtain();
+        WGPUCommandBufferDescriptor cmdBufferDescriptor = WGPUCommandBufferDescriptor.obtain();
         cmdBufferDescriptor.setNextInChain(null);
         cmdBufferDescriptor.setLabel("Command buffer");
         encoder.finish(cmdBufferDescriptor, command);
@@ -306,17 +306,17 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
     }
 
 
-    private WebGPUTextureView getNextSurfaceTextureView() {
-        WebGPUTextureView textureViewOut = WebGPUTextureView.obtain();
-        WebGPUSurfaceTexture surfaceTextureOut = WebGPUSurfaceTexture.obtain();
+    private WGPUTextureView getNextSurfaceTextureView() {
+        WGPUTextureView textureViewOut = WGPUTextureView.obtain();
+        WGPUSurfaceTexture surfaceTextureOut = WGPUSurfaceTexture.obtain();
         surface.getCurrentTexture(surfaceTextureOut);
 
-        WebGPUTexture textureOut = WebGPUTexture.obtain();
+        WGPUTexture textureOut = WGPUTexture.obtain();
         surfaceTextureOut.getTexture(textureOut);
 
         WGPUTextureFormat textureFormat = textureOut.getFormat();
 
-        WebGPUTextureViewDescriptor viewDescriptor = WebGPUTextureViewDescriptor.obtain();
+        WGPUTextureViewDescriptor viewDescriptor = WGPUTextureViewDescriptor.obtain();
         viewDescriptor.setLabel("Surface texture view");
         viewDescriptor.setFormat(textureFormat);
         viewDescriptor.setDimension(WGPUTextureViewDimension._2D);
@@ -405,7 +405,7 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
 
 
     private void initSwapChain(int width, int height, boolean vsyncEnabled) {
-        WebGPUSurfaceConfiguration config = WebGPUSurfaceConfiguration.obtain();
+        WGPUSurfaceConfiguration config = WGPUSurfaceConfiguration.obtain();
         config.setWidth(width);
         config.setHeight(height);
         config.setFormat(surfaceFormat);
@@ -457,12 +457,12 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
 //    }
 
     @Override
-    public WebGPUDevice getDevice() {
+    public WGPUDevice getDevice() {
         return device;
     }
 
     @Override
-    public WebGPUQueue getQueue() {
+    public WGPUQueue getQueue() {
         return queue;
     }
 
@@ -472,7 +472,7 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
     }
 
     @Override
-    public WebGPUTextureView getTargetView () {
+    public WGPUTextureView getTargetView () {
         return targetView;
     }
     /** Push a texture view to use for output, instead of the screen. */
@@ -486,7 +486,7 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
 //    }
 
     @Override
-    public void popTargetView(WebGPUTextureView prevTargetView, Rectangle oldViewport) {
+    public void popTargetView(WGPUTextureView prevTargetView, Rectangle oldViewport) {
         setViewportRectangle(oldViewport);
         targetView = prevTargetView;
     }
@@ -498,7 +498,7 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
 //    }
 
     @Override
-    public WebGPUCommandEncoder getCommandEncoder () {
+    public WGPUCommandEncoder getCommandEncoder () {
         return encoder;
     }
 
@@ -535,7 +535,7 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
     final static int WGPU_LIMIT_U32_UNDEFINED = -1;
     final static int WGPU_LIMIT_U64_UNDEFINED = -1;
 
-    public void setDefaultLimits (WebGPULimits limits) {
+    public void setDefaultLimits (WGPULimits limits) {
         limits.setMaxTextureDimension1D(WGPU_LIMIT_U32_UNDEFINED);
         limits.setMaxTextureDimension2D(WGPU_LIMIT_U32_UNDEFINED);
         limits.setMaxTextureDimension3D(WGPU_LIMIT_U32_UNDEFINED);

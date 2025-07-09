@@ -26,13 +26,13 @@ import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
 
 
 public class WebGPUPipeline implements Disposable {
-    private final WebGPURenderPipeline pipeline;
+    private final WGPURenderPipeline pipeline;
     public PipelineSpecification specification;
     private final WgShaderProgram shader;
     private final boolean ownsShader;
 
 
-    public WebGPUPipeline(WebGPUPipelineLayout pipelineLayout, PipelineSpecification spec) {
+    public WebGPUPipeline(WGPUPipelineLayout pipelineLayout, PipelineSpecification spec) {
         // if the specification does not already have a shader, create one from the source file, customized to the vertex attributes.
         if(spec.shader != null) {
             shader = spec.shader;   // make use of the shader in the spec
@@ -47,9 +47,9 @@ public class WebGPUPipeline implements Disposable {
         }
         this.specification = new PipelineSpecification(spec);
 
-        WebGPUVertexBufferLayout vertexBufferLayout = spec.vertexAttributes == null ? null : WebGPUVertexLayout.buildVertexBufferLayout(spec.vertexAttributes);
+        WGPUVertexBufferLayout vertexBufferLayout = spec.vertexAttributes == null ? null : WebGPUVertexLayout.buildVertexBufferLayout(spec.vertexAttributes);
 
-        WebGPURenderPipelineDescriptor pipelineDesc = WebGPURenderPipelineDescriptor.obtain();
+        WGPURenderPipelineDescriptor pipelineDesc = WGPURenderPipelineDescriptor.obtain();
         pipelineDesc.setNextInChain(null);
         pipelineDesc.setLabel(spec.name);
 
@@ -69,16 +69,16 @@ public class WebGPUPipeline implements Disposable {
         pipelineDesc.getPrimitive().setCullMode(spec.cullMode);
 
         if (spec.colorFormat != WGPUTextureFormat.Undefined) {   // if there is a color attachment
-            WebGPUFragmentState fragmentState = WebGPUFragmentState.obtain();
+            WGPUFragmentState fragmentState = WGPUFragmentState.obtain();
             fragmentState.setNextInChain(null);
             fragmentState.setModule(shader.getShaderModule());
             fragmentState.setEntryPoint(spec.fragmentShaderEntryPoint);
             fragmentState.setConstants(null);
 
             // blending
-            WebGPUBlendState blendState = null;
+            WGPUBlendState blendState = null;
             if(spec.blendingEnabled) {
-                blendState = WebGPUBlendState.obtain();
+                blendState = WGPUBlendState.obtain();
                 blendState.getColor().setSrcFactor(spec.blendSrcColor);
                 blendState.getColor().setDstFactor(spec.blendDstColor);
                 blendState.getColor().setOperation(spec.blendOpColor);
@@ -88,7 +88,7 @@ public class WebGPUPipeline implements Disposable {
             }
 
 
-            WebGPUColorTargetState colorTarget = WebGPUColorTargetState.obtain();
+            WGPUColorTargetState colorTarget = WGPUColorTargetState.obtain();
             colorTarget.setFormat(spec.colorFormat);
             colorTarget.setBlend(blendState);
             colorTarget.setWriteMask(WGPUColorWriteMask.All);
@@ -100,7 +100,7 @@ public class WebGPUPipeline implements Disposable {
             pipelineDesc.setFragment(fragmentState);
         }
 
-        WebGPUDepthStencilState depthStencilState = WebGPUDepthStencilState.obtain();
+        WGPUDepthStencilState depthStencilState = WGPUDepthStencilState.obtain();
         setDefaultStencilState(depthStencilState);
 
         if (spec.isSkyBox) {
@@ -141,7 +141,7 @@ public class WebGPUPipeline implements Disposable {
 
         pipelineDesc.setLayout(pipelineLayout);
 
-        pipeline = new WebGPURenderPipeline();
+        pipeline = new WGPURenderPipeline();
         WgGraphics gfx = (WgGraphics) Gdx.graphics;
         WebGPUContext webgpu = gfx.getContext();
         webgpu.device.createRenderPipeline(pipelineDesc, pipeline);
@@ -162,7 +162,7 @@ public class WebGPUPipeline implements Disposable {
         return h == h2;
     }
 
-    public WebGPURenderPipeline getPipeline(){
+    public WGPURenderPipeline getPipeline(){
         return pipeline;
     }
 
@@ -174,7 +174,7 @@ public class WebGPUPipeline implements Disposable {
             shader.dispose();
     }
 
-    private void setDefaultStencilState(WebGPUDepthStencilState  depthStencilState ) {
+    private void setDefaultStencilState(WGPUDepthStencilState  depthStencilState ) {
         depthStencilState.setFormat(WGPUTextureFormat.Undefined);
         depthStencilState.setDepthWriteEnabled(WGPUOptionalBool.False);
         depthStencilState.setDepthCompare(WGPUCompareFunction.Always);
@@ -187,7 +187,7 @@ public class WebGPUPipeline implements Disposable {
         setDefaultStencilFaceState(depthStencilState.getStencilBack());
     }
 
-    private void setDefaultStencilFaceState(WebGPUStencilFaceState stencilFaceState) {
+    private void setDefaultStencilFaceState(WGPUStencilFaceState stencilFaceState) {
         stencilFaceState.setCompare( WGPUCompareFunction.Always);
         stencilFaceState.setFailOp( WGPUStencilOperation.Keep);
         stencilFaceState.setDepthFailOp( WGPUStencilOperation.Keep);

@@ -169,3 +169,6 @@ Thumbs.db
 /demo/build/
 /gdx-webgpu/build/
 /tests/gdx-tests-webgpu/build/
+/tests/gdx-tests-webgpu2/build/
+**/gdx-desktop-webgpu/build/
+**/gdx-webgpu2/build/

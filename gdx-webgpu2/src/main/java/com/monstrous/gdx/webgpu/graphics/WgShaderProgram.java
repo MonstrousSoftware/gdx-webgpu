@@ -22,9 +22,9 @@ import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.github.xpenatan.webgpu.WGPUSType;
-import com.github.xpenatan.webgpu.WebGPUShaderModule;
-import com.github.xpenatan.webgpu.WebGPUShaderModuleDescriptor;
-import com.github.xpenatan.webgpu.WebGPUShaderSourceWGSL;
+import com.github.xpenatan.webgpu.WGPUShaderModule;
+import com.github.xpenatan.webgpu.WGPUShaderModuleDescriptor;
+import com.github.xpenatan.webgpu.WGPUShaderSourceWGSL;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 
@@ -34,7 +34,7 @@ public class WgShaderProgram implements Disposable {
     private final WgGraphics gfx = (WgGraphics) Gdx.graphics;
     private final WebGPUContext webgpu = gfx.getContext();
     private String name;
-    private WebGPUShaderModule shaderModule;
+    private WGPUShaderModule shaderModule;
 
     public WgShaderProgram(FileHandle fileHandle) {
         this(fileHandle, "");
@@ -55,16 +55,16 @@ public class WgShaderProgram implements Disposable {
         String processedSource = Preprocessor.process(shaderSource);
 
         // Create Shader Module
-        WebGPUShaderModuleDescriptor shaderDesc = WebGPUShaderModuleDescriptor.obtain();
+        WGPUShaderModuleDescriptor shaderDesc = WGPUShaderModuleDescriptor.obtain();
         shaderDesc.setLabel(name);
 
-        WebGPUShaderSourceWGSL shaderCodeDesc = WebGPUShaderSourceWGSL.obtain();
+        WGPUShaderSourceWGSL shaderCodeDesc = WGPUShaderSourceWGSL.obtain();
         shaderCodeDesc.getChain().setNext(null);
         shaderCodeDesc.getChain().setSType(WGPUSType.ShaderSourceWGSL);
         shaderCodeDesc.setCode(processedSource);
 
         shaderDesc.setNextInChain(shaderCodeDesc.getChain());
-        shaderModule = WebGPUShaderModule.obtain();
+        shaderModule = WGPUShaderModule.obtain();
         webgpu.device.createShaderModule(shaderDesc, shaderModule);
         // todo how to detect compile errors?
 //        if(shaderModule == null)
@@ -73,7 +73,7 @@ public class WgShaderProgram implements Disposable {
         //System.out.println(name+": "+processedSource);
     }
 
-    public WebGPUShaderModule getShaderModule() {
+    public WGPUShaderModule getShaderModule() {
         return shaderModule;
     }
 

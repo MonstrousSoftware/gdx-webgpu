@@ -32,8 +32,8 @@ import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopApplication;
 public class HelloTriangleGDX extends ApplicationAdapter {
 
     public WebGPUContext webgpu;
-    private WebGPURenderPipeline pipeline;
-    private WebGPURenderPassEncoder renderPass;
+    private WGPURenderPipeline pipeline;
+    private WGPURenderPassEncoder renderPass;
 
     public static void main(String[] argv) {
         new WgDesktopApplication(new HelloTriangleGDX());
@@ -44,13 +44,13 @@ public class HelloTriangleGDX extends ApplicationAdapter {
         WgGraphics gfx = (WgGraphics) Gdx.graphics;
         webgpu = gfx.getContext();
         pipeline = initPipeline();
-        renderPass = new WebGPURenderPassEncoder();
+        renderPass = new WGPURenderPassEncoder();
     }
 
     @Override
     public void render() {
         // create a render pass
-        WebGPURenderPassDescriptor renderPassDesc = getRenderPassDescriptor();
+        WGPURenderPassDescriptor renderPassDesc = getRenderPassDescriptor();
         webgpu.encoder.beginRenderPass(renderPassDesc, renderPass);
 
         // draw using render pass
@@ -62,8 +62,8 @@ public class HelloTriangleGDX extends ApplicationAdapter {
         renderPass.release();
     }
 
-    private WebGPURenderPassDescriptor getRenderPassDescriptor(){
-        WebGPURenderPassColorAttachment renderPassColorAttachment = WebGPURenderPassColorAttachment.obtain();
+    private WGPURenderPassDescriptor getRenderPassDescriptor(){
+        WGPURenderPassColorAttachment renderPassColorAttachment = WGPURenderPassColorAttachment.obtain();
         renderPassColorAttachment.setView(webgpu.targetView);
         renderPassColorAttachment.setResolveTarget(null);
         renderPassColorAttachment.setLoadOp(WGPULoadOp.Clear);
@@ -73,7 +73,7 @@ public class HelloTriangleGDX extends ApplicationAdapter {
         WGPUVectorRenderPassColorAttachment colorAttachmentVector = WGPUVectorRenderPassColorAttachment.obtain();
         colorAttachmentVector.push_back(renderPassColorAttachment);
 
-        WebGPURenderPassDescriptor renderPassDesc  = WebGPURenderPassDescriptor.obtain();
+        WGPURenderPassDescriptor renderPassDesc  = WGPURenderPassDescriptor.obtain();
         renderPassDesc.setColorAttachments(colorAttachmentVector);
         renderPassDesc.setDepthStencilAttachment(null);
         renderPassDesc.setTimestampWrites(null);
@@ -92,11 +92,11 @@ public class HelloTriangleGDX extends ApplicationAdapter {
         pipeline.dispose();
     }
 
-    public WebGPURenderPipeline initPipeline() {
-        WebGPURenderPipeline pipeline;
-        WebGPUShaderModule shaderModule = makeShaderModule();
+    public WGPURenderPipeline initPipeline() {
+        WGPURenderPipeline pipeline;
+        WGPUShaderModule shaderModule = makeShaderModule();
 
-        WebGPURenderPipelineDescriptor pipelineDesc = WebGPURenderPipelineDescriptor.obtain();
+        WGPURenderPipelineDescriptor pipelineDesc = WGPURenderPipelineDescriptor.obtain();
         pipelineDesc.setLabel("my pipeline");
 
         pipelineDesc.getVertex().setBuffers(null);
@@ -109,14 +109,14 @@ public class HelloTriangleGDX extends ApplicationAdapter {
         pipelineDesc.getPrimitive().setFrontFace(WGPUFrontFace.CCW);
         pipelineDesc.getPrimitive().setCullMode(WGPUCullMode.None);
 
-        WebGPUFragmentState fragmentState = WebGPUFragmentState.obtain();
+        WGPUFragmentState fragmentState = WGPUFragmentState.obtain();
         fragmentState.setNextInChain(null);
         fragmentState.setModule(shaderModule);
         fragmentState.setEntryPoint("fs_main");
         fragmentState.setConstants(null);
 
         // blending
-        WebGPUBlendState blendState = WebGPUBlendState.obtain();
+        WGPUBlendState blendState = WGPUBlendState.obtain();
         blendState.getColor().setSrcFactor(WGPUBlendFactor.SrcAlpha);
         blendState.getColor().setDstFactor(WGPUBlendFactor.OneMinusSrcAlpha);
         blendState.getColor().setOperation(WGPUBlendOperation.Add);
@@ -124,7 +124,7 @@ public class HelloTriangleGDX extends ApplicationAdapter {
         blendState.getAlpha().setDstFactor(WGPUBlendFactor.Zero);
         blendState.getAlpha().setOperation(WGPUBlendOperation.Add);
 
-        WebGPUColorTargetState colorTarget = WebGPUColorTargetState.obtain();
+        WGPUColorTargetState colorTarget = WGPUColorTargetState.obtain();
         colorTarget.setFormat(webgpu.surfaceFormat); // match output surface
         colorTarget.setBlend(blendState);
         colorTarget.setWriteMask(WGPUColorWriteMask.All);
@@ -140,7 +140,7 @@ public class HelloTriangleGDX extends ApplicationAdapter {
         pipelineDesc.getMultisample().setAlphaToCoverageEnabled(false);
         pipelineDesc.setLayout(null);
 
-        pipeline = new WebGPURenderPipeline();
+        pipeline = new WGPURenderPipeline();
         webgpu.device.createRenderPipeline(pipelineDesc, pipeline);
 
         shaderModule.release();
@@ -149,19 +149,19 @@ public class HelloTriangleGDX extends ApplicationAdapter {
         return pipeline;
     }
 
-    public WebGPUShaderModule makeShaderModule() {
+    public WGPUShaderModule makeShaderModule() {
         String shaderSource = readShaderSource();
 
-        WebGPUShaderModuleDescriptor shaderDesc = WebGPUShaderModuleDescriptor.obtain();
+        WGPUShaderModuleDescriptor shaderDesc = WGPUShaderModuleDescriptor.obtain();
         shaderDesc.setLabel("triangle shader");
 
-        WebGPUShaderSourceWGSL shaderCodeDesc = WebGPUShaderSourceWGSL.obtain();
+        WGPUShaderSourceWGSL shaderCodeDesc = WGPUShaderSourceWGSL.obtain();
         shaderCodeDesc.getChain().setNext(null);
         shaderCodeDesc.getChain().setSType(WGPUSType.ShaderSourceWGSL);
         shaderCodeDesc.setCode(shaderSource);
 
         shaderDesc.setNextInChain(shaderCodeDesc.getChain());
-        WebGPUShaderModule shaderModule = WebGPUShaderModule.obtain();
+        WGPUShaderModule shaderModule = WGPUShaderModule.obtain();
         webgpu.device.createShaderModule(shaderDesc, shaderModule);
         return shaderModule;
     }
