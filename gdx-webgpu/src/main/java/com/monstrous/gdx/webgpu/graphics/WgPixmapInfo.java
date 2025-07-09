@@ -6,6 +6,7 @@ import com.monstrous.gdx.webgpu.utils.WgpuJavaStruct;
 import jnr.ffi.Runtime;
 import jnr.ffi.Struct;
 
+// todo OBSOLETE
 
 public class WgPixmapInfo extends WgpuJavaStruct {
 

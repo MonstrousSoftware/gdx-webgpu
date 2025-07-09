@@ -18,8 +18,7 @@ package com.monstrous.gdx.webgpu.wrappers;
 
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
-import jnr.ffi.Pointer;
-
+import com.github.xpenatan.webgpu.WGPUPipelineLayout;
 
 
 /** Cache for pipelines
@@ -33,7 +32,7 @@ public class PipelineCache implements Disposable {
         pipelines = new Array<>();
     }
 
-    public WebGPUPipeline findPipeline(Pointer pipelineLayout, PipelineSpecification spec){
+    public WebGPUPipeline findPipeline(WGPUPipelineLayout pipelineLayout, PipelineSpecification spec){
         // try to find suitable pipeline from the cache
         for(WebGPUPipeline pipeline : pipelines){
             if(pipeline.canRender(spec))

@@ -27,6 +27,8 @@ import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgTextureData;
 
+import java.nio.ByteBuffer;
+
 public class WgTexture extends Texture {
 
     private final WebGPUContext webgpu = ((WgGraphics) Gdx.graphics).webgpu;
@@ -156,7 +158,8 @@ public class WgTexture extends Texture {
             //disposePixmap = true;
         }
 
-        //todo !! load(pixmap.getPixels(), 0);
+        load(pixmap.getPixels());
+       // load(pixmap.getPixels(), 0);
     }
 
 
@@ -512,6 +515,38 @@ public class WgTexture extends Texture {
         extent.setDepthOrArrayLayers(1);
 
         webgpu.queue.writeTexture(destination, data, source, extent);
+    }
+
+    protected void load(ByteBuffer pixels) {
+
+        // Arguments telling which part of the texture we upload to
+        // (together with the last argument of writeTexture)
+        WGPUTexelCopyTextureInfo destination = WGPUTexelCopyTextureInfo.obtain();
+        destination.setTexture(texture);
+        destination.setMipLevel(0);
+        destination.getOrigin().setX(0);
+        destination.getOrigin().setY(0);
+        destination.getOrigin().setZ(0);
+        destination.setAspect(WGPUTextureAspect.All);   // not relevant
+
+        // Arguments telling how the pixel data is laid out
+        WGPUTexelCopyBufferLayout source = WGPUTexelCopyBufferLayout.obtain();
+        source.setOffset(0);
+        source.setBytesPerRow(4 *data.getWidth());
+        source.setRowsPerImage( data.getHeight());
+
+        WGPUExtent3D extent = WGPUExtent3D.obtain();
+        extent.setWidth(data.getWidth());
+        extent.setHeight(data.getHeight());
+        extent.setDepthOrArrayLayers(1);
+
+        // buffer copy as a work around
+        WGPUByteBuffer wbuf = new WGPUByteBuffer(pixels.limit());
+        for(int i = 0; i < pixels.limit(); i++)
+            wbuf.put( pixels.get(i));
+        wbuf.flip();
+
+        webgpu.queue.writeTexture(destination, wbuf, source, extent);
     }
 
 

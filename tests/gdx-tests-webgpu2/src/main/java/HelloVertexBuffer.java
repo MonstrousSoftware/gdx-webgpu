@@ -42,6 +42,8 @@ public class HelloVertexBuffer extends ApplicationAdapter {
 
         PipelineSpecification spec = new PipelineSpecification(vattr, shaderSource);
         pipeline = new WebGPUPipeline(null, spec);
+
+
     }
 
     @Override

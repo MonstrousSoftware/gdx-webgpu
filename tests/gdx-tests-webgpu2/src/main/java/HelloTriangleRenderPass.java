@@ -26,6 +26,7 @@ public class HelloTriangleRenderPass extends ApplicationAdapter {
         PipelineSpecification spec = new PipelineSpecification();
         spec.shaderSource = readShaderSource();
         pipeline = new WebGPUPipeline(null, spec);
+
     }
 
     @Override
