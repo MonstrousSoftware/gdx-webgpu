@@ -51,7 +51,12 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
     let distance : f32 = textureSample(texture, textureSampler, in.uv).a;
     let alpha : f32 = smoothstep( 0.5 - smoothing, 0.5 + smoothing, distance);
 
-    let color = vec4f(in.color.rgb, alpha * in.color.a);
+    var color = vec4f(in.color.rgb, alpha * in.color.a);
 
-    return vec4f(color);
+#ifdef GAMMA_CORRECTION
+    let linearColor: vec3f = pow(color.rgb, vec3f(2.2));
+    color = vec4f(linearColor, 1.0);
+#endif
+
+    return color;
 };

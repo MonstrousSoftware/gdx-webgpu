@@ -70,6 +70,7 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
         Pointer formats = caps.getFormats();
         int format = formats.getInt(0);
         surfaceFormat = WGPUTextureFormat.values()[format];
+        System.out.println("Surface format: "+surfaceFormat);
 
         adapter.dispose();  // finished with adapter now that we have a device
 

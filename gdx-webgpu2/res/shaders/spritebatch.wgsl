@@ -1,4 +1,6 @@
-// spritebach.wgsl
+// spritebatch.wgsl
+
+#define GAMMA_CORRECTION
 
 struct Uniforms {
     projectionViewTransform: mat4x4f,
@@ -52,9 +54,14 @@ fn vs_main(in: VertexInput) -> VertexOutput {
 fn fs_main(in : VertexOutput) -> @location(0) vec4f {
 
 #ifdef TEXTURE_COORDINATE
-    let color = in.color * textureSample(texture, textureSampler, in.uv);
+    var color = in.color * textureSample(texture, textureSampler, in.uv);
 #else
-    let color = in.color;
+    var color = in.color;
 #endif
-    return vec4f(color);
+
+#ifdef GAMMA_CORRECTION
+    let linearColor: vec3f = pow(color.rgb, vec3f(2.2));
+    color = vec4f(linearColor, 1.0);
+#endif
+    return color;
 };
