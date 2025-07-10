@@ -91,7 +91,7 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 
 		createBuffers();
 
-		WGPUByteBuffer vertexBB = WGPUByteBuffer.obtain(maxVertices * vertexSize*Float.BYTES);
+		WGPUByteBuffer vertexBB = new WGPUByteBuffer(maxVertices * vertexSize*Float.BYTES);
 		vertexBB.order(WGPUByteOrder.LittleEndian); // webgpu expects little endian data
         vertexData = vertexBB.asFloatBuffer();  // float view on the byte buffer
 
@@ -138,7 +138,6 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 		else
 			pipelineSpec.topology = WGPUPrimitiveTopology.TriangleList;
 		pipelineSpec.setCullMode(WGPUCullMode.None);
-
 
 		renderPass = RenderPassBuilder.create("ImmediateModeRenderer", null, false, webgpu.getSamples());
 	}
@@ -192,10 +191,14 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 		// write number of vertices to the GPU's vertex buffer
 		//
 		int numBytes = numVertices * vertexSize * Float.BYTES;
+        // since we used put with an index, the position was never updated
+        // set it now, because writeBuffer needs it.
+        vertexData.position(numVertices * vertexSize);
+        //System.out.println("write buffer in imm mode rndr: pos:"+vertexData.getPosition());
         vertexData.flip(); // prepare for reading
 
 		// copy vertex data to GPU vertex buffer
-        System.out.println("write buffer in imm mode rndr: size:"+numBytes+" byteData: "+vertexData.getByteBuffer().getLimit());
+        //System.out.println("write buffer in imm mode rndr: size:"+numBytes+" byteData: "+vertexData.getByteBuffer().getLimit());
         webgpu.queue.writeBuffer(vertexBuffer.getBuffer(), 0, vertexData.getByteBuffer());
 
 		// Set vertex buffer while encoding the render pass

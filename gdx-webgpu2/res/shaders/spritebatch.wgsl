@@ -1,7 +1,5 @@
 // spritebatch.wgsl
 
-#define GAMMA_CORRECTION
-
 struct Uniforms {
     projectionViewTransform: mat4x4f,
 };

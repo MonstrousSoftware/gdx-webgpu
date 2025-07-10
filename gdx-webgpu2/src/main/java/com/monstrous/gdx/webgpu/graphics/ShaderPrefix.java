@@ -17,9 +17,12 @@
 package com.monstrous.gdx.webgpu.graphics;
 
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 
 public class ShaderPrefix {
     private static final StringBuffer sb = new StringBuffer();
@@ -72,6 +75,23 @@ public class ShaderPrefix {
 //        if (environment != null && environment.useImageBasedLighting) {
 //            sb.append("#define USE_IBL\n");
 //        }
+
+        // Add gamma correction if surface format is Srgb
+        WgGraphics gfx = (WgGraphics)Gdx.graphics;
+        WebGPUContext webgpu = gfx.getContext();
+        switch(webgpu.surfaceFormat) {
+            case RGBA8UnormSrgb:
+            case BGRA8UnormSrgb:
+            case BC2RGBAUnormSrgb:
+            case BC3RGBAUnormSrgb:
+            case BC7RGBAUnormSrgb:
+            case ETC2RGBA8UnormSrgb:
+                // some more exotic formats to add...
+                sb.append("#define GAMMA_CORRECTION\n");
+                break;
+        }
+
+        //System.out.println("Prefix: "+sb.toString());
         return sb.toString();
     }
 }
