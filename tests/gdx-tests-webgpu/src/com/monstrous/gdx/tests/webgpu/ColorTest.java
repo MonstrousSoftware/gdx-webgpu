@@ -28,17 +28,15 @@ import com.monstrous.gdx.webgpu.scene2d.WgStage;
 
 public class ColorTest extends GdxTest {
 	WgStage stage;
-
-//    public static void main (String[] argv) {
-//        new WgDesktopApplication(new ColorTest());
-//    }
+    WgSkin skin;
 
 	@Override
 	public void create () {
 		stage = new WgStage(new ScreenViewport());
 		Gdx.input.setInputProcessor(stage);
 
-		WgSkin skin = new WgSkin(Gdx.files.internal("data/uiskin.json"));
+		skin = new WgSkin(Gdx.files.internal("data/uiskin.json"));
+
 		//skin.add("default-font", new BitmapFont(Gdx.files.internal("data/lsans-32.fnt"), false));
 
 		Table root = new Table();
@@ -104,4 +102,10 @@ public class ColorTest extends GdxTest {
 	public void resize (int width, int height) {
 		stage.getViewport().update(width, height, true);
 	}
+
+    @Override
+    public void dispose() {
+       stage.dispose();
+       skin.dispose();
+    }
 }

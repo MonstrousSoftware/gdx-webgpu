@@ -18,7 +18,8 @@ public class Launcher {
 
         config.useVsync(false);
 
-        new WgDesktopApplication(new ImmediateModeRendererTest(), config);
+        //new WgDesktopApplication(new ImmediateModeRendererTest(), config);
+        new WgDesktopApplication(new ColorTest(), config);
     }
 
 }

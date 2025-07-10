@@ -71,7 +71,7 @@ public class WgStage extends Stage {
 		// However we cannot access this package private static member. We add stage.enableDebug() to block debug drawing including the recursive descent.
 		// (but maybe this is not a good idea as it can lead to confusion why debug doesn't work)
 		//if(debugEnabled)
-			drawDebug(camera);
+		drawDebug(camera);
 	}
 
 	/** Allow debug drawing (default is enabled).

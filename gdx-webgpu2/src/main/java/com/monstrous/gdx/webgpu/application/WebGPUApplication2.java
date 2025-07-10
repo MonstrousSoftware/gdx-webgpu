@@ -74,7 +74,7 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
 
         if(surface != null) {
             System.out.println("Surface created");
-            WGPUSurfaceCapabilities surfaceCapabilities = new WGPUSurfaceCapabilities();
+            WGPUSurfaceCapabilities surfaceCapabilities = WGPUSurfaceCapabilities.obtain();
             surface.getCapabilities(adapter, surfaceCapabilities);
             surfaceFormat = surfaceCapabilities.getFormats().get(0);
             System.out.println("surfaceFormat: " + surfaceFormat);
