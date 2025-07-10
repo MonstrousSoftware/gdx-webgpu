@@ -177,7 +177,7 @@ public class RenderPassBuilder {
         WGPURenderPassEncoder renderPass = new WGPURenderPassEncoder();
         webgpu.encoder.beginRenderPass(renderPassDescriptor, renderPass);
 
-        WebGPURenderPass pass = new WebGPURenderPass(renderPass, renderPassDescriptor, passType, colorFormat, depthTexture.getFormat(), sampleCount,
+        WebGPURenderPass pass = new WebGPURenderPass(renderPass, passType, colorFormat, depthTexture.getFormat(), sampleCount,
                 outTexture == null ? Gdx.graphics.getWidth() : outTexture.getWidth(),
                 outTexture == null ? Gdx.graphics.getHeight() : outTexture.getHeight());
 

@@ -46,20 +46,18 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 	private final Matrix4 projModelView = new Matrix4();
 
 
-	private VertexAttributes vertexAttributes;
-	private WebGPUVertexBuffer vertexBuffer;
+    private WebGPUVertexBuffer vertexBuffer;
 	private WebGPUUniformBuffer uniformBuffer;
 	private int uniformBufferSize;
-	private WebGPUBindGroupLayout bindGroupLayout;
+	private final WebGPUBindGroupLayout bindGroupLayout;
 	private WGPUPipelineLayout pipelineLayout;
-	private PipelineCache pipelines;
-	private PipelineSpecification pipelineSpec;
+	private final PipelineCache pipelines;
+	private final PipelineSpecification pipelineSpec;
 	private WgTexture texture;
 	private WebGPURenderPass renderPass;
-	private WGPUFloatBuffer vertexData;
+	private final WGPUFloatBuffer vertexData;
 	private WebGPUPipeline prevPipeline;
-	private WgGraphics gfx;
-    private WebGPUContext webgpu;
+    private final WebGPUContext webgpu;
 
 	public WgImmediateModeRenderer(boolean hasNormals, boolean hasColors, int numTexCoords) {
 		this(5000, hasNormals, hasColors, numTexCoords, createDefaultShader(hasNormals, hasColors, numTexCoords));
@@ -75,13 +73,13 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 	public WgImmediateModeRenderer(int maxVertices, boolean hasNormals, boolean hasColors, int numTexCoords,
                                    ShaderProgram shader) {
 
-		gfx = (WgGraphics) Gdx.graphics;
+        WgGraphics gfx = (WgGraphics) Gdx.graphics;
         webgpu = gfx.getContext();
 
 		this.maxVertices = maxVertices;
 
-		vertexAttributes = new VertexAttributes( VertexAttribute.Position(),
-				VertexAttribute.ColorPacked(), VertexAttribute.TexCoords(0), VertexAttribute.Normal() );
+        VertexAttributes vertexAttributes = new VertexAttributes(VertexAttribute.Position(),
+            VertexAttribute.ColorPacked(), VertexAttribute.TexCoords(0), VertexAttribute.Normal());
 
 		vertexSize = vertexAttributes.vertexSize/Float.BYTES;	// size in floats
 
@@ -194,8 +192,10 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 		// write number of vertices to the GPU's vertex buffer
 		//
 		int numBytes = numVertices * vertexSize * Float.BYTES;
+        vertexData.flip(); // prepare for reading
 
 		// copy vertex data to GPU vertex buffer
+        System.out.println("write buffer in imm mode rndr: size:"+numBytes+" byteData: "+vertexData.getByteBuffer().getLimit());
         webgpu.queue.writeBuffer(vertexBuffer.getBuffer(), 0, vertexData.getByteBuffer());
 
 		// Set vertex buffer while encoding the render pass
@@ -210,6 +210,7 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 		// reset
 		vertexIdx = 0;
 		numVertices = 0;
+        vertexData.clear();
 	}
 
 	public void end () {

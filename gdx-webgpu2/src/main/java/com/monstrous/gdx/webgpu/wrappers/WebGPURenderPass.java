@@ -18,13 +18,13 @@ package com.monstrous.gdx.webgpu.wrappers;
 
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.utils.Disposable;
 import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 
 
-public class WebGPURenderPass {
-    private final WGPURenderPassDescriptor renderPassDescriptor;
+public class WebGPURenderPass  {
     private final WGPURenderPassEncoder renderPass;                   // handle used by WebGPU
     public final RenderPassType type;
     private final WGPUTextureFormat textureFormat;
@@ -34,11 +34,10 @@ public class WebGPURenderPass {
     WebGPUContext webgpu;
 
     // don't call this directly, use RenderPassBuilder.create()
-    WebGPURenderPass(WGPURenderPassEncoder renderPass, WGPURenderPassDescriptor descriptor, RenderPassType type, WGPUTextureFormat textureFormat, WGPUTextureFormat depthFormat, int sampleCount, int targetWidth, int targetHeight) {
+    WebGPURenderPass(WGPURenderPassEncoder renderPass, RenderPassType type, WGPUTextureFormat textureFormat, WGPUTextureFormat depthFormat, int sampleCount, int targetWidth, int targetHeight) {
         super();
 
         this.renderPass = renderPass;
-        this.renderPassDescriptor = descriptor; // experimental
         this.type = type;
         this.textureFormat = textureFormat;
         this.depthFormat = depthFormat;
@@ -50,14 +49,11 @@ public class WebGPURenderPass {
         webgpu = gfx.getContext();
     }
 
-//    public void begin() { // experimental
-//        webgpu.encoder.beginRenderPass(renderPassDescriptor, renderPass);
-//    }
 
     public void end() {
         renderPass.end();
         renderPass.release();
-        // don't dispose, because we will reuse
+        renderPass.dispose();
     }
 
     public WGPURenderPassEncoder getRenderPassEncoder() {
@@ -134,4 +130,6 @@ public class WebGPURenderPass {
     public void draw(int numVertices){
         draw(numVertices, 1, 0, 0);
     }
+
+
 }

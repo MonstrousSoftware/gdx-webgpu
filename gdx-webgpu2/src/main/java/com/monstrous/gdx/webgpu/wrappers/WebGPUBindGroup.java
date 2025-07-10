@@ -72,7 +72,6 @@ public class WebGPUBindGroup implements Disposable {
             WGPUBindGroupEntry entry = new WGPUBindGroupEntry();
             setDefault(entry);
             entryArray[i] = entry;
-
         }
     }
 
@@ -155,6 +154,9 @@ public class WebGPUBindGroup implements Disposable {
             bindGroup = new WGPUBindGroup();
             webgpu.device.createBindGroup(bindGroupDescriptor, bindGroup);
             dirty = false;
+            for (int i = 0; i < numEntries; i++) {
+                entryArray[i].dispose();
+            }
         }
         return bindGroup;
     }
