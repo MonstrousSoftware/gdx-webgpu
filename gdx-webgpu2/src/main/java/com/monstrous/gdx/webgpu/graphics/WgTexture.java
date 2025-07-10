@@ -577,7 +577,8 @@ public class WgTexture extends Texture {
 
         if(texture != null) {   // guard against double dispose
             //System.out.println("Destroy texture " + label);
-            sampler.release();
+            if(sampler != null)
+                sampler.release();
             textureView.dispose();
             texture.destroy();
             texture.release();

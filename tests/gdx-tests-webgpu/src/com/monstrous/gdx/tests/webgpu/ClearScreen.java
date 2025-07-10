@@ -11,15 +11,10 @@ import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 //
 public class ClearScreen extends GdxTest {
 
-//    public static void main (String[] argv) {
-//        new WgDesktopApplication(new ClearScreen());
-//    }
 
 	@Override
 	public void render () {
-		WgScreenUtils.clear(Color.CORAL);	// use ScreenUtils variant to clear the screen
+        WgScreenUtils.clear(Color.CORAL);	// use ScreenUtils variant to clear the screen
 	}
-
-
 
 }

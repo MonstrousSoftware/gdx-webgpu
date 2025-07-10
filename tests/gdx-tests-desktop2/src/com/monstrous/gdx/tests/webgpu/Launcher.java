@@ -12,14 +12,18 @@ public class Launcher {
         WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
         config.setWindowedMode(640, 480);
         config.setTitle("WebGPU");
-        config.backend = WebGPUContext.Backend.DEFAULT;
+        config.backend = WebGPUContext.Backend.VULKAN;
 
-        config.enableGPUtiming = false; // todo feature needs to be enabled
+        config.enableGPUtiming = true;
 
         config.useVsync(false);
 
         //new WgDesktopApplication(new ImmediateModeRendererTest(), config);
-        new WgDesktopApplication(new ColorTest(), config);
+        //new WgDesktopApplication(new ColorTest(), config);
+        new WgDesktopApplication(new SpriteBatchTest(), config);
+        //new WgDesktopApplication(new DistanceFontTest(), config);
+        //new WgDesktopApplication(new FontTest(), config);
+        //new WgDesktopApplication(new FullScreenTest(), config);
     }
 
 }

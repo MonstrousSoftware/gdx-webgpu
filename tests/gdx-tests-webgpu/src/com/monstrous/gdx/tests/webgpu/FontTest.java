@@ -19,7 +19,7 @@ public class FontTest extends GdxTest {
         batch = new WgSpriteBatch();
         font = new WgBitmapFont();
 
-        //font = new WebGPUBitmapFont(Gdx.files.classpath("com/badlogic/gdx/utils/lsans-15.fnt"));
+        //font = new WgBitmapFont(Gdx.files.classpath("com/badlogic/gdx/utils/lsans-15.fnt"));
     }
 
 		@Override

@@ -1,30 +1,34 @@
 
-package com.monstrous.gdx.tests.webgpu;
+package main.java;
 
+import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
+import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopApplication;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 
 
-public class FullScreenTest extends GdxTest {
+public class FullScreenTest extends ApplicationAdapter {
     private WgSpriteBatch batch;
     private BitmapFont font;
     private WgTexture texture;
     private Viewport viewport;
     private int savedWidth, savedHeight;
 
+    public static void main(String[] argv) {
+        new WgDesktopApplication(new FullScreenTest());
+    }
 
     @Override
     public void create () {
         batch = new WgSpriteBatch();
-        font = new WgBitmapFont();
+//        font = new WgBitmapFont();
         texture = new WgTexture("data/badlogic.jpg");
         viewport = new ScreenViewport();
     }
@@ -52,7 +56,7 @@ public class FullScreenTest extends GdxTest {
         batch.begin();
 
         batch.draw(texture, 100, 100);
-        font.draw(batch, "Press F11 to toggle between window and full screen mode", 10, 70);
+//        font.draw(batch, "Press F11 to toggle between window and full screen mode", 10, 70);
 
         batch.end();
     }
@@ -67,7 +71,7 @@ public class FullScreenTest extends GdxTest {
     @Override
     public void dispose () {
         batch.dispose();
-        font.dispose();
+//        font.dispose();
         texture.dispose();
     }
 

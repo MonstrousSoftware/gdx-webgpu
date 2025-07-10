@@ -44,8 +44,8 @@ public class GPUTimer implements Disposable {
         if(!enabled)
             return;
 
-        WgGraphics gfx = (WgGraphics) Gdx.graphics;
-        WebGPUContext webgpu = gfx.getContext();
+//        WgGraphics gfx = (WgGraphics) Gdx.graphics;
+//        WebGPUContext webgpu = gfx.getContext();
 
         // Create timestamp queries
         WGPUQuerySetDescriptor querySetDescriptor =  WGPUQuerySetDescriptor.obtain();
@@ -64,13 +64,13 @@ public class GPUTimer implements Disposable {
         bufferDesc.setSize(8*2*MAX_PASSES);     // space for 2 uint64's per pass
         bufferDesc.setMappedAtCreation(false);
         timeStampResolveBuffer =  new WGPUBuffer();
-        webgpu.device.createBuffer(bufferDesc, timeStampResolveBuffer);
+        device.createBuffer(bufferDesc, timeStampResolveBuffer);
 
         bufferDesc.setLabel("timestamp map buffer");
         bufferDesc.setUsage( WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.MapRead) );
         bufferDesc.setSize(8*2*MAX_PASSES);
         timeStampMapBuffer = new WGPUBuffer();
-        webgpu.device.createBuffer(bufferDesc, timeStampMapBuffer);
+        device.createBuffer(bufferDesc, timeStampMapBuffer);
 
         passNumber = -1;
     }
@@ -132,17 +132,25 @@ public class GPUTimer implements Disposable {
             return;
 
         timeStampMapOngoing = true;
-        WGPUFuture webGPUFuture = timeStampMapBuffer.mapAsync(WGPUMapMode.Read, 0, 16, WGPUCallbackMode.AllowProcessEvents, new BufferMapCallback() {
+        WGPUFuture webGPUFuture = timeStampMapBuffer.mapAsync(WGPUMapMode.Read, 0, 8 * 2 * MAX_PASSES, WGPUCallbackMode.AllowProcessEvents, new BufferMapCallback() {
             @Override
             protected void onCallback(WGPUMapAsyncStatus status, String message) {
-                System.out.println("Buffer mapped with status " + status);
+                //System.out.println("Buffer mapped with status " + status);
                 if(status == WGPUMapAsyncStatus.Success) {
 
                     WGPUByteBuffer ram = timeStampMapBuffer.getConstMappedRange(0, 8 * 2 * MAX_PASSES);
                     for (int pass = 0; pass < numPasses; pass++) {
                         // todo convert to long, there is no getLong()
-                        long start = ram.getInt(8 * 2 * pass);// + ram.getInt(8 *2*pass + 4);
-                        long end = ram.getInt(8 * 2 * pass + 8); //+ ram.getInt(8 *2*pass + 12);
+                        int off = 8*2*pass;
+                        int n1 = ram.getInt(off);
+                        int n2 = ram.getInt(off + 4);
+                        int n3 = ram.getInt(off + 8);
+                        int n4 = ram.getInt(off + 12);
+                        long start = n1 + 65536L* n2;
+                        long end = n3 + 65536L* n4;
+                        //System.out.println("gpu timing: "+n1+" , "+n2+" , "+n3+" , "+n4+" longs:"+start+" - "+end);
+//                        long start = ram.getInt(8 * 2 * pass) + 65536L * ram.getInt(8 *2*pass + 4);
+//                        long end = ram.getInt(8 * 2 * pass + 8) + 65536L * ram.getInt(8 *2*pass + 12);
                         long ns = end - start;
                         addTimeSample(pass, ns);
                     }
@@ -158,10 +166,10 @@ public class GPUTimer implements Disposable {
         if(!enabled)
             return;
         System.out.println("GPUTimer.dispose()");
-        while(timeStampMapOngoing) {
-            System.out.println("Waiting for time stamp map before disposing... ");
-            // todo device.tick();
-        }
+//        while(timeStampMapOngoing) {
+//            System.out.println("Waiting for time stamp map before disposing... ");
+//            // todo device.tick();
+//        }
 
         timestampQuerySet.release();
 

@@ -74,6 +74,8 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
 
         if(surface != null) {
             System.out.println("Surface created");
+            // Find out the preferred surface format of the window
+            // = the first one listed under capabilities
             WGPUSurfaceCapabilities surfaceCapabilities = WGPUSurfaceCapabilities.obtain();
             surface.getCapabilities(adapter, surfaceCapabilities);
             surfaceFormat = surfaceCapabilities.getFormats().get(0);
@@ -90,26 +92,14 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
             System.out.println("Surface not created");
         }
 
-//        surface = JavaWebGPU.getUtils().glfwGetWGPUSurface(instance, config.windowHandle);
-//        WebGPUAdapter adapter = new WebGPUAdapter(instance, surface, config.requestedBackendType, WGPUPowerPreference.HighPerformance);
-
-        // device = new WebGPUDevice(adapter, config.gpuTimingEnabled);
-
-        // Find out the preferred surface format of the window
-//        WGPUSurfaceCapabilities caps = WGPUSurfaceCapabilities.createDirect();
-//        webGPU.wgpuSurfaceGetCapabilities(surface, adapter.getHandle(), caps);
-//        Pointer formats = caps.getFormats();
-//        int format = formats.getInt(0);
-//        surfaceFormat = WGPUTextureFormat.values()[format];
-
         // todo webGPU.wgpuInstanceRelease(instance); // we can release the instance now that we have the device
         // do we need instance for processEvents?
 
         gpuTimer = new GPUTimer(device, config.gpuTimingEnabled);
 
         encoder = new WGPUCommandEncoder();
-        while(!isReady())
-            update();
+//        while(!isReady())
+//            update();
 //        initSwapChain(640, 480, true);
 
     }
@@ -175,6 +165,7 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
 
         WGPUVectorFeatureName features = WGPUVectorFeatureName.obtain();
         features.push_back(WGPUFeatureName.DepthClipControl);
+        features.push_back(WGPUFeatureName.TimestampQuery);
         deviceDescriptor.setRequiredFeatures(features);
 
         deviceDescriptor.getDefaultQueue().setLabel("The default queue");
@@ -195,7 +186,7 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
                     System.out.println("Total Features: " + featureCount);
                     for(int i = 0; i < featureCount; i++) {
                         WGPUFeatureName featureName = features.getFeatureAt(i);
-                        System.out.println("Feature name: " + featureName);
+                        System.out.println("\tFeature name: " + featureName);
                     }
                     features.dispose();
 
@@ -257,7 +248,7 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
         }
 
         WGPUCommandEncoderDescriptor encoderDesc = WGPUCommandEncoderDescriptor.obtain();
-        encoderDesc.setLabel("My command encoder");
+        encoderDesc.setLabel("The Command Encoder");
         device.createCommandEncoder(encoderDesc, encoder);
 
         listener.render();
@@ -271,8 +262,12 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
         encoder.finish(cmdBufferDescriptor, command);
         encoder.release();
 
+
         queue.submit(1, command);
         command.release();
+
+        // fetch time stamps after submitting the command buffer
+        gpuTimer.fetchTimestamps();
 
         targetView.release();
         targetView = null;
@@ -325,12 +320,22 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
             return;
         terminateDepthBuffer();
 
-        exitSwapChain();
+        // on full-screen we get fatal error: `SurfaceOutput` must be dropped before a new `Surface` is made
+        if(targetView != null) {
+            targetView.release();
+            targetView.dispose();
 
+        }
+
+        exitSwapChain();
+        System.out.println("starting new swap chain");
         initSwapChain(width, height, config.vSyncEnabled);
+
+        System.out.println("init depth buffer");
         initDepthBuffer(width, height, config.numSamples);
 
         if(config.numSamples > 1 ) {
+            System.out.println("renew multisampling texture");
             if(multiSamplingTexture != null)
                 multiSamplingTexture.dispose();
             multiSamplingTexture = new WgTexture("multisampling", width, height, false, true, surfaceFormat, config.numSamples);
@@ -346,6 +351,7 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
 
         //         make sure we get a target view from the new swap chain
         //         to present at the end of this frame
+        // commented out because of error:   Surface image is already acquired
 //        if(targetView != null)
 //            targetView.release();
 //        targetView = getNextSurfaceTextureView();
@@ -408,6 +414,7 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
         //System.out.println("exitSwapChain");
         if(surface != null)
             surface.unconfigure();
+
     }
 
     private void initDepthBuffer(int width, int height, int samples){

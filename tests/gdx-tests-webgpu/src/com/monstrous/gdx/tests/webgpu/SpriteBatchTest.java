@@ -7,6 +7,7 @@ import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.webgpu.WGPUBackendType;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
@@ -29,10 +30,13 @@ public class SpriteBatchTest extends GdxTest {
     float ROTATION_SPEED = 20;
     float scale = 1;
     float SCALE_SPEED = -1;
+    WebGPUContext webgpu;
 
 
     @Override
     public void create() {
+        WgGraphics gfx = (WgGraphics)Gdx.graphics;
+        webgpu = gfx.webgpu;
         Gdx.app.log(TAG, "[" + this.hashCode() + "] create() START"); // Log instance and start
 
         viewport = new ScreenViewport();
@@ -112,6 +116,9 @@ public class SpriteBatchTest extends GdxTest {
             Gdx.app.log(TAG, "fps: " + frames + ", render calls: " + spriteBatch.renderCalls + ", begin: " + df.format(begin) + ", " + df.format(draw1) + ", " + df.format(drawText) + ", end: " + df.format(end));
             frames = 0;
             startTime = TimeUtils.nanoTime();
+
+            for(int pass = 0; pass < webgpu.getGPUTimer().getNumPasses(); pass++)
+                Gdx.app.log(TAG, "GPU time (pass "+pass+" "+webgpu.getGPUTimer().getPassName(pass)+") : "+(int)webgpu.getAverageGPUtime(pass)+ " microseconds");
         }
         frames++;
     }

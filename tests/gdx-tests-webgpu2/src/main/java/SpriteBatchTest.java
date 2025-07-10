@@ -41,7 +41,7 @@ public class SpriteBatchTest extends ApplicationAdapter {
         config.setTitle("WebGPUTest");
         config.backend = WebGPUContext.Backend.VULKAN;
 
-        config.enableGPUtiming = false;
+        config.enableGPUtiming = true;
         config.useVsync(false);
 
         new WgDesktopApplication(new SpriteBatchTest(), config);
