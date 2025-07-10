@@ -4,15 +4,13 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopGraphics;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.webgpu.*;
 import com.monstrous.gdx.webgpu.wrappers.*;
 import jnr.ffi.Pointer;
-
 
 
 /**
@@ -28,20 +26,17 @@ public class TestCompute extends GdxTest {
     private WgSpriteBatch batch;
     private WgBitmapFont font;
 
-    private WgDesktopGraphics gfx;
+    private WgGraphics gfx;
     private WebGPUComputePipeline pipeline;
     float[] inputData = new float[BUFFER_SIZE/Float.BYTES];
     float[] outputData = new float[BUFFER_SIZE/Float.BYTES];
 
-    public static void main (String[] argv) {
-        new WgDesktopApplication(new TestCompute());
-    }
 
     @Override
     public void create() {
         batch = new WgSpriteBatch();
         font = new WgBitmapFont();
-        gfx = (WgDesktopGraphics)Gdx.graphics;
+        gfx = (WgGraphics)Gdx.graphics;
 
         // do the compute pass once on start up
         onCompute();
@@ -106,7 +101,7 @@ public class TestCompute extends GdxTest {
     private void compute(WebGPUBindGroup bindGroup, WebGPUUniformBuffer inputBuffer, WebGPUBuffer outputBuffer, WebGPUBuffer mapBuffer) {
 
         // create a queue
-        WebGPUQueue queue = new WebGPUQueue(gfx.context.device);
+        WebGPUQueue queue = new WebGPUQueue(gfx.getContext().device);
 
         // Fill input buffer
 
@@ -117,7 +112,7 @@ public class TestCompute extends GdxTest {
         }
         inputBuffer.flush();
 
-        WebGPUCommandEncoder encoder = new WebGPUCommandEncoder(gfx.context.device);
+        WebGPUCommandEncoder encoder = new WebGPUCommandEncoder(gfx.getContext().device);
 
         WebGPUComputePass pass = encoder.beginComputePass();
 
@@ -160,7 +155,7 @@ public class TestCompute extends GdxTest {
 
         while(!done[0]) {
             System.out.println("Tick.");
-            gfx.context.device.tick();
+            gfx.getContext().device.tick();
         }
 
         System.out.println("output: ");

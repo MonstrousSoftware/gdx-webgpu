@@ -6,7 +6,6 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
@@ -18,11 +17,6 @@ public class ScissorTest extends GdxTest {
     private WgBitmapFont font;
     private int x,y;
     private int dx, dy;
-
-    // launcher
-    public static void main (String[] argv) {
-        new WgDesktopApplication(new ScissorTest());
-    }
 
 
     @Override

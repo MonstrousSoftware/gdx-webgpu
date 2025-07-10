@@ -17,7 +17,8 @@ public abstract class WebGPUContext {
         OPENGL,
         OPENGL_ES,
         VULKAN,
-        WEBGPU
+        WEBGPU,
+        HEADLESS
     }
 
     public WebGPUDevice device;

@@ -30,8 +30,6 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.utils.ActorGestureListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TiledDrawable;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplicationConfiguration;
 import com.monstrous.gdx.webgpu.scene2d.WgSkin;
 import com.monstrous.gdx.webgpu.scene2d.WgStage;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
@@ -44,13 +42,6 @@ public class Scene2dTest extends GdxTest {
 	private TiledDrawable patch;
 	private TextureRegion region;
 
-    // launcher
-    public static void main (String[] argv) {
-
-        WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
-        config.setWindowedMode(640, 480);
-        new WgDesktopApplication(new Scene2dTest(), config);
-    }
 
 	public void create () {
 		stage = new WgStage();

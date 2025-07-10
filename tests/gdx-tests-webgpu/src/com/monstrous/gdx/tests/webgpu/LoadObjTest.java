@@ -24,8 +24,6 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.math.Vector3;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.tests.webgpu.utils.PerspectiveCamController;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplicationConfiguration;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
@@ -45,16 +43,6 @@ public class LoadObjTest extends GdxTest {
 	Model model;
 	ModelInstance instance;
 
-
-	// launcher
-	public static void main (String[] argv) {
-
-		WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
-		config.setWindowedMode(640, 480);
-		config.setTitle("WebGPUTest");
-
-		new WgDesktopApplication(new LoadObjTest(), config);
-	}
 
 	// application
 	public void create () {

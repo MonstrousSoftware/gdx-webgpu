@@ -33,7 +33,6 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgParticleEffect;
 import com.monstrous.gdx.webgpu.scene2d.WgSkin;
@@ -50,11 +49,6 @@ public class ParticleEmittersTest extends GdxTest {
 	CheckBox skipCleanup;
 	Button clearEmitters, scaleEffects;
 	Label logLabel;
-
-    // launcher
-    public static void main (String[] argv) {
-        new WgDesktopApplication(new ParticleEmittersTest());
-    }
 
 	@Override
 	public void create () {

@@ -11,7 +11,6 @@ import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.utils.Array;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 
@@ -23,11 +22,6 @@ public class HeightMapTest extends BaseG3dTest {
 	Environment environment;
 	boolean morph = true;
 	Texture texture;
-
-    // launcher
-    public static void main (String[] argv) {
-        new WgDesktopApplication(new HeightMapTest());
-    }
 
 	@Override
 	public void create () {

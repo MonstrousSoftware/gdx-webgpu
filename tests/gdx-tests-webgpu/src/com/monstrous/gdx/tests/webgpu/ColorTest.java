@@ -22,7 +22,6 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 import com.monstrous.gdx.webgpu.scene2d.WgSkin;
 import com.monstrous.gdx.webgpu.scene2d.WgStage;
@@ -30,9 +29,9 @@ import com.monstrous.gdx.webgpu.scene2d.WgStage;
 public class ColorTest extends GdxTest {
 	WgStage stage;
 
-    public static void main (String[] argv) {
-        new WgDesktopApplication(new ColorTest());
-    }
+//    public static void main (String[] argv) {
+//        new WgDesktopApplication(new ColorTest());
+//    }
 
 	@Override
 	public void create () {

@@ -42,9 +42,9 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
         public int numSamples;
         public boolean vSyncEnabled;
         public boolean gpuTimingEnabled;
-        public WGPUBackendType requestedBackendType;
+        public Backend requestedBackendType;
 
-        public Configuration(long windowHandle, int numSamples, boolean vSyncEnabled, boolean gpuTimingEnabled, WGPUBackendType requestedBackendType) {
+        public Configuration(long windowHandle, int numSamples, boolean vSyncEnabled, boolean gpuTimingEnabled, Backend requestedBackendType) {
             this.windowHandle = windowHandle;
             this.numSamples = numSamples;
             this.vSyncEnabled = vSyncEnabled;
@@ -60,7 +60,7 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
         Pointer instance = webGPU.wgpuCreateInstance(null);
 
         surface = JavaWebGPU.getUtils().glfwGetWGPUSurface(instance, config.windowHandle);
-        WebGPUAdapter adapter = new WebGPUAdapter(instance, surface, config.requestedBackendType, WGPUPowerPreference.HighPerformance);
+        WebGPUAdapter adapter = new WebGPUAdapter(instance, surface, convertBackendType(config.requestedBackendType), WGPUPowerPreference.HighPerformance);
 
         device = new WebGPUDevice(adapter, config.gpuTimingEnabled);
 
@@ -369,7 +369,7 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
 
     @Override
     public WGPUBackendType getRequestedBackendType() {
-        return config.requestedBackendType;
+        return convertBackendType(config.requestedBackendType);
     }
 
     @Override
@@ -381,5 +381,24 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
         return multiSamplingTexture;
     }
 
+    /** map Backend enum to WGPU enum
+     * Note the WGPU enum values cannot be used until the shared library is loaded.
+     */
+    public WGPUBackendType convertBackendType(Backend backend){
+        WGPUBackendType type;
+        switch(backend){
 
+            case D3D11:     type = WGPUBackendType.D3D11; break;
+            case D3D12:     type = WGPUBackendType.D3D12; break;
+            case METAL:     type = WGPUBackendType.Metal; break;
+            case OPENGL:    type = WGPUBackendType.OpenGL; break;
+            case OPENGL_ES: type = WGPUBackendType.OpenGLES; break;
+            case VULKAN:    type = WGPUBackendType.Vulkan; break;
+            case HEADLESS:  type = WGPUBackendType.Null; break;
+
+            case DEFAULT:
+            default:        type = WGPUBackendType.Undefined; break;
+        }
+        return type;
+    }
 }

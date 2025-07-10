@@ -10,8 +10,6 @@ import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.utils.ScreenUtils;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplicationConfiguration;
 import com.monstrous.gdx.webgpu.graphics.WgMesh;
 import com.monstrous.gdx.webgpu.graphics.g3d.model.WgMeshPart;
 import com.monstrous.gdx.webgpu.graphics.utils.WgMeshBuilder;
@@ -31,16 +29,7 @@ public class BasicShaderTest  implements ApplicationListener {
     public Renderable renderable;
     public ModelInstance instance;
 
-    public static void main (String[] argv) {
 
-        WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
-        config.setWindowedMode(640, 480);
-        config.setTitle("WebGPUTest");
-        //config.backend = WGPUBackendType.D3D12;
-        config.enableGPUtiming = false;
-
-        new WgDesktopApplication(new BasicShaderTest(), config);
-    }
 
 
     @Override

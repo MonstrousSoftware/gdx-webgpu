@@ -30,8 +30,6 @@ import com.monstrous.gdx.tests.webgpu.utils.PerspectiveCamController;
 import com.monstrous.gdx.webgpu.application.WebGPUApplication;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplicationConfiguration;
 import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
@@ -66,18 +64,6 @@ public class ShadowTest extends GdxTest {
     WebGPUContext webgpu;
 
 
-	// launcher
-	public static void main (String[] argv) {
-
-		WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
-		config.setWindowedMode(640, 480);
-		config.setTitle("WebGPUTest");
-        config.enableGPUtiming = true;
-        //config.backend = WGPUBackendType.Vulkan;
-        config.useVsync(false);
-
-		new WgDesktopApplication(new ShadowTest(), config);
-	}
 
 	public void create () {
         WgGraphics gfx = (WgGraphics) Gdx.graphics;

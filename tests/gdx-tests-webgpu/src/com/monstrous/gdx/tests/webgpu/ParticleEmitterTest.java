@@ -24,7 +24,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.ParticleEmitter;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.badlogic.gdx.utils.Array;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
+
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgParticleEffect;
 
@@ -36,11 +36,6 @@ public class ParticleEmitterTest extends GdxTest {
 	int particleCount = 10;
 	float fpsCounter;
 	InputProcessor inputProcessor;
-
-    // launcher
-    public static void main (String[] argv) {
-        new WgDesktopApplication(new ParticleEmitterTest());
-    }
 
 	@Override
 	public void create () {

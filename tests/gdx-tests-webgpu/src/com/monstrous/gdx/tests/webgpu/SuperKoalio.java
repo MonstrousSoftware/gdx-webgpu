@@ -35,8 +35,6 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Pool;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplicationConfiguration;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 import com.monstrous.gdx.webgpu.graphics.utils.WgShapeRenderer;
@@ -90,15 +88,6 @@ public class SuperKoalio extends GdxTest {
 
 	private boolean debug = false;
 	private WgShapeRenderer debugRenderer;
-
-    public static void main (String[] argv) {
-
-        WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
-        config.setWindowedMode(640, 480);
-        config.setTitle("WebGPUTest");
-
-        new WgDesktopApplication(new SuperKoalio(), config);
-    }
 
 	@Override
 	public void create () {

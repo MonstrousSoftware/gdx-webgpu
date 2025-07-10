@@ -31,9 +31,8 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.webgpu.application.WebGPUApplication;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplicationConfiguration;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
@@ -64,19 +63,6 @@ public class LoadGLTFTest extends GdxTest {
     private Viewport viewport;
 
 
-	// launcher
-	public static void main (String[] argv) {
-
-		WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
-		config.setWindowedMode(1200, 800);
-		config.setTitle("WebGPUTest");
-        config.useVsync(false);
-        config.backend = WGPUBackendType.Vulkan;
-        config.enableGPUtiming = true;
-        //config.samples = 4;
-
-		new WgDesktopApplication(new LoadGLTFTest(), config);
-	}
 
 	// application
 	public void create () {

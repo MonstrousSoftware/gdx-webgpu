@@ -22,7 +22,6 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
 import com.monstrous.gdx.webgpu.graphics.utils.WgImmediateModeRenderer;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 
@@ -31,10 +30,6 @@ public class ImmediateModeRendererTest extends GdxTest {
 	WgImmediateModeRenderer renderer;
 	WgTexture texture;
 
-
-    public static void main (String[] argv) {
-        new WgDesktopApplication(new ImmediateModeRendererTest());
-    }
 
 	@Override
 	public void create () {

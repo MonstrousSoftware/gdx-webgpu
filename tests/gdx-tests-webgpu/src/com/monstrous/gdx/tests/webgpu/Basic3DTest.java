@@ -32,8 +32,6 @@ import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplicationConfiguration;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
@@ -46,11 +44,6 @@ public class Basic3DTest extends GdxTest {
 	public ModelInstance instance;
 	public Environment environment;
 
-    // launcher
-    public static void main (String[] argv) {
-        WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
-        new WgDesktopApplication(new Basic3DTest(), config);
-    }
 
 	@Override
 	public void create () {

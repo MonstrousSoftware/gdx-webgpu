@@ -24,6 +24,7 @@ import com.badlogic.gdx.Graphics.Monitor;
 import com.badlogic.gdx.LifecycleListener;
 import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.audio.Music;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.webgpu.WGPUBackendType;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.glutils.HdpiMode;
@@ -64,7 +65,7 @@ public class WgDesktopApplicationConfiguration extends WgDesktopWindowConfigurat
 	boolean pauseWhenMinimized = true;
 	boolean pauseWhenLostFocus = false;
 
-	public Backend backend = Backend.DEFAULT;	// webgpu backend, e.g. Vulkan, DX12, etc.
+	public WebGPUContext.Backend backend = WebGPUContext.Backend.DEFAULT;	// webgpu backend, e.g. Vulkan, DX12, etc.
 	public boolean enableGPUtiming = false;
 
 	String preferencesDirectory = ".prefs/";

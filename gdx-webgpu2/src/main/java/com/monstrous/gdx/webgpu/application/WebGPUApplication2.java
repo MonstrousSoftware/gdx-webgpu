@@ -576,19 +576,23 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
         }
     }
 
+    /** map Backend enum to WGPU enum
+     * Note the WGPU enum values cannot be used until the shared library is loaded.
+     */
     public WGPUBackendType convertBackendType(Backend backend){
         WGPUBackendType type;
         switch(backend){
 
-            case D3D11: type = WGPUBackendType.D3D11; break;
-            case D3D12: type = WGPUBackendType.D3D12; break;
-            case METAL: type = WGPUBackendType.Metal; break;
-            case OPENGL: type = WGPUBackendType.OpenGL; break;
+            case D3D11:     type = WGPUBackendType.D3D11; break;
+            case D3D12:     type = WGPUBackendType.D3D12; break;
+            case METAL:     type = WGPUBackendType.Metal; break;
+            case OPENGL:    type = WGPUBackendType.OpenGL; break;
             case OPENGL_ES: type = WGPUBackendType.OpenGLES; break;
-            case VULKAN: type = WGPUBackendType.Vulkan; break;
+            case VULKAN:    type = WGPUBackendType.Vulkan; break;
+            case HEADLESS:  type = WGPUBackendType.Null; break;
+
             case DEFAULT:
-            default:
-                        type = WGPUBackendType.Undefined; break;
+            default:        type = WGPUBackendType.Undefined; break;
         }
         return type;
     }

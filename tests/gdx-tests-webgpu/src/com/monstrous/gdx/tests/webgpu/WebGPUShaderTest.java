@@ -4,8 +4,6 @@ package com.monstrous.gdx.tests.webgpu;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplicationConfiguration;
 import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
@@ -15,15 +13,6 @@ import com.monstrous.gdx.webgpu.graphics.WgTexture;
 */
 public class WebGPUShaderTest {
 
-	// launcher
-	public static void main (String[] argv) {
-
-		WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
-		config.setWindowedMode(640, 480);
-		config.setTitle("WebGPUTest");
-
-		new WgDesktopApplication(new TestApp(), config);
-	}
 
 	// application
 	static class TestApp extends ApplicationAdapter {
