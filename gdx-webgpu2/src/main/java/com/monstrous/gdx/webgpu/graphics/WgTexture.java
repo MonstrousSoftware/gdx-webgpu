@@ -540,7 +540,8 @@ public class WgTexture extends Texture {
         extent.setHeight(data.getHeight());
         extent.setDepthOrArrayLayers(1);
 
-        // buffer copy as a work around
+        // todo
+        // buffer copy as a work around, because Pixmap doesn't use WGPUByteBuffer
         WGPUByteBuffer wbuf = new WGPUByteBuffer(pixels.limit());
         for(int i = 0; i < pixels.limit(); i++)
             wbuf.put( pixels.get(i));
@@ -557,7 +558,7 @@ public class WgTexture extends Texture {
     }
 
     public static int numComponents(WGPUTextureFormat format ){
-        int n = 4;
+        int n;
         switch(format) {
             case R8Unorm: n = 1; break;
             case RG8Uint: n = 2; break;
@@ -565,7 +566,6 @@ public class WgTexture extends Texture {
             case RGBA8Unorm: n = 4; break;
             case BGRA8Unorm: n = 4; break;
             default: throw new IllegalArgumentException("Unsupported format: "+format);
-
         }
         return n;
     }

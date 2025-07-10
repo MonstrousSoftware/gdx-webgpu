@@ -169,9 +169,9 @@ public class WgSpriteBatch implements Batch {
 
     // the index buffer is fixed and only has to be filled on start-up
     private void fillIndexBuffer(int maxSprites){
-        WGPUByteBuffer bb = WGPUByteBuffer.obtain(maxSprites*INDICES_PER_SPRITE*Short.BYTES);
+        WGPUByteBuffer bb = new WGPUByteBuffer(maxSprites*INDICES_PER_SPRITE*Short.BYTES);
         WGPUShortBuffer indexData = bb.asShortBuffer();
-        for(int i = 0; i < maxSprites; i++){
+        for(int i = 0; i < maxSprites/2; i++){              /// todo bug workaround
             short vertexOffset = (short)(i * 4);
             // two triangles per sprite
             indexData.put(vertexOffset);
@@ -182,6 +182,7 @@ public class WgSpriteBatch implements Batch {
             indexData.put((short)(vertexOffset + 2));
             indexData.put((short)(vertexOffset + 3));
         }
+
         indexData.flip();
         indexBuffer.setIndices(bb);
     }

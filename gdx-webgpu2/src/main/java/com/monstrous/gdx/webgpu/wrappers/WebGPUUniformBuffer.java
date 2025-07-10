@@ -89,7 +89,7 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
         dirty = false;
 
         // working buffer in native memory to use as input to WriteBuffer
-        WGPUByteBuffer dataBuf = WGPUByteBuffer.obtain(contentSize);
+        WGPUByteBuffer dataBuf = new WGPUByteBuffer(contentSize);
         floatData = dataBuf.asFloatBuffer();
         //floatData = new WGPUFloatBuffer(); (contentSize);       // native memory buffer for one slice to aid write buffer
     }
@@ -180,7 +180,9 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
 
     public void set(int offset, Matrix4 mat ){
         for(int i = 0; i < 16; i++) {
-            floatData.put(offset+i, mat.val[i]);
+            float f =  mat.val[i];
+            int index = offset+i;
+            floatData.put(index,f);
         }
         dirty = true;
     }

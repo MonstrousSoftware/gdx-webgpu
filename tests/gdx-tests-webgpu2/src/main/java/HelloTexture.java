@@ -39,6 +39,7 @@ public class HelloTexture extends ApplicationAdapter {
     public void render() {
         batch.begin();
         batch.draw(texture, 0, 0);
+        batch.draw(texture, 300, 100);
         batch.end();
 
     }
