@@ -10,7 +10,6 @@ import com.badlogic.gdx.math.Affine2;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.utils.BufferUtils;
 import com.badlogic.gdx.utils.Null;
 import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
@@ -371,7 +370,8 @@ public class WgSpriteBatch implements Batch {
 
         // append new vertex data to GPU vertex buffer
         int numBytes = numSprites * VERTS_PER_SPRITE * vertexSize;
-        vertexBuffer.setVertices(vertexBB, vbOffset, numBytes);
+        vertexData.flip();  // switch from writing to reading
+        vertexBuffer.setVertices(vertexData.getByteBuffer(), vbOffset);
 
         // Set vertex buffer while encoding the render pass
         // use an offset to set the vertex buffer for this batch

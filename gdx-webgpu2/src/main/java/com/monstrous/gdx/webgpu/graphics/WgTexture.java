@@ -351,7 +351,8 @@ public class WgTexture extends Texture {
     public void setFilter(TextureFilter minFilter, TextureFilter magFilter){
         if(minFilter == this.minFilter && magFilter == this.magFilter) return;
         // note: this may invalidate the sampler if it was built already and had other values
-        sampler.release();
+        if(sampler != null)
+            sampler.release();
         sampler = null; // invalidate sampler
         this.minFilter = minFilter;
         this.magFilter = magFilter;
@@ -373,7 +374,8 @@ public class WgTexture extends Texture {
     @Override
     public void setWrap (TextureWrap u, TextureWrap v){
         if(u == this.uWrap && v == this.vWrap) return;
-        sampler.release();
+        if(sampler != null)
+            sampler.release();
         sampler = null; // invalidate sampler
 
         // ignored

@@ -43,13 +43,18 @@ public class WebGPUVertexBuffer extends WebGPUBuffer {
         webgpu.queue.writeBuffer(buffer, 0, dataBuf );
     }
 
-    // sizeInBytes is ignored!
-    public void setVertices(WGPUByteBuffer byteData, int targetOffset, int sizeInBytes) {
-        //int sizeInBytes = byteData.limit();
-        sizeInBytes = (sizeInBytes + 3) & ~3; // round up to multiple of 4 for writeBuffer
+
+    public void setVertices(WGPUByteBuffer byteData, int targetOffset) {
+        int sizeInBytes = byteData.getLimit();
+        // pad to multiple of 4
+        while(sizeInBytes % 4 != 0){
+            byteData.put((byte)0);
+            sizeInBytes++;
+        }
         if(sizeInBytes > getSize()) throw new IllegalArgumentException("VertexBuffer.setVertices: ByteBuffer contents too large.");
 
         // Upload data to the buffer
+        //System.out.println("write buffer in setVertices: size:"+sizeInBytes+" byteData: "+byteData.getLimit());
         webgpu.queue.writeBuffer(buffer, targetOffset, byteData );
     }
 
