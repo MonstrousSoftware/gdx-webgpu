@@ -28,3 +28,4 @@ include 'tests:gdx-tests-webgpu2'
 include 'gdx-webgpu2'
 
 include 'tests:gdx-tests-desktop'
+include 'tests:gdx-tests-desktop2'

@@ -14,11 +14,6 @@
  * limitations under the License.
  ******************************************************************************/
 
-//ext {
-//	mainTestClass = "com.monstrous.gdx.tests.webgpu.WebGPUTestStarter"
-//	ext.j2w_version = "1.01"
-//}
-
 apply from: "../../dependencies.gradle"
 
 sourceSets.main.resources.srcDirs = ["../assets"]
@@ -30,38 +25,8 @@ if (JavaVersion.current().isJava9Compatible()) {
 }
 
 
+// note: do not add dependencies here on platform specific modules
+
 dependencies {
 	implementation project(":gdx-webgpu")
-	//implementation project(":backends:gdx-lwjgl3-webgpu")
-	//implementation 'com.github.jnr:jnr-ffi:2.2.17'
-
-  // needed for BufferUtils
-  //implementation 'org.lwjgl:lwjgl:3.3.3'
 }
-
-
-//
-//tasks.register('launchTestsWebGPU', JavaExec) {
-//	dependsOn classes
-//	mainClass = mainTestClass
-//	classpath = sourceSets.main.runtimeClasspath
-//	standardInput = System.in
-//	workingDir = new File("../assets")
-//	ignoreExitValue = true
-//}
-//configure (launchTestsWebGPU) {
-//	group "LibGDX"
-//	description = "Run the WebGPU tests"
-//}
-//tasks.register('dist', Jar) {
-//	dependsOn classes
-//	manifest {
-//		attributes 'Main-Class': project.mainTestClass
-//	}
-//	dependsOn configurations.runtimeClasspath
-//	from {
-//		configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
-//	}
-//	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-//	with jar
-//}

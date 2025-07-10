@@ -55,7 +55,7 @@ public class GPUTimer implements Disposable {
         querySetDescriptor.setCount(2*MAX_PASSES); // start and end time
 
         timestampQuerySet = new WGPUQuerySet();
-        webgpu.device.createQuerySet(querySetDescriptor, timestampQuerySet);
+        device.createQuerySet(querySetDescriptor, timestampQuerySet);
 
         // Create buffer
         WGPUBufferDescriptor bufferDesc = WGPUBufferDescriptor.obtain();
