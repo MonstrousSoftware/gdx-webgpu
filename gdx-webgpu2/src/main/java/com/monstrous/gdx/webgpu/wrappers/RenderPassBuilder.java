@@ -30,9 +30,17 @@ import com.monstrous.gdx.webgpu.graphics.WgTexture;
  */
 public class RenderPassBuilder {
 
-    private static WGPURenderPassDescriptor renderPassDescriptor;
-    private static WGPURenderPassColorAttachment renderPassColorAttachment;
-    private static WGPURenderPassDepthStencilAttachment depthStencilAttachment;
+    // storage for descriptor elements to quickly rebuild it per frame
+    public static class DescriptorComponents {
+        WGPURenderPassEncoder renderPass;
+        WGPURenderPassDescriptor renderPassDescriptor;
+        WGPURenderPassColorAttachment renderPassColorAttachment;
+        WGPUVectorRenderPassColorAttachment colorAttachments;
+        WGPURenderPassDepthStencilAttachment depthStencilAttachment;
+    }
+//    private static WGPURenderPassDescriptor renderPassDescriptor;
+//    private static WGPURenderPassColorAttachment renderPassColorAttachment;
+//    private static WGPURenderPassDepthStencilAttachment depthStencilAttachment;
 
     public static WebGPURenderPass create(String name) {
         return create( name, null);
@@ -79,27 +87,28 @@ public class RenderPassBuilder {
         WgGraphics gfx = (WgGraphics) Gdx.graphics;
         WebGPUContext webgpu = gfx.getContext();
 
+        DescriptorComponents components = new DescriptorComponents();
+
         if (webgpu.encoder == null)
             throw new RuntimeException("Encoder must be set before calling WebGPURenderPass.create()");
 
         WGPUTextureFormat colorFormat = WGPUTextureFormat.Undefined;
 
-        // create reusable helper objects on first call
-        if (renderPassDescriptor == null) {
-            Gdx.app.log("RenderPassBuilder", "creating descriptors");
-            renderPassDescriptor = new WGPURenderPassDescriptor();
-            renderPassDescriptor.setNextInChain(null);
-            renderPassDescriptor.setOcclusionQuerySet(null);
 
-            renderPassColorAttachment = new WGPURenderPassColorAttachment();
-            renderPassColorAttachment.setNextInChain(null);
+        components.renderPassDescriptor = new WGPURenderPassDescriptor();
+        Gdx.app.log("RenderPassBuilder", "creating descriptors");
 
-            depthStencilAttachment = new WGPURenderPassDepthStencilAttachment();
-        }
-        renderPassDescriptor.setLabel(name);
+        components.renderPassDescriptor.setNextInChain(null);
+        components.renderPassDescriptor.setOcclusionQuerySet(null);
+        components.renderPassDescriptor.setLabel(name);
 
+        // note: assuming there is only one color attachment
+        components.renderPassColorAttachment = new WGPURenderPassColorAttachment();
+        components.renderPassColorAttachment.setNextInChain(null);
 
-        WGPUVectorRenderPassColorAttachment colorAttachments = WGPUVectorRenderPassColorAttachment.obtain();
+        components.depthStencilAttachment = new WGPURenderPassDepthStencilAttachment();
+
+        components.colorAttachments = new WGPUVectorRenderPassColorAttachment();
 
         if (passType == RenderPassType.COLOR_AND_DEPTH ||
             passType == RenderPassType.COLOR_PASS ||
@@ -107,59 +116,59 @@ public class RenderPassBuilder {
             passType == RenderPassType.SHADOW_PASS ||
             passType == RenderPassType.NO_DEPTH) {
 
-            renderPassColorAttachment.setStoreOp(WGPUStoreOp.Store);
+            components.renderPassColorAttachment.setStoreOp(WGPUStoreOp.Store);
 
-            renderPassColorAttachment.setDepthSlice(-1);
+            components.renderPassColorAttachment.setDepthSlice(-1);
 
 
             if (clearColor != null) {
-                renderPassColorAttachment.setLoadOp( WGPULoadOp.Clear);
+                components.renderPassColorAttachment.setLoadOp( WGPULoadOp.Clear);
 
-                renderPassColorAttachment.getClearValue().setR(clearColor.r);
-                renderPassColorAttachment.getClearValue().setG(clearColor.g);
-                renderPassColorAttachment.getClearValue().setB(clearColor.b);
-                renderPassColorAttachment.getClearValue().setA(clearColor.a);
+                components.renderPassColorAttachment.getClearValue().setR(clearColor.r);
+                components.renderPassColorAttachment.getClearValue().setG(clearColor.g);
+                components.renderPassColorAttachment.getClearValue().setB(clearColor.b);
+                components.renderPassColorAttachment.getClearValue().setA(clearColor.a);
             } else {
-                renderPassColorAttachment.setLoadOp(WGPULoadOp.Load);
+                components.renderPassColorAttachment.setLoadOp(WGPULoadOp.Load);
             }
 
             if (outTexture == null) {
                 if (sampleCount > 1) {
-                    renderPassColorAttachment.setView(webgpu.getMultiSamplingTexture().getTextureView());
-                    renderPassColorAttachment.setResolveTarget(webgpu.getTargetView());
+                    components.renderPassColorAttachment.setView(webgpu.getMultiSamplingTexture().getTextureView());
+                    components.renderPassColorAttachment.setResolveTarget(webgpu.getTargetView());
                 } else {
-                    renderPassColorAttachment.setView(webgpu.getTargetView());
-                    renderPassColorAttachment.setResolveTarget(null);
+                    components.renderPassColorAttachment.setView(webgpu.getTargetView());
+                    components.renderPassColorAttachment.setResolveTarget(null);
                 }
                 colorFormat = webgpu.getSurfaceFormat();
 
             } else {
-                renderPassColorAttachment.setView(outTexture.getTextureView());
-                renderPassColorAttachment.setResolveTarget(null);
+                components.renderPassColorAttachment.setView(outTexture.getTextureView());
+                components.renderPassColorAttachment.setResolveTarget(null);
                 colorFormat = outTexture.getFormat();
                 sampleCount = 1;
             }
 
-            colorAttachments.push_back(renderPassColorAttachment);
+            components.colorAttachments.push_back(components.renderPassColorAttachment);
         } else {
             sampleCount = 1;
         }
-        renderPassDescriptor.setColorAttachments(colorAttachments);
+        components.renderPassDescriptor.setColorAttachments(components.colorAttachments);
 
         if (passType != RenderPassType.NO_DEPTH) {
-            depthStencilAttachment.setDepthClearValue(1.0f);
-            depthStencilAttachment.setDepthLoadOp( clearDepth ? WGPULoadOp.Clear : WGPULoadOp.Load);
+            components.depthStencilAttachment.setDepthClearValue(1.0f);
+            components.depthStencilAttachment.setDepthLoadOp( clearDepth ? WGPULoadOp.Clear : WGPULoadOp.Load);
             //depthStencilAttachment.setDepthLoadOp(passType == RenderPassType.COLOR_PASS_AFTER_DEPTH_PREPASS ? WGPULoadOp.Load : WGPULoadOp.Clear);
-            depthStencilAttachment.setDepthStoreOp(WGPUStoreOp.Store);
-            depthStencilAttachment.setDepthReadOnly(false);
-            depthStencilAttachment.setStencilClearValue(0);
-            depthStencilAttachment.setStencilLoadOp(WGPULoadOp.Undefined);
-            depthStencilAttachment.setStencilStoreOp(WGPUStoreOp.Undefined);
-            depthStencilAttachment.setStencilReadOnly(true);
+            components.depthStencilAttachment.setDepthStoreOp(WGPUStoreOp.Store);
+            components.depthStencilAttachment.setDepthReadOnly(false);
+            components.depthStencilAttachment.setStencilClearValue(0);
+            components.depthStencilAttachment.setStencilLoadOp(WGPULoadOp.Undefined);
+            components.depthStencilAttachment.setStencilStoreOp(WGPUStoreOp.Undefined);
+            components.depthStencilAttachment.setStencilReadOnly(true);
 
-            depthStencilAttachment.setView(depthTexture.getTextureView());
+            components.depthStencilAttachment.setView(depthTexture.getTextureView());
 
-            renderPassDescriptor.setDepthStencilAttachment(depthStencilAttachment);
+            components.renderPassDescriptor.setDepthStencilAttachment(components.depthStencilAttachment);
         }
 
         GPUTimer timer = gfx.getContext().getGPUTimer();
@@ -171,24 +180,27 @@ public class RenderPassBuilder {
             query.setBeginningOfPassWriteIndex(timer.getStartIndex());  // get offset for this render pass's start time
             query.setEndOfPassWriteIndex(timer.getStopIndex());
             query.setQuerySet(timer.getQuerySet());
-            renderPassDescriptor.setTimestampWrites(query);
+            components.renderPassDescriptor.setTimestampWrites(query);
         }
 
-        WGPURenderPassEncoder renderPass = new WGPURenderPassEncoder();
-        webgpu.encoder.beginRenderPass(renderPassDescriptor, renderPass);
+//      //  WGPURenderPassEncoder renderPass = new WGPURenderPassEncoder();
+//
 
-        WebGPURenderPass pass = new WebGPURenderPass(renderPass, renderPassDescriptor, passType, colorFormat, depthTexture.getFormat(), sampleCount,
+        components.renderPass = new WGPURenderPassEncoder();
+      //  webgpu.encoder.beginRenderPass(components.renderPassDescriptor, components.renderPass);
+
+        WebGPURenderPass pass = new WebGPURenderPass(components, passType, colorFormat, depthTexture.getFormat(), sampleCount,
                 outTexture == null ? Gdx.graphics.getWidth() : outTexture.getWidth(),
                 outTexture == null ? Gdx.graphics.getHeight() : outTexture.getHeight());
 
         // todo may change over time
-        Rectangle view = webgpu.getViewportRectangle();
-        pass.setViewport(view.x, view.y, view.width, view.height, 0, 1);
-
-        if(webgpu.isScissorEnabled()) {
-            Rectangle scissor = webgpu.getScissor();
-            pass.setScissorRect((int) scissor.x, (int) scissor.y, (int) scissor.width, (int) scissor.height);
-        }
+//        Rectangle view = webgpu.getViewportRectangle();
+//        pass.setViewport(view.x, view.y, view.width, view.height, 0, 1);
+//
+//        if(webgpu.isScissorEnabled()) {
+//            Rectangle scissor = webgpu.getScissor();
+//            pass.setScissorRect((int) scissor.x, (int) scissor.y, (int) scissor.width, (int) scissor.height);
+//        }
 
         return pass;
     }

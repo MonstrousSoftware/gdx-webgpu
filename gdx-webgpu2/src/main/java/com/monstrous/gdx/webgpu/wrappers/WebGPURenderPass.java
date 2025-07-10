@@ -18,13 +18,14 @@ package com.monstrous.gdx.webgpu.wrappers;
 
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.math.Rectangle;
 import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 
 
 public class WebGPURenderPass {
-    private final WGPURenderPassDescriptor renderPassDescriptor;
+    //private final WGPURenderPassDescriptor renderPassDescriptor;
     private final WGPURenderPassEncoder renderPass;                   // handle used by WebGPU
     public final RenderPassType type;
     private final WGPUTextureFormat textureFormat;
@@ -32,13 +33,15 @@ public class WebGPURenderPass {
     public int targetWidth, targetHeight;
     private int sampleCount;
     WebGPUContext webgpu;
+    RenderPassBuilder.DescriptorComponents components;
 
     // don't call this directly, use RenderPassBuilder.create()
-    WebGPURenderPass(WGPURenderPassEncoder renderPass, WGPURenderPassDescriptor descriptor, RenderPassType type, WGPUTextureFormat textureFormat, WGPUTextureFormat depthFormat, int sampleCount, int targetWidth, int targetHeight) {
+    WebGPURenderPass(RenderPassBuilder.DescriptorComponents components, RenderPassType type, WGPUTextureFormat textureFormat, WGPUTextureFormat depthFormat, int sampleCount, int targetWidth, int targetHeight) {
         super();
 
-        this.renderPass = renderPass;
-        this.renderPassDescriptor = descriptor; // experimental
+        this.components = components;
+        this.renderPass = components.renderPass;
+        //this.renderPassDescriptor = descriptor; // experimental
         this.type = type;
         this.textureFormat = textureFormat;
         this.depthFormat = depthFormat;
@@ -50,9 +53,31 @@ public class WebGPURenderPass {
         webgpu = gfx.getContext();
     }
 
-//    public void begin() { // experimental
-//        webgpu.encoder.beginRenderPass(renderPassDescriptor, renderPass);
-//    }
+    public void begin() { // experimental
+        components.renderPassColorAttachment.reset();
+        components.renderPassColorAttachment.setView(webgpu.targetView);
+        components.renderPassColorAttachment.setResolveTarget(null);
+        components.renderPassColorAttachment.setLoadOp(WGPULoadOp.Clear);
+        components.renderPassColorAttachment.setStoreOp(WGPUStoreOp.Store);
+        components.renderPassColorAttachment.getClearValue().setColor(0.9f, 0.1f, 0.2f, 1.0f);
+
+        components.colorAttachments.clear();
+        components.colorAttachments.push_back(components.renderPassColorAttachment);
+        components.renderPassDescriptor.reset();
+        components.renderPassDescriptor.setColorAttachments(components.colorAttachments);
+        components.renderPassDescriptor.setDepthStencilAttachment(components.depthStencilAttachment);
+        components.renderPassDescriptor.setTimestampWrites(null);
+
+        webgpu.encoder.beginRenderPass(components.renderPassDescriptor, renderPass);
+
+        Rectangle view = webgpu.getViewportRectangle();
+        setViewport(view.x, view.y, view.width, view.height, 0, 1);
+
+        if(webgpu.isScissorEnabled()) {
+            Rectangle scissor = webgpu.getScissor();
+            setScissorRect((int) scissor.x, (int) scissor.y, (int) scissor.width, (int) scissor.height);
+        }
+    }
 
     public void end() {
         renderPass.end();
