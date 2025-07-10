@@ -29,6 +29,7 @@ import com.badlogic.gdx.graphics.glutils.HdpiMode;
 import com.badlogic.gdx.graphics.glutils.HdpiUtils;
 import com.badlogic.gdx.math.GridPoint2;
 import com.github.xpenatan.webgpu.WGPUBackendType;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.GLFW;
@@ -39,6 +40,7 @@ import java.io.PrintStream;
 import java.nio.IntBuffer;
 
 public class WgDesktopApplicationConfiguration extends WgDesktopWindowConfiguration {
+
 	public static PrintStream errorStream = System.err;
 
 	boolean disableAudio = false;
@@ -62,7 +64,7 @@ public class WgDesktopApplicationConfiguration extends WgDesktopWindowConfigurat
 	boolean pauseWhenMinimized = true;
 	boolean pauseWhenLostFocus = false;
 
-	public WGPUBackendType backend;// = WGPUBackendType.Undefined;	// webgpu backend, e.g. Vulkan, DX12, etc.
+	public WebGPUContext.Backend backend = WebGPUContext.Backend.DEFAULT;// webgpu backend, e.g. Vulkan, DX12, etc.
 	public boolean enableGPUtiming = false;
 
 	String preferencesDirectory = ".prefs/";

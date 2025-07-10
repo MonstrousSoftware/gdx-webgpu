@@ -6,6 +6,17 @@ import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.wrappers.GPUTimer;
 
 public abstract class WebGPUContext {
+    public static enum Backend {
+        DEFAULT,
+        D3D11,
+        D3D12,
+        METAL,
+        OPENGL,
+        OPENGL_ES,
+        VULKAN,
+        WEBGPU
+    }
+
     public WGPUInstance instance;
     public WGPUAdapter adapter;
     public WGPUDevice device;

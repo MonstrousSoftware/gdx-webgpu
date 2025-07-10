@@ -42,9 +42,9 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
         public int numSamples;
         public boolean vSyncEnabled;
         public boolean gpuTimingEnabled;
-        public WGPUBackendType requestedBackendType;
+        public Backend requestedBackendType;
 
-        public Configuration(long windowHandle, int numSamples, boolean vSyncEnabled, boolean gpuTimingEnabled, WGPUBackendType requestedBackendType) {
+        public Configuration(long windowHandle, int numSamples, boolean vSyncEnabled, boolean gpuTimingEnabled, Backend requestedBackendType) {
             this.windowHandle = windowHandle;
             this.numSamples = numSamples;
             this.vSyncEnabled = vSyncEnabled;
@@ -130,7 +130,7 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
 
     private void requestAdapter() {
         WGPURequestAdapterOptions op = WGPURequestAdapterOptions.obtain();
-        //op.setBackendType(WGPUBackendType.Vulkan);
+        op.setBackendType(convertBackendType(config.requestedBackendType));
         RequestAdapterCallback callback = new RequestAdapterCallback() {
             @Override
             protected void onCallback(WGPURequestAdapterStatus status, WGPUAdapter adapter) {
@@ -574,5 +574,22 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
         InitState(int status) {
             this.status = status;
         }
+    }
+
+    public WGPUBackendType convertBackendType(Backend backend){
+        WGPUBackendType type;
+        switch(backend){
+
+            case D3D11: type = WGPUBackendType.D3D11; break;
+            case D3D12: type = WGPUBackendType.D3D12; break;
+            case METAL: type = WGPUBackendType.Metal; break;
+            case OPENGL: type = WGPUBackendType.OpenGL; break;
+            case OPENGL_ES: type = WGPUBackendType.OpenGLES; break;
+            case VULKAN: type = WGPUBackendType.Vulkan; break;
+            case DEFAULT:
+            default:
+                        type = WGPUBackendType.Undefined; break;
+        }
+        return type;
     }
 }

@@ -112,7 +112,7 @@ public class WgDesktopGraphics extends WgGraphics implements Disposable {
             app.getConfiguration().samples,
 			app.getConfiguration().vSyncEnabled,
             app.getConfiguration().enableGPUtiming,
-            null );//app.getConfiguration().backend);
+            app.getConfiguration().backend );
 
 
 		this.context = new WebGPUApplication2(config);

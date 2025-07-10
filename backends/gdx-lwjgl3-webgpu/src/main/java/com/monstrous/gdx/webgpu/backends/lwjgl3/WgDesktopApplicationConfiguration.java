@@ -39,6 +39,8 @@ import java.io.PrintStream;
 import java.nio.IntBuffer;
 
 public class WgDesktopApplicationConfiguration extends WgDesktopWindowConfiguration {
+
+
 	public static PrintStream errorStream = System.err;
 
 	boolean disableAudio = false;
@@ -62,7 +64,7 @@ public class WgDesktopApplicationConfiguration extends WgDesktopWindowConfigurat
 	boolean pauseWhenMinimized = true;
 	boolean pauseWhenLostFocus = false;
 
-	public WGPUBackendType backend = WGPUBackendType.Undefined;	// webgpu backend, e.g. Vulkan, DX12, etc.
+	public Backend backend = Backend.DEFAULT;	// webgpu backend, e.g. Vulkan, DX12, etc.
 	public boolean enableGPUtiming = false;
 
 	String preferencesDirectory = ".prefs/";

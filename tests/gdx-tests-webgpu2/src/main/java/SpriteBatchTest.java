@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.github.xpenatan.webgpu.WGPUBackendType;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopApplication;
 import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopApplicationConfiguration;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
@@ -38,8 +39,8 @@ public class SpriteBatchTest extends ApplicationAdapter {
         WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
         config.setWindowedMode(640, 480);
         config.setTitle("WebGPUTest");
-        //config.backend = WGPUBackendType.Vulkan;
-        //config.backend = WGPUBackendType.D3D12;
+        config.backend = WebGPUContext.Backend.VULKAN;
+
         config.enableGPUtiming = false;
         config.useVsync(false);
 
