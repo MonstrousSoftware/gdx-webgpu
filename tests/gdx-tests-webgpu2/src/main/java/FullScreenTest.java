@@ -35,6 +35,7 @@ public class FullScreenTest extends ApplicationAdapter {
 
     @Override
     public void render () {
+        //System.out.println("render");
 
         if(Gdx.input.isKeyPressed(Input.Keys.ESCAPE)){
             Gdx.app.exit();
@@ -49,6 +50,7 @@ public class FullScreenTest extends ApplicationAdapter {
                 savedHeight = Gdx.graphics.getHeight();
                 Gdx.graphics.setFullscreenMode(currentMode);
             }
+            return;
         }
 
         viewport.apply();
@@ -65,6 +67,8 @@ public class FullScreenTest extends ApplicationAdapter {
     @Override
     public void resize (int width, int height) {
        Gdx.app.log("resize", "");
+       if(width ==0 || height == 0)
+           return;
        viewport.update(width, height, true);
     }
 

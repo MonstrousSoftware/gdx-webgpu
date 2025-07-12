@@ -73,14 +73,17 @@ public class WgDesktopGraphics extends WgGraphics implements Disposable {
 		@Override
 		public void invoke (long windowHandle, final int width, final int height) {
 			if (!"glfw_async".equals(Configuration.GLFW_LIBRARY_NAME.get())) {
+                System.out.println("resize callback");
 				updateFramebufferInfo();
 				if (!window.isListenerInitialized()) {
 					return;
 				}
 				window.makeCurrent();
+                System.out.println("set viewport: 0,0, "+backBufferWidth+", "+backBufferHeight);
 				context.setViewportRectangle(0, 0, backBufferWidth, backBufferHeight);
 				window.getListener().resize(getWidth(), getHeight());
 				update();
+                System.out.println("context resize");
 				context.resize(getWidth(), getHeight());
 				//window.renderFrame();
 				// window.getListener().render();
@@ -427,6 +430,9 @@ public class WgDesktopGraphics extends WgGraphics implements Disposable {
 
 	@Override
 	public boolean setFullscreenMode (DisplayMode displayMode) {
+        System.out.println("setFullScreenMode()");
+
+
 		window.getInput().resetPollingStates();
 		WebGPUDisplayMode newMode = (WebGPUDisplayMode)displayMode;
 		if (isFullscreen()) {
@@ -446,6 +452,11 @@ public class WgDesktopGraphics extends WgGraphics implements Disposable {
 			// switch from windowed to fullscreen
 			GLFW.glfwSetWindowMonitor(window.getWindowHandle(), newMode.getMonitor(), 0, 0, newMode.width, newMode.height,
 				newMode.refreshRate);
+
+
+
+            System.out.println("setFullScreenMode: set viewport: 0,0, "+backBufferWidth+", "+backBufferHeight);
+            context.setViewportRectangle(0, 0, backBufferWidth, backBufferHeight);
 		}
 		updateFramebufferInfo();
 

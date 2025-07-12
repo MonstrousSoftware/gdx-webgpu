@@ -409,7 +409,12 @@ public class WgDesktopWindow implements Disposable {
 		if (!iconified) input.update();
 
 		synchronized (this) {
-			shouldRender |= requestRendering && !iconified;
+            // original libgdx code:
+            //shouldRender |= requestRendering && !iconified;
+
+            // don't render when iconified
+            shouldRender |= requestRendering;
+            shouldRender &= !iconified;
 			requestRendering = false;
 		}
 
@@ -420,19 +425,13 @@ public class WgDesktopWindow implements Disposable {
 			// graphics.gl20.glViewport(0, 0, graphics.getBackBufferWidth(), graphics.getBackBufferHeight());
 			listener.resize(graphics.getWidth(), graphics.getHeight());
 			graphics.update();
-			// listener.render();
-			// GLFW.glfwSwapBuffers(windowHandle);
-			//renderFrame();
 			return true;
 		}
 
 		if (shouldRender) {
 			graphics.update();
-			// listener.render();
-			graphics.context.renderFrame(listener);
-
-			// GLFW.glfwSwapBuffers(windowHandle);
-		}
+    	    graphics.context.renderFrame(listener);
+        }
 
 		if (!iconified) input.prepareNext();
 

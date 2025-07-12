@@ -333,6 +333,7 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
 
         System.out.println("init depth buffer");
         initDepthBuffer(width, height, config.numSamples);
+        System.out.println("got new  depth buffer");
 
         if(config.numSamples > 1 ) {
             System.out.println("renew multisampling texture");
