@@ -39,8 +39,8 @@ import com.monstrous.gdx.webgpu.application.WgGraphics;
 public class WebGPUBuffer implements Disposable {
     protected WGPUBuffer buffer;
     private final int bufferSize;
-    protected WgGraphics gfx;
-    protected WebGPUContext webgpu;
+    private WgGraphics gfx;
+    private WebGPUContext webgpu;
 
     public WebGPUBuffer(String label, WGPUBufferUsage usage, int bufferSize){
         gfx = (WgGraphics) Gdx.graphics;
@@ -69,6 +69,7 @@ public class WebGPUBuffer implements Disposable {
     public void write(int destOffset, WGPUByteBuffer data){
         if(destOffset + data.getLimit() > bufferSize) throw new RuntimeException("Overflow in Buffer.write().");
         webgpu.queue.writeBuffer(buffer, destOffset, data);
+        log(data.getLimit());
     }
 
     @Override
@@ -76,5 +77,9 @@ public class WebGPUBuffer implements Disposable {
         buffer.release();
         // todo buffer.destroy();
         buffer = null;
+    }
+
+    private void log(int bytesWritten){
+        //System.out.println("buffer write: "+bytesWritten);
     }
 }

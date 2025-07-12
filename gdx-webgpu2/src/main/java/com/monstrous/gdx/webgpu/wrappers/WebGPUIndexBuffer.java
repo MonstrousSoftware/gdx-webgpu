@@ -64,7 +64,7 @@ public class WebGPUIndexBuffer extends WebGPUBuffer {
         for(int i = 0; i < indexCount; i++){
             iData.put(indices[i+srcOffset]);
         }
-        webgpu.queue.writeBuffer(buffer, bufferOffset, byteBuffer);
+        write(bufferOffset, byteBuffer);
     }
 
     public void setIndices(int bufferOffset, int[] indices, int indexCount){
@@ -77,7 +77,7 @@ public class WebGPUIndexBuffer extends WebGPUBuffer {
         for(int i = 0; i < indexCount; i++){
             iData.put(indices[i]);
         }
-        webgpu.queue.writeBuffer(buffer, bufferOffset, byteBuffer);
+        write(bufferOffset, byteBuffer);
     }
 
     public void setIndices(Array<Integer> indexValues) {
@@ -100,7 +100,7 @@ public class WebGPUIndexBuffer extends WebGPUBuffer {
                 iData.put(indexValues.get(i));
             }
         }
-        webgpu.queue.writeBuffer(buffer, 0, byteBuffer);
+        write(0, byteBuffer);
     }
 
     public void setIndices(WGPUByteBuffer byteData) {
@@ -110,7 +110,7 @@ public class WebGPUIndexBuffer extends WebGPUBuffer {
         if(sizeInBytes > getSize()) throw new IllegalArgumentException("IndexBuffer.setIndices: data too large.");
 
         // Upload data to the buffer
-        webgpu.queue.writeBuffer(buffer, 0, byteData);      // todo sizeInBytes not supported
+        write( 0, byteData);      // todo sizeInBytes not supported
     }
 
     /** fill index buffer with raw data. */
@@ -119,6 +119,6 @@ public class WebGPUIndexBuffer extends WebGPUBuffer {
         if(bufferOffset + indexBufferSize > getSize()) throw new IllegalArgumentException("IndexBuffer.setIndices: data too large.");
 
         // Upload data to the buffer
-        webgpu.queue.writeBuffer(buffer, bufferOffset, idata);
+        write(bufferOffset, idata);
     }
 }

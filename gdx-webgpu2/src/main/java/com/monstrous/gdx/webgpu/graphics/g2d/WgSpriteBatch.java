@@ -68,6 +68,7 @@ public class WgSpriteBatch implements Batch {
     private final Map<WGPUBlendFactor, Integer> blendGLConstantMap = new HashMap<>(); // vice versa
     private final Binder binder;
     private static String defaultShader;
+    private boolean mustUpdateMatrices = true;  // to save a buffer write if the matrix is unchanged
 
     public WgSpriteBatch() {
         this(1000); // default nr
@@ -319,7 +320,7 @@ public class WgSpriteBatch implements Batch {
         maxSpritesInBatch = 0;
         renderCalls = 0;
         numFlushes = 0;
-        uniformBuffer.setDynamicOffsetIndex(numFlushes);
+        //uniformBuffer.setDynamicOffsetIndex(numFlushes);
 
         prevPipeline = null;
 
@@ -352,6 +353,8 @@ public class WgSpriteBatch implements Batch {
     }
 
     public void flush() {
+
+
         if(numSprites == 0)
             return;
         if(numSprites > maxSpritesInBatch)
@@ -365,7 +368,11 @@ public class WgSpriteBatch implements Batch {
         setPipeline();
 
         // bind group
-        updateMatrices();
+
+        if(mustUpdateMatrices) {
+            updateMatrices();
+            mustUpdateMatrices = false;
+        }
         int dynamicOffset = numFlushes*uniformBuffer.getUniformStride();
         WebGPUBindGroup wbg = binder.getBindGroup(0);
         WGPUBindGroup bg = wbg.getBindGroup();
@@ -454,6 +461,7 @@ public class WgSpriteBatch implements Batch {
         if(drawing)
             flush();
         projectionMatrix.set(projection);
+        mustUpdateMatrices = true;
     }
 
     @Override
@@ -461,6 +469,7 @@ public class WgSpriteBatch implements Batch {
         if(drawing)
             flush();
         transformMatrix.set(transform);
+        mustUpdateMatrices = true;
     }
 
     @Override
@@ -994,6 +1003,8 @@ public class WgSpriteBatch implements Batch {
         uniformBufferSize = 16 * Float.BYTES;
         uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize,WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Uniform), maxFlushes  );
     }
+
+    private Matrix4 prevMatrix = new Matrix4();
 
     private void updateMatrices(){
         combinedMatrix.set(shiftDepthMatrix).mul(projectionMatrix).mul(transformMatrix);
