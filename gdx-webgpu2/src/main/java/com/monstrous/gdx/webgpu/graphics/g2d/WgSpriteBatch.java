@@ -369,10 +369,10 @@ public class WgSpriteBatch implements Batch {
 
         // bind group
 
-        if(mustUpdateMatrices) {
+        //if(mustUpdateMatrices) {
             updateMatrices();
-            mustUpdateMatrices = false;
-        }
+        //    mustUpdateMatrices = false;
+        //}
         int dynamicOffset = numFlushes*uniformBuffer.getUniformStride();
         WebGPUBindGroup wbg = binder.getBindGroup(0);
         WGPUBindGroup bg = wbg.getBindGroup();

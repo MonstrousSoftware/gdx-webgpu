@@ -175,6 +175,9 @@ public class WebGPUBindGroup implements Disposable {
             bindGroup.dispose();
             bindGroup = null;
         }
+        for (int i = 0; i < numEntries; i++) {
+            entryArray[i].dispose();
+        }
         bindGroupDescriptor.dispose();
     }
 
