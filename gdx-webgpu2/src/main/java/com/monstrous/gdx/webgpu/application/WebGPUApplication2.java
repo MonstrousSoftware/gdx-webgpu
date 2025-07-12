@@ -353,9 +353,9 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
         //         make sure we get a target view from the new swap chain
         //         to present at the end of this frame
         // commented out because of error:   Surface image is already acquired
-//        if(targetView != null)
-//            targetView.release();
-//        targetView = getNextSurfaceTextureView();
+        if(targetView != null)
+            targetView.release();
+        targetView = getNextSurfaceTextureView();
     }
 
     public void setViewportRectangle(int x, int y, int w, int h){
@@ -412,10 +412,14 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
     }
 
     private void exitSwapChain(){
-        //System.out.println("exitSwapChain");
+        System.out.println("exitSwapChain");
         if(surface != null)
             surface.unconfigure();
+    }
 
+    public void drop(){
+        terminateDepthBuffer();
+        exitSwapChain();
     }
 
     private void initDepthBuffer(int width, int height, int samples){
