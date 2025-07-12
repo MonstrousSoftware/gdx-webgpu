@@ -138,5 +138,8 @@ Most of the 2d classes have been ported (in the sense that it compiles), however
 - 
 - Fixed: crash on switching textures in sprite batch (reuse of bind group). Was due to entries being disposed after creating bind group (they were being reused).
 
+todo: crash on launch another application window (e.g. TestStarter): Caused by:
+Surface image is already acquired
+
 
 	

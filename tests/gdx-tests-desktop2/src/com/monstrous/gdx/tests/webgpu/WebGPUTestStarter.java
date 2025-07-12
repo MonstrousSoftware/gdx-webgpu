@@ -99,7 +99,7 @@ public class WebGPUTestStarter {
 							((WgDesktopGraphics)Gdx.graphics).getWindow().getPositionY() + 40);
 						winConfig.useVsync(false);
 						Gdx.app.setLogLevel(Application.LOG_DEBUG);
-						((WgDesktopApplication)Gdx.app).newWindow(new GdxTestWrapper(test, false), winConfig);
+						((WgDesktopApplication)Gdx.app).newWindow(test, winConfig);
 						System.out.println("Started test: " + testName);
 						prefs.putString("LastTest", testName);
 						prefs.flush();

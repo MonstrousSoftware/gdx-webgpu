@@ -67,4 +67,6 @@ public abstract class WebGPUContext {
     public abstract GPUTimer getGPUTimer();
     public abstract float getAverageGPUtime(int pass);
 
+
+    public abstract void resize(int width, int height);
 }

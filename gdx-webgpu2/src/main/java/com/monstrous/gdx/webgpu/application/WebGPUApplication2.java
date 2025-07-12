@@ -36,6 +36,8 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
     private int width, height;
     private final WGPUCommandBuffer command;
     private final float[] gpuTime = new float[GPUTimer.MAX_PASSES];
+    private boolean mustResize = false;
+    private int newWidth, newHeight;    // for resize
 
     public static class Configuration {
         public long windowHandle;
@@ -240,12 +242,14 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
 
 
     public void renderFrame (ApplicationListener listener) {
-        if(targetView == null)
-            targetView = getNextSurfaceTextureView();
-        if (targetView == null) {
-            System.out.println("*** Invalid target view");
-            return;
+        if(mustResize){
+            doResize(newWidth, newHeight);
+            listener.resize(newWidth, newHeight);
+            mustResize = false;
         }
+
+        targetView = getNextSurfaceTextureView();
+
 
         WGPUCommandEncoderDescriptor encoderDesc = WGPUCommandEncoderDescriptor.obtain();
         encoderDesc.setLabel("The Command Encoder");
@@ -275,8 +279,16 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
         if(WGPU.getPlatformType() != WGPUPlatformType.WGPU_Web) {
             surface.present();
         }
+
     }
 
+
+
+    public void resize(int width, int height){
+        mustResize = true;
+        this.newWidth = width;
+        this.newHeight = height;
+    }
 
     public void update() {
         if(instance != null) {
@@ -289,12 +301,13 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
 
 
     private WGPUTextureView getNextSurfaceTextureView() {
-        WGPUTextureView textureViewOut = WGPUTextureView.obtain();
+        WGPUTextureView textureViewOut = new WGPUTextureView();
         WGPUSurfaceTexture surfaceTextureOut = WGPUSurfaceTexture.obtain();
         surface.getCurrentTexture(surfaceTextureOut);
 
         WGPUTexture textureOut = WGPUTexture.obtain();
         surfaceTextureOut.getTexture(textureOut);
+        //surfaceTextureOut.dispose();
 
         WGPUTextureFormat textureFormat = textureOut.getFormat();
 
@@ -309,26 +322,27 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
         viewDescriptor.setAspect(WGPUTextureAspect.All);
 
         textureOut.createView(viewDescriptor, textureViewOut);
-        textureOut.release();
+        // not on WGPU: textureOut.release();
         return textureViewOut;
     }
 
-    public void resize(int width, int height){
+    // Note that normally resize() is called from outside renderFrame(), e.g. targetView is null.
+    // If resize is called from within renderFrame() i.e. from ApplicationListener.render()
+    // then there may be problems.
+    // This also (?) applies for calling newWindow()
+    //
+    public void doResize(int width, int height){
         System.out.println("resize: "+width+" x "+height);
 
         if(width * height == 0 )   // on minimize, don't create zero sized textures
             return;
+
         terminateDepthBuffer();
-
-        // on full-screen we get fatal error: `SurfaceOutput` must be dropped before a new `Surface` is made
-        if(targetView != null) {
-            targetView.release();
-            targetView.dispose();
-
-        }
-
         exitSwapChain();
         System.out.println("starting new swap chain");
+        if(targetView != null) {
+            targetView.release();
+        }
         initSwapChain(width, height, config.vSyncEnabled);
 
         System.out.println("init depth buffer");
@@ -353,9 +367,13 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
         //         make sure we get a target view from the new swap chain
         //         to present at the end of this frame
         // commented out because of error:   Surface image is already acquired
-        if(targetView != null)
-            targetView.release();
-        targetView = getNextSurfaceTextureView();
+
+        // the target view is no longer valid because the surface has changed
+//        if(targetView != null) {
+//            targetView.release();
+//            targetView = null;
+//        }
+//        targetView = getNextSurfaceTextureView();
     }
 
     public void setViewportRectangle(int x, int y, int w, int h){
@@ -399,6 +417,7 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
 
 
     private void initSwapChain(int width, int height, boolean vsyncEnabled) {
+
         WGPUSurfaceConfiguration config = WGPUSurfaceConfiguration.obtain();
         config.setWidth(width);
         config.setHeight(height);
@@ -413,8 +432,7 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
 
     private void exitSwapChain(){
         System.out.println("exitSwapChain");
-        if(surface != null)
-            surface.unconfigure();
+        surface.unconfigure();
     }
 
     public void drop(){

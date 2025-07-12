@@ -7,6 +7,7 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.monstrous.gdx.webgpu.application.WebGPUApplication2;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopApplication;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
@@ -55,6 +56,7 @@ public class FullScreenTest extends ApplicationAdapter {
             }
             return;
         }
+
 
         viewport.apply();
         batch.setProjectionMatrix(viewport.getCamera().combined);

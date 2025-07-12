@@ -79,19 +79,11 @@ public class WgDesktopGraphics extends WgGraphics implements Disposable {
 					return;
 				}
 				window.makeCurrent();
-                System.out.println("set viewport: 0,0, "+backBufferWidth+", "+backBufferHeight);
-				context.setViewportRectangle(0, 0, backBufferWidth, backBufferHeight);
-				window.getListener().resize(getWidth(), getHeight());
-				update();
                 System.out.println("context resize");
 				context.resize(getWidth(), getHeight());
-				//window.renderFrame();
-				// window.getListener().render();
-				// GLFW.glfwSwapBuffers(windowHandle);
 			} else {
 				window.asyncResized = true;
                 System.out.println("Window.async resized");
-
 			}
 		}
 	};
@@ -449,7 +441,7 @@ public class WgDesktopGraphics extends WgGraphics implements Disposable {
 			// store window position so we can restore it when switching from fullscreen to windowed later
 			storeCurrentWindowPositionAndDisplayMode();
 
-            context.drop(); // TEST
+            //context.drop(); // TEST
 
             System.out.println("calling glfwSetWindowMonitor()");
 			// switch from windowed to fullscreen
