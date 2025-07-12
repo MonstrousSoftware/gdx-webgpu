@@ -49,30 +49,31 @@ public class WebGPUBindGroup implements Disposable {
     private final Map<Integer, Integer> bindingIndex;       // array index per bindingId (bindingId's can skip numbers)
     private final WGPUBindGroupEntry[] entryArray;
     private final int numEntries;
-    private boolean dirty;  // has an entry changed?
-
+    private boolean dirty;  // has an entry changed? Then we need to rebuild the bind group
 
     public WebGPUBindGroup(WebGPUBindGroupLayout layout) {
         WgGraphics gfx = (WgGraphics) Gdx.graphics;
         webgpu = gfx.getContext();
 
+        // Create an array of BindGroupEntry,since we know from the layout how many entries we need
+        //
         numEntries = layout.getEntryCount();
         entryArray = new WGPUBindGroupEntry[numEntries];
-
-        // Create a bind group descriptor and an array of BindGroupEntry
-        //
-        bindGroupDescriptor = WGPUBindGroupDescriptor.obtain();
-        bindGroupDescriptor.setNextInChain(null);
-        bindGroupDescriptor.setLayout(layout.getLayout());
-
-        bindingIndex = new HashMap<>();
-
         for (int i = 0; i < numEntries; i++) {
-            // don't use obtain because the entries will overwrite each other
+            // don't use obtain() because the entries would then overwrite each other
             WGPUBindGroupEntry entry = new WGPUBindGroupEntry();
             setDefault(entry);
             entryArray[i] = entry;
         }
+
+        // Create a reusable bind group descriptor
+        //
+        bindGroupDescriptor = new WGPUBindGroupDescriptor();
+        bindGroupDescriptor.setNextInChain(null);
+        bindGroupDescriptor.setLayout(layout.getLayout());
+
+
+        bindingIndex = new HashMap<>();
     }
 
     public void begin() {
@@ -145,18 +146,17 @@ public class WebGPUBindGroup implements Disposable {
                 bindGroup.release();
                 bindGroup.dispose();
             }
+
             WGPUVectorBindGroupEntry entryVector = WGPUVectorBindGroupEntry.obtain();
             for (int i = 0; i < numEntries; i++) {
                 entryVector.push_back(entryArray[i]);
             }
             //System.out.println("Creating bind group");
+
             bindGroupDescriptor.setEntries(entryVector);
             bindGroup = new WGPUBindGroup();
             webgpu.device.createBindGroup(bindGroupDescriptor, bindGroup);
             dirty = false;
-            for (int i = 0; i < numEntries; i++) {
-                entryArray[i].dispose();
-            }
         }
         return bindGroup;
     }
@@ -175,6 +175,7 @@ public class WebGPUBindGroup implements Disposable {
             bindGroup.dispose();
             bindGroup = null;
         }
+        bindGroupDescriptor.dispose();
     }
 
 }

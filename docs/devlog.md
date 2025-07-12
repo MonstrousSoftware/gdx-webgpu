@@ -130,5 +130,13 @@ WgTexture.  SuperKoalio demo works now.
 
 08/07: Shadows working.
 
+12/07: Doing the migration to use the jWebGOU backend which should allow multi-platform support, uses a newer WebGPU version and has a much nicer interface.
+Most of the 2d classes have been ported (in the sense that it compiles), however with some serious bugs. Some may be due how WGPU exhibits different behaviour from Dawn.
+
+- Fixed: crash on minimize.
+- todo: crash on full-screen
+- 
+- Fixed: crash on switching textures in sprite batch (reuse of bind group). Was due to entries being disposed after creating bind group (they were being reused).
+
 
 	

@@ -17,6 +17,7 @@ import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 public class HelloTexture extends ApplicationAdapter {
 
     private Texture texture;
+    private Texture texture2;
     private WgSpriteBatch batch;
 
     public static void main(String[] argv) {
@@ -26,6 +27,7 @@ public class HelloTexture extends ApplicationAdapter {
     @Override
     public void create() {
         texture = new WgTexture(Gdx.files.internal("data/badlogic.jpg"));
+        texture2 = new WgTexture(Gdx.files.internal("data/stones.jpg"));
         batch = new WgSpriteBatch();
 
     }
@@ -34,7 +36,7 @@ public class HelloTexture extends ApplicationAdapter {
     public void render() {
         batch.begin();
         batch.draw(texture, 0, 0);
-        batch.draw(texture, 300, 100);
+        batch.draw(texture2, 300, 100);
         batch.end();
 
     }
@@ -48,6 +50,7 @@ public class HelloTexture extends ApplicationAdapter {
     public void dispose(){
         batch.dispose();
         texture.dispose();
+        texture2.dispose();
     }
 
 }

@@ -28,14 +28,17 @@ public class FullScreenTest extends ApplicationAdapter {
     @Override
     public void create () {
         batch = new WgSpriteBatch();
-//        font = new WgBitmapFont();
+        font = new WgBitmapFont();
         texture = new WgTexture("data/badlogic.jpg");
         viewport = new ScreenViewport();
+
+        // since the content is static we could use non-continuous rendering
+        Gdx.graphics.setContinuousRendering(false);
     }
 
     @Override
     public void render () {
-        //System.out.println("render");
+        System.out.println("render");
 
         if(Gdx.input.isKeyPressed(Input.Keys.ESCAPE)){
             Gdx.app.exit();
@@ -58,7 +61,7 @@ public class FullScreenTest extends ApplicationAdapter {
         batch.begin();
 
         batch.draw(texture, 100, 100);
-//        font.draw(batch, "Press F11 to toggle between window and full screen mode", 10, 70);
+        font.draw(batch, "Press F11 to toggle between window and full screen mode", 10, 70);
 
         batch.end();
     }
@@ -75,7 +78,7 @@ public class FullScreenTest extends ApplicationAdapter {
     @Override
     public void dispose () {
         batch.dispose();
-//        font.dispose();
+        font.dispose();
         texture.dispose();
     }
 

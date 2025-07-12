@@ -366,7 +366,10 @@ public class WgSpriteBatch implements Batch {
 
         // bind group
         updateMatrices();
-        renderPass.setBindGroup( 0, binder.getBindGroup(0).getBindGroup(), numFlushes*uniformBuffer.getUniformStride());
+        int dynamicOffset = numFlushes*uniformBuffer.getUniformStride();
+        WebGPUBindGroup wbg = binder.getBindGroup(0);
+        WGPUBindGroup bg = wbg.getBindGroup();
+        renderPass.setBindGroup( 0, bg, dynamicOffset );
 
         // append new vertex data to GPU vertex buffer
         int numBytes = numSprites * VERTS_PER_SPRITE * vertexSize;
