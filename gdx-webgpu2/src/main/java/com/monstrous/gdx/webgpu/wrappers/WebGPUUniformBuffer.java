@@ -23,10 +23,11 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.Vector4;
 import com.github.xpenatan.webgpu.WGPUBufferUsage;
-import com.github.xpenatan.webgpu.WGPUByteBuffer;
-import com.github.xpenatan.webgpu.WGPUFloatBuffer;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
 
 
 /** Uniform buffer, optionally to be used with dynamic offsets
@@ -49,7 +50,8 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
     private final int contentSize;
     private final int uniformStride;
     private final int maxSlices;
-    private final WGPUFloatBuffer floatData;
+    private final ByteBuffer dataBuf;
+    private final FloatBuffer floatData;
     private int dynamicOffsetIndex;
     private boolean dirty;
 
@@ -89,7 +91,8 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
         dirty = false;
 
         // working buffer in native memory to use as input to WriteBuffer
-        WGPUByteBuffer dataBuf = new WGPUByteBuffer(contentSize);
+        dataBuf = ByteBuffer.allocateDirect(contentSize);
+        dataBuf.order(ByteOrder.LITTLE_ENDIAN);
         floatData = dataBuf.asFloatBuffer();
         //floatData = new WGPUFloatBuffer(); (contentSize);       // native memory buffer for one slice to aid write buffer
     }
@@ -132,12 +135,12 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
     /* call this after any set or a sequence of sets to write the floatData to the GPU buffer */
     public void flush(){
         if(dirty) {
-            write(dynamicOffsetIndex * uniformStride, floatData.getByteBuffer());
+            write(dynamicOffsetIndex * uniformStride, dataBuf, contentSize);
             dirty = false;
         }
     }
 
-    public WGPUFloatBuffer getFloatData() {
+    public FloatBuffer getFloatData() {
         return floatData;
     }
 

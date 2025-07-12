@@ -26,6 +26,9 @@ import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.wrappers.*;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
 
 
 /** Immediate mode rendering class for WebGPU. The renderer will allow you to specify vertices on the fly and provides a default
@@ -55,7 +58,8 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 	private final PipelineSpecification pipelineSpec;
 	private WgTexture texture;
 	private WebGPURenderPass renderPass;
-	private final WGPUFloatBuffer vertexData;
+    private final ByteBuffer vertexBB;
+    private final FloatBuffer vertexData;
 	private WebGPUPipeline prevPipeline;
     private final WebGPUContext webgpu;
 
@@ -91,8 +95,8 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 
 		createBuffers();
 
-		WGPUByteBuffer vertexBB = new WGPUByteBuffer(maxVertices * vertexSize*Float.BYTES);
-		vertexBB.order(WGPUByteOrder.LittleEndian); // webgpu expects little endian data
+        vertexBB = ByteBuffer.allocateDirect(maxVertices * vertexSize * Float.BYTES);
+		vertexBB.order(ByteOrder.LITTLE_ENDIAN); // webgpu expects little endian data
         vertexData = vertexBB.asFloatBuffer();  // float view on the byte buffer
 
 
@@ -199,7 +203,7 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 
 		// copy vertex data to GPU vertex buffer
         //System.out.println("write buffer in imm mode rndr: size:"+numBytes+" byteData: "+vertexData.getByteBuffer().getLimit());
-        webgpu.queue.writeBuffer(vertexBuffer.getBuffer(), 0, vertexData.getByteBuffer());
+        webgpu.queue.writeBuffer(vertexBuffer.getBuffer(), 0, vertexBB, numBytes);
 
 		// Set vertex buffer while encoding the render pass
 		renderPass.setVertexBuffer( 0, vertexBuffer.getBuffer(), 0, numBytes);

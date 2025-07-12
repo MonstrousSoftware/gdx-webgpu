@@ -25,6 +25,7 @@ import com.github.xpenatan.webgpu.WGPUBufferUsage;
 import com.github.xpenatan.webgpu.WGPUByteBuffer;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
+import java.nio.ByteBuffer;
 
 // Formerly WebGPUBuffer
 // Is there still an added value wrt WebGPUBuffer?
@@ -70,6 +71,12 @@ public class WebGPUBuffer implements Disposable {
         if(destOffset + data.getLimit() > bufferSize) throw new RuntimeException("Overflow in Buffer.write().");
         webgpu.queue.writeBuffer(buffer, destOffset, data);
         log(data.getLimit());
+    }
+
+    public void write(int destOffset, ByteBuffer data, int sizeInBytes){
+        if(destOffset + sizeInBytes > bufferSize) throw new RuntimeException("Overflow in Buffer.write().");
+        webgpu.queue.writeBuffer(buffer, destOffset, data, sizeInBytes);
+        log(data.limit());
     }
 
     @Override
