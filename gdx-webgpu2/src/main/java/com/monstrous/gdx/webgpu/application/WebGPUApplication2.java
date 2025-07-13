@@ -72,7 +72,10 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
         while(!isReady())
             update();
 
+        System.out.println("Creating surface for window handle: "+config.windowHandle);
         surface = instance.createWindowsSurface(config.windowHandle);
+        System.out.println("surface:" + surface.toString());
+
 
         if(surface != null) {
             System.out.println("Surface created");
@@ -274,6 +277,7 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
         gpuTimer.fetchTimestamps();
 
         targetView.release();
+        targetView.dispose();
         targetView = null;
 
         if(WGPU.getPlatformType() != WGPUPlatformType.WGPU_Web) {
@@ -417,7 +421,7 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
 
 
     private void initSwapChain(int width, int height, boolean vsyncEnabled) {
-
+        System.out.println("initSwapChain");
         WGPUSurfaceConfiguration config = WGPUSurfaceConfiguration.obtain();
         config.setWidth(width);
         config.setHeight(height);
@@ -457,7 +461,9 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
 
     @Override
     public void dispose() {
+        terminateDepthBuffer();
         exitSwapChain();
+
         queue.dispose();
         device.dispose();
         gpuTimer.dispose();
@@ -465,7 +471,7 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
         surface.release();
         command.dispose();
 
-        terminateDepthBuffer();
+
     }
 
 

@@ -114,9 +114,6 @@ public class WgDesktopGraphics extends WgGraphics implements Disposable {
         this.webgpu = context;
 
 		context.resize(getWidth(), getHeight());
-       // context.setViewportRectangle(0, 0, getWidth(), getHeight());
-
-		// initiateGL();
 
 		GLFW.glfwSetFramebufferSizeCallback(window.getWindowHandle(), resizeCallback);
 	}

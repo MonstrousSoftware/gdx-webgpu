@@ -130,16 +130,21 @@ WgTexture.  SuperKoalio demo works now.
 
 08/07: Shadows working.
 
-12/07: Doing the migration to use the jWebGOU backend which should allow multi-platform support, uses a newer WebGPU version and has a much nicer interface.
+12/07: Doing the migration to use the jWebGPU backend which should allow multi-platform support, uses a newer WebGPU version and has a much nicer interface.
 Most of the 2d classes have been ported (in the sense that it compiles), however with some serious bugs. Some may be due how WGPU exhibits different behaviour from Dawn.
 
 - Fixed: crash on minimize.
-- todo: crash on full-screen
-- 
+
+- Fixed: crash on full-screen.  It gave problems when doing a resize from within the render loop for example because the surface 
+ out texture was still in use, e.g. when pressing F11. So now, calling
+resize will just set a flag and the actual resize is performed just before the render loop.
+
 - Fixed: crash on switching textures in sprite batch (reuse of bind group). Was due to entries being disposed after creating bind group (they were being reused).
 
 todo: crash on launch another application window (e.g. TestStarter): Caused by:
-Surface image is already acquired
+Surface is not configured for presentation
+
+todo: bitmapfont looks bad
 
 
 	

@@ -390,7 +390,13 @@ public class WgDesktopApplication implements Application {
 		WgDesktopApplicationConfiguration appConfig = WgDesktopApplicationConfiguration.copy(this.config);
 		appConfig.setWindowConfiguration(config);
 		if (appConfig.title == null) appConfig.title = listener.getClass().getSimpleName();
-		return createWindow(appConfig, listener);
+
+
+        WgDesktopWindow window =  createWindow(appConfig, listener);
+        WgDesktopWindow rootWindow = windows.get(0);
+        boolean same = window.getGraphics().context.surface == rootWindow.getGraphics().context.surface;
+        System.out.println("Surfaces are the same? :"+same);
+        return window;
 	}
 
 	private WgDesktopWindow createWindow (final WgDesktopApplicationConfiguration config, ApplicationListener listener) {
