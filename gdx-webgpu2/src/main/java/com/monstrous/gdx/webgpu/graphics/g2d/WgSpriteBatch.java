@@ -10,6 +10,7 @@ import com.badlogic.gdx.math.Affine2;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.utils.BufferUtils;
 import com.badlogic.gdx.utils.Null;
 import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
@@ -18,6 +19,9 @@ import com.monstrous.gdx.webgpu.graphics.Binder;
 import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.wrappers.*;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,8 +39,9 @@ public class WgSpriteBatch implements Batch {
     private final int maxSprites;
     private boolean drawing;
     private final int vertexSize;
-    private final WGPUByteBuffer vertexBB;
-    private final WGPUFloatBuffer vertexData;     // float buffer view on byte buffer
+    private final ByteBuffer vertexBB;
+    private final FloatBuffer vertexData;     // float buffer view on byte buffer
+
     public int numSprites;
     private final Color tint;
     private float tintPacked;
@@ -109,8 +114,8 @@ public class WgSpriteBatch implements Batch {
         fillIndexBuffer(maxSprites);
 
         // Create FloatBuffer to hold vertex data per batch, is reset every flush
-        vertexBB = new WGPUByteBuffer(maxSprites * VERTS_PER_SPRITE * vertexSize);
-        vertexBB.order(WGPUByteOrder.LittleEndian);
+        vertexBB = BufferUtils.newUnsafeByteBuffer(maxSprites * VERTS_PER_SPRITE * vertexSize);
+        vertexBB.order(ByteOrder.LITTLE_ENDIAN);
         // important, webgpu expects little endian.  ByteBuffer defaults to big endian.
         vertexData = vertexBB.asFloatBuffer();
 
@@ -380,8 +385,7 @@ public class WgSpriteBatch implements Batch {
 
         // append new vertex data to GPU vertex buffer
         int numBytes = numSprites * VERTS_PER_SPRITE * vertexSize;
-        vertexData.flip();  // switch from writing to reading
-        vertexBuffer.setVertices(vertexData.getByteBuffer(), vbOffset);
+        vertexBuffer.setVertices(vertexBB, vbOffset, numBytes);
 
         // Set vertex buffer while encoding the render pass
         // use an offset to set the vertex buffer for this batch
@@ -722,9 +726,7 @@ public class WgSpriteBatch implements Batch {
         int remaining = 20*(maxSprites - numSprites);
         if(numFloats > remaining)   // avoid buffer overflow by truncating as needed
             numFloats = remaining;
-        for(int i = 0; i < numFloats; i++) {
-            vertexData.put(spriteVertices[i+offset]);
-        }
+        vertexData.put(spriteVertices, offset, numFloats);
         numSprites += numFloats/20;
     }
 
@@ -1033,7 +1035,6 @@ public class WgSpriteBatch implements Batch {
         indexBuffer.dispose();
         uniformBuffer.dispose();
         bindGroupLayout.dispose();
-        vertexBB.dispose();
         //pipelineLayout.dispose();
 
     }

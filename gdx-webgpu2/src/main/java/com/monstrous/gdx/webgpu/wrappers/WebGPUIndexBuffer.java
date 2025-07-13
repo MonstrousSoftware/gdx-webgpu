@@ -3,6 +3,10 @@ package com.monstrous.gdx.webgpu.wrappers;
 
 import com.badlogic.gdx.utils.Array;
 import com.github.xpenatan.webgpu.*;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.IntBuffer;
+import java.nio.ShortBuffer;
 
 public class WebGPUIndexBuffer extends WebGPUBuffer {
 
@@ -59,12 +63,13 @@ public class WebGPUIndexBuffer extends WebGPUBuffer {
         this.indexCount = indexCount;
         int indexBufferSize = align(indexCount * indexSizeInBytes);
 
-        WGPUByteBuffer byteBuffer = WGPUByteBuffer.obtain(indexBufferSize);
-        WGPUShortBuffer iData = byteBuffer.asShortBuffer();
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(indexBufferSize);
+        byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+        ShortBuffer iData = byteBuffer.asShortBuffer();
         for(int i = 0; i < indexCount; i++){
             iData.put(indices[i+srcOffset]);
         }
-        write(bufferOffset, byteBuffer);
+        write(bufferOffset, byteBuffer, indexBufferSize);
     }
 
     public void setIndices(int bufferOffset, int[] indices, int indexCount){
@@ -72,12 +77,13 @@ public class WebGPUIndexBuffer extends WebGPUBuffer {
         this.indexCount = indexCount;
         int indexBufferSize = align(indexCount * indexSizeInBytes);
 
-        WGPUByteBuffer byteBuffer = WGPUByteBuffer.obtain(indexBufferSize);
-        WGPUIntBuffer iData = byteBuffer.asIntBuffer();
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(indexBufferSize);
+        byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+        IntBuffer iData = byteBuffer.asIntBuffer();
         for(int i = 0; i < indexCount; i++){
             iData.put(indices[i]);
         }
-        write(bufferOffset, byteBuffer);
+        write(bufferOffset, byteBuffer, indexBufferSize);
     }
 
     public void setIndices(Array<Integer> indexValues) {
@@ -88,19 +94,20 @@ public class WebGPUIndexBuffer extends WebGPUBuffer {
         indexCount = indexValues.size;
         int indexBufferSize = align(indexCount * indexSizeInBytes);
 
-        WGPUByteBuffer byteBuffer = WGPUByteBuffer.obtain(indexBufferSize);
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(indexBufferSize);
+        byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
         if (indexSizeInBytes == 2) {
-            WGPUShortBuffer iData = byteBuffer.asShortBuffer();
+            ShortBuffer iData = byteBuffer.asShortBuffer();
             for (int i = 0; i < indexCount; i++) {
                 iData.put(indexValues.get(i).shortValue());
             }
         } else if (indexSizeInBytes == 4) {
-            WGPUIntBuffer iData = byteBuffer.asIntBuffer();
+            IntBuffer iData = byteBuffer.asIntBuffer();
             for (int i = 0; i < indexCount; i++) {
                 iData.put(indexValues.get(i));
             }
         }
-        write(0, byteBuffer);
+        write(0, byteBuffer, indexBufferSize);
     }
 
     public void setIndices(WGPUByteBuffer byteData) {
