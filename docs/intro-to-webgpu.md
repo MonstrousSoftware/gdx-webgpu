@@ -7,13 +7,15 @@ But now and then you may want to dig a little deeper, and this introduction trie
 WebGPU needs to be set up for use when an application is started.  There are a number of steps involved.
 
 1. Obtain an Instance
+To work with WebGPU, first we need an Instance of WebGPU.  We need this in order to obtain a so-called Adapter.
+
 ```java
 	WGPUInstance instance = WGPU.createInstance();
 ```
 2. Obtain an Adapter
 
-To obtain an Adapter we use an aynchronous call.  This is done by providing a callback object to the request.  The method onCallback
-is execute once the adapter is available and the callback is called.  In practice, this is instantaeous on the native platform.
+To obtain an Adapter we use an asynchronous call.  This is done by providing a callback object to the request.  The method onCallback
+is execute once the adapter is available and the callback is called.  In practice, this is instantaneous on the native platform.
 ```java
       RequestAdapterCallback callback = new RequestAdapterCallback() {
         @Override
@@ -27,13 +29,16 @@ is execute once the adapter is available and the callback is called.  In practic
       WGPURequestAdapterOptions options = WGPURequestAdapterOptions.obtain();
       instance.requestAdapter(option, WGPUCallbackMode.AllowProcessEvents, callback);
 ```		
-We no longer need the instance, once we have the adapter
+Once we have the Adapter, we no longer need the Instance.
 ```java	
 		instance.release()	
 ```
 4. Obtain a Device
+
+A Device is also obtained with an asynchronous call.
+
 ```java
-		RequestDeviceCallback callback = new RequestDeviceCallback() {
+	RequestDeviceCallback callback = new RequestDeviceCallback() {
             @Override
             protected void onCallback(WGPURequestDeviceStatus status, WGPUDevice device) {
                 if(status == WGPURequestDeviceStatus.Success) {
@@ -42,31 +47,31 @@ We no longer need the instance, once we have the adapter
             }
         });
 
-		adapter.requestDevice(deviceDescriptor, WGPUCallbackMode.AllowProcessEvents, callback); 
+	adapter.requestDevice(deviceDescriptor, WGPUCallbackMode.AllowProcessEvents, callback); 
 ```		
 
 
 Once we have the Device we are finished with the Adapter and we can release it:
 
 ```java
-	    adapter.release();
-      adapter.dispose();
+        adapter.release();
+        adapter.dispose();
 ```		
 
 5. Get a command queue
 ```java	
-		queue = device.getQueue();
+        queue = device.getQueue();
 ```		
 6. Create a surface
 
-	The surface represents the graphics output, i.e. the window canvas.  
-	To create it, we need to pass the window handle and call a platform specific method. For example, for Windows:
+The surface represents the graphics output, i.e. the window canvas.  
+To create it, we need to pass the window handle and call a platform specific method. For example, for Windows:
 ```java		
-		surface = instance.createWindowsSurface(config.windowHandle);
+        surface = instance.createWindowsSurface(config.windowHandle);
 ```		
 7. Get a command encoder
 ```java		
-		encoder = new WGPUCommandEncoder();		
+	encoder = new WGPUCommandEncoder();		
 ```
 todo: swap chain
 
