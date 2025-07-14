@@ -1,20 +1,26 @@
 
 package com.monstrous.gdx.tests.webgpu;
 
+import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
+
+
+import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.webgpu.WGPUBlendFactor;
-//import com.github.xpenatan.webgpu.WGPUBlendFactor;
+
 
 // demonstrates use of WebPUBitmapFont
 //
-public class FontTest extends GdxTest {
+public class FontTest extends ApplicationAdapter {
 		private WgSpriteBatch batch;
 		private BitmapFont font;
 
+    public static void main(String[] argv) {
+        new WgDesktopApplication(new FontTest());
+    }
 
     @Override
     public void create () {

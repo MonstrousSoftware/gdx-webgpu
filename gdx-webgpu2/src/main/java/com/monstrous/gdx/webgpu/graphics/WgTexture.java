@@ -276,7 +276,7 @@ public class WgTexture extends Texture {
         textureViewDesc.setBaseMipLevel(baseMipLevel);
         textureViewDesc.setMipLevelCount(mipLevelCount);
         textureViewDesc.setDimension(dimension);
-        textureViewDesc.setFormat(texture.getFormat());
+        textureViewDesc.setFormat(texture.getFormat());         // should this match surface format instead?
         textureView = new WGPUTextureView();
         texture.createView(textureViewDesc, textureView);
         return textureView;

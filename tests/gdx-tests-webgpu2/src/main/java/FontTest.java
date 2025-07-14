@@ -1,20 +1,24 @@
 
-package com.monstrous.gdx.tests.webgpu;
+package main.java;
 
+
+import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
+import com.github.xpenatan.webgpu.WGPUBlendFactor;
+import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopApplication;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
-import com.monstrous.gdx.webgpu.webgpu.WGPUBlendFactor;
-//import com.github.xpenatan.webgpu.WGPUBlendFactor;
 
-// demonstrates use of WebPUBitmapFont
+// demonstrates use of WgBitmapFont
 //
-public class FontTest extends GdxTest {
+public class FontTest extends ApplicationAdapter {
 		private WgSpriteBatch batch;
 		private BitmapFont font;
 
+    public static void main(String[] argv) {
+        new WgDesktopApplication(new FontTest());
+    }
 
     @Override
     public void create () {
@@ -29,6 +33,7 @@ public class FontTest extends GdxTest {
 
 			batch.begin();
             batch.setBlendFactor(WGPUBlendFactor.SrcAlpha, WGPUBlendFactor.OneMinusSrcAlpha);
+
 			font.draw(batch, "Hello, world!", 200, 200);
 			batch.end();
 		}
