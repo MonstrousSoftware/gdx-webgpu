@@ -510,7 +510,7 @@ public class WgTexture extends Texture {
     /** Load image data into a specific layer and mip level
      *
      */
-    protected void loadMipLevel(WGPUByteBuffer data, int width, int height, int layer, int mipLevel) {
+     protected void loadMipLevel(ByteBuffer data, int width, int height, int layer, int mipLevel) {
 
         // Arguments telling which part of the texture we upload to
         // (together with the last argument of writeTexture)
@@ -533,41 +533,7 @@ public class WgTexture extends Texture {
         extent.setHeight(height);
         extent.setDepthOrArrayLayers(1);
 
-        webgpu.queue.writeTexture(destination, data, source, extent);
-    }
-
-    protected void loadMipLevel(ByteBuffer data, int width, int height, int layer, int mipLevel) {
-
-        // Arguments telling which part of the texture we upload to
-        // (together with the last argument of writeTexture)
-        WGPUTexelCopyTextureInfo destination = WGPUTexelCopyTextureInfo.obtain();
-        destination.setTexture(texture);
-        destination.setMipLevel(mipLevel);
-        destination.getOrigin().setX(0);
-        destination.getOrigin().setY(0);
-        destination.getOrigin().setZ(layer);
-        destination.setAspect(WGPUTextureAspect.All);   // not relevant
-
-        // Arguments telling how the pixel data is laid out
-        WGPUTexelCopyBufferLayout source = WGPUTexelCopyBufferLayout.obtain();
-        source.setOffset(0);
-        source.setBytesPerRow(4 *width);
-        source.setRowsPerImage(height);
-
-        WGPUExtent3D extent = WGPUExtent3D.obtain();
-        extent.setWidth(width);
-        extent.setHeight(height);
-        extent.setDepthOrArrayLayers(1);
-
-        // TEMP HACK
-        WGPUByteBuffer wbuf = WGPUByteBuffer.obtain(data.limit());
-        for(int i = 0; i < data.limit(); i++) {
-            wbuf.put( data.get(i));
-        }
-        wbuf.flip();
-
-
-        webgpu.queue.writeTexture(destination, wbuf, source, extent);
+        webgpu.queue.writeTexture(destination, data, 4*width*height, source, extent);
     }
 
     protected void load(ByteBuffer pixels) {
@@ -593,16 +559,7 @@ public class WgTexture extends Texture {
         extent.setHeight(data.getHeight());
         extent.setDepthOrArrayLayers(1);
 
-        // todo
-        // buffer copy as a work around, because Pixmap doesn't use WGPUByteBuffer
-        WGPUByteBuffer wbuf = WGPUByteBuffer.obtain(pixels.limit());
-        for(int i = 0; i < pixels.limit(); i++) {
-            wbuf.put( pixels.get(i));
-        }
-        wbuf.flip();
-
-
-        webgpu.queue.writeTexture(destination, wbuf, source, extent);
+        webgpu.queue.writeTexture(destination, pixels, pixels.limit(), source, extent);
     }
 
 
