@@ -141,10 +141,13 @@ resize will just set a flag and the actual resize is performed just before the r
 
 - Fixed: crash on switching textures in sprite batch (reuse of bind group). Was due to entries being disposed after creating bind group (they were being reused).
 
-todo: crash on launch another application window (e.g. TestStarter): Caused by:
-Surface is not configured for presentation
+- Fixed: crash on launch another application window (e.g. TestStarter): Caused by:
+  Surface is not configured for presentation. Was due to reuse of surface resource in jwebgpu. Now a new surface object is generated.
 
-todo: bitmapfont looks bad
+- fixed: bitmapfont looks bad. Alpha blending was broken by the gamma correction code in teh sprite batch shader.
+
+- todo: mipmapping code was commented out while playing around with ByteBuffer. To restore.
+ 
 
 
 	

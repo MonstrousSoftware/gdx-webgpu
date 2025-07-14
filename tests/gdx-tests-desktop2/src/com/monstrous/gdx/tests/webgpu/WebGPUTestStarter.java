@@ -27,6 +27,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTestWrapper;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopApplication;
 import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopApplicationConfiguration;
 import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopGraphics;
@@ -47,6 +48,8 @@ public class WebGPUTestStarter {
 		WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
 		config.setWindowedMode(320, 640);
         config.enableGPUtiming = false;
+        config.backend = WebGPUContext.Backend.VULKAN;
+        config.useVsync(false);
 
 		new WgDesktopApplication(new TestChooser(), config);
 	}

@@ -6,8 +6,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
-import com.monstrous.gdx.webgpu.webgpu.WGPUBlendFactor;
-//import com.github.xpenatan.webgpu.WGPUBlendFactor;
+
 
 // demonstrates use of WebPUBitmapFont
 //
@@ -28,7 +27,6 @@ public class FontTest extends GdxTest {
 		public void render () {
 
 			batch.begin();
-            batch.setBlendFactor(WGPUBlendFactor.SrcAlpha, WGPUBlendFactor.OneMinusSrcAlpha);
 			font.draw(batch, "Hello, world!", 200, 200);
 			batch.end();
 		}

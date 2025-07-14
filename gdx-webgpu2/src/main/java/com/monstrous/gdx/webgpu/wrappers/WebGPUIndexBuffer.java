@@ -110,15 +110,27 @@ public class WebGPUIndexBuffer extends WebGPUBuffer {
         write(0, byteBuffer, indexBufferSize);
     }
 
-    public void setIndices(WGPUByteBuffer byteData) {
-        int sizeInBytes = byteData.getCapacity();
+    public void setIndices(ByteBuffer byteData) {
+        int sizeInBytes = byteData.limit();
         indexCount = sizeInBytes/2;
         sizeInBytes = (sizeInBytes + 3) & ~3; // round up to multiple of 4 for writeBuffer
         if(sizeInBytes > getSize()) throw new IllegalArgumentException("IndexBuffer.setIndices: data too large.");
 
         // Upload data to the buffer
-        write( 0, byteData);      // todo sizeInBytes not supported
+        write( 0, byteData, sizeInBytes);
     }
+
+    public void setIndices(WGPUByteBuffer byteData) {
+        int sizeInBytes = byteData.getLimit();
+        indexCount = sizeInBytes/2;
+        sizeInBytes = (sizeInBytes + 3) & ~3; // round up to multiple of 4 for writeBuffer
+        if(sizeInBytes > getSize()) throw new IllegalArgumentException("IndexBuffer.setIndices: data too large.");
+
+        // Upload data to the buffer
+        write( 0, byteData);
+    }
+
+
 
     /** fill index buffer with raw data. */
     // indexBufferSize is ignored

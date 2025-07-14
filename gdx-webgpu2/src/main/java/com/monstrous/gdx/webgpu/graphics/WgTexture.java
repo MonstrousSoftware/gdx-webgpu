@@ -542,7 +542,7 @@ public class WgTexture extends Texture {
 
         // todo
         // buffer copy as a work around, because Pixmap doesn't use WGPUByteBuffer
-        WGPUByteBuffer wbuf = new WGPUByteBuffer(pixels.limit());
+        WGPUByteBuffer wbuf = WGPUByteBuffer.obtain(pixels.limit());
         for(int i = 0; i < pixels.limit(); i++) {
             wbuf.put( pixels.get(i));
         }

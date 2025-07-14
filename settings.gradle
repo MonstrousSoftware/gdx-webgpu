@@ -9,23 +9,23 @@ include 'lwjgl3', 'android', 'teavm', 'core'
 
 
 include ":gdx-webgpu"
+include 'gdx-webgpu2'
 
 include ":backends"
 include ":backends:gdx-lwjgl3-webgpu"
-
-
-include ":tests"
-include ":tests:gdx-tests-webgpu"
-include ":tests:test-api"
-include ":tests:gdx-tests-android"
+include 'backends:gdx-desktop-webgpu'
 
 
 include ':api-test'
 include ':api-new-test'
 
-include 'backends:gdx-desktop-webgpu'
-include 'tests:gdx-tests-webgpu2'
-include 'gdx-webgpu2'
 
+
+
+include 'tests:gdx-tests-webgpu2'
 include 'tests:gdx-tests-desktop'
 include 'tests:gdx-tests-desktop2'
+include ":tests"
+include ":tests:gdx-tests-webgpu"
+include ":tests:test-api"
+include ":tests:gdx-tests-android"

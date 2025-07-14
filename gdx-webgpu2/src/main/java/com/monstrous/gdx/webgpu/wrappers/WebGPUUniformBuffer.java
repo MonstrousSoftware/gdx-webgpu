@@ -156,45 +156,45 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
 
     /** offset in bytes */
     public void set(int offset, float value ){
-        floatData.put(offset, value);
+        dataBuf.putFloat(offset, value);
         dirty = true;
     }
 
     public void set( int offset, Vector2 vec ){
-        floatData.put(offset, vec.x);
-        floatData.put(offset +Float.BYTES, vec.y);
+        dataBuf.putFloat(offset, vec.x);
+        dataBuf.putFloat(offset +Float.BYTES, vec.y);
         dirty = true;
     }
 
     public void set( int offset, Vector3 vec ){
-        floatData.put(offset, vec.x);
-        floatData.put(offset +Float.BYTES, vec.y);
-        floatData.put(offset +2*Float.BYTES, vec.z);
+        dataBuf.putFloat(offset, vec.x);
+        dataBuf.putFloat(offset +Float.BYTES, vec.y);
+        dataBuf.putFloat(offset +2*Float.BYTES, vec.z);
         dirty = true;
     }
 
     public void set( int offset, Vector4 vec ){
-        floatData.put(offset, vec.x);
-        floatData.put(offset +Float.BYTES, vec.y);
-        floatData.put(offset +2*Float.BYTES, vec.z);
-        floatData.put(offset +3*Float.BYTES, vec.w);
+        dataBuf.putFloat(offset, vec.x);
+        dataBuf.putFloat(offset +Float.BYTES, vec.y);
+        dataBuf.putFloat(offset +2*Float.BYTES, vec.z);
+        dataBuf.putFloat(offset +3*Float.BYTES, vec.w);
         dirty = true;
     }
 
     public void set(int offset, Matrix4 mat ){
         for(int i = 0; i < 16; i++) {
             float f =  mat.val[i];
-            int index = offset+i;
-            floatData.put(index,f);
+            int index = offset + i*Float.BYTES;
+            dataBuf.putFloat(index,f);
         }
         dirty = true;
     }
 
     public void set( int offset, Color col ){
-        floatData.put(offset, col.r);
-        floatData.put(offset +Float.BYTES, col.g);
-        floatData.put(offset +2*Float.BYTES,col.b);
-        floatData.put(offset +3*Float.BYTES, col.a);
+        dataBuf.putFloat(offset, col.r);
+        dataBuf.putFloat(offset +Float.BYTES, col.g);
+        dataBuf.putFloat(offset +2*Float.BYTES,col.b);
+        dataBuf.putFloat(offset +3*Float.BYTES, col.a);
         dirty = true;
     }
 
