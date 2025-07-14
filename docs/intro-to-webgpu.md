@@ -1,7 +1,7 @@
 # Introduction to WebGPU
 
 This is a very brief overview of a WebGPU application.  Please note that when using gdx-webgpu this is all taken care of behind the scenes.
-But now and then you may want to dig a little deeper, and this introduction tries to explain some basic concepts.
+But now and then you may want to dig a little deeper, and this introduction tries to explain some basic concepts. To keep this simple, some details and error handling has been omitted.
 
 # Initializing WebGPU
 WebGPU needs to be set up for use when an application is started.  There are a number of steps involved.
@@ -80,12 +80,12 @@ todo: swap chain
 When the application exits, we should release the WebGPU resources that we obtained 
 during the initialisation and that were not released already during the start-up such as Instance and Adapter..
 ```java
-		// encoder.dispose()
-		surface.release()
-		queue.dispose();
-		device.dispose();
-
-		command.dispose();
+        // encoder.dispose()
+        surface.release()
+        queue.dispose();
+        device.dispose();
+        
+        command.dispose();
 ```
 
 # Render Loop
@@ -99,21 +99,25 @@ the user code calls WgSpriteBatch to render some sprites.
 1. Get the next texture view from the swap chain to serve as render output.
 ```java		
       targetView = getNextSurfaceTextureView();
-```		 
-	In actual fact, there are a few steps involved, So we'll go into more detail on what happens in getNextSurfaceTextureView:
-	First we get the current surface texture from the surface. (Despite the name, a SurfaceTexture is not a Texture but it does contain a Texture).
+```
+	 
+In actual fact, there are a few steps involved, So we'll go into more detail on what happens in getNextSurfaceTextureView:
+First we get the current surface texture from the surface. (Despite the name, a SurfaceTexture is not a Texture but it does contain a Texture).
+
 ```java
       WGPUSurfaceTexture surfaceTextureOut = WGPUSurfaceTexture.obtain();
       surface.getCurrentTexture(surfaceTextureOut);
 ```		
-	Then we extract the texture from the surface texture
+Then we extract the texture from the surface texture
+
 ```java
       WGPUTexture textureOut = WGPUTexture.obtain();
       surfaceTextureOut.getTexture(textureOut);
       //surfaceTextureOut.dispose();	// can we dispose now?
 ```		
-	To render to a texture, we don't need the texture itself, but a texture view.  So next, construct a texture view
-	from the texture:
+To render to a texture, we don't need the texture itself, but a texture view.  So next, construct a texture view
+from the texture:
+
 ```java
       WGPUTextureViewDescriptor viewDescriptor = WGPUTextureViewDescriptor.obtain();
       viewDescriptor.setLabel("Surface texture view");
@@ -130,6 +134,7 @@ the user code calls WgSpriteBatch to render some sprites.
 ```	
 		 
 2. Create a command encoder.
+
 ```java
       WGPUCommandEncoderDescriptor encoderDesc = WGPUCommandEncoderDescriptor.obtain();
       encoderDesc.setLabel("The Command Encoder");
@@ -138,7 +143,8 @@ the user code calls WgSpriteBatch to render some sprites.
 
 3. Create a render pass
 
-	Note: step 3 to 5 are performed for example by WgSpriteBatch.
+Note: step 3 to 5 are performed for example by WgSpriteBatch.
+
 ```java
       WGPURenderPassDescriptor renderPassDescriptor = new WGPURenderPassDescriptor();
       
@@ -163,6 +169,7 @@ the user code calls WgSpriteBatch to render some sprites.
 ```
 	
 4. Draw to the render pass		
+
 ```java
       renderPass.setBindGroup( 0, bg, dynamicOffset );
       
@@ -173,11 +180,13 @@ the user code calls WgSpriteBatch to render some sprites.
 ```	
 
 5. End the render pass.
+
 ```java		
       renderPass.end();
 ```		
 		
 6	Finish the encoder obtained in step 3 and capture the result in a command buffer. Once we have the command buffer, we can release the encoder.
+
 ```java
       WGPUCommandBufferDescriptor cmdBufferDescriptor = WGPUCommandBufferDescriptor.obtain();
       cmdBufferDescriptor.setNextInChain(null);
@@ -187,17 +196,20 @@ the user code calls WgSpriteBatch to render some sprites.
       encoder.release();		 
 ```
 7.  Submit the command buffer to the command queue.  Once we've done that we can release the command buffer.
+
 ```java
       queue.submit(1, commandBuffer);
       commandBuffer.release();
 ```
 8. We are now finished with the texture view, so we can release it.
+
 ```java
       targetView.release();
       targetView.dispose();		
       targetView = null;	
 ```		
 9. Depending on the platform (not on Web), we need to present the surface in order to make it visible
+
 ```java		
     if(WGPU.getPlatformType() != WGPUPlatformType.WGPU_Web) 
       surface.present();
