@@ -80,7 +80,9 @@ public class WebGPUTests {
         DistanceFontTest.class,
         DepthClearTest.class,
         FogTest.class,
-        ShadowTest.class
+        ShadowTest.class,
+        SystemCursorTest.class,
+        TextureAtlasTest.class
 
 		// @on
 

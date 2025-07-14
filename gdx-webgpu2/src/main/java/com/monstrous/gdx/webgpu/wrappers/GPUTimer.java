@@ -155,6 +155,7 @@ public class GPUTimer implements Disposable {
                         addTimeSample(pass, ns);
                     }
                     timeStampMapBuffer.unmap();
+                    ram.dispose();
                 }
                 timeStampMapOngoing = false;
             }

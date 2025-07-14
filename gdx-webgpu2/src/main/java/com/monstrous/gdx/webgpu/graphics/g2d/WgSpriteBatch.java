@@ -22,6 +22,7 @@ import com.monstrous.gdx.webgpu.wrappers.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.nio.ShortBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -76,7 +77,7 @@ public class WgSpriteBatch implements Batch {
     private boolean mustUpdateMatrices = true;  // to save a buffer write if the matrix is unchanged
 
     public WgSpriteBatch() {
-        this(1000); // default nr
+        this(2000); // default nr
     }
 
     public WgSpriteBatch(int maxSprites) {
@@ -174,7 +175,7 @@ public class WgSpriteBatch implements Batch {
 
     // the index buffer is fixed and only has to be filled on start-up
     private void fillIndexBuffer(int maxSprites){
-        WGPUByteBuffer bb = new WGPUByteBuffer(maxSprites*INDICES_PER_SPRITE*Short.BYTES);
+        WGPUByteBuffer bb = WGPUByteBuffer.obtain(maxSprites*INDICES_PER_SPRITE*Short.BYTES);
         WGPUShortBuffer indexData = bb.asShortBuffer();
         for(int i = 0; i < maxSprites; i++){
             short vertexOffset = (short)(i * 4);
@@ -190,6 +191,25 @@ public class WgSpriteBatch implements Batch {
         indexData.flip();
         indexBuffer.setIndices(bb);
     }
+
+    // why does this not work?
+    private void fillIndexBuffer2(int maxSprites){
+        ByteBuffer bb = ByteBuffer.allocateDirect(maxSprites*INDICES_PER_SPRITE*Short.BYTES);
+        for(int i = 0; i < maxSprites; i++){
+            short vertexOffset = (short)(i * 4);
+            // two triangles per sprite
+            bb.putShort(vertexOffset);
+            bb.putShort((short)(vertexOffset + 1));
+            bb.putShort((short)(vertexOffset + 2));
+
+            bb.putShort(vertexOffset);
+            bb.putShort((short)(vertexOffset + 2));
+            bb.putShort((short)(vertexOffset + 3));
+        }
+        bb.flip();
+
+        indexBuffer.setIndices(bb);
+     }
 
 
     public void setColor(float r, float g, float b, float a){

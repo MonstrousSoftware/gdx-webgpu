@@ -111,6 +111,11 @@ public class WebGPUIndexBuffer extends WebGPUBuffer {
     }
 
     public void setIndices(ByteBuffer byteData) {
+        for(int i = 0; i < byteData.limit(); i++){
+            System.out.println("index "+i+" : "+byteData.getShort());
+
+
+        }
         int sizeInBytes = byteData.limit();
         indexCount = sizeInBytes/2;
         sizeInBytes = (sizeInBytes + 3) & ~3; // round up to multiple of 4 for writeBuffer
@@ -120,6 +125,7 @@ public class WebGPUIndexBuffer extends WebGPUBuffer {
         write( 0, byteData, sizeInBytes);
     }
 
+    @Deprecated
     public void setIndices(WGPUByteBuffer byteData) {
         int sizeInBytes = byteData.getLimit();
         indexCount = sizeInBytes/2;
@@ -134,6 +140,7 @@ public class WebGPUIndexBuffer extends WebGPUBuffer {
 
     /** fill index buffer with raw data. */
     // indexBufferSize is ignored
+    @Deprecated
     private void setIndices(WGPUByteBuffer idata, int bufferOffset, int indexBufferSize) {
         if(bufferOffset + indexBufferSize > getSize()) throw new IllegalArgumentException("IndexBuffer.setIndices: data too large.");
 

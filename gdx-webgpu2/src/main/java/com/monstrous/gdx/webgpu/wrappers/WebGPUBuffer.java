@@ -67,6 +67,7 @@ public class WebGPUBuffer implements Disposable {
         return bufferSize;
     }
 
+    @Deprecated
     public void write(int destOffset, WGPUByteBuffer data){
         if(destOffset + data.getLimit() > bufferSize) throw new RuntimeException("Overflow in Buffer.write().");
         webgpu.queue.writeBuffer(buffer, destOffset, data);
@@ -76,6 +77,12 @@ public class WebGPUBuffer implements Disposable {
     public void write(int destOffset, ByteBuffer data, int sizeInBytes){
         if(destOffset + sizeInBytes > bufferSize) throw new RuntimeException("Overflow in Buffer.write().");
         webgpu.queue.writeBuffer(buffer, destOffset, data, sizeInBytes);
+        log(data.limit());
+    }
+
+    public void write(int destOffset, ByteBuffer data){
+        if(destOffset + data.limit() > bufferSize) throw new RuntimeException("Overflow in Buffer.write().");
+        webgpu.queue.writeBuffer(buffer, destOffset, data, data.limit());
         log(data.limit());
     }
 
