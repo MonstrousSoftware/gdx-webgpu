@@ -28,5 +28,5 @@ if (JavaVersion.current().isJava9Compatible()) {
 // note: do not add dependencies here on platform specific modules
 
 dependencies {
-	implementation project(":gdx-webgpu")
+	implementation project(":gdx-webgpu2")
 }

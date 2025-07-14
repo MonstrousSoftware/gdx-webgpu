@@ -45,7 +45,7 @@ import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDefaultShader;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 import com.monstrous.gdx.webgpu.scene2d.WgSkin;
 import com.monstrous.gdx.webgpu.scene2d.WgStage;
-import com.monstrous.gdx.webgpu.webgpu.WGPUBackendType;
+
 
 /** Test renderable instancing - reducing the number of draw calls if renderables use the same mesh part.
  * */

@@ -20,6 +20,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Renderable;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BoxShapeBuilder;
 import com.badlogic.gdx.math.Matrix4;
@@ -53,6 +54,7 @@ public class ModelBatchTest extends GdxTest {
 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		cam.position.set(0, 0, 2);
 		cam.near = 0.1f;
+        cam.far = 30f;
 
 
 		controller = new PerspectiveCamController(cam);
@@ -70,6 +72,9 @@ public class ModelBatchTest extends GdxTest {
 		WgTexture texture2 = new WgTexture(Gdx.files.internal("data/badlogic.jpg"), true);
 		texture2.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear);
 		Material mat2 = new Material(TextureAttribute.createDiffuse(texture2));
+
+//        Material mat1 = new Material(ColorAttribute.createDiffuse(Color.YELLOW));
+//        Material mat2 = new Material(ColorAttribute.createDiffuse(Color.BLUE));
 
 
 		final WgMeshPart meshPart = createMeshPart();

@@ -9,7 +9,6 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
-import com.monstrous.gdx.webgpu.webgpu.WGPUBackendType;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 
 import java.text.DecimalFormat;

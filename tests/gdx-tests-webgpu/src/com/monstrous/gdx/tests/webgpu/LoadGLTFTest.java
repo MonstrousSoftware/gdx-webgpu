@@ -30,7 +30,6 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
-import com.monstrous.gdx.webgpu.application.WebGPUApplication;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
@@ -39,7 +38,7 @@ import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLBModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLTFModelLoader;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
-import com.monstrous.gdx.webgpu.webgpu.WGPUBackendType;
+
 
 /** Test G3DJ loading and ModelInstance rendering */
 
@@ -59,7 +58,7 @@ public class LoadGLTFTest extends GdxTest {
     int numVerts;
     int numIndices;
     WgGraphics gfx;
-    WebGPUApplication webgpu;
+    WebGPUContext webgpu;
     private Viewport viewport;
 
 

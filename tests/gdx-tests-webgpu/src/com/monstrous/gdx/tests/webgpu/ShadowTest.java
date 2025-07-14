@@ -27,7 +27,6 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.tests.webgpu.utils.PerspectiveCamController;
-import com.monstrous.gdx.webgpu.application.WebGPUApplication;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
@@ -35,11 +34,11 @@ import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
-import com.monstrous.gdx.webgpu.graphics.g3d.environment.WgDirectionalShadowLight;
+
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDepthShaderProvider;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
-import com.monstrous.gdx.webgpu.webgpu.WGPUBackendType;
+
 import com.monstrous.gdx.webgpu.wrappers.RenderPassType;
 
 /** Shadow demo.
@@ -59,7 +58,7 @@ public class ShadowTest extends GdxTest {
     Array<ModelInstance> instances;
     Environment environment;
     Environment emptyEnvironment;
-    WgDirectionalShadowLight shadowLight;
+    com.monstrous.gdx.webgpu.graphics.g3d.attributes.environment.WgDirectionalShadowLight shadowLight;
     Vector3 lightPos;
     WebGPUContext webgpu;
 
@@ -128,7 +127,7 @@ public class ShadowTest extends GdxTest {
         final int MAP = 1024;   // resolution of shadow map texture (may affect frame rate)
         final int VIEWPORT = 8; // depth and width of shadow volume in world units
         final float DEPTH = 20f; // length of shadow volume in world units along light direction
-        shadowLight = new WgDirectionalShadowLight(MAP, MAP, VIEWPORT, VIEWPORT, 0f, DEPTH);
+        shadowLight = new com.monstrous.gdx.webgpu.graphics.g3d.attributes.environment.WgDirectionalShadowLight(MAP, MAP, VIEWPORT, VIEWPORT, 0f, DEPTH);
         shadowLight.setDirection(dirLight1.direction);
         shadowLight.set(dirLight1);
         environment.shadowMap = shadowLight;

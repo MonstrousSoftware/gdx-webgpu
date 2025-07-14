@@ -31,10 +31,11 @@ allprojects {
     }
   }
 
-  configurations.configureEach {
-    // Check for updates every sync
-    resolutionStrategy.cacheChangingModulesFor(0, "seconds")
-  }
+// to always chack for update
+//  configurations.configureEach {
+//    // Check for updates every sync
+//    resolutionStrategy.cacheChangingModulesFor(0, "seconds")
+//  }
 }
 
 configure(subprojects - project(':android')) {

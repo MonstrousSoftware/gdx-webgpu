@@ -58,8 +58,8 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 	private final PipelineSpecification pipelineSpec;
 	private WgTexture texture;
 	private WebGPURenderPass renderPass;
-    private final ByteBuffer vertexBB;
-    private final FloatBuffer vertexData;
+    private final ByteBuffer vertexByteBuffer;
+    private final FloatBuffer vertexFloatBuffer;
 	private WebGPUPipeline prevPipeline;
     private final WebGPUContext webgpu;
 
@@ -95,9 +95,9 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 
 		createBuffers();
 
-        vertexBB = ByteBuffer.allocateDirect(maxVertices * vertexSize * Float.BYTES);
-		vertexBB.order(ByteOrder.LITTLE_ENDIAN); // webgpu expects little endian data
-        vertexData = vertexBB.asFloatBuffer();  // float view on the byte buffer
+        vertexByteBuffer = ByteBuffer.allocateDirect(maxVertices * vertexSize * Float.BYTES);
+		vertexByteBuffer.order(ByteOrder.LITTLE_ENDIAN); // webgpu expects little endian data
+        vertexFloatBuffer = vertexByteBuffer.asFloatBuffer();  // float view on the byte buffer
 
 
 		bindGroupLayout = createBindGroupLayout();
@@ -147,35 +147,35 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 	}
 
 	public void color (Color color) {
-		vertexData.put(vertexIdx + colorOffset, color.toFloatBits());
+		vertexFloatBuffer.put(vertexIdx + colorOffset, color.toFloatBits());
 	}
 
 	public void color (float r, float g, float b, float a) {
-		vertexData.put(vertexIdx + colorOffset, Color.toFloatBits(r, g, b, a));
+		vertexFloatBuffer.put(vertexIdx + colorOffset, Color.toFloatBits(r, g, b, a));
 	}
 
 	public void color (float colorBits) {
-		vertexData.put(vertexIdx + colorOffset, colorBits);
+		vertexFloatBuffer.put(vertexIdx + colorOffset, colorBits);
 	}
 
 	public void texCoord (float u, float v) {
 		final int idx = vertexIdx + texCoordOffset;
-		vertexData.put(idx, u);
-		vertexData.put(idx+1, v);
+		vertexFloatBuffer.put(idx, u);
+		vertexFloatBuffer.put(idx+1, v);
 	}
 
 	public void normal (float x, float y, float z) {
 		final int idx = vertexIdx + normalOffset;
-		vertexData.put(idx, 		x);
-		vertexData.put(idx+1, 	y);
-		vertexData.put(idx+2, 	z);
+		vertexFloatBuffer.put(idx, 		x);
+		vertexFloatBuffer.put(idx+1, 	y);
+		vertexFloatBuffer.put(idx+2, 	z);
 	}
 
 	public void vertex (float x, float y, float z) {
 		final int idx = vertexIdx;
-		vertexData.put(idx, 		x);
-		vertexData.put(idx+1, 	y);
-		vertexData.put(idx+2, 	z);
+		vertexFloatBuffer.put(idx, 		x);
+		vertexFloatBuffer.put(idx+1, 	y);
+		vertexFloatBuffer.put(idx+2, 	z);
 
 		vertexIdx += vertexSize;
 		numVertices++;
@@ -197,13 +197,16 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 		int numBytes = numVertices * vertexSize * Float.BYTES;
         // since we used put with an index, the position was never updated
         // set it now, because writeBuffer needs it.
-        vertexData.position(numVertices * vertexSize);
+        vertexFloatBuffer.position(numVertices * vertexSize);
         //System.out.println("write buffer in imm mode rndr: pos:"+vertexData.getPosition());
-        vertexData.flip(); // prepare for reading
+        vertexFloatBuffer.flip(); // prepare for reading
+
+        vertexBuffer.setVertices(vertexByteBuffer, 0, numBytes);
+
 
 		// copy vertex data to GPU vertex buffer
         //System.out.println("write buffer in imm mode rndr: size:"+numBytes+" byteData: "+vertexData.getByteBuffer().getLimit());
-        webgpu.queue.writeBuffer(vertexBuffer.getBuffer(), 0, vertexBB, numBytes);
+    //    webgpu.queue.writeBuffer(vertexBuffer.getBuffer(), 0, vertexByteBuffer, numBytes);
 
 		// Set vertex buffer while encoding the render pass
 		renderPass.setVertexBuffer( 0, vertexBuffer.getBuffer(), 0, numBytes);
@@ -217,7 +220,7 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 		// reset
 		vertexIdx = 0;
 		numVertices = 0;
-        vertexData.clear();
+        vertexFloatBuffer.clear();
 	}
 
 	public void end () {
