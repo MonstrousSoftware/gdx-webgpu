@@ -97,7 +97,7 @@ public class WebGPUTestStarter {
 						ApplicationListener test = WebGPUTests.newTest(testName);
 						WgDesktopWindowConfiguration winConfig = new WgDesktopWindowConfiguration();
 						winConfig.setTitle(testName);
-						winConfig.setWindowedMode(1024, 1024); //640, 480);
+						winConfig.setWindowedMode(640, 480);
 						winConfig.setWindowPosition(((WgDesktopGraphics)Gdx.graphics).getWindow().getPositionX() + 40,
 							((WgDesktopGraphics)Gdx.graphics).getWindow().getPositionY() + 40);
 						winConfig.useVsync(false);

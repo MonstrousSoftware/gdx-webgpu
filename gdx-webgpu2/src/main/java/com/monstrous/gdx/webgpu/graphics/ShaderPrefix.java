@@ -91,7 +91,7 @@ public class ShaderPrefix {
                 break;
         }
 
-        //System.out.println("Prefix: "+sb.toString());
+        System.out.println("Prefix: "+sb.toString());
         return sb.toString();
     }
 }
