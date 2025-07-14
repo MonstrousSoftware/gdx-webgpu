@@ -103,7 +103,7 @@ public class PerspectiveCamController extends InputAdapter {
 
 	@Override
 	public boolean scrolled (float amountX, float amountY) {
-		cam.fieldOfView -= -amountY * Gdx.graphics.getDeltaTime() * 100;
+		cam.fieldOfView -= -amountY * Gdx.graphics.getDeltaTime() * 500;
 		cam.update();
 		return true;
 	}

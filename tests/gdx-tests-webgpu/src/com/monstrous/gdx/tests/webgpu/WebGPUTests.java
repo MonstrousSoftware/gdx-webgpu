@@ -82,7 +82,8 @@ public class WebGPUTests {
         FogTest.class,
         ShadowTest.class,
         SystemCursorTest.class,
-        TextureAtlasTest.class
+        TextureAtlasTest.class,
+        TestTextureMipMap.class
 
 		// @on
 

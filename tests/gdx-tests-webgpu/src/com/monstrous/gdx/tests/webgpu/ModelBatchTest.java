@@ -73,9 +73,6 @@ public class ModelBatchTest extends GdxTest {
 		texture2.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear);
 		Material mat2 = new Material(TextureAttribute.createDiffuse(texture2));
 
-//        Material mat1 = new Material(ColorAttribute.createDiffuse(Color.YELLOW));
-//        Material mat2 = new Material(ColorAttribute.createDiffuse(Color.BLUE));
-
 
 		final WgMeshPart meshPart = createMeshPart();
 		renderable = new Renderable();

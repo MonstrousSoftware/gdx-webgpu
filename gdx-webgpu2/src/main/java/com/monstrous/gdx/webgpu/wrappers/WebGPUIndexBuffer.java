@@ -111,10 +111,8 @@ public class WebGPUIndexBuffer extends WebGPUBuffer {
     }
 
     public void setIndices(ByteBuffer byteData) {
-        for(int i = 0; i < byteData.limit(); i++){
-            System.out.println("index "+i+" : "+byteData.getShort());
-
-
+        for(int i = 0; i < byteData.limit()/2; i++){
+            System.out.println("index "+i/2+" : "+byteData.getShort());
         }
         int sizeInBytes = byteData.limit();
         indexCount = sizeInBytes/2;

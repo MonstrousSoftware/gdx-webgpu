@@ -78,7 +78,7 @@ public class WgTexture extends Texture {
      */
 
     public WgTexture(String fileName) {
-        this(fileName, false);
+        this(fileName, true);
     }
 
     public WgTexture(String fileName, boolean mipMapping) {
@@ -156,8 +156,8 @@ public class WgTexture extends Texture {
             //disposePixmap = true;
         }
 
-        load(pixmap.getPixels());
-       // load(pixmap.getPixels(), 0);
+
+        load(pixmap.getPixels(), 0);
     }
 
 
@@ -536,6 +536,7 @@ public class WgTexture extends Texture {
         webgpu.queue.writeTexture(destination, data, 4*width*height, source, extent);
     }
 
+    @Deprecated
     protected void load(ByteBuffer pixels) {
 
         // Arguments telling which part of the texture we upload to
