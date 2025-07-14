@@ -41,8 +41,6 @@ public class WgTexture extends Texture {
     protected String label;
     protected int mipLevelCount;
     private int numSamples;
-//    private TextureFilter minFilter;
-//    private TextureFilter magFilter;
     protected TextureData data; // cannot access data of Texture which is package private
 
     public WgTexture(String label, int width, int height, boolean mipMapping, boolean renderAttachment, WGPUTextureFormat format, int numSamples ) {
@@ -80,7 +78,7 @@ public class WgTexture extends Texture {
      */
 
     public WgTexture(String fileName) {
-        this(fileName, true);
+        this(fileName, false);
     }
 
     public WgTexture(String fileName, boolean mipMapping) {
@@ -545,9 +543,12 @@ public class WgTexture extends Texture {
         // todo
         // buffer copy as a work around, because Pixmap doesn't use WGPUByteBuffer
         WGPUByteBuffer wbuf = new WGPUByteBuffer(pixels.limit());
-        for(int i = 0; i < pixels.limit(); i++)
+        for(int i = 0; i < pixels.limit(); i++) {
             wbuf.put( pixels.get(i));
+        }
+
         wbuf.flip();
+
 
         webgpu.queue.writeTexture(destination, wbuf, source, extent);
     }
