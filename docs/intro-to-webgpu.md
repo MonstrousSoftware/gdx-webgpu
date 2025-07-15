@@ -109,8 +109,9 @@ during the initialisation and that were not released already during the start-up
 ```java
 	surface.unconfigure();
 	surface.release();
-        surface.dipose();
+        surface.dispose();
 	queue.dispose();
+        device.destroy();
 	device.dispose();
 ```
 
@@ -184,7 +185,7 @@ Note: step 3 to 5 are performed by the user's code in ApplicationListener.render
 	renderPassColorAttachment.getClearValue().setColor(0.5f, 0.5f, 0.5f, 1.0f);	
 	renderPassColorAttachment.setStoreOp(WGPUStoreOp.Store);
 
-	// attach to the targetView obained earlier
+	// attach to the targetView obtained earlier
 	renderPassColorAttachment.setView(targetView);
 	renderPassColorAttachment.setResolveTarget(null);
 
