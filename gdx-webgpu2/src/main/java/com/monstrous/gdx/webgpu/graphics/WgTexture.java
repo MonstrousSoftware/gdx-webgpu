@@ -31,7 +31,7 @@ import java.nio.ByteBuffer;
 
 public class WgTexture extends Texture {
 
-    private final WebGPUContext webgpu = ((WgGraphics) Gdx.graphics).webgpu;
+    private final WebGPUContext webgpu = ((WgGraphics) Gdx.graphics).getContext();
 
     private WGPUTexture texture;
     private WGPUTextureView textureView;

@@ -35,7 +35,7 @@ public class SpriteBatchTest extends GdxTest {
     @Override
     public void create() {
         WgGraphics gfx = (WgGraphics)Gdx.graphics;
-        webgpu = gfx.webgpu;
+        webgpu = gfx.getContext();
         Gdx.app.log(TAG, "[" + this.hashCode() + "] create() START"); // Log instance and start
 
         viewport = new ScreenViewport();

@@ -28,26 +28,24 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
     private InitState initState;
 
     private WgTexture multiSamplingTexture;
-    private final GPUTimer gpuTimer;
+    private GPUTimer gpuTimer;
     private final Configuration config;
     private final Rectangle viewportRectangle = new Rectangle();
     private boolean scissorEnabled = false;
     private Rectangle scissor;
     private int width, height;
-    private final WGPUCommandBuffer command;
+    private WGPUCommandBuffer command;
     private final float[] gpuTime = new float[GPUTimer.MAX_PASSES];
     private boolean mustResize = false;
     private int newWidth, newHeight;    // for resize
 
     public static class Configuration {
-        public long windowHandle;
         public int numSamples;
         public boolean vSyncEnabled;
         public boolean gpuTimingEnabled;
         public Backend requestedBackendType;
 
-        public Configuration(long windowHandle, int numSamples, boolean vSyncEnabled, boolean gpuTimingEnabled, Backend requestedBackendType) {
-            this.windowHandle = windowHandle;
+        public Configuration(int numSamples, boolean vSyncEnabled, boolean gpuTimingEnabled, Backend requestedBackendType) {
             this.numSamples = numSamples;
             this.vSyncEnabled = vSyncEnabled;
             this.gpuTimingEnabled = gpuTimingEnabled;
@@ -57,73 +55,29 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
 
     // note:  JWebGPULoader.init must be called before we get here to load the native library
 
-    public WebGPUApplication2(Configuration config) {
-        //this.webGPU = webGPU;
+    public WebGPUApplication2(Configuration config, OnInitCallback initCallback) {
         this.config = config;
 
         // create instance, adapter, device and queue
-        init();
-
-        while(!isReady())
-            update();
-
-        command = new WGPUCommandBuffer();
-
-        while(!isReady())
-            update();
-
-        System.out.println("Creating surface for window handle: "+config.windowHandle);
-        surface = instance.createWindowsSurface(config.windowHandle);
-        System.out.println("surface:" + surface.toString());
-
-
-        if(surface != null) {
-            System.out.println("Surface created");
-            // Find out the preferred surface format of the window
-            // = the first one listed under capabilities
-            WGPUSurfaceCapabilities surfaceCapabilities = WGPUSurfaceCapabilities.obtain();
-            surface.getCapabilities(adapter, surfaceCapabilities);
-            surfaceFormat = surfaceCapabilities.getFormats().get(0);
-            System.out.println("surfaceFormat: " + surfaceFormat);
-
-            // initSwapChain will be done via resize()
-
-            // Release the adapter only after it has been fully utilized
-            adapter.release();
-            adapter.dispose();
-            adapter = null;
-        }
-        else {
-            System.out.println("Surface not created");
-        }
-
-        // todo webGPU.wgpuInstanceRelease(instance); // we can release the instance now that we have the device
-        // do we need instance for processEvents?
-
-        gpuTimer = new GPUTimer(device, config.gpuTimingEnabled);
-
-        encoder = new WGPUCommandEncoder();
-//        while(!isReady())
-//            update();
-//        initSwapChain(640, 480, true);
-
+        init(initCallback);
     }
 
-    private void init() {
+    private void init(OnInitCallback initCallback) {
 
         WGPUInstance instance = WGPU.createInstance();
         if(instance.isValid()) {
             initState = InitState.INSTANCE_VALID;
             this.instance = instance;
-            requestAdapter();
+            requestAdapter(initCallback);
         }
         else {
             initState = InitState.INSTANCE_NOT_VALID;
             instance.dispose();
+            initCallback.onInit(WebGPUApplication2.this);
         }
     }
 
-    private void requestAdapter() {
+    private void requestAdapter(OnInitCallback initCallback) {
         WGPURequestAdapterOptions op = WGPURequestAdapterOptions.obtain();
         op.setBackendType(convertBackendType(config.requestedBackendType));
         RequestAdapterCallback callback = new RequestAdapterCallback() {
@@ -133,18 +87,18 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
                 if(status == WGPURequestAdapterStatus.Success) {
                     initState = InitState.ADAPTER_VALID;
                     WebGPUApplication2.this.adapter = adapter;
-                    requestDevice();
+                    requestDevice(initCallback);
                 }
                 else {
                     initState = InitState.ADAPTER_NOT_VALID;
+                    initCallback.onInit(WebGPUApplication2.this);
                 }
             }
         };
         instance.requestAdapter(op, WGPUCallbackMode.AllowProcessEvents, callback);
     }
 
-
-    private void requestDevice() {
+    private void requestDevice(OnInitCallback initCallback) {
         WGPUAdapterInfo info = WGPUAdapterInfo.obtain();
         if(adapter.getInfo(info)) {
             WGPUBackendType backendType = info.getBackendType();
@@ -183,6 +137,10 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
                     initState = InitState.DEVICE_VALID;
                     WebGPUApplication2.this.device = device;
                     queue = device.getQueue();
+                    command = new WGPUCommandBuffer();
+                    gpuTimer = new GPUTimer(device, config.gpuTimingEnabled);
+                    encoder = new WGPUCommandEncoder();
+
                     System.out.println("Platform: " + WGPU.getPlatformType());
 
                     WGPUSupportedFeatures features = WGPUSupportedFeatures.obtain();
@@ -202,9 +160,12 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
                     System.out.println("MaxTextureDimension2D: " + limits.getMaxTextureDimension2D());
                     System.out.println("MaxTextureDimension3D: " + limits.getMaxTextureDimension3D());
                     System.out.println("MaxTextureArrayLayers: " + limits.getMaxTextureArrayLayers());
+
+                    initCallback.onInit(WebGPUApplication2.this);
                 }
                 else {
                     initState = InitState.DEVICE_NOT_VALID;
+                    initCallback.onInit(WebGPUApplication2.this);
                 }
             }
         }, new UncapturedErrorCallback() {
@@ -220,7 +181,6 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
     public boolean isReady() {
         return initState == InitState.DEVICE_VALID;
     }
-
 
     /** returns null if gpu timing is not enabled in application configuration. */
     @Override
@@ -326,6 +286,7 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
         viewDescriptor.setAspect(WGPUTextureAspect.All);
 
         textureOut.createView(viewDescriptor, textureViewOut);
+//        textureOut.release();
         // not on WGPU: textureOut.release();
         return textureViewOut;
     }
@@ -595,7 +556,7 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
         limits.setMaxComputeWorkgroupsPerDimension(WGPU_LIMIT_U32_UNDEFINED);
     }
 
-    enum InitState {
+    public enum InitState {
         NOT_INITIALIZED(0),
         ERROR(1),
         INSTANCE_VALID(2),
@@ -631,5 +592,9 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
             default:        type = WGPUBackendType.Undefined; break;
         }
         return type;
+    }
+
+    public interface OnInitCallback {
+        void onInit(WebGPUApplication2 application);
     }
 }
