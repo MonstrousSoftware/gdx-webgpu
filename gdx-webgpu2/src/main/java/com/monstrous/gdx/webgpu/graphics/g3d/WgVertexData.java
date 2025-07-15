@@ -28,6 +28,7 @@ public class WgVertexData implements VertexData {
         this.attributes = attributes;
         byteBuffer = BufferUtils.newUnsafeByteBuffer(this.attributes.vertexSize * numVertices);
         buffer = byteBuffer.asFloatBuffer();
+        // why flip?
         ((Buffer)buffer).flip();
         ((Buffer)byteBuffer).flip();
         vertexBuffer = new WebGPUVertexBuffer( this.attributes.vertexSize * numVertices);
@@ -52,6 +53,7 @@ public class WgVertexData implements VertexData {
     @Override
     public void setVertices(float[] vertices, int offset, int count) {
         BufferUtils.copy(vertices, byteBuffer, count, offset);
+        // flip?
         ((Buffer)buffer).position(0);
         ((Buffer)buffer).limit(count);
         isDirty = true;
