@@ -146,8 +146,12 @@ resize will just set a flag and the actual resize is performed just before the r
 
 - fixed: bitmapfont looks bad. Alpha blending was broken by the gamma correction code in teh sprite batch shader.
 
-- todo: mipmapping code was commented out while playing around with ByteBuffer. To restore.
+- fixed: mipmapping code was commented out while playing around with ByteBuffer. 
  
+
+15/07:
+- Fixed loading WgModel from ModelData. Issue was index buffer filling via ShortBuffer.  Model loading works now including GTLF models. 
+
 
 
 	

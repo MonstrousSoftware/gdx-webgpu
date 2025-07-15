@@ -73,7 +73,6 @@ public class LoadCube extends ApplicationAdapter {
 		cam.far = 50f;
 		cam.update();
 
-
         String modelFileName = "data/g3d/gltf/UnitCube/UnitCube.gltf";
 		FileHandle file = Gdx.files.internal(modelFileName);
         WgGLTFModelLoader loader = new WgGLTFModelLoader();
