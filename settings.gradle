@@ -14,17 +14,15 @@ include 'gdx-webgpu2'
 include ":backends"
 include ":backends:gdx-lwjgl3-webgpu"
 include 'backends:gdx-desktop-webgpu'
-
+include "backends:gdx-teavm-webgpu"
 
 include ':api-test'
 include ':api-new-test'
 
-
-
-
 include 'tests:gdx-tests-webgpu2'
 include 'tests:gdx-tests-desktop'
 include 'tests:gdx-tests-desktop2'
+include "tests:gdx-tests-teavm"
 include ":tests"
 include ":tests:gdx-tests-webgpu"
 include ":tests:test-api"

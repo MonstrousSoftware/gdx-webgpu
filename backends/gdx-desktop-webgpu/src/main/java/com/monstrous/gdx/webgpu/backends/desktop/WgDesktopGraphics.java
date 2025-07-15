@@ -24,7 +24,11 @@ import com.badlogic.gdx.graphics.glutils.HdpiMode;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.utils.Disposable;
 
+import com.github.xpenatan.webgpu.WGPUInstance;
+import com.github.xpenatan.webgpu.WGPUSurface;
+import com.github.xpenatan.webgpu.WGPUSurfaceCapabilities;
 import com.monstrous.gdx.webgpu.application.WebGPUApplication2;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.utils.WgGL20;
 import org.lwjgl.BufferUtils;
@@ -34,8 +38,13 @@ import org.lwjgl.glfw.GLFWFramebufferSizeCallback;
 import org.lwjgl.system.Configuration;
 
 import java.nio.IntBuffer;
+import static org.lwjgl.glfw.GLFW.GLFW_PLATFORM_WAYLAND;
+import static org.lwjgl.glfw.GLFW.glfwGetPlatform;
+import static org.lwjgl.glfw.GLFWNativeWayland.glfwGetWaylandDisplay;
+import static org.lwjgl.glfw.GLFWNativeX11.glfwGetX11Display;
 
-public class WgDesktopGraphics extends WgGraphics implements Disposable {
+public class WgDesktopGraphics implements WgGraphics, Disposable {
+
 	final WgDesktopWindow window;
 	final WgDesktopApplication app;
 	GL20 gl20;
@@ -62,8 +71,6 @@ public class WgDesktopGraphics extends WgGraphics implements Disposable {
 	private int windowHeightBeforeFullscreen;
 	private DisplayMode displayModeBeforeFullscreen = null;
 	public final WebGPUApplication2 context;
-
-
 
 
 	IntBuffer tmpBuffer = BufferUtils.createIntBuffer(1);
@@ -103,20 +110,72 @@ public class WgDesktopGraphics extends WgGraphics implements Disposable {
         Gdx.gl = this.gl20;
 
 		WebGPUApplication2.Configuration config = new WebGPUApplication2.Configuration(
-            win32handle,
             app.getConfiguration().samples,
 			app.getConfiguration().vSyncEnabled,
             app.getConfiguration().enableGPUtiming,
             app.getConfiguration().backend );
 
+        this.context = new WebGPUApplication2(config, new WebGPUApplication2.OnInitCallback() {
+            @Override
+            public void onInit(WebGPUApplication2 application) {
+                if(application.isReady()) {
+                    System.out.println("Creating surface for window handle: "+win32handle);
+                    application.surface = createSurface(application.instance, win32handle);
 
-		this.context = new WebGPUApplication2(config);
-        this.webgpu = context;
+                    if(application.surface != null) {
+                        System.out.println("surface:" + application.surface);
+                        System.out.println("Surface created");
+                        // Find out the preferred surface format of the window
+                        // = the first one listed under capabilities
+                        WGPUSurfaceCapabilities surfaceCapabilities = WGPUSurfaceCapabilities.obtain();
+                        application.surface.getCapabilities(application.adapter, surfaceCapabilities);
+                        application.surfaceFormat = surfaceCapabilities.getFormats().get(0);
+                        System.out.println("surfaceFormat: " + application.surfaceFormat);
 
-		context.resize(getWidth(), getHeight());
+                        // Release the adapter only after it has been fully utilized
+                        application.adapter.release();
+                        application.adapter.dispose();
+                        application.adapter = null;
+                    }
+                    else {
+                        System.out.println("Surface not created");
+                    }
 
-		GLFW.glfwSetFramebufferSizeCallback(window.getWindowHandle(), resizeCallback);
-	}
+                    // todo webGPU.wgpuInstanceRelease(instance); // we can release the instance now that we have the device
+                    // do we need instance for processEvents?
+                }
+                else {
+                    throw new RuntimeException("Failed to initialize WebGPU");
+                }
+            }
+        });
+
+        context.resize(getWidth(), getHeight());
+
+        GLFW.glfwSetFramebufferSizeCallback(window.getWindowHandle(), resizeCallback);
+    }
+
+    private WGPUSurface createSurface(WGPUInstance instance, long windowHandle) {
+        WGPUSurface surface = null;
+        String osName = System.getProperty("os.name").toLowerCase();
+        if(osName.contains("win")) {
+            surface = instance.createWindowsSurface(windowHandle);
+        }
+        else if(osName.contains("linux")) {
+            if(glfwGetPlatform() == GLFW_PLATFORM_WAYLAND) {
+                long display = glfwGetWaylandDisplay();
+                surface = instance.createLinuxSurface(true, windowHandle, display);
+            }
+            else {
+                long display = glfwGetX11Display();
+                surface = instance.createLinuxSurface(false, windowHandle, display);
+            }
+        }
+        else if(osName.contains("mac")) {
+            surface = instance.createMacSurface(windowHandle);
+        }
+        return surface;
+    }
 
     @Override
     public WebGPUApplication2 getContext() {

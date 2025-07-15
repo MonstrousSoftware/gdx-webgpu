@@ -163,12 +163,5 @@ Thumbs.db
 ## You should delete or comment out the next line if you have configuration in a different resource-config.json .
 **/resource-config.json
 
-# Project exclude paths
-/backends/build/
-/backends/gdx-lwjgl3-webgpu/build/
-/demo/build/
-/gdx-webgpu/build/
-/tests/gdx-tests-webgpu/build/
-/tests/gdx-tests-webgpu2/build/
-**/gdx-desktop-webgpu/build/
-**/gdx-webgpu2/build/
+# Exclude all build paths
+**/build/

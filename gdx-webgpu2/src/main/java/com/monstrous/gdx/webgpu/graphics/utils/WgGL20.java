@@ -22,7 +22,7 @@ public class WgGL20 implements GL20 {
     @Override
     public void glViewport(int x, int y, int width, int height) {
         WgGraphics gfx = (WgGraphics)Gdx.graphics;
-        WebGPUContext webgpu = gfx.webgpu;
+        WebGPUContext webgpu = gfx.getContext();
         Rectangle view = webgpu.getViewportRectangle();
         if(x != view.x || y != view.y || width != view.width || height != view.height){
             Gdx.app.log("glViewport", "x=" + x + " y=" + y + " w=" + width + " h=" + height);
@@ -33,7 +33,7 @@ public class WgGL20 implements GL20 {
     @Override
     public void glScissor(int x, int y, int width, int height) {
         WgGraphics gfx = (WgGraphics)Gdx.graphics;
-        WebGPUContext webgpu = gfx.webgpu;
+        WebGPUContext webgpu = gfx.getContext();
         // note: we are not testing for glEnable(GL_SCISSOR_TEST)/glDisable(GL_SCISSOR_TEST)
 
         Rectangle scissor = webgpu.getScissor();
@@ -47,7 +47,7 @@ public class WgGL20 implements GL20 {
     public void glEnable(int cap) {
         if(cap == GL20.GL_SCISSOR_TEST){
             WgGraphics gfx = (WgGraphics)Gdx.graphics;
-            WebGPUContext webgpu = gfx.webgpu;
+            WebGPUContext webgpu = gfx.getContext();
             webgpu.enableScissor(true);
         }
     }
@@ -56,7 +56,7 @@ public class WgGL20 implements GL20 {
     public void glDisable(int cap) {
         if(cap == GL20.GL_SCISSOR_TEST){
             WgGraphics gfx = (WgGraphics)Gdx.graphics;
-            WebGPUContext webgpu = gfx.webgpu;
+            WebGPUContext webgpu = gfx.getContext();
             webgpu.enableScissor(false);
         }
     }
