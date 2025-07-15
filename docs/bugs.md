@@ -15,4 +15,5 @@ Workaround: use different WgSpriteBatch objects.
 2. If you supply a ShaderProgram to SpriteBatch it will not have been compiled with the right prefix, so the behaviour
 may be different even with the same shader source.
 
+3. In LoadModelTest the appearance of e.g. Stanford Dragon is worse if another model is loaded first.  Perhaps a suboptimal pipeline is used.
 

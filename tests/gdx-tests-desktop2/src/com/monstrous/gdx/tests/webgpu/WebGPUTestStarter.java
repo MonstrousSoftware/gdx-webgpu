@@ -60,8 +60,7 @@ public class WebGPUTestStarter {
 		TextButton lastClickedTestButton;
 
 		public void create () {
-// System.out.println("OpenGL renderer: " + Gdx.graphics.getGLVersion().getRendererString());
-// System.out.println("OpenGL vendor: " + Gdx.graphics.getGLVersion().getVendorString());
+
 
 			final Preferences prefs = Gdx.app.getPreferences("webgpu-tests");
 

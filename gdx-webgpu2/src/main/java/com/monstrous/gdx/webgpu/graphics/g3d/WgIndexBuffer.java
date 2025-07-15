@@ -70,6 +70,7 @@ public class WgIndexBuffer implements IndexData {
     public void setIndices(short[] indices, int offset, int count) {
         ((Buffer) shortBuffer).clear();
         shortBuffer.put(indices, offset, count);
+
         ((Buffer) shortBuffer).flip();
         ((Buffer)byteBuffer).position(0);
         ((Buffer)byteBuffer).limit(count << 1);
@@ -118,6 +119,15 @@ public class WgIndexBuffer implements IndexData {
     public void bind() {
         if(isDirty){
             // upload data to GPU buffer if needed
+
+            // copy limit from short or int buffer to byte buffer
+            int byteLimit;
+            if(wideIndices)
+                byteLimit = Integer.BYTES * intBuffer.limit();
+            else
+                byteLimit = Short.BYTES * shortBuffer.limit();
+            byteBuffer.limit(byteLimit);
+            byteBuffer.position(0);     // reset position for reading
             indexBuffer.setIndices(byteBuffer);
             isDirty = false;
         }

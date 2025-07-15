@@ -100,7 +100,8 @@ public class WgModel extends Model {
             }
             ((Buffer)intBuffer).position(0);
         } else {
-
+            ShortBuffer shortBuffer = mesh.getIndexData().getBuffer(true);
+            shortBuffer.clear();
             for (ModelMeshPart part : modelMesh.parts) {
                 MeshPart meshPart = new WgMeshPart();
                 meshPart.id = part.id;
@@ -109,7 +110,7 @@ public class WgModel extends Model {
                 meshPart.size = hasIndices ?  part.indices.length : numVertices;
                 meshPart.mesh = mesh;
                 if (hasIndices) {
-                    mesh.setIndices(part.indices, offset, part.indices.length);
+                    shortBuffer.put(part.indices);
                 }
                 offset += meshPart.size;
                 meshParts.add(meshPart);
