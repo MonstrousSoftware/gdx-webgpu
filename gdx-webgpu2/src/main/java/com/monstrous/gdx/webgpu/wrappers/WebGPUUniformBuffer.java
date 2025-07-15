@@ -94,7 +94,6 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
         dataBuf = ByteBuffer.allocateDirect(contentSize);
         dataBuf.order(ByteOrder.LITTLE_ENDIAN);
         floatData = dataBuf.asFloatBuffer();
-        //floatData = new WGPUFloatBuffer(); (contentSize);       // native memory buffer for one slice to aid write buffer
     }
 
 

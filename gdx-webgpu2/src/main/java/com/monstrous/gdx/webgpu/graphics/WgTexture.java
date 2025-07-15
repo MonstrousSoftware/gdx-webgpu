@@ -520,11 +520,14 @@ public class WgTexture extends Texture {
 
         if(texture != null) {   // guard against double dispose
             //System.out.println("Destroy texture " + label);
-            if(sampler != null)
+            if(sampler != null) {
                 sampler.release();
+                sampler.dispose();
+            }
+            textureView.release();
             textureView.dispose();
             texture.destroy();
-            texture.release();
+            texture.dispose();
             texture = null;
         }
         super.dispose();

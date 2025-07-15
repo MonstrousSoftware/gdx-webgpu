@@ -21,6 +21,7 @@ import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.utils.ScreenUtils;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.tests.webgpu.utils.PerspectiveCamController;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
@@ -49,6 +50,7 @@ public class ShapeRendererTest extends GdxTest {
 	public void render () {
 //		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 //		Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
+        ScreenUtils.clear(Color.GOLD, true);
 		cam.update();
 		renderer.setProjectionMatrix(cam.combined);
 		renderer.identity();

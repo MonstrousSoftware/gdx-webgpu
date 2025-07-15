@@ -172,15 +172,13 @@ public class GPUTimer implements Disposable {
 //            // todo device.tick();
 //        }
 
-        timestampQuerySet.release();
+        timestampQuerySet.destroy();
 
         // the following causes a crash when uncommented
         //timestampQuerySet.destroy();
 
-        timeStampMapBuffer.destroy();   // is this the correct order?
-        timeStampMapBuffer.release();
+        timeStampMapBuffer.destroy();
         timeStampResolveBuffer.destroy();
-        timeStampResolveBuffer.release();
     }
 
     private final String[] names = new String[MAX_PASSES];

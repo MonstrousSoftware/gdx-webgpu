@@ -20,6 +20,7 @@ import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.wrappers.GPUTimer;
 
+
 /** WebGPU graphics context and implementation of application life cycle. Used to initialize and terminate WebGPU and to render frames.
  * Also provides shared WebGPU resources, like the device, the default queue, the surface etc.
  */
@@ -195,7 +196,6 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
     }
 
     /** called once per second. Used to gather statistics */
-    // todo called?
     public void secondsTick() {
         //  request average gpu time once per second to keep it readable
         for(int i = 0; i < getGPUTimer().getNumPasses(); i++) {
@@ -286,8 +286,7 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
         viewDescriptor.setAspect(WGPUTextureAspect.All);
 
         textureOut.createView(viewDescriptor, textureViewOut);
-//        textureOut.release();
-        // not on WGPU: textureOut.release();
+        textureOut.release();
         return textureViewOut;
     }
 
@@ -304,18 +303,17 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
 
         terminateDepthBuffer();
         exitSwapChain();
-        System.out.println("starting new swap chain");
+
         if(targetView != null) {
             targetView.release();
         }
         initSwapChain(width, height, config.vSyncEnabled);
 
-        System.out.println("init depth buffer");
+
         initDepthBuffer(width, height, config.numSamples);
-        System.out.println("got new  depth buffer");
+
 
         if(config.numSamples > 1 ) {
-            System.out.println("renew multisampling texture");
             if(multiSamplingTexture != null)
                 multiSamplingTexture.dispose();
             multiSamplingTexture = new WgTexture("multisampling", width, height, false, true, surfaceFormat, config.numSamples);
@@ -328,17 +326,6 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
         viewportRectangle.set(0,0,width, height);
         this.width = width;
         this.height = height;
-
-        //         make sure we get a target view from the new swap chain
-        //         to present at the end of this frame
-        // commented out because of error:   Surface image is already acquired
-
-        // the target view is no longer valid because the surface has changed
-//        if(targetView != null) {
-//            targetView.release();
-//            targetView = null;
-//        }
-//        targetView = getNextSurfaceTextureView();
     }
 
     public void setViewportRectangle(int x, int y, int w, int h){
@@ -400,11 +387,6 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
         surface.unconfigure();
     }
 
-    public void drop(){
-        terminateDepthBuffer();
-        exitSwapChain();
-    }
-
     private void initDepthBuffer(int width, int height, int samples){
         //System.out.println("initDepthBuffer: "+width+" x "+height);
         depthTexture = new WgTexture("depth texture", width, height, 1, WGPUTextureUsage.RenderAttachment,
@@ -426,13 +408,12 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
         exitSwapChain();
 
         queue.dispose();
+        device.destroy();
         device.dispose();
         gpuTimer.dispose();
 
         surface.release();
         command.dispose();
-
-
     }
 
 
@@ -479,18 +460,6 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
         surfaceFormat = prevState.surfaceFormat;
         depthTexture = prevState.depthTexture;
     }
-
-//    @Override
-//    public WgTexture pushDepthTexture(WgTexture depth) {
-//        WgTexture prevDepth = depthTexture;
-//        depthTexture = depth;
-//        return prevDepth;
-//    }
-//
-//    @Override
-//    public void popDepthTexture(WgTexture prevDepth) {
-//        depthTexture  = prevDepth;
-//    }
 
     @Override
     public WGPUCommandEncoder getCommandEncoder () {

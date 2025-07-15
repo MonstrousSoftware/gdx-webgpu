@@ -152,6 +152,12 @@ resize will just set a flag and the actual resize is performed just before the r
 15/07:
 - Fixed loading WgModel from ModelData. Issue was index buffer filling via ShortBuffer.  Model loading works now including GTLF models. 
 
+to do:
+- DepthClearTest behaves strangely like depth sorting doesn't work.
+- ShapeRenderer test gives only black screen
+- SuperKaolio seems to fast and not sure the character behaves correctly.
+- When switching between models, e.g. in LoadModelTest, it seems the wrong pipeline is used. Textures look strange.
+
 
 
 	
