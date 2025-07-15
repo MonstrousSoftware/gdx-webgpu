@@ -52,10 +52,12 @@ public class SpriteBatchTest extends GdxTest {
             for (int i = 0; i < SPRITES; i++) {
                 int x = (int) (Math.random() * (screenWidth - width + width * 0.5f));
                 int y = (int) (Math.random() * (screenHeight - height + height * 0.5f));
-                if(sprites[i] == null)
+                if(sprites[i] == null) {
                     sprites[i] = new Sprite(texture, width, height);
+                    sprites[i].setOrigin(width * 0.5f, height * 0.5f);
+                }
                 sprites[i].setPosition(x, y);
-                sprites[i].setOrigin(width * 0.5f, height * 0.5f);
+
             }
         } catch (Throwable t) {
             Gdx.app.error(TAG, "[" + this.hashCode() + "] Error during sprite creation!", t);
@@ -66,8 +68,9 @@ public class SpriteBatchTest extends GdxTest {
 
     @Override
     public void resize(int width, int height) {
+        System.out.println("Resize: "+width+" x "+height);
         viewport.update(width, height, true);
-        generateSprites(width, height);
+        generateSprites(width,height);
     }
 
     @Override

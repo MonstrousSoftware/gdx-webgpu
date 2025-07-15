@@ -17,7 +17,7 @@ dependencies {
 
     implementation(project(":backends:gdx-teavm-webgpu"))
     implementation(project(":tests:gdx-tests-webgpu2"))
-//    implementation(project(":tests:gdx-tests-webgpu")) // Have Build errors
+    implementation(project(":tests:gdx-tests-webgpu")) // Have Build errors
 }
 
 val mainClassName = "main.java.com.monstrous.gdx.tests.webgpu.BuildTeaVM"

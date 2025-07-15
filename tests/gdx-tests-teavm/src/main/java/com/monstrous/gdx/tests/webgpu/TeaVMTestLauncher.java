@@ -1,7 +1,9 @@
 package main.java.com.monstrous.gdx.tests.webgpu;
 
 import com.github.xpenatan.gdx.backends.teavm.TeaApplicationConfiguration;
+import com.monstrous.gdx.tests.webgpu.ASimpleGame;
 import com.monstrous.gdx.webgpu.backends.teavm.WgTeaApplication;
+import main.java.FullScreenTest;
 import main.java.HelloTexture;
 import main.java.SpriteBatchTest;
 
@@ -15,7 +17,7 @@ public class TeaVMTestLauncher {
         config.preloadAssets = true;
         config.useGL30 = true;
 
-        new WgTeaApplication(new SpriteBatchTest(), config);
+        new WgTeaApplication(new ASimpleGame(), config);
 //        new WgTeaApplication(new HelloTexture(), config);
     }
 }

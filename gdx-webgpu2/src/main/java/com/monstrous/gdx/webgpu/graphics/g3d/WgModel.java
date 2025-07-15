@@ -100,8 +100,6 @@ public class WgModel extends Model {
             }
             ((Buffer)intBuffer).position(0);
         } else {
-            ShortBuffer indicesBuffer = mesh.getIndicesBuffer(true);
-            ((Buffer)indicesBuffer).clear();
 
             for (ModelMeshPart part : modelMesh.parts) {
                 MeshPart meshPart = new WgMeshPart();
@@ -111,12 +109,11 @@ public class WgModel extends Model {
                 meshPart.size = hasIndices ?  part.indices.length : numVertices;
                 meshPart.mesh = mesh;
                 if (hasIndices) {
-                       indicesBuffer.put(part.indices);
+                    mesh.setIndices(part.indices, offset, part.indices.length);
                 }
                 offset += meshPart.size;
                 meshParts.add(meshPart);
             }
-            ((Buffer)indicesBuffer).position(0);
         }
 
         // todo (assumes short indices to calc bbox)

@@ -31,9 +31,12 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
+import com.badlogic.gdx.graphics.g3d.model.data.*;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 
+import com.badlogic.gdx.math.Quaternion;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.JsonReader;
 import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopApplication;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModel;
@@ -82,6 +85,33 @@ public class LoadCube extends ApplicationAdapter {
 //        ModelBuilder modelBuilder = new WgModelBuilder();
 //		model = modelBuilder.createBox(5f, 5f, 5f, mat, //new Material(ColorAttribute.createDiffuse(Color.GREEN)),
 //			VertexAttributes.Usage.Position | VertexAttributes.Usage.TextureCoordinates |VertexAttributes.Usage.Normal);
+
+//        ModelData modelData = new ModelData();
+//
+//        ModelMesh modelMesh = new ModelMesh();
+//
+//        ModelMaterial modelMaterial = new ModelMaterial();
+//        modelMaterial.id = "mat";
+//        modelMaterial.diffuse = Color.YELLOW;
+//
+//        ModelNodePart part = new ModelNodePart();
+//        part.materialId = "mat";
+//        part.meshPartId = "part";
+//        part.bones = null;
+//
+//        ModelNode modelNode = new ModelNode();
+//        modelNode.scale = new Vector3(1,1,1);
+//        modelNode.translation = new Vector3(0,0,0);
+//        modelNode.rotation = new Quaternion();
+//        modelNode.parts = new ModelNodePart[1];
+//        modelNode.parts[0] = part;
+//
+//
+//        modelData.addMesh(modelMesh);
+//        modelData.materials.add(modelMaterial);
+//        modelData.nodes.add(modelNode);
+
+
 
 
 		instance = new ModelInstance(model2);
