@@ -88,7 +88,6 @@ public class WgTeaGraphics extends TeaGraphics implements WgGraphics {
         });
 
         context.resize(getWidth(), getHeight());
-//        context.viewport(0, 0, getWidth(), getHeight());
 
         // listen to fullscreen changes
         addFullscreenChangeListener(canvas, new FullscreenChanged() {
