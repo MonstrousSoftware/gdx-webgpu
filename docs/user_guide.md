@@ -12,13 +12,50 @@ Instead of the regular application launcher, use the gdx-webgpu launcher for you
 
 Then in your application, you can generally code as normal for LibGDX applications, except that for some graphics classes you need to use an alternative class.
 Gdx-webgpu provides substitute classes for many of the LibGDX graphics classes.  
-For example, instead of `Texture`, you would use `WgTexture`, instead of `SpriteBatch` you would use `WgSpriteBatch`, etcetera.
+For example, instead of `Texture`, you would use `WgTexture`, instead of `SpriteBatch` you would use `WgSpriteBatch`, instead of `Stage` you would use `WgStage`, etcetera.
 
-When using the WebGPU for rendering, the substitute classes need to be used as the original classes will not work without a GL context and this will generally lead to 
-a run-time exception.
+Here is an example that should look very familiar to LibGDX users:
+```java
+package main.java;
 
-Sometimes the substitute class is subclassed from the original class, so you can provide the subclass where the original class is expected, 
-as long as you use the constructor of the substitute class (i.e. the `new` operator).  This allows a lot of existing code to remain unchanged.
+import com.badlogic.gdx.ApplicationAdapter;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Texture;
+import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopApplication;
+import com.monstrous.gdx.webgpu.graphics.WgTexture;
+import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
+
+public class HelloTexture extends ApplicationAdapter {
+
+    private Texture texture;
+    private WgSpriteBatch batch;
+
+    @Override
+    public void create() {
+        texture = new WgTexture(Gdx.files.internal("data/badlogic.jpg")); // <--
+        batch = new WgSpriteBatch(); // <--
+    }
+
+    @Override
+    public void render() {
+        batch.begin();
+        batch.draw(texture, 0, 0);
+        batch.end();
+    }
+
+    @Override
+    public void dispose(){
+        batch.dispose();
+        texture.dispose();
+    }
+}
+```
+Note in the example that WgTexture was used to create the Texture object.  WgTexture is a subclass of Texture, suitable for WebGPU.  Also note that WgSpriteBatch was used instead of SpriteBatch.  In this example, these are the only two changes from a regular LibGDX application: Using types with a Wg- prefix instead of the standard LibGDX graphics classes. 
+
+
+When using the WebGPU for rendering, the substitute classes need to be used as the original classes will not work without a GL context and this will generally lead to a run-time exception.
+
+Sometimes the substitute class is subclassed from the original class (as in the WgTexture from the example, which is subclassed from Texture).  In these cases you can provide the subclass as a method parameter where the original class is expected, as long as you use the constructor of the substitute class (i.e. the `new` operator).  This allows a lot of existing code to remain unchanged.
 
 Example:
 
@@ -28,7 +65,7 @@ Example:
 
 
 
-## Launch
+## Launcher
 To launch a gdx-webgpu application, create a `WgApplication` and pass it an instance of `ApplicationListener` and optionally a configuration object.
 
 ```java
@@ -47,8 +84,8 @@ Some useful configuration options:
 |`config.setWindowedMode(w,h);`     | Sets the application window to the given size.                                                                                                                                                                                                                          |
 |`config.useVsync(boolean)`| 	Whether to fix the frame rate to vsync.                                                                                                                                                                                                                                |
 |`config.samples`        | 	Set to 4 for anti-aliasing. 1 for no anti-aliasing.                                                                                                                                                                                                                    |
-|`config.backend`     | Default is `WGPUBackendType.Undefined` which means WebGPU will try to select a suitable backend. Other values can be used to test a Vulkan backend or a DirectX12 backend for the WebGPU layer. Note that the availability of backends depends on the users' computer. |	
-| `config.enableGPUtiming` | Default is false. Can be set to true to allow GPU timing measurements (to explain how)                                                                                                                                                                                  |
+|`config.backend`     | Default is undefined, which means WebGPU will try to select a suitable backend. Other values can be used to test a Vulkan backend or a DirectX12 backend for the WebGPU layer. Note that the availability of backends depends on the users' computer. |	
+| `config.enableGPUtiming` | Default is false. Can be set to true to allow GPU timing measurements.                                                                                                                                                                                  |
  
 Configuration settings are platform dependent.
 
@@ -114,6 +151,7 @@ classes that replace an existing LibGDX class.
 
 ## Some general comments
 
+### WGSL
 WebGPU uses a different shader language than OpenGL: WGSL instead of GLSL.  It looks a bit different because it uses Rust syntax, but it is fairly easy to pick up if 
 you are already familiar with shader languages.  One nice aspect is that the vertex shader and fragment shader can be defined in the same source file. WGSL does not
 support preprocessor commands.  Some rudimentary preprocessing is provided by gdx-webgpu to support conditional compilation, e.g.
@@ -124,11 +162,16 @@ support preprocessor commands.  Some rudimentary preprocessing is provided by gd
     #endif
 ```
 
+### Use of OpenGL commands
 Calling OpenGL commands from code is not supported (silently ignored) with very few exceptions (glViewport, glScissor).
 
+To clear the screen use `ScreenUtils.clear(Color.WHITE)` or pass a clear color paramter to `WgSpriteBatch` or `WgModelBatch`.
+
+### WebGPU Projection matrix
 A WebGPU projection matrix is slightly different from an OpenGL one, because the Z coordinate is mapped to [0..1] instead if [-1 .. 1].  The matrix classes have however not
 been changed. SpriteBatch will make an internal adjustment to compensate if provided a projection transform.
 
+### Non-graphics classes
 Any LibGDX functions not related to graphics should just work, e.g. maths classes, audio, networking, etc.
 
 
@@ -158,7 +201,7 @@ The new methods use WebGPU constants (enum WGPUBlendFactor):
 - setBlendFactorSeparate
 
 ### Clear color
-The `WgSpriteBatch#begin()` method takes an optional `Color` parameter to clear the screen at the start of the render pass, which is slightly more efficient than using `ScreenUtils.clear()` which triggers a dedicated render pass.
+The `WgSpriteBatch#begin()` method takes an optional `Color` parameter to clear the screen at the start of the render pass, which is *slightly* more efficient than using `ScreenUtils.clear()` which runs a dedicated render pass.
 
 ### Set Shader
 It is possible to set a shader program, either in the constructor or by using `setShader()`.  The shader program needs to be a WgShaderProgram which encapsulates a shader written in WGSL. 
@@ -184,7 +227,9 @@ Unlike FrameBuffer in LibGDX, WgFrameBuffer can be nested.
 # Other comments
 
 ## GPU timing
-To get timing of render passes, set `enableGPUtiming` to true in the application configuration (it may not have effect on all platforms).  
+In case you are wondering about GPU performance, you can get some timing information per render pass quite easily.
+
+To get timing of render passes, set `enableGPUtiming` to `true` in the application configuration (it may not have effect on all platforms).  
 
 Access the GPUTimer as follows:
 ```java 
@@ -205,7 +250,8 @@ You can use the methods of GPUTimer to get the number of render passes, their la
  ![gpu timing example](images/gpu-timing.png) 
 
 In the example above, you can see 5 render passes being executed: 1 to clear the screen, 1 to render the 3d scene, 
-1 to put the text on the screen, and 2 for the user interface using Scene2D.  In this case the draw call for 451 instanced models
-takes 1570 microseconds, which is the bulk of the frame time.
+1 to put the text on the screen, and 2 for the user interface using Scene2D.  In this case the draw call for 451 instanced models takes 1570 microseconds, which is the bulk of the frame time.
+
+To get more insight in what the GPU is doing, you can use a tool such as RenderDoc.
         
 
