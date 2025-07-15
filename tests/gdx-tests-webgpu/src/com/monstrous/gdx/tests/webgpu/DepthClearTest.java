@@ -52,21 +52,11 @@ public class DepthClearTest extends GdxTest {
     ModelInstance instanceClose, instanceFar;
 
 
-//	// launcher
-//	public static void main (String[] argv) {
-//
-//		WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
-//		config.setWindowedMode(640, 480);
-//		config.setTitle("WebGPUTest");
-//
-//		new WgDesktopApplication(new DepthClearTest(), config);
-//	}
-
 	public void create () {
 		modelBatch = new WgModelBatch();
         modelBatch2 = new WgModelBatch();
 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		cam.position.set(0, 0, 1);
+		cam.position.set(0, 0, 0);
 		cam.near = 0.1f;
 
 
@@ -87,24 +77,24 @@ public class DepthClearTest extends GdxTest {
         box = modelBuilder.createBox(1, 1, 1, mat, attribs);
 
 
-        instanceFar = new ModelInstance(box, 0,0,-3);
-        instanceClose = new ModelInstance(box, 0,0,-1);
-        instanceClose.transform.scale(0.3f, 0.3f, 0.3f);
+        instanceFar = new ModelInstance(box, 0,0,-5);
+        instanceClose = new ModelInstance(box, 0,0,-2);
+        instanceClose.transform.scale(0.1f, 2.0f, 0.1f);
+        instanceFar.transform.scale(2f, 2f, 2f);
 	}
 
 	public void render () {
 		float delta = Gdx.graphics.getDeltaTime();
 		instanceClose.transform.rotate(Vector3.Y, delta*15f);
-        instanceFar.transform.rotate(Vector3.Y, -delta*15f);
+        //instanceFar.transform.rotate(Vector3.Y, -delta*15f);
 
 		WgScreenUtils.clear(Color.TEAL, true);
 		cam.update();
 		modelBatch.begin(cam);
 		modelBatch.render(instanceClose);
-        //modelBatch.render(instanceFar);
 		modelBatch.end();
 
-        WgScreenUtils.clear(Color.TEAL, false);
+        //WgScreenUtils.clear(Color.TEAL, false);
         modelBatch2.begin(cam);
         modelBatch2.render(instanceFar);
         modelBatch2.end();
