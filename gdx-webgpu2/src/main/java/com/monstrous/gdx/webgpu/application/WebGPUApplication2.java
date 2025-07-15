@@ -455,33 +455,42 @@ public class WebGPUApplication2 extends WebGPUContext implements Disposable {
     public WGPUTextureView getTargetView () {
         return targetView;
     }
+
+
+
     /** Push a texture view to use for output, instead of the screen. */
     @Override
-    public WGPUTextureView pushTargetView(WgTexture texture, Rectangle oldViewport) {
-        WGPUTextureView prevTargetView = targetView;
+    public RenderOutputState pushTargetView(WgTexture texture, WgTexture depth) {
+        RenderOutputState state = new RenderOutputState(targetView, surfaceFormat, depthTexture, getViewportRectangle());
         targetView = texture.getTextureView();
-        oldViewport.set(getViewportRectangle());
+        surfaceFormat = texture.getFormat();
+        if(depth != null){
+            depthTexture = depth;
+        }
         setViewportRectangle(0,0,texture.getWidth(), texture.getHeight());
-        return prevTargetView;
+        return state;
     }
 
-    @Override
-    public void popTargetView(WGPUTextureView prevTargetView, Rectangle oldViewport) {
-        setViewportRectangle(oldViewport);
-        targetView = prevTargetView;
-    }
 
     @Override
-    public WgTexture pushDepthTexture(WgTexture depth) {
-        WgTexture prevDepth = depthTexture;
-        depthTexture = depth;
-        return prevDepth;
+    public void popTargetView(RenderOutputState prevState) {
+        setViewportRectangle(prevState.viewport);
+        targetView = prevState.targetView;
+        surfaceFormat = prevState.surfaceFormat;
+        depthTexture = prevState.depthTexture;
     }
 
-    @Override
-    public void popDepthTexture(WgTexture prevDepth) {
-        depthTexture  = prevDepth;
-    }
+//    @Override
+//    public WgTexture pushDepthTexture(WgTexture depth) {
+//        WgTexture prevDepth = depthTexture;
+//        depthTexture = depth;
+//        return prevDepth;
+//    }
+//
+//    @Override
+//    public void popDepthTexture(WgTexture prevDepth) {
+//        depthTexture  = prevDepth;
+//    }
 
     @Override
     public WGPUCommandEncoder getCommandEncoder () {

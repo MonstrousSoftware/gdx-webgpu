@@ -76,7 +76,7 @@ public class PostProcessing extends GdxTest {
 		batch = new WgSpriteBatch();
 		font = new WgBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
 
-        fbo = new WgFrameBuffer(webgpu.getSurfaceFormat(),  640, 480, true);
+        fbo = new WgFrameBuffer(640, 480, true);
 
         shader = new WgShaderProgram(Gdx.files.internal("data/wgsl/sprite-greyscale.wgsl"));
 	}

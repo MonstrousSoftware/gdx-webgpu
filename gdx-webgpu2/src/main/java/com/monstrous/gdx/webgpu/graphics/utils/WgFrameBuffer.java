@@ -30,16 +30,17 @@ import com.monstrous.gdx.webgpu.graphics.WgTexture;
 public class WgFrameBuffer implements Disposable {
 
     private final WebGPUContext webgpu;
-    private final boolean hasDepth;
     private final WgTexture colorTexture;
     private final WgTexture depthTexture;
-    private WGPUTextureView originalView;
-    private final Rectangle originalViewportRectangle;
-    private WgTexture originalDepthTexture;
+    private WebGPUContext.RenderOutputState prevState;
 
-    /** note: requires WGPUTextureFormat instead of Pixmap.Format */
+
+    public WgFrameBuffer( int width, int height, boolean hasDepth) {
+        this(WGPUTextureFormat.RGBA8Unorm, width, height, hasDepth);
+    }
+
+    /** note: requires WGPUTextureFormat instead of Pixmap.Format.  */
     public WgFrameBuffer(WGPUTextureFormat format, int width, int height, boolean hasDepth) {
-        this.hasDepth = hasDepth;
         WgGraphics gfx = (WgGraphics) Gdx.graphics;
         webgpu = gfx.getContext();
 
@@ -49,20 +50,14 @@ public class WgFrameBuffer implements Disposable {
             depthTexture = new WgTexture("fbo depth", width, height, 1, textureUsage, WGPUTextureFormat.Depth24Plus, 1, WGPUTextureFormat.Depth24Plus);
         else
             depthTexture = null;
-        originalViewportRectangle = new Rectangle();
     }
 
     public void begin(){
-        originalView = webgpu.pushTargetView(colorTexture, originalViewportRectangle);
-        if(hasDepth)
-            originalDepthTexture = webgpu.pushDepthTexture(depthTexture);
-
+        prevState = webgpu.pushTargetView(colorTexture, depthTexture);
     }
 
     public void end() {
-        webgpu.popTargetView(originalView, originalViewportRectangle);
-        if(hasDepth)
-            webgpu.popDepthTexture(originalDepthTexture);
+        webgpu.popTargetView(prevState);
     }
 
     public Texture getColorBufferTexture(){

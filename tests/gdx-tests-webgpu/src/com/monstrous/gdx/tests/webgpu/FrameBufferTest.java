@@ -23,6 +23,7 @@ import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.math.Vector3;
+import com.github.xpenatan.webgpu.WGPUTextureFormat;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.tests.webgpu.utils.PerspectiveCamController;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
@@ -72,7 +73,7 @@ public class FrameBufferTest extends GdxTest {
 		batch = new WgSpriteBatch();
 		font = new WgBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
 
-        fbo = new WgFrameBuffer(gfx.getContext().getSurfaceFormat(),  640, 480, true);
+        fbo = new WgFrameBuffer(WGPUTextureFormat.RGBA8Unorm,  640, 480, true);
 	}
 
 	public void render () {

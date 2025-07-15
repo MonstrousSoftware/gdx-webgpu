@@ -18,6 +18,20 @@ public abstract class WebGPUContext {
         HEADLESS
     }
 
+    static public class RenderOutputState {
+        WGPUTextureView targetView;
+        WGPUTextureFormat surfaceFormat;
+        WgTexture depthTexture;
+        Rectangle viewport;
+
+        public RenderOutputState(WGPUTextureView targetView, WGPUTextureFormat surfaceFormat, WgTexture depthTexture, Rectangle viewport) {
+            this.targetView = targetView;
+            this.surfaceFormat = surfaceFormat;
+            this.depthTexture = depthTexture;
+            this.viewport = new Rectangle(viewport);
+        }
+    }
+
     public WGPUInstance instance;
     public WGPUAdapter adapter;
     public WGPUDevice device;
@@ -36,22 +50,20 @@ public abstract class WebGPUContext {
     /** Use provided texture for output (must have usage RenderAttachment).
      *
      * @param texture texture to use for output
-     * @param oldViewport out: previous viewport dimensions
-     * @return Pointer of previous TextureView
+     * @param depthTexture depth texture to use for output, may be null
+     * @return Render output state, to restore current output state with popTargetView().
      */
-    public abstract WGPUTextureView pushTargetView(WgTexture texture, Rectangle oldViewport);
+    public abstract RenderOutputState pushTargetView(WgTexture texture, WgTexture depthTexture);
 
     /** Restore previous output target.
      *
-     * @param prevPointer TextureView returned by pushTargetView()
-     * @param prevViewport in: Viewport rectangle returned by pushTargetView()
      */
-    public abstract void popTargetView(WGPUTextureView prevPointer, Rectangle prevViewport);
+    public abstract void popTargetView(RenderOutputState prevState);
 
     abstract WGPUCommandEncoder getCommandEncoder ();
     public abstract WgTexture getDepthTexture ();
-    public abstract WgTexture pushDepthTexture(WgTexture depth);
-    public abstract void popDepthTexture(WgTexture prevDepth);
+//    public abstract WgTexture pushDepthTexture(WgTexture depth);
+//    public abstract void popDepthTexture(WgTexture prevDepth);
     //abstract WGPUBackendType getRequestedBackendType();
     public abstract  int getSamples();
     public abstract WgTexture getMultiSamplingTexture();
