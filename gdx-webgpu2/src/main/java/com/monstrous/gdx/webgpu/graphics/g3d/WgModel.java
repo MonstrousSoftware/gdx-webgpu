@@ -75,7 +75,9 @@ public class WgModel extends Model {
 		meshes.add(mesh);
 		disposables.add(mesh);
 
-		BufferUtils.copy(modelMesh.vertices, mesh.getVerticesBuffer(true), modelMesh.vertices.length, 0);
+        // todo is BufferUtils.copy faster?
+        mesh.setVertices(modelMesh.vertices);
+		//BufferUtils.copy(modelMesh.vertices, mesh.getVerticesBuffer(true), modelMesh.vertices.length, 0);
 		int offset = 0;
 
 

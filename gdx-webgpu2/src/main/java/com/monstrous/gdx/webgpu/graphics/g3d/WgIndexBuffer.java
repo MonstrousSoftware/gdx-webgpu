@@ -127,6 +127,7 @@ public class WgIndexBuffer implements IndexData {
         bind();
         // bind index buffer to render pass
         int size = indexBuffer.getSize();  // in bytes
+
         renderPass.setIndexBuffer( indexBuffer.getBuffer(), (wideIndices ? WGPUIndexFormat.Uint32 : WGPUIndexFormat.Uint16), 0, size);
     }
 

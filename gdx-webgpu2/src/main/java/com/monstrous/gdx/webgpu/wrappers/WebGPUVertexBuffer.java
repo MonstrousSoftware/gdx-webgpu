@@ -47,6 +47,11 @@ public class WebGPUVertexBuffer extends WebGPUBuffer {
     }
 
     public void setVertices(ByteBuffer byteData, int targetOffset, int sizeInBytes) {
+//        for(int i = 0; i < byteData.limit()/Float.BYTES; i++){
+//            System.out.println("vertex "+i+" : "+byteData.getFloat());
+//        }
+//        byteData.position(0);
+
         sizeInBytes = (sizeInBytes + 3) & ~3; // round up to multiple of 4 for writeBuffer
         if(sizeInBytes > getSize()) throw new IllegalArgumentException("VertexBuffer.setVertices: ByteBuffer contents too large.");
 

@@ -169,7 +169,7 @@ public class ParserGLTF {
                         JsonValue attribs = p.get("attributes");
                         JsonValue attrib = attribs.child;
                         while(attrib != null){
-                            //System.out.println(attrib.name);
+                            System.out.println("GLTF attribute: " + attrib.name);
                             GLTFAttribute attribute = new GLTFAttribute(attrib.name, attrib.asInt());
                             primitive.attributes.add(attribute);
                             attrib = attrib.next;

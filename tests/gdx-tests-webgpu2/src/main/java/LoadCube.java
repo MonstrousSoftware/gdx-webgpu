@@ -71,20 +71,20 @@ public class LoadCube extends ApplicationAdapter {
 		cam.update();
 
 
-        String modelFileName = "data/g3d/gltf/Cube/Cube.gltf";
+        String modelFileName = "data/g3d/gltf/UnitCube/UnitCube.gltf";
 		FileHandle file = Gdx.files.internal(modelFileName);
         WgGLTFModelLoader loader = new WgGLTFModelLoader();
 		Model model2 =  loader.loadModel(file);
 
-        Material mat = model2.materials.get(0);
+        //Material mat = model2.materials.get(0);
+//        Material mat =new Material(ColorAttribute.createDiffuse(Color.GREEN));
+//
+//        ModelBuilder modelBuilder = new WgModelBuilder();
+//		model = modelBuilder.createBox(5f, 5f, 5f, mat, //new Material(ColorAttribute.createDiffuse(Color.GREEN)),
+//			VertexAttributes.Usage.Position | VertexAttributes.Usage.TextureCoordinates |VertexAttributes.Usage.Normal);
 
-        ModelBuilder modelBuilder = new WgModelBuilder();
-		model = modelBuilder.createBox(5f, 5f, 5f, mat, //new Material(ColorAttribute.createDiffuse(Color.GREEN)),
-			VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 
-//        Material mat =  new Material(ColorAttribute.createDiffuse(Color.GREEN));
-        //model.materials.get(0).set(mat);
-		instance = new ModelInstance(model);
+		instance = new ModelInstance(model2);
 
 //		Gdx.input.setInputProcessor(new InputMultiplexer(this, inputController = new CameraInputController(cam)));
 	}
