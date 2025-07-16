@@ -27,8 +27,7 @@ import com.badlogic.gdx.utils.Disposable;
 import com.github.xpenatan.webgpu.WGPUInstance;
 import com.github.xpenatan.webgpu.WGPUSurface;
 import com.github.xpenatan.webgpu.WGPUSurfaceCapabilities;
-import com.monstrous.gdx.webgpu.application.WebGPUApplication2;
-import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WebGPUApplication;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.utils.WgGL20;
 import org.lwjgl.BufferUtils;
@@ -70,7 +69,7 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
 	private int windowWidthBeforeFullscreen;
 	private int windowHeightBeforeFullscreen;
 	private DisplayMode displayModeBeforeFullscreen = null;
-	public final WebGPUApplication2 context;
+	public final WebGPUApplication context;
 
 
 	IntBuffer tmpBuffer = BufferUtils.createIntBuffer(1);
@@ -109,15 +108,15 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
 		Gdx.graphics = this;
         Gdx.gl = this.gl20;
 
-		WebGPUApplication2.Configuration config = new WebGPUApplication2.Configuration(
+		WebGPUApplication.Configuration config = new WebGPUApplication.Configuration(
             app.getConfiguration().samples,
 			app.getConfiguration().vSyncEnabled,
             app.getConfiguration().enableGPUtiming,
             app.getConfiguration().backend );
 
-        this.context = new WebGPUApplication2(config, new WebGPUApplication2.OnInitCallback() {
+        this.context = new WebGPUApplication(config, new WebGPUApplication.OnInitCallback() {
             @Override
-            public void onInit(WebGPUApplication2 application) {
+            public void onInit(WebGPUApplication application) {
                 if(application.isReady()) {
                     System.out.println("Creating surface for window handle: "+win32handle);
                     application.surface = createSurface(application.instance, win32handle);
@@ -178,7 +177,7 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
     }
 
     @Override
-    public WebGPUApplication2 getContext() {
+    public WebGPUApplication getContext() {
         return context;
     }
 

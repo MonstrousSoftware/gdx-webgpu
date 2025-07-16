@@ -1,14 +1,17 @@
-package com.monstrous.gdx.webgpu.graphics.g3d.environment;
+package com.monstrous.gdx.webgpu.graphics.g3d.attributes.environment;
 
-import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.environment.ShadowMap;
 import com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Disposable;
+import com.github.xpenatan.webgpu.WGPUTextureFormat;
 import com.monstrous.gdx.webgpu.graphics.utils.WgFrameBuffer;
-import com.monstrous.gdx.webgpu.webgpu.WGPUTextureFormat;
+
 
 public class WgDirectionalShadowLight extends DirectionalLight implements ShadowMap, Disposable {
     protected WgFrameBuffer fbo;
@@ -21,7 +24,7 @@ public class WgDirectionalShadowLight extends DirectionalLight implements Shadow
     private final TextureDescriptor<Texture> textureDesc;
 
     public WgDirectionalShadowLight(int shadowMapWidth, int shadowMapHeight, float shadowViewportWidth, float shadowViewportHeight,
-                                  float shadowNear, float shadowFar) {
+                                    float shadowNear, float shadowFar) {
         fbo = new WgFrameBuffer(WGPUTextureFormat.BGRA8Unorm, shadowMapWidth, shadowMapHeight, true);
         cam = new OrthographicCamera(shadowViewportWidth, shadowViewportHeight);
         cam.near = shadowNear;

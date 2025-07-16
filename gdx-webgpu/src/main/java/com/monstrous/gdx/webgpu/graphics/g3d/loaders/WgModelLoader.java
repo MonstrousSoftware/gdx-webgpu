@@ -22,8 +22,6 @@ import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader;
 import com.badlogic.gdx.assets.loaders.FileHandleResolver;
 import com.badlogic.gdx.assets.loaders.TextureLoader;
-import com.monstrous.gdx.webgpu.graphics.g3d.WgModel;
-import com.monstrous.gdx.webgpu.graphics.utils.WgTextureProvider;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g3d.Model;
@@ -34,9 +32,12 @@ import com.badlogic.gdx.graphics.g3d.utils.TextureProvider;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.ObjectMap;
+import com.monstrous.gdx.webgpu.graphics.g3d.WgModel;
+import com.monstrous.gdx.webgpu.graphics.utils.WgTextureProvider;
 
 import java.util.Iterator;
 
+/** Abstract class for the different model loaders, e.g. OBJ, G3DJ, G3DB, GLTF and GLB */
 public abstract class WgModelLoader<P extends WgModelLoader.ModelParameters> extends AsynchronousAssetLoader<Model, P> {
 	public WgModelLoader(FileHandleResolver resolver) {
 		super(resolver);

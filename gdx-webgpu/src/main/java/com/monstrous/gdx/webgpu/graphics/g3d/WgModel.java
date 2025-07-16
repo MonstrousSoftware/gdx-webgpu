@@ -17,26 +17,27 @@
 package com.monstrous.gdx.webgpu.graphics.g3d;
 
 
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Mesh;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
+import com.badlogic.gdx.graphics.g3d.model.MeshPart;
+import com.badlogic.gdx.graphics.g3d.model.data.*;
+import com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor;
+import com.badlogic.gdx.graphics.g3d.utils.TextureProvider;
+import com.badlogic.gdx.utils.BufferUtils;
+import com.badlogic.gdx.utils.ObjectMap;
 import com.monstrous.gdx.webgpu.graphics.WgMesh;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.PBRTextureAttribute;
 import com.monstrous.gdx.webgpu.graphics.g3d.model.PBRModelTexture;
 import com.monstrous.gdx.webgpu.graphics.g3d.model.WgMeshPart;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Mesh;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.VertexAttributes;
-import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
-import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
-import com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute;
-import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
-import com.badlogic.gdx.graphics.g3d.model.*;
-import com.badlogic.gdx.graphics.g3d.model.data.*;
-import com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor;
-import com.badlogic.gdx.graphics.g3d.utils.TextureProvider;
-import com.badlogic.gdx.utils.*;
 import com.monstrous.gdx.webgpu.graphics.g3d.model.WgModelMeshPart;
 
 import java.nio.Buffer;
@@ -74,14 +75,11 @@ public class WgModel extends Model {
 		meshes.add(mesh);
 		disposables.add(mesh);
 
-		BufferUtils.copy(modelMesh.vertices, mesh.getVerticesBuffer(true), modelMesh.vertices.length, 0);
+        mesh.setVertices(modelMesh.vertices);
 		int offset = 0;
 
 
         if(needWideIndices){
-            IntBuffer intBuffer = ((WgIndexBuffer)mesh.getIndexData()).getIntBuffer(true);
-            ((Buffer)intBuffer).clear();
-
             for (ModelMeshPart part : modelMesh.parts) {
                 MeshPart meshPart = new WgMeshPart();
                 meshPart.id = part.id;
@@ -90,16 +88,12 @@ public class WgModel extends Model {
                 meshPart.size = hasIndices ?  ((WgModelMeshPart)part).indices32.length : numVertices;
                 meshPart.mesh = mesh;
                 if (hasIndices) {
-                    intBuffer.put(((WgModelMeshPart)part).indices32);
+                   ((WgIndexBuffer)mesh.getIndexData()).updateIndices(offset, ((WgModelMeshPart)part).indices32, 0, meshPart.size);
                 }
                 offset += meshPart.size;
                 meshParts.add(meshPart);
             }
-            ((Buffer)intBuffer).position(0);
         } else {
-            ShortBuffer indicesBuffer = mesh.getIndicesBuffer(true);
-            ((Buffer)indicesBuffer).clear();
-
             for (ModelMeshPart part : modelMesh.parts) {
                 MeshPart meshPart = new WgMeshPart();
                 meshPart.id = part.id;
@@ -108,12 +102,11 @@ public class WgModel extends Model {
                 meshPart.size = hasIndices ?  part.indices.length : numVertices;
                 meshPart.mesh = mesh;
                 if (hasIndices) {
-                       indicesBuffer.put(part.indices);
+                    mesh.getIndexData().updateIndices(offset, part.indices, 0, meshPart.size);
                 }
                 offset += meshPart.size;
                 meshParts.add(meshPart);
             }
-            ((Buffer)indicesBuffer).position(0);
         }
 
         // todo (assumes short indices to calc bbox)

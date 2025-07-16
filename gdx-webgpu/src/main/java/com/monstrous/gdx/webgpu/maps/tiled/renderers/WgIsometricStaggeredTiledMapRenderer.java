@@ -18,7 +18,6 @@ package com.monstrous.gdx.webgpu.maps.tiled.renderers;
 
 
 import com.badlogic.gdx.graphics.g2d.Batch;
-
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.renderers.IsometricStaggeredTiledMapRenderer;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;

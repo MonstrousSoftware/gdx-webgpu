@@ -24,9 +24,7 @@ package com.monstrous.gdx.webgpu.graphics.g2d;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.graphics.Texture.TextureFilter;
-import com.badlogic.gdx.graphics.g2d.*;
-import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.Array;
 import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
 
@@ -39,6 +37,8 @@ import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
 // note: smoothing uniform not supported.
 
 public class WgDistanceFieldFont extends WgBitmapFont {
+
+    // todo
 //	private float distanceFieldSmoothing;
 //
 	public WgDistanceFieldFont(BitmapFontData data, Array<TextureRegion> pageRegions, boolean integer) {

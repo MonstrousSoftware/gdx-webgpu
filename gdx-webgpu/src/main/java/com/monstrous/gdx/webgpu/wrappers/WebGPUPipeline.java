@@ -17,30 +17,24 @@
 package com.monstrous.gdx.webgpu.wrappers;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.utils.Disposable;
+import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.ShaderPrefix;
 import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
-import com.badlogic.gdx.utils.Disposable;
-import com.monstrous.gdx.webgpu.webgpu.*;
-import jnr.ffi.Pointer;
+
 
 public class WebGPUPipeline implements Disposable {
-    private final WgGraphics gfx = (WgGraphics) Gdx.graphics;
-    private final WebGPU_JNI webGPU = gfx.getWebGPU();
-    private final WebGPUContext webgpu = gfx.getContext();
-    private final Pointer pipeline;
+    private final WGPURenderPipeline pipeline;
     public PipelineSpecification specification;
     private final WgShaderProgram shader;
     private final boolean ownsShader;
 
-    public WebGPUPipeline(WebGPUPipelineLayout pipelineLayout, PipelineSpecification spec) {
-        this(pipelineLayout == null ? null : pipelineLayout.getHandle(), spec);
-    }
 
-    public WebGPUPipeline(Pointer pipelineLayout, PipelineSpecification spec) {
+    public WebGPUPipeline(WGPUPipelineLayout pipelineLayout, PipelineSpecification spec) {
         // if the specification does not already have a shader, create one from the source file, customized to the vertex attributes.
-        if(spec.shader != null) {
+        if (spec.shader != null) {
             shader = spec.shader;   // make use of the shader in the spec
             ownsShader = false;     // we don't have to dispose it
         } else {
@@ -53,25 +47,21 @@ public class WebGPUPipeline implements Disposable {
         }
         this.specification = new PipelineSpecification(spec);
 
-        Pointer shaderModule = shader.getHandle();
         WGPUVertexBufferLayout vertexBufferLayout = spec.vertexAttributes == null ? null : WebGPUVertexLayout.buildVertexBufferLayout(spec.vertexAttributes);
 
-        WGPURenderPipelineDescriptor pipelineDesc = WGPURenderPipelineDescriptor.createDirect();        // todo worth reusing these?
-
-        pipelineDesc.setNextInChain();
+        WGPURenderPipelineDescriptor pipelineDesc = WGPURenderPipelineDescriptor.obtain();
+        pipelineDesc.setNextInChain(null);
         pipelineDesc.setLabel(spec.name);
 
-        pipelineDesc.getVertex().setBufferCount(vertexBufferLayout != null ? 1 : 0);
-        pipelineDesc.getVertex().setBuffers(vertexBufferLayout);
+        WGPUVectorVertexBufferLayout bufferLayout = WGPUVectorVertexBufferLayout.obtain();
+        if (vertexBufferLayout != null)
+            bufferLayout.push_back(vertexBufferLayout);
+        pipelineDesc.getVertex().setBuffers(bufferLayout);
 
-//        WGPUConstantEntry entry = WGPUConstantEntry.createDirect();
-//        entry.setKey("numDirLights");
-//        entry.setValue(3f);
-
-        pipelineDesc.getVertex().setModule(shaderModule);
+        pipelineDesc.getVertex().setModule(shader.getShaderModule());
         pipelineDesc.getVertex().setEntryPoint(spec.vertexShaderEntryPoint);
-        pipelineDesc.getVertex().setConstantCount(0);
-        pipelineDesc.getVertex().setConstants();
+        WGPUVectorConstantEntry constants = WGPUVectorConstantEntry.obtain();
+        pipelineDesc.getVertex().setConstants(constants);
 
         pipelineDesc.getPrimitive().setTopology(spec.topology);
         pipelineDesc.getPrimitive().setStripIndexFormat(isStripTopology(spec.topology) ? spec.indexFormat : WGPUIndexFormat.Undefined);
@@ -79,17 +69,16 @@ public class WebGPUPipeline implements Disposable {
         pipelineDesc.getPrimitive().setCullMode(spec.cullMode);
 
         if (spec.colorFormat != WGPUTextureFormat.Undefined) {   // if there is a color attachment
-            WGPUFragmentState fragmentState = WGPUFragmentState.createDirect();
-            fragmentState.setNextInChain();
-            fragmentState.setModule(shaderModule);
+            WGPUFragmentState fragmentState = WGPUFragmentState.obtain();
+            fragmentState.setNextInChain(null);
+            fragmentState.setModule(shader.getShaderModule());
             fragmentState.setEntryPoint(spec.fragmentShaderEntryPoint);
-            fragmentState.setConstantCount(0);
-            fragmentState.setConstants();
+            fragmentState.setConstants(null);
 
-            // blend
-            WGPUBlendState blendState = null;   // to disable blending
-            if(spec.blendingEnabled) {
-                blendState = WGPUBlendState.createDirect();
+            // blending
+            WGPUBlendState blendState = null;
+            if (spec.blendingEnabled) {
+                blendState = WGPUBlendState.obtain();
                 blendState.getColor().setSrcFactor(spec.blendSrcColor);
                 blendState.getColor().setDstFactor(spec.blendDstColor);
                 blendState.getColor().setOperation(spec.blendOpColor);
@@ -99,37 +88,38 @@ public class WebGPUPipeline implements Disposable {
             }
 
 
-            WGPUColorTargetState colorTarget = WGPUColorTargetState.createDirect();
+            WGPUColorTargetState colorTarget = WGPUColorTargetState.obtain();
             colorTarget.setFormat(spec.colorFormat);
             colorTarget.setBlend(blendState);
             colorTarget.setWriteMask(WGPUColorWriteMask.All);
 
-            fragmentState.setTargetCount(1);
-            fragmentState.setTargets(colorTarget);
+            WGPUVectorColorTargetState colorStateTargets = WGPUVectorColorTargetState.obtain();
+            colorStateTargets.push_back(colorTarget);
+            fragmentState.setTargets(colorStateTargets);
 
             pipelineDesc.setFragment(fragmentState);
         }
 
-        WGPUDepthStencilState depthStencilState = WGPUDepthStencilState.createDirect();
+        WGPUDepthStencilState depthStencilState = WGPUDepthStencilState.obtain();
         setDefaultStencilState(depthStencilState);
 
         if (spec.isSkyBox) {
             depthStencilState.setDepthCompare(WGPUCompareFunction.LessEqual);// we are clearing to 1.0 and rendering at 1.0, i.e. at max distance
-            depthStencilState.setDepthWriteEnabled(1L);
+            depthStencilState.setDepthWriteEnabled(WGPUOptionalBool.True);
         } else {
             if (!spec.useDepthTest) {
                 // disable depth testing
                 depthStencilState.setDepthCompare(WGPUCompareFunction.Always);
-                depthStencilState.setDepthWriteEnabled(0L);
+                depthStencilState.setDepthWriteEnabled(WGPUOptionalBool.False);
             } else {
                 if (spec.afterDepthPrepass) {   // rely on Z pre-pass
                     depthStencilState.setDepthCompare(WGPUCompareFunction.Equal);
-                    depthStencilState.setDepthWriteEnabled(1L);
+                    depthStencilState.setDepthWriteEnabled(WGPUOptionalBool.True);
                 } else {
                     // this is the usual depth compare: smaller values are closer, near plane has z = 0.0 and far plane has z = 1.0
                     // so render if the fragment z is less or equal than the depth buffer value
                     depthStencilState.setDepthCompare(WGPUCompareFunction.LessEqual);
-                    depthStencilState.setDepthWriteEnabled(1L); // true
+                    depthStencilState.setDepthWriteEnabled(WGPUOptionalBool.True); // true
                 }
             }
         }
@@ -137,21 +127,27 @@ public class WebGPUPipeline implements Disposable {
         if (!spec.noDepthAttachment) {
             depthStencilState.setFormat(spec.depthFormat);
             // deactivate stencil
-            depthStencilState.setStencilReadMask(0L);
-            depthStencilState.setStencilWriteMask(0L);
+            depthStencilState.setStencilReadMask(0);
+            depthStencilState.setStencilWriteMask(0);
 
             pipelineDesc.setDepthStencil(depthStencilState);
+        } else {
+            pipelineDesc.setDepthStencil(null); // no depth or stencil buffer
         }
-
         pipelineDesc.getMultisample().setCount(spec.numSamples);
-        pipelineDesc.getMultisample().setMask(-1L);
-        pipelineDesc.getMultisample().setAlphaToCoverageEnabled(0);
+        pipelineDesc.getMultisample().setMask(-1);
+        pipelineDesc.getMultisample().setAlphaToCoverageEnabled(false);
 
         pipelineDesc.setLayout(pipelineLayout);
-        pipeline = webGPU.wgpuDeviceCreateRenderPipeline(webgpu.device.getHandle(), pipelineDesc);
 
-        if(pipeline == null)
-            throw new RuntimeException("Pipeline creation failed");
+        pipeline = new WGPURenderPipeline();
+        WgGraphics gfx = (WgGraphics) Gdx.graphics;
+        WebGPUContext webgpu = gfx.getContext();
+        webgpu.device.createRenderPipeline(pipelineDesc, pipeline);
+
+        //shaderModule.release();
+
+        System.out.println("RenderPipeline created");
     }
 
     private boolean isStripTopology( WGPUPrimitiveTopology topology ){
@@ -165,20 +161,21 @@ public class WebGPUPipeline implements Disposable {
         return h == h2;
     }
 
-    public Pointer getHandle(){
+    public WGPURenderPipeline getPipeline(){
         return pipeline;
     }
 
     @Override
     public void dispose() {
-        webGPU.wgpuRenderPipelineRelease(pipeline);
+        pipeline.release();
+        pipeline.dispose();
         if(ownsShader)
             shader.dispose();
     }
 
     private void setDefaultStencilState(WGPUDepthStencilState  depthStencilState ) {
         depthStencilState.setFormat(WGPUTextureFormat.Undefined);
-        depthStencilState.setDepthWriteEnabled(0L);
+        depthStencilState.setDepthWriteEnabled(WGPUOptionalBool.False);
         depthStencilState.setDepthCompare(WGPUCompareFunction.Always);
         depthStencilState.setStencilReadMask(0xFFFFFFFF);
         depthStencilState.setStencilWriteMask(0xFFFFFFFF);

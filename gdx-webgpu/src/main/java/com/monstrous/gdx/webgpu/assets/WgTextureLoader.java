@@ -21,12 +21,12 @@ import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader;
 import com.badlogic.gdx.assets.loaders.FileHandleResolver;
 import com.badlogic.gdx.assets.loaders.TextureLoader;
-import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.TextureData;
 import com.badlogic.gdx.utils.Array;
+import com.monstrous.gdx.webgpu.graphics.WgTexture;
 
 
 
@@ -87,18 +87,4 @@ public class WgTextureLoader extends AsynchronousAssetLoader<Texture, TextureLoa
 		return null;
 	}
 
-//	static public class TextureParameter extends AssetLoaderParameters<WebGPUTexture> {
-//		/** the format of the final Texture. Uses the source images format if null **/
-//		public Format format = null;
-//		/** whether to generate mipmaps **/
-//		public boolean genMipMaps = false;
-//		/** The texture to put the {@link TextureData} in, optional. **/
-//		public WebGPUTexture texture = null;
-//		/** TextureData for textures created on the fly, optional. When set, all format and genMipMaps are ignored */
-//		public TextureData textureData = null;
-//		public TextureFilter minFilter = TextureFilter.Nearest;
-//		public TextureFilter magFilter = TextureFilter.Nearest;
-//		public TextureWrap wrapU = TextureWrap.ClampToEdge;
-//		public TextureWrap wrapV = TextureWrap.ClampToEdge;
-//	}
 }

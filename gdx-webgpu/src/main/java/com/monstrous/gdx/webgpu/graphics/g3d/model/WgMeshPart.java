@@ -16,11 +16,11 @@
 
 package com.monstrous.gdx.webgpu.graphics.g3d.model;
 
+import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.monstrous.gdx.webgpu.graphics.WgMesh;
 import com.monstrous.gdx.webgpu.wrappers.WebGPURenderPass;
-import com.badlogic.gdx.graphics.Mesh;
-import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 
 
 

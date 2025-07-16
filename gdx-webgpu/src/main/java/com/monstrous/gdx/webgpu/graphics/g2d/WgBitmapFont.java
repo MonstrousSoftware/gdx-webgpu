@@ -23,10 +23,11 @@
 package com.monstrous.gdx.webgpu.graphics.g2d;
 
 import com.badlogic.gdx.Gdx;
-import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.graphics.g2d.*;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.Array;
+import com.monstrous.gdx.webgpu.graphics.WgTexture;
 
 /** WebGPU version of BitmapFont.
  * This intercepts the creation of Texture in the constructor and uses WebGPUTexture instead.

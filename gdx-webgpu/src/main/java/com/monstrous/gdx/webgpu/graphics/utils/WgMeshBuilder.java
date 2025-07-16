@@ -17,8 +17,6 @@
 package com.monstrous.gdx.webgpu.graphics.utils;
 
 
-import com.monstrous.gdx.webgpu.graphics.WgMesh;
-import com.monstrous.gdx.webgpu.graphics.g3d.model.WgMeshPart;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -29,6 +27,8 @@ import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.*;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.*;
+import com.monstrous.gdx.webgpu.graphics.WgMesh;
+import com.monstrous.gdx.webgpu.graphics.g3d.model.WgMeshPart;
 
 
 public class WgMeshBuilder implements MeshPartBuilder {

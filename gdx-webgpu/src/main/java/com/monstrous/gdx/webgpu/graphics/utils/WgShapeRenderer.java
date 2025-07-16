@@ -30,7 +30,7 @@ import com.badlogic.gdx.utils.Disposable;
 
 
 // Note: only change for WebGPU is to use WebGPUImmediateRenderer
-// Can we subclass from ShapeRenderer?
+// Can we subclass from ShapeRenderer to reduce code duplication?
 //
 public class WgShapeRenderer implements Disposable {
 	/** Shape types to be used with {@link #begin(ShapeType)}.

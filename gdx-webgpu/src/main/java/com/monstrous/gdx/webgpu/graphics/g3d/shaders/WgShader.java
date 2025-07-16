@@ -5,9 +5,8 @@ import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.g3d.Attributes;
 import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.Shader;
-
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
-import com.monstrous.gdx.webgpu.wrappers.*;
+import com.monstrous.gdx.webgpu.wrappers.WebGPURenderPass;
 
 public abstract class WgShader implements Shader {
     public int numRenderables;

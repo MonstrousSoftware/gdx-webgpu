@@ -18,21 +18,17 @@ package com.monstrous.gdx.webgpu.graphics.utils;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
-import com.monstrous.gdx.webgpu.application.WebGPUApplication;
-import com.monstrous.gdx.webgpu.application.WgGraphics;
-import com.monstrous.gdx.webgpu.graphics.WgTexture;
-import com.monstrous.gdx.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.graphics.glutils.ImmediateModeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Matrix4;
-import com.monstrous.gdx.webgpu.webgpu.*;
+import com.github.xpenatan.webgpu.*;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
+import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.wrappers.*;
-import jnr.ffi.Pointer;
-
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
-
 
 
 /** Immediate mode rendering class for WebGPU. The renderer will allow you to specify vertices on the fly and provides a default
@@ -53,21 +49,19 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 	private final Matrix4 projModelView = new Matrix4();
 
 
-	private VertexAttributes vertexAttributes;
-	private WebGPUVertexBuffer vertexBuffer;
+    private WebGPUVertexBuffer vertexBuffer;
 	private WebGPUUniformBuffer uniformBuffer;
 	private int uniformBufferSize;
-	private WebGPUBindGroupLayout bindGroupLayout;
-	private WebGPUPipelineLayout pipelineLayout;
-	private PipelineCache pipelines;
-	private PipelineSpecification pipelineSpec;
+	private final WebGPUBindGroupLayout bindGroupLayout;
+	private WGPUPipelineLayout pipelineLayout;
+	private final PipelineCache pipelines;
+	private final PipelineSpecification pipelineSpec;
 	private WgTexture texture;
 	private WebGPURenderPass renderPass;
-	private Pointer vertexDataPtr;
-	private FloatBuffer vertexData;
+    private final ByteBuffer vertexByteBuffer;
+    private final FloatBuffer vertexFloatBuffer;
 	private WebGPUPipeline prevPipeline;
-	private WgGraphics gfx;
-    private WebGPUApplication webgpu;
+    private final WebGPUContext webgpu;
 
 	public WgImmediateModeRenderer(boolean hasNormals, boolean hasColors, int numTexCoords) {
 		this(5000, hasNormals, hasColors, numTexCoords, createDefaultShader(hasNormals, hasColors, numTexCoords));
@@ -83,13 +77,13 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 	public WgImmediateModeRenderer(int maxVertices, boolean hasNormals, boolean hasColors, int numTexCoords,
                                    ShaderProgram shader) {
 
-		gfx = (WgGraphics) Gdx.graphics;
+        WgGraphics gfx = (WgGraphics) Gdx.graphics;
         webgpu = gfx.getContext();
 
 		this.maxVertices = maxVertices;
 
-		vertexAttributes = new VertexAttributes( VertexAttribute.Position(),
-				VertexAttribute.ColorPacked(), VertexAttribute.TexCoords(0), VertexAttribute.Normal() );
+        VertexAttributes vertexAttributes = new VertexAttributes(VertexAttribute.Position(),
+            VertexAttribute.ColorPacked(), VertexAttribute.TexCoords(0), VertexAttribute.Normal());
 
 		vertexSize = vertexAttributes.vertexSize/Float.BYTES;	// size in floats
 
@@ -101,14 +95,13 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 
 		createBuffers();
 
-		ByteBuffer vertexBB = ByteBuffer.allocateDirect(maxVertices * vertexSize*Float.BYTES);
-		vertexBB.order(ByteOrder.LITTLE_ENDIAN); // webgpu expects little endian data
-		vertexDataPtr = Pointer.wrap(JavaWebGPU.getRuntime(), vertexBB);
-        vertexData = vertexBB.asFloatBuffer();  // float view on the byte buffer
+        vertexByteBuffer = ByteBuffer.allocateDirect(maxVertices * vertexSize * Float.BYTES);
+		vertexByteBuffer.order(ByteOrder.LITTLE_ENDIAN); // webgpu expects little endian data
+        vertexFloatBuffer = vertexByteBuffer.asFloatBuffer();  // float view on the byte buffer
 
 
 		bindGroupLayout = createBindGroupLayout();
-		pipelineLayout = new WebGPUPipelineLayout("ImmediateModeRenderer pipeline layout", bindGroupLayout);
+		pipelineLayout = createPipelineLayout("ImmediateModeRenderer pipeline layout", bindGroupLayout);
 
 		pipelines = new PipelineCache();
 		pipelineSpec = new PipelineSpecification(vertexAttributes, defaultShaderSource());
@@ -150,40 +143,39 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 			pipelineSpec.topology = WGPUPrimitiveTopology.TriangleList;
 		pipelineSpec.setCullMode(WGPUCullMode.None);
 
-
 		renderPass = RenderPassBuilder.create("ImmediateModeRenderer", null, false, webgpu.getSamples());
 	}
 
 	public void color (Color color) {
-		vertexData.put(vertexIdx + colorOffset, color.toFloatBits());
+		vertexFloatBuffer.put(vertexIdx + colorOffset, color.toFloatBits());
 	}
 
 	public void color (float r, float g, float b, float a) {
-		vertexData.put(vertexIdx + colorOffset, Color.toFloatBits(r, g, b, a));
+		vertexFloatBuffer.put(vertexIdx + colorOffset, Color.toFloatBits(r, g, b, a));
 	}
 
 	public void color (float colorBits) {
-		vertexData.put(vertexIdx + colorOffset, colorBits);
+		vertexFloatBuffer.put(vertexIdx + colorOffset, colorBits);
 	}
 
 	public void texCoord (float u, float v) {
 		final int idx = vertexIdx + texCoordOffset;
-		vertexData.put(idx, u);
-		vertexData.put(idx+1, v);
+		vertexFloatBuffer.put(idx, u);
+		vertexFloatBuffer.put(idx+1, v);
 	}
 
 	public void normal (float x, float y, float z) {
 		final int idx = vertexIdx + normalOffset;
-		vertexData.put(idx, 		x);
-		vertexData.put(idx+1, 	y);
-		vertexData.put(idx+2, 	z);
+		vertexFloatBuffer.put(idx, 		x);
+		vertexFloatBuffer.put(idx+1, 	y);
+		vertexFloatBuffer.put(idx+2, 	z);
 	}
 
 	public void vertex (float x, float y, float z) {
 		final int idx = vertexIdx;
-		vertexData.put(idx, 		x);
-		vertexData.put(idx+1, 	y);
-		vertexData.put(idx+2, 	z);
+		vertexFloatBuffer.put(idx, 		x);
+		vertexFloatBuffer.put(idx+1, 	y);
+		vertexFloatBuffer.put(idx+2, 	z);
 
 		vertexIdx += vertexSize;
 		numVertices++;
@@ -198,19 +190,28 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 		// bind texture
 		WebGPUBindGroup bg = makeBindGroup(bindGroupLayout, uniformBuffer, texture);
 		setPipeline();
-		renderPass.setPipeline(prevPipeline.getHandle());
+		renderPass.setPipeline(prevPipeline);
 
 		// write number of vertices to the GPU's vertex buffer
 		//
 		int numBytes = numVertices * vertexSize * Float.BYTES;
+        // since we used put with an index, the position was never updated
+        // set it now, because writeBuffer needs it.
+        vertexFloatBuffer.position(numVertices * vertexSize);
+        //System.out.println("write buffer in imm mode rndr: pos:"+vertexData.getPosition());
+        vertexFloatBuffer.flip(); // prepare for reading
+
+        vertexBuffer.setVertices(vertexByteBuffer, 0, numBytes);
+
 
 		// copy vertex data to GPU vertex buffer
-		webgpu.queue.writeBuffer(vertexBuffer, 0, vertexDataPtr, numBytes);
+        //System.out.println("write buffer in imm mode rndr: size:"+numBytes+" byteData: "+vertexData.getByteBuffer().getLimit());
+    //    webgpu.queue.writeBuffer(vertexBuffer.getBuffer(), 0, vertexByteBuffer, numBytes);
 
 		// Set vertex buffer while encoding the render pass
-		renderPass.setVertexBuffer( 0, vertexBuffer.getHandle(), 0, numBytes);
+		renderPass.setVertexBuffer( 0, vertexBuffer.getBuffer(), 0, numBytes);
 
-		renderPass.setBindGroup( 0, bg.getHandle(), 0, JavaWebGPU.createNullPointer());
+		renderPass.setBindGroup( 0, bg.getBindGroup());
 
 		renderPass.draw( numVertices);
 
@@ -219,6 +220,7 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 		// reset
 		vertexIdx = 0;
 		numVertices = 0;
+        vertexFloatBuffer.clear();
 	}
 
 	public void end () {
@@ -296,11 +298,11 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 	private void createBuffers() {
 
 		// Create vertex buffer (no index buffer)
-		vertexBuffer = new WebGPUVertexBuffer(WGPUBufferUsage.CopyDst | WGPUBufferUsage.Vertex, (long) maxVertices * vertexSize);
+		vertexBuffer = new WebGPUVertexBuffer(WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Vertex),  maxVertices * vertexSize);
 
 		// Create uniform buffer for the projection matrix
 		uniformBufferSize = 16 * Float.BYTES;
-		uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize,WGPUBufferUsage.CopyDst |WGPUBufferUsage.Uniform  );
+		uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize,WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Uniform)  );
 	}
 
 	private void setUniforms(){
@@ -331,14 +333,28 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 
 	// create or reuse pipeline on demand to match the pipeline spec
 	private void setPipeline() {
-		WebGPUPipeline pipeline = pipelines.findPipeline( pipelineLayout.getHandle(), pipelineSpec);
+		WebGPUPipeline pipeline = pipelines.findPipeline( pipelineLayout, pipelineSpec);
 		if (pipeline != prevPipeline) { // avoid unneeded switches
-			//renderPass.setPipeline(pipeline.getHandle());
+			renderPass.setPipeline(pipeline);
 			prevPipeline = pipeline;
 		}
 	}
 
-	//@Override
+    private WGPUPipelineLayout createPipelineLayout(String label, WebGPUBindGroupLayout... bindGroupLayouts ) {
+        WGPUPipelineLayoutDescriptor pipelineLayoutDesc = WGPUPipelineLayoutDescriptor.obtain();
+        pipelineLayoutDesc.setNextInChain(null);
+        pipelineLayoutDesc.setLabel(label);
+        WGPUVectorBindGroupLayout layouts = WGPUVectorBindGroupLayout.obtain();
+        for (int i = 0; i < bindGroupLayouts.length; i++)
+            layouts.push_back( bindGroupLayouts[i].getLayout() );
+        pipelineLayoutDesc.setBindGroupLayouts(layouts);
+
+        pipelineLayout = new WGPUPipelineLayout();
+        webgpu.device.createPipelineLayout(pipelineLayoutDesc, pipelineLayout);
+        return pipelineLayout;
+    }
+
+	@Override
 	public void dispose(){
 		pipelines.dispose();
 		vertexBuffer.dispose();

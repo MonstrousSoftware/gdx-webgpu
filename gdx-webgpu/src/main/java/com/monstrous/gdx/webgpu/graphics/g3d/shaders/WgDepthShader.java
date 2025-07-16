@@ -17,17 +17,18 @@
 package com.monstrous.gdx.webgpu.graphics.g3d.shaders;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.graphics.g3d.*;
+import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.VertexAttributes;
+import com.badlogic.gdx.graphics.g3d.Attributes;
+import com.badlogic.gdx.graphics.g3d.Renderable;
+import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
-import com.badlogic.gdx.math.Matrix4;
+import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.webgpu.graphics.Binder;
 import com.monstrous.gdx.webgpu.graphics.WgMesh;
-import com.monstrous.gdx.webgpu.webgpu.*;
 import com.monstrous.gdx.webgpu.wrappers.*;
-
-import static com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888;
 
 /** Depth shader to render renderables to a depth buffer */
 public class WgDepthShader extends WgShader {
@@ -52,7 +53,7 @@ public class WgDepthShader extends WgShader {
 
         // Create uniform buffer for global (per-frame) uniforms, i.e. projection matrix
         uniformBufferSize = 16* Float.BYTES;
-        uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize, WGPUBufferUsage.CopyDst | WGPUBufferUsage.Uniform);
+        uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Uniform));
 
         binder = new Binder();
         // define groups
@@ -79,13 +80,13 @@ public class WgDepthShader extends WgShader {
 
         // for now we use a uniform buffer, but we organize data as an array of modelMatrix
         // we are not using dynamic offsets, but we will index the array in the shader code using the instance_index
-        instanceBuffer = new WebGPUUniformBuffer(instanceSize*config.maxInstances, WGPUBufferUsage.CopyDst | WGPUBufferUsage.Storage);
+        instanceBuffer = new WebGPUUniformBuffer(instanceSize*config.maxInstances, WGPUBufferUsage.CopyDst.or( WGPUBufferUsage.Storage));
 
-        binder.setBuffer("instanceUniforms", instanceBuffer, 0, (long) instanceSize *config.maxInstances);
+        binder.setBuffer("instanceUniforms", instanceBuffer, 0,  instanceSize *config.maxInstances);
 
 
         // get pipeline layout which aggregates all the bind group layouts
-        WebGPUPipelineLayout pipelineLayout = binder.getPipelineLayout("DepthBatch pipeline layout");
+        WGPUPipelineLayout pipelineLayout = binder.getPipelineLayout("DepthBatch pipeline layout");
 
         // vertexAttributes will be set from the renderable
         vertexAttributes = renderable.meshPart.mesh.getVertexAttributes();
@@ -138,7 +139,7 @@ public class WgDepthShader extends WgShader {
         drawCalls = 0;
         prevRenderable = null;  // to store renderable that still needs to be rendered
 
-        renderPass.setPipeline(pipeline.getHandle());
+        renderPass.setPipeline(pipeline);
     }
 
 
@@ -219,7 +220,7 @@ public class WgDepthShader extends WgShader {
     private WebGPUBindGroupLayout createFrameBindGroupLayout(int uniformBufferSize) {
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("WgDepthShader bind group layout (frame)");
         layout.begin();
-        layout.addBuffer(0, WGPUShaderStage.Vertex|WGPUShaderStage.Fragment, WGPUBufferBindingType.Uniform, uniformBufferSize, false);
+        layout.addBuffer(0, WGPUShaderStage.Vertex.or(WGPUShaderStage.Fragment), WGPUBufferBindingType.Uniform, uniformBufferSize, false);
         layout.end();
         return layout;
     }
@@ -228,7 +229,7 @@ public class WgDepthShader extends WgShader {
     private WebGPUBindGroupLayout createInstancingBindGroupLayout(){
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("WgDepthShader Binding Group Layout (instance)");
         layout.begin();
-        layout.addBuffer(0, WGPUShaderStage.Vertex , WGPUBufferBindingType.ReadOnlyStorage, 16L *Float.BYTES*config.maxInstances, false);
+        layout.addBuffer(0, WGPUShaderStage.Vertex , WGPUBufferBindingType.ReadOnlyStorage, 16 *Float.BYTES*config.maxInstances, false);
         layout.end();
         return layout;
     }

@@ -17,11 +17,12 @@
 package com.monstrous.gdx.webgpu.wrappers;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.Environment;
+import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
-import com.badlogic.gdx.graphics.VertexAttributes;
-import com.monstrous.gdx.webgpu.webgpu.*;
+
 
 import java.util.Objects;
 

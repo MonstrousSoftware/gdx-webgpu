@@ -2,18 +2,19 @@ package com.monstrous.gdx.webgpu.graphics.g3d;
 
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.RenderableProvider;
-import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.utils.RenderableSorter;
 import com.badlogic.gdx.graphics.g3d.utils.ShaderProvider;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Disposable;
+import com.badlogic.gdx.utils.FlushablePool;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDefaultShader;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDefaultShaderProvider;
-import com.badlogic.gdx.graphics.*;
-
-import com.badlogic.gdx.utils.*;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgShader;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgDefaultRenderableSorter;
 import com.monstrous.gdx.webgpu.wrappers.RenderPassBuilder;

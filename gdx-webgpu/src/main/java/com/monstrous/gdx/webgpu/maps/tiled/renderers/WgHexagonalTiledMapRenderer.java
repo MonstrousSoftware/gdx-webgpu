@@ -16,19 +16,10 @@
 
 package com.monstrous.gdx.webgpu.maps.tiled.renderers;
 
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.tiled.TiledMap;
-import com.badlogic.gdx.maps.tiled.TiledMapImageLayer;
-import com.badlogic.gdx.maps.tiled.TiledMapTile;
-import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
-import com.badlogic.gdx.maps.tiled.renderers.BatchTiledMapRenderer;
 import com.badlogic.gdx.maps.tiled.renderers.HexagonalTiledMapRenderer;
-import com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
-
-import static com.badlogic.gdx.graphics.g2d.Batch.*;
 
 public class WgHexagonalTiledMapRenderer extends HexagonalTiledMapRenderer {
 

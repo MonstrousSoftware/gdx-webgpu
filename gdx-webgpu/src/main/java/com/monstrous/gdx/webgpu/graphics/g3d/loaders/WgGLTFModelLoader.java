@@ -20,12 +20,14 @@ import com.badlogic.gdx.assets.loaders.FileHandleResolver;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.model.data.*;
-import com.badlogic.gdx.math.*;
-import com.badlogic.gdx.utils.*;
+import com.badlogic.gdx.math.Quaternion;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.Vector4;
+import com.badlogic.gdx.utils.Array;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.gltf.*;
 import com.monstrous.gdx.webgpu.graphics.g3d.model.PBRModelTexture;
 import com.monstrous.gdx.webgpu.graphics.g3d.model.WgModelMeshPart;
-
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,8 +36,6 @@ import java.util.Map;
 /** Loader for gltf model format.
  *
  */
-
-
 public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParameters> {
     private final Map<GLTFPrimitive, String> meshMap = new HashMap<>();
     private int fallbackMaterialId;

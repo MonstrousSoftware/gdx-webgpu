@@ -16,25 +16,14 @@
 
 package com.monstrous.gdx.webgpu.maps.tiled;
 
-import com.badlogic.gdx.assets.AssetDescriptor;
-import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.FileHandleResolver;
-import com.badlogic.gdx.assets.loaders.TextureLoader;
-import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.maps.ImageResolver;
-import com.badlogic.gdx.maps.ImageResolver.AssetManagerImageResolver;
 import com.badlogic.gdx.maps.ImageResolver.DirectImageResolver;
-import com.badlogic.gdx.maps.MapProperties;
-import com.badlogic.gdx.maps.tiled.BaseTmxMapLoader;
 import com.badlogic.gdx.maps.tiled.TiledMap;
-import com.badlogic.gdx.maps.tiled.TiledMapTileSet;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ObjectMap;
-import com.badlogic.gdx.utils.XmlReader.Element;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 
 /** @brief synchronous loader for TMX maps created with the Tiled tool */
@@ -46,7 +35,7 @@ public class WgTmxMapLoader extends TmxMapLoader {
 	 * @param fileName the filename
 	 * @param parameter specifies whether to use y-up, generate mip maps etc.
 	 * @return the TiledMap */
-	public TiledMap load (String fileName, TmxMapLoader.Parameters parameter) {
+	public TiledMap load (String fileName, Parameters parameter) {
 		FileHandle tmxFile = resolve(fileName);
 
 		this.root = xml.parse(tmxFile);

@@ -17,10 +17,10 @@
 package com.monstrous.gdx.webgpu.graphics.utils;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.wrappers.RenderPassBuilder;
 import com.monstrous.gdx.webgpu.wrappers.WebGPURenderPass;
-import com.badlogic.gdx.graphics.Color;
 
 /** WebGPU version to clear the screen
  *  */

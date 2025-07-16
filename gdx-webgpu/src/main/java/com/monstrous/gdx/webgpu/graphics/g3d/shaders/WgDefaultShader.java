@@ -17,25 +17,23 @@
 package com.monstrous.gdx.webgpu.graphics.g3d.shaders;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.*;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
+import com.badlogic.gdx.graphics.g3d.model.MeshPart;
+import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector4;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
+import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.webgpu.graphics.Binder;
 import com.monstrous.gdx.webgpu.graphics.WgMesh;
-import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.graphics.g3d.model.MeshPart;
-import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.PBRTextureAttribute;
-import com.monstrous.gdx.webgpu.webgpu.*;
 import com.monstrous.gdx.webgpu.wrappers.*;
-import jnr.ffi.Pointer;
-
 
 import static com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888;
 
@@ -104,10 +102,10 @@ public class WgDefaultShader extends WgShader implements Disposable {
         boolean hasShadowMap = renderable.environment != null && renderable.environment.shadowMap != null;
 
         // Create uniform buffer for global (per-frame) uniforms, e.g. projection matrix, camera position, etc.
-        uniformBufferSize = (16 + 16 + 4 + 4 +4+4
+        uniformBufferSize = (16 + 16 + 4 + 4 +4+4 +   +32
                 +8*config.maxDirectionalLights
                 +12*config.maxPointLights)* Float.BYTES;
-        uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize, WGPUBufferUsage.CopyDst | WGPUBufferUsage.Uniform);
+        uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Uniform));
 
 
         materialSize = 20*Float.BYTES;      // data size per material (should be enough for now)
@@ -115,7 +113,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         // this does not include textures
 
         // allocate a uniform buffer with dynamic offsets
-        materialBuffer = new WebGPUUniformBuffer(materialSize, WGPUBufferUsage.CopyDst | WGPUBufferUsage.Uniform,  config.maxMaterials);
+        materialBuffer = new WebGPUUniformBuffer(materialSize, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Uniform),  config.maxMaterials);
 
         binder = new Binder();
         // define groups
@@ -191,13 +189,13 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
         // for now we use a uniform buffer, but we organize data as an array of modelMatrix
         // we are not using dynamic offsets, but we will index the array in teh shader code using the instance_index
-        instanceBuffer = new WebGPUUniformBuffer(instanceSize*config.maxInstances, WGPUBufferUsage.CopyDst | WGPUBufferUsage.Storage);
+        instanceBuffer = new WebGPUUniformBuffer(instanceSize*config.maxInstances, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Storage));
 
-        binder.setBuffer("instanceUniforms", instanceBuffer, 0, (long) instanceSize *config.maxInstances);
+        binder.setBuffer("instanceUniforms", instanceBuffer, 0,  instanceSize *config.maxInstances);
 
 
         // get pipeline layout which aggregates all the bind group layouts
-        WebGPUPipelineLayout pipelineLayout = binder.getPipelineLayout("ModelBatch pipeline layout");
+        WGPUPipelineLayout pipelineLayout = binder.getPipelineLayout("ModelBatch pipeline layout");
 
         //pipelines = new PipelineCache();    // use static cache?
 
@@ -274,7 +272,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         drawCalls = 0;
         prevRenderable = null;  // to store renderable that still needs to be rendered
 
-        renderPass.setPipeline(pipeline.getHandle());
+        renderPass.setPipeline(pipeline);
     }
 
 
@@ -446,7 +444,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
     private WebGPUBindGroupLayout createFrameBindGroupLayout(int uniformBufferSize, boolean hasShadowMap) {
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch bind group layout (frame)");
         layout.begin();
-        layout.addBuffer(0, WGPUShaderStage.Vertex|WGPUShaderStage.Fragment, WGPUBufferBindingType.Uniform, uniformBufferSize, false);
+        layout.addBuffer(0, WGPUShaderStage.Vertex.or(WGPUShaderStage.Fragment), WGPUBufferBindingType.Uniform, uniformBufferSize, false);
         if(hasShadowMap) {
             layout.addTexture(1, WGPUShaderStage.Fragment, WGPUTextureSampleType.Depth, WGPUTextureViewDimension._2D, false);
             layout.addSampler(2, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Comparison);
@@ -458,7 +456,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
     private WebGPUBindGroupLayout createMaterialBindGroupLayout(int materialStride) {
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch bind group layout (material)");
         layout.begin();
-        layout.addBuffer(0, WGPUShaderStage.Vertex|WGPUShaderStage.Fragment, WGPUBufferBindingType.Uniform, materialStride, true);
+        layout.addBuffer(0, WGPUShaderStage.Vertex.or(WGPUShaderStage.Fragment), WGPUBufferBindingType.Uniform, materialStride, true);
         layout.addTexture(1, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D, false);
         layout.addSampler(2, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering );
         layout.addTexture(3, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D, false);
@@ -474,7 +472,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
     private WebGPUBindGroupLayout createInstancingBindGroupLayout(){
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch Binding Group Layout (instance)");
         layout.begin();
-        layout.addBuffer(0, WGPUShaderStage.Vertex , WGPUBufferBindingType.ReadOnlyStorage, 16L *Float.BYTES*config.maxInstances, false);
+        layout.addBuffer(0, WGPUShaderStage.Vertex , WGPUBufferBindingType.ReadOnlyStorage, 16 *Float.BYTES*config.maxInstances, false);
         layout.end();
         return layout;
     }

@@ -18,50 +18,56 @@ package com.monstrous.gdx.webgpu.wrappers;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Disposable;
-import com.monstrous.gdx.webgpu.application.WebGPUApplication;
+import com.github.xpenatan.webgpu.WGPUComputePipeline;
+import com.github.xpenatan.webgpu.WGPUComputePipelineDescriptor;
+import com.github.xpenatan.webgpu.WGPUProgrammableStageDescriptor;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
-import com.monstrous.gdx.webgpu.webgpu.WGPUComputePipelineDescriptor;
-import com.monstrous.gdx.webgpu.webgpu.WebGPU_JNI;
-import jnr.ffi.Pointer;
+
+
+// TO BE COMPLETED
 
 public class WebGPUComputePipeline implements Disposable {
-    private final WebGPU_JNI webGPU;
     private final WgGraphics gfx;
-    private final WebGPUApplication webgpu;
-    private final Pointer pipeline;
+    private final WebGPUContext webgpu;
+    private  WGPUComputePipeline pipeline;
 
 
     public WebGPUComputePipeline(WgShaderProgram shader, String entryPoint, WebGPUPipelineLayout layout) {
         gfx = (WgGraphics) Gdx.graphics;
-        webGPU = gfx.getWebGPU();
         webgpu = gfx.getContext();
 
-        WGPUComputePipelineDescriptor pipelineDesc = WGPUComputePipelineDescriptor.createDirect();
+        WGPUComputePipelineDescriptor pipelineDesc = WGPUComputePipelineDescriptor.obtain();
 
-        pipelineDesc.setNextInChain();
+        pipelineDesc.setNextInChain(null);
 
-        pipelineDesc.getCompute().setModule(shader.getHandle());
-        pipelineDesc.getCompute().setEntryPoint(entryPoint);
-        pipelineDesc.getCompute().setConstantCount(0);
-        pipelineDesc.getCompute().setConstants();
 
-        pipelineDesc.setLayout(layout.getHandle());
 
-        pipeline = webGPU.wgpuDeviceCreateComputePipeline(webgpu.device.getHandle(), pipelineDesc);
-
-        if(pipeline == null)
-            throw new RuntimeException("Compute pipeline creation failed");
+        // not supported in API??
+        WGPUProgrammableStageDescriptor compute = pipelineDesc.getCompute();
+ //       compute.
+//
+//        pipelineDesc.getCompute().setModule(shader.getHandle());
+//        pipelineDesc.getCompute().setEntryPoint(entryPoint);
+//        pipelineDesc.getCompute().setConstantCount(0);
+//        pipelineDesc.getCompute().setConstants();
+//
+//        pipelineDesc.setLayout(layout.getHandle());
+//
+//        pipeline = new WGPUComputePipeline();
+        webgpu.device.createComputePipeline(pipelineDesc, pipeline);
     }
 
 
-    public Pointer getHandle(){
+    public WGPUComputePipeline getPipeline(){
         return pipeline;
     }
 
     @Override
     public void dispose() {
-        webGPU.wgpuComputePipelineRelease(pipeline);
+        pipeline.release();
+        pipeline.dispose();
     }
 
 }

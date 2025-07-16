@@ -16,7 +16,6 @@
 
 package com.monstrous.gdx.webgpu.graphics.g2d;
 
-
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.TextureData;
 import com.badlogic.gdx.utils.GdxRuntimeException;

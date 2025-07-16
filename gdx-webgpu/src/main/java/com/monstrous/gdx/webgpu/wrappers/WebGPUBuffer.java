@@ -18,13 +18,17 @@ package com.monstrous.gdx.webgpu.wrappers;
 
 
 import com.badlogic.gdx.Gdx;
-import com.monstrous.gdx.webgpu.application.WebGPUApplication;
-import com.monstrous.gdx.webgpu.application.WgGraphics;
-import com.monstrous.gdx.webgpu.webgpu.WGPUBufferDescriptor;
-import com.monstrous.gdx.webgpu.webgpu.WebGPU_JNI;
 import com.badlogic.gdx.utils.Disposable;
-import jnr.ffi.Pointer;
+import com.github.xpenatan.webgpu.WGPUBuffer;
+import com.github.xpenatan.webgpu.WGPUBufferDescriptor;
+import com.github.xpenatan.webgpu.WGPUBufferUsage;
+import com.github.xpenatan.webgpu.WGPUByteBuffer;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
+import java.nio.ByteBuffer;
 
+// Formerly WebGPUBuffer
+// Is there still an added value wrt WebGPUBuffer?
 
 /**
  * Encapsulation of WebGPU Buffer
@@ -34,45 +38,62 @@ import jnr.ffi.Pointer;
  * usage: one or more flags in combination, e.g. WGPUBufferUsage.CopyDst | WGPUBufferUsage.Uniform
  */
 public class WebGPUBuffer implements Disposable {
-    protected final WebGPU_JNI webGPU;
-    private Pointer handle;
-    private final long bufferSize;
-    protected WgGraphics gfx;
-    protected WebGPUApplication webgpu;
+    protected WGPUBuffer buffer;
+    private final int bufferSize;
+    private WgGraphics gfx;
+    private WebGPUContext webgpu;
 
-    public WebGPUBuffer(String label, long usage, long bufferSize){
+    public WebGPUBuffer(String label, WGPUBufferUsage usage, int bufferSize){
         gfx = (WgGraphics) Gdx.graphics;
-        webGPU = gfx.getWebGPU();
         webgpu = gfx.getContext();
 
         this.bufferSize = bufferSize;
 
         // Create uniform buffer
-        WGPUBufferDescriptor bufferDesc = WGPUBufferDescriptor.createDirect();
+        WGPUBufferDescriptor bufferDesc = WGPUBufferDescriptor.obtain();
         bufferDesc.setLabel( label );
         bufferDesc.setUsage( usage );
         bufferDesc.setSize( bufferSize );
-        bufferDesc.setMappedAtCreation(0L);
-        this.handle = webGPU.wgpuDeviceCreateBuffer(webgpu.device.getHandle(), bufferDesc);
+        bufferDesc.setMappedAtCreation(false);
+        buffer = new WGPUBuffer();
+        webgpu.device.createBuffer(bufferDesc, buffer);
     }
 
-    public Pointer getHandle(){
-        return handle;
+    public WGPUBuffer getBuffer(){
+        return buffer;
     }
 
-    public long getSize(){
+    public int getSize(){
         return bufferSize;
     }
 
-    public void write(int destOffset, Pointer data, int dataSize){
-        if(destOffset + dataSize > bufferSize) throw new RuntimeException("Overflow in Buffer.write().");
-        webgpu.queue.writeBuffer(this, destOffset, data, dataSize);
+    @Deprecated
+    public void write(int destOffset, WGPUByteBuffer data){
+        if(destOffset + data.getLimit() > bufferSize) throw new RuntimeException("Overflow in Buffer.write().");
+        webgpu.queue.writeBuffer(buffer, destOffset, data);
+        log(data.getLimit());
+    }
+
+    public void write(int destOffset, ByteBuffer data, int sizeInBytes){
+        if(destOffset + sizeInBytes > bufferSize) throw new RuntimeException("Overflow in Buffer.write().");
+        webgpu.queue.writeBuffer(buffer, destOffset, data, sizeInBytes);
+        log(data.limit());
+    }
+
+    public void write(int destOffset, ByteBuffer data){
+        if(destOffset + data.limit() > bufferSize) throw new RuntimeException("Overflow in Buffer.write().");
+        webgpu.queue.writeBuffer(buffer, destOffset, data, data.limit());
+        log(data.limit());
     }
 
     @Override
     public void dispose() {
-        webGPU.wgpuBufferDestroy(handle);
-        webGPU.wgpuBufferRelease(handle);
-        handle = null;
+        buffer.destroy();
+        buffer.dispose();
+        buffer = null;
+    }
+
+    private void log(int bytesWritten){
+        //System.out.println("buffer write: "+bytesWritten);
     }
 }

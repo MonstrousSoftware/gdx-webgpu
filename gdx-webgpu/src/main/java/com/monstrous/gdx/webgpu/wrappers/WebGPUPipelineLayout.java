@@ -1,49 +1,55 @@
+/*******************************************************************************
+ * Copyright 2025 Monstrous Software.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ******************************************************************************/
+
 package com.monstrous.gdx.webgpu.wrappers;
 
-
 import com.badlogic.gdx.Gdx;
-import com.monstrous.gdx.webgpu.application.WebGPUApplication;
-import com.monstrous.gdx.webgpu.application.WgGraphics;
-import com.monstrous.gdx.webgpu.utils.JavaWebGPU;
-import com.monstrous.gdx.webgpu.webgpu.WGPUPipelineLayoutDescriptor;
-import com.monstrous.gdx.webgpu.webgpu.WebGPU_JNI;
 import com.badlogic.gdx.utils.Disposable;
-import jnr.ffi.Pointer;
-import org.lwjgl.system.MemoryStack;
+import com.github.xpenatan.webgpu.WGPUPipelineLayout;
+import com.github.xpenatan.webgpu.WGPUPipelineLayoutDescriptor;
+import com.github.xpenatan.webgpu.WGPUVectorBindGroupLayout;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 
-import java.nio.ByteBuffer;
-
-import static org.lwjgl.system.MemoryStack.stackPush;
 
 public class WebGPUPipelineLayout implements Disposable {
-    private final WgGraphics gfx = (WgGraphics) Gdx.graphics;
-    private final WebGPU_JNI webGPU = gfx.getWebGPU();
-    private final WebGPUApplication webgpu = gfx.getContext();
-    private final Pointer handle;
+    private final WGPUPipelineLayout layout;
 
     public WebGPUPipelineLayout(String label, WebGPUBindGroupLayout... bindGroupLayouts ) {
+        WGPUVectorBindGroupLayout layouts = WGPUVectorBindGroupLayout.obtain();
+        for (int i = 0; i < bindGroupLayouts.length; i++)
+            layouts.push_back( bindGroupLayouts[i].getLayout());
 
-        int count = bindGroupLayouts.length;
-        try (MemoryStack stack = stackPush()) {
-            ByteBuffer pLayouts = stack.malloc(count * Long.BYTES);
-            for (int i = 0; i < count; i++)
-                pLayouts.putLong(i*Long.BYTES, bindGroupLayouts[i].getHandle().address());
-
-            WGPUPipelineLayoutDescriptor pipelineLayoutDesc = WGPUPipelineLayoutDescriptor.createDirect();
-            pipelineLayoutDesc.setNextInChain();
-            pipelineLayoutDesc.setLabel(label);
-            pipelineLayoutDesc.setBindGroupLayoutCount(count);
-            pipelineLayoutDesc.setBindGroupLayouts(JavaWebGPU.createByteBufferPointer(pLayouts));  // expects an array of layouts in native memory
-            handle = webGPU.wgpuDeviceCreatePipelineLayout(webgpu.device.getHandle(), pipelineLayoutDesc);
-        } // free malloced memory
+        WGPUPipelineLayoutDescriptor pipelineLayoutDesc = WGPUPipelineLayoutDescriptor.obtain();
+        pipelineLayoutDesc.setNextInChain(null);
+        pipelineLayoutDesc.setLabel(label);
+        pipelineLayoutDesc.setBindGroupLayouts(layouts);
+        layout = new WGPUPipelineLayout();
+        WgGraphics gfx = (WgGraphics) Gdx.graphics;
+        WebGPUContext webgpu = gfx.getContext();
+        webgpu.device.createPipelineLayout(pipelineLayoutDesc, layout);
     }
 
-    public Pointer getHandle() {
-        return handle;
+    public WGPUPipelineLayout getLayout() {
+        return layout;
     }
 
     @Override
     public void dispose() {
-        webGPU.wgpuPipelineLayoutRelease(handle);
+        layout.release();
+        layout.dispose();
     }
 }

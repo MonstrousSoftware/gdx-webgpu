@@ -2,28 +2,25 @@ package com.monstrous.gdx.webgpu.graphics.g2d;
 
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.math.Rectangle;
-import com.monstrous.gdx.webgpu.application.WebGPUApplication;
-import com.monstrous.gdx.webgpu.application.WgGraphics;
-import com.monstrous.gdx.webgpu.graphics.Binder;
-import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
-import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Affine2;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.BufferUtils;
 import com.badlogic.gdx.utils.Null;
+import com.github.xpenatan.webgpu.*;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
+import com.monstrous.gdx.webgpu.graphics.Binder;
+import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
-import com.monstrous.gdx.webgpu.webgpu.*;
 import com.monstrous.gdx.webgpu.wrappers.*;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
-import java.nio.ShortBuffer;
+import java.nio.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,13 +33,14 @@ public class WgSpriteBatch implements Batch {
     private final static int INDICES_PER_SPRITE = 6;
 
     private final WgGraphics gfx;
-    private final WebGPUApplication webgpu;
+    private final WebGPUContext webgpu;
     private final WgShaderProgram specificShader;
     private final int maxSprites;
     private boolean drawing;
     private final int vertexSize;
     private final ByteBuffer vertexBB;
     private final FloatBuffer vertexData;     // float buffer view on byte buffer
+
     public int numSprites;
     private final Color tint;
     private float tintPacked;
@@ -51,7 +49,7 @@ public class WgSpriteBatch implements Batch {
     private WebGPUUniformBuffer uniformBuffer;
     private final WebGPUBindGroupLayout bindGroupLayout;
     private final VertexAttributes vertexAttributes;
-    private final WebGPUPipelineLayout pipelineLayout;
+    private final WGPUPipelineLayout pipelineLayout;
     private final PipelineSpecification pipelineSpec;
     private int uniformBufferSize;
     private WgTexture lastTexture;
@@ -74,9 +72,10 @@ public class WgSpriteBatch implements Batch {
     private final Map<WGPUBlendFactor, Integer> blendGLConstantMap = new HashMap<>(); // vice versa
     private final Binder binder;
     private static String defaultShader;
+    private boolean mustUpdateMatrices = true;  // to save a buffer write if the matrix is unchanged
 
     public WgSpriteBatch() {
-        this(1000); // default nr
+        this(2000); // default nr
     }
 
     public WgSpriteBatch(int maxSprites) {
@@ -175,22 +174,25 @@ public class WgSpriteBatch implements Batch {
     // the index buffer is fixed and only has to be filled on start-up
     private void fillIndexBuffer(int maxSprites){
         ByteBuffer bb = BufferUtils.newUnsafeByteBuffer(maxSprites*INDICES_PER_SPRITE*Short.BYTES);
-        ShortBuffer indexData = bb.asShortBuffer();
+        bb.order(ByteOrder.LITTLE_ENDIAN);  // webgpu expects little endian data
+        ShortBuffer shorts = bb.asShortBuffer();
         for(int i = 0; i < maxSprites; i++){
             short vertexOffset = (short)(i * 4);
             // two triangles per sprite
-            indexData.put(vertexOffset);
-            indexData.put((short)(vertexOffset + 1));
-            indexData.put((short)(vertexOffset + 2));
+            shorts.put(vertexOffset);
+            shorts.put((short)(vertexOffset + 1));
+            shorts.put((short)(vertexOffset + 2));
 
-            indexData.put(vertexOffset);
-            indexData.put((short)(vertexOffset + 2));
-            indexData.put((short)(vertexOffset + 3));
+            shorts.put(vertexOffset);
+            shorts.put((short)(vertexOffset + 2));
+            shorts.put((short)(vertexOffset + 3));
         }
-        indexData.flip();
+        // set the limit of the byte buffer to the number of bytes filled
+        ((Buffer)bb).limit(shorts.limit()*Short.BYTES);
+
         indexBuffer.setIndices(bb);
         BufferUtils.disposeUnsafeByteBuffer(bb);
-    }
+     }
 
 
     public void setColor(float r, float g, float b, float a){
@@ -326,7 +328,7 @@ public class WgSpriteBatch implements Batch {
         maxSpritesInBatch = 0;
         renderCalls = 0;
         numFlushes = 0;
-        uniformBuffer.setDynamicOffsetIndex(numFlushes);
+        //uniformBuffer.setDynamicOffsetIndex(numFlushes);
 
         prevPipeline = null;
 
@@ -359,6 +361,8 @@ public class WgSpriteBatch implements Batch {
     }
 
     public void flush() {
+
+
         if(numSprites == 0)
             return;
         if(numSprites > maxSpritesInBatch)
@@ -372,8 +376,15 @@ public class WgSpriteBatch implements Batch {
         setPipeline();
 
         // bind group
-        updateMatrices();
-        renderPass.setBindGroup( 0, binder.getBindGroup(0).getHandle(), numFlushes*uniformBuffer.getUniformStride());
+
+        //if(mustUpdateMatrices) {
+            updateMatrices();
+        //    mustUpdateMatrices = false;
+        //}
+        int dynamicOffset = numFlushes*uniformBuffer.getUniformStride();
+        WebGPUBindGroup wbg = binder.getBindGroup(0);
+        WGPUBindGroup bg = wbg.getBindGroup();
+        renderPass.setBindGroup( 0, bg, dynamicOffset );
 
         // append new vertex data to GPU vertex buffer
         int numBytes = numSprites * VERTS_PER_SPRITE * vertexSize;
@@ -381,8 +392,8 @@ public class WgSpriteBatch implements Batch {
 
         // Set vertex buffer while encoding the render pass
         // use an offset to set the vertex buffer for this batch
-        renderPass.setVertexBuffer( 0, vertexBuffer.getHandle(), vbOffset, numBytes);
-        renderPass.setIndexBuffer( indexBuffer.getHandle(), WGPUIndexFormat.Uint16, 0, (long) numSprites *6*Short.BYTES);
+        renderPass.setVertexBuffer( 0, vertexBuffer.getBuffer(), vbOffset, numBytes);
+        renderPass.setIndexBuffer( indexBuffer.getBuffer(), WGPUIndexFormat.Uint16, 0,  numSprites *6*Short.BYTES);
 
         renderPass.drawIndexed( numSprites *6, 1, 0, 0, 0);
 
@@ -407,9 +418,9 @@ public class WgSpriteBatch implements Batch {
 
     // create or reuse pipeline on demand to match the pipeline spec
     private void setPipeline() {
-        WebGPUPipeline pipeline = pipelines.findPipeline( pipelineLayout.getHandle(), pipelineSpec);
+        WebGPUPipeline pipeline = pipelines.findPipeline( pipelineLayout, pipelineSpec);
         if (pipeline != prevPipeline) { // avoid unneeded switches
-            renderPass.setPipeline(pipeline.getHandle());
+            renderPass.setPipeline(pipeline);
             prevPipeline = pipeline;
         }
     }
@@ -457,6 +468,7 @@ public class WgSpriteBatch implements Batch {
         if(drawing)
             flush();
         projectionMatrix.set(projection);
+        mustUpdateMatrices = true;
     }
 
     @Override
@@ -464,6 +476,7 @@ public class WgSpriteBatch implements Batch {
         if(drawing)
             flush();
         transformMatrix.set(transform);
+        mustUpdateMatrices = true;
     }
 
     @Override
@@ -987,14 +1000,16 @@ public class WgSpriteBatch implements Batch {
         int indexSize = maxSprites * INDICES_PER_SPRITE * Short.BYTES;
 
         // Create vertex buffer and index buffer
-        vertexBuffer = new WebGPUVertexBuffer(WGPUBufferUsage.CopyDst | WGPUBufferUsage.Vertex, (long) maxSprites * 4 * vertexSize);
-        indexBuffer = new WebGPUIndexBuffer(WGPUBufferUsage.CopyDst | WGPUBufferUsage.Index, indexSize, Short.BYTES);
+        vertexBuffer = new WebGPUVertexBuffer(WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Vertex),  maxSprites * 4 * vertexSize);
+        indexBuffer = new WebGPUIndexBuffer(WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Index), indexSize, Short.BYTES);
 
         // Create uniform buffer with dynamic offset for the view projection matrix
         // dynamic offset will be incremented per flush so that it can have a specific view projection matrix
         uniformBufferSize = 16 * Float.BYTES;
-        uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize,WGPUBufferUsage.CopyDst |WGPUBufferUsage.Uniform, maxFlushes  );
+        uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize,WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Uniform), maxFlushes  );
     }
+
+    private Matrix4 prevMatrix = new Matrix4();
 
     private void updateMatrices(){
         combinedMatrix.set(shiftDepthMatrix).mul(projectionMatrix).mul(transformMatrix);
@@ -1024,7 +1039,7 @@ public class WgSpriteBatch implements Batch {
         uniformBuffer.dispose();
         bindGroupLayout.dispose();
         //pipelineLayout.dispose();
-        BufferUtils.disposeUnsafeByteBuffer(vertexBB);
+
     }
 
 

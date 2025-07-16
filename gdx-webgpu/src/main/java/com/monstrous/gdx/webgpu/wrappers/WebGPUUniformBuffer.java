@@ -17,15 +17,18 @@
 package com.monstrous.gdx.webgpu.wrappers;
 
 import com.badlogic.gdx.Gdx;
-import com.monstrous.gdx.webgpu.application.WebGPUApplication;
-import com.monstrous.gdx.webgpu.application.WgGraphics;
-import com.monstrous.gdx.webgpu.utils.JavaWebGPU;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.Vector4;
-import jnr.ffi.Pointer;
+import com.github.xpenatan.webgpu.WGPUBufferUsage;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+
 
 /** Uniform buffer, optionally to be used with dynamic offsets
  *
@@ -47,7 +50,8 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
     private final int contentSize;
     private final int uniformStride;
     private final int maxSlices;
-    private final Pointer floatData;
+    private final ByteBuffer dataBuf;
+    private final FloatBuffer floatData;
     private int dynamicOffsetIndex;
     private boolean dirty;
 
@@ -57,7 +61,7 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
      * @param contentSize size of data in bytes
      * @param usage flags of WGPUBufferUsage
      */
-    public WebGPUUniformBuffer(int contentSize, long usage){
+    public WebGPUUniformBuffer(int contentSize, WGPUBufferUsage usage){
         this(contentSize, usage, 1);
     }
 
@@ -67,7 +71,7 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
      * @param usage flags of WGPUBufferUsage
      * @param maxSlices minimum 1
      */
-    public WebGPUUniformBuffer(int contentSize, long usage, int maxSlices){
+    public WebGPUUniformBuffer(int contentSize, WGPUBufferUsage usage, int maxSlices){
         this("uniform buffer", contentSize, usage, maxSlices);
     }
 
@@ -77,7 +81,7 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
      * @param usage flags of WGPUBufferUsage
      * @param maxSlices minimum 1
      */
-    public WebGPUUniformBuffer(String label, int contentSize, long usage, int maxSlices){
+    public WebGPUUniformBuffer(String label, int contentSize, WGPUBufferUsage usage, int maxSlices){
         super(label, usage, calculateBufferSize(contentSize, maxSlices));
         this.contentSize = contentSize;
         this.maxSlices = maxSlices;
@@ -87,19 +91,21 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
         dirty = false;
 
         // working buffer in native memory to use as input to WriteBuffer
-        floatData = JavaWebGPU.createDirectPointer(contentSize);       // native memory buffer for one slice to aid write buffer
+        dataBuf = ByteBuffer.allocateDirect(contentSize);
+        dataBuf.order(ByteOrder.LITTLE_ENDIAN);
+        floatData = dataBuf.asFloatBuffer();
     }
 
 
 
-    private static long calculateBufferSize(int contentSize, int maxSlices){
+    private static int calculateBufferSize(int contentSize, int maxSlices){
         // round up buffer size to 16 byte alignment
-        long bufferSize = ceilToNextMultiple(contentSize, 16);
+        int bufferSize = ceilToNextMultiple(contentSize, 16);
 
         // if we use dynamics offsets, there is a minimum stride to apply between "slices"
         if(maxSlices > 1) { // do we use dynamic offsets?
             int uniformStride = calculateStride(contentSize, maxSlices);
-            bufferSize += (long) uniformStride * (maxSlices - 1);
+            bufferSize += uniformStride * (maxSlices - 1);
         }
         return bufferSize;
     }
@@ -107,8 +113,9 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
     private static int calculateStride(int contentSize, int maxSlices){
         int stride = 0;
         if(maxSlices > 1) { // do we use dynamic offsets?
-            WebGPUApplication webgpu = ((WgGraphics) Gdx.graphics).getContext();
-            int uniformAlignment =  (int) webgpu.device.getSupportedLimits().getLimits().getMinUniformBufferOffsetAlignment();
+            WebGPUContext webgpu = ((WgGraphics) Gdx.graphics).getContext();
+            // todo
+            int uniformAlignment =  256; //(int) webgpu.device.getSupportedLimits().getLimits().getMinUniformBufferOffsetAlignment();
             stride = ceilToNextMultiple(contentSize, uniformAlignment);
         }
         return stride;
@@ -127,12 +134,12 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
     /* call this after any set or a sequence of sets to write the floatData to the GPU buffer */
     public void flush(){
         if(dirty) {
-            write(dynamicOffsetIndex * uniformStride, floatData, contentSize);
+            write(dynamicOffsetIndex * uniformStride, dataBuf, contentSize);
             dirty = false;
         }
     }
 
-    public Pointer getFloatData() {
+    public FloatBuffer getFloatData() {
         return floatData;
     }
 
@@ -148,41 +155,45 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
 
     /** offset in bytes */
     public void set(int offset, float value ){
-        floatData.putFloat(offset, value);
+        dataBuf.putFloat(offset, value);
         dirty = true;
     }
 
     public void set( int offset, Vector2 vec ){
-        floatData.putFloat(offset, vec.x);
-        floatData.putFloat(offset +Float.BYTES, vec.y);
+        dataBuf.putFloat(offset, vec.x);
+        dataBuf.putFloat(offset +Float.BYTES, vec.y);
         dirty = true;
     }
 
     public void set( int offset, Vector3 vec ){
-        floatData.putFloat(offset, vec.x);
-        floatData.putFloat(offset +Float.BYTES, vec.y);
-        floatData.putFloat(offset +2*Float.BYTES, vec.z);
+        dataBuf.putFloat(offset, vec.x);
+        dataBuf.putFloat(offset +Float.BYTES, vec.y);
+        dataBuf.putFloat(offset +2*Float.BYTES, vec.z);
         dirty = true;
     }
 
     public void set( int offset, Vector4 vec ){
-        floatData.putFloat(offset, vec.x);
-        floatData.putFloat(offset +Float.BYTES, vec.y);
-        floatData.putFloat(offset +2*Float.BYTES, vec.z);
-        floatData.putFloat(offset +3*Float.BYTES, vec.w);
+        dataBuf.putFloat(offset, vec.x);
+        dataBuf.putFloat(offset +Float.BYTES, vec.y);
+        dataBuf.putFloat(offset +2*Float.BYTES, vec.z);
+        dataBuf.putFloat(offset +3*Float.BYTES, vec.w);
         dirty = true;
     }
 
     public void set(int offset, Matrix4 mat ){
-        floatData.put(offset, mat.val, 0, 16);
+        for(int i = 0; i < 16; i++) {
+            float f =  mat.val[i];
+            int index = offset + i*Float.BYTES;
+            dataBuf.putFloat(index,f);
+        }
         dirty = true;
     }
 
     public void set( int offset, Color col ){
-        floatData.putFloat(offset, col.r);
-        floatData.putFloat(offset +Float.BYTES, col.g);
-        floatData.putFloat(offset +2*Float.BYTES,col.b);
-        floatData.putFloat(offset +3*Float.BYTES, col.a);
+        dataBuf.putFloat(offset, col.r);
+        dataBuf.putFloat(offset +Float.BYTES, col.g);
+        dataBuf.putFloat(offset +2*Float.BYTES,col.b);
+        dataBuf.putFloat(offset +3*Float.BYTES, col.a);
         dirty = true;
     }
 

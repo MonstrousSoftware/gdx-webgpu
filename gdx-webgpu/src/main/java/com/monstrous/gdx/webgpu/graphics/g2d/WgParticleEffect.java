@@ -22,8 +22,6 @@ import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 
 
-
-
 public class WgParticleEffect extends ParticleEffect {
 
     @Override

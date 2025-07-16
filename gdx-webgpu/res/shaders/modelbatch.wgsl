@@ -238,12 +238,16 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
 
     color = color + vec4f(emissiveColor, 0);
 
-#ifdef FOG
-    color = vec4f(mix(color.rgb, uFrame.fogColor.rgb, in.fogDepth), 1);
+
+#ifdef GAMMA_CORRECTION
+    let linearColor: vec3f = pow(color.rgb, vec3f(2.2));
+    color = vec4f(linearColor, color.a);
 #endif
 
-
-
+#ifdef FOG
+    // fog needs to come after gamma correction
+    color = vec4f(mix(color.rgb, uFrame.fogColor.rgb, in.fogDepth), 1);
+#endif
 
     //return vec4f(emissiveColor, 1.0);
     //return vec4f(normal, 1.0);

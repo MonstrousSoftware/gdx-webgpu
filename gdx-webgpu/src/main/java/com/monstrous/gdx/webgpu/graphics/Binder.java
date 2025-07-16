@@ -15,14 +15,18 @@
  ******************************************************************************/
 package com.monstrous.gdx.webgpu.graphics;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.Vector4;
 import com.badlogic.gdx.utils.Disposable;
+import com.github.xpenatan.webgpu.*;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.wrappers.*;
-import jnr.ffi.Pointer;
+
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,7 +38,8 @@ public class Binder implements Disposable {
     private final Map<Integer, WebGPUBindGroupLayout> groupLayouts;
     private final Map<Integer, WebGPUBindGroup> groups;
     private final Map<Integer, BufferInfo> buffers;
-    private WebGPUPipelineLayout pipelineLayout;
+    private WGPUPipelineLayout pipelineLayout;
+    private WebGPUContext webgpu;
 
     public static class BufferInfo {
         WebGPUUniformBuffer buffer;
@@ -49,6 +54,8 @@ public class Binder implements Disposable {
     }
 
     public Binder() {
+        WgGraphics gfx = (WgGraphics) Gdx.graphics;
+        webgpu = gfx.getContext();
         bindMap = new BindingDictionary();
         groupLayouts = new HashMap<>();
         groups = new HashMap<>();
@@ -72,7 +79,7 @@ public class Binder implements Disposable {
     }
 
     // to do specific  for uniform buffer
-    public void setBuffer(String name, WebGPUUniformBuffer buffer, int offset, long size ){
+    public void setBuffer(String name, WebGPUUniformBuffer buffer, int offset, int size ){
         BindingDictionary.BindingMap mapping = bindMap.findUniform(name);
         if(mapping == null) throw new RuntimeException("Uniform name "+name+" not defined.");
         WebGPUBindGroup bindGroup = getBindGroup(mapping.groupId);
@@ -91,7 +98,7 @@ public class Binder implements Disposable {
     }
 
     // todo allow more generic buffers?
-    public void setBuffer(int groupId, int bindingId, WebGPUUniformBuffer buffer, int offset, long size ){
+    public void setBuffer(int groupId, int bindingId, WebGPUUniformBuffer buffer, int offset, int size ){
         WebGPUBindGroup bindGroup = getBindGroup(groupId);
         bindGroup.setBuffer(bindingId, buffer, offset, size);
 
@@ -99,7 +106,7 @@ public class Binder implements Disposable {
         buffers.put(combine(groupId, bindingId), new BufferInfo(buffer, offset, size));
     }
 
-    public void setTexture(String name, WebGPUTextureView textureView ){
+    public void setTexture(String name, WGPUTextureView textureView ){
         BindingDictionary.BindingMap mapping = bindMap.findUniform(name);
         if(mapping == null) throw new RuntimeException("Uniform name "+name+" not defined.");
         WebGPUBindGroup bindGroup = getBindGroup(mapping.groupId);
@@ -107,7 +114,7 @@ public class Binder implements Disposable {
         bindGroup.setTexture(mapping.bindingId, textureView);
     }
 
-    public void setSampler(String name, Pointer sampler){
+    public void setSampler(String name, WGPUSampler sampler){
         BindingDictionary.BindingMap mapping = bindMap.findUniform(name);
         if(mapping == null) throw new RuntimeException("Uniform name "+name+" not defined.");
         WebGPUBindGroup bindGroup = getBindGroup(mapping.groupId);
@@ -192,17 +199,24 @@ public class Binder implements Disposable {
     }
 
 
-    public WebGPUPipelineLayout getPipelineLayout(String label){
+    public WGPUPipelineLayout getPipelineLayout(String label){
         // note: if label changes, this does not invalidate an existing pipeline layout
         // the method will return the cached layout with the original label.
         if(pipelineLayout == null){
-            WebGPUBindGroupLayout[] layouts = new WebGPUBindGroupLayout[groupLayouts.size()];
+
+            WGPUVectorBindGroupLayout layouts = WGPUVectorBindGroupLayout.obtain();
 
             // does this need to be in sequential order of group id? Can group id's skip numbers?
-            int i = 0;
             for(WebGPUBindGroupLayout layout : groupLayouts.values())
-                layouts[i++] = layout;
-            pipelineLayout = new WebGPUPipelineLayout(label, layouts);
+                layouts.push_back(layout.getLayout());
+
+            WGPUPipelineLayoutDescriptor pipelineLayoutDesc = WGPUPipelineLayoutDescriptor.obtain();
+            pipelineLayoutDesc.setNextInChain(null);
+            pipelineLayoutDesc.setLabel(label);
+            pipelineLayoutDesc.setBindGroupLayouts(layouts);
+
+            pipelineLayout = new WGPUPipelineLayout();
+            webgpu.device.createPipelineLayout(pipelineLayoutDesc, pipelineLayout);
         }
         return pipelineLayout;
     }
@@ -210,13 +224,13 @@ public class Binder implements Disposable {
     /** bind the bind group related to groupId to the render pass */
     public void bindGroup(WebGPURenderPass renderPass, int groupId ){
         WebGPUBindGroup bindGroup = groups.get(groupId);
-        renderPass.setBindGroup( groupId, bindGroup.getHandle());
+        renderPass.setBindGroup( groupId, bindGroup.getBindGroup());
     }
 
     /** bind the bind group related to groupId to the render pass and use a dynamic offset for one of the bindings */
     public void bindGroup(WebGPURenderPass renderPass, int groupId, int dynamicOffset ){
         WebGPUBindGroup bindGroup = groups.get(groupId);
-        renderPass.setBindGroup( groupId, bindGroup.getHandle(), dynamicOffset);
+        renderPass.setBindGroup( groupId, bindGroup.getBindGroup(), dynamicOffset);
     }
 
     @Override

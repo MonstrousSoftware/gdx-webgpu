@@ -5,25 +5,21 @@ plugins {
 // A list of which subprojects to load as part of the same larger project.
 // You can remove Strings from the list and reload the Gradle project
 // if you want to temporarily disable a subproject.
-include 'lwjgl3', 'android', 'teavm', 'core'
 
 
-include ":gdx-webgpu"
-include 'gdx-webgpu2'
+include ':gdx-webgpu'
+include ':gdx-webgpu-old'
 
 include ":backends"
 include ":backends:gdx-lwjgl3-webgpu"
-include 'backends:gdx-desktop-webgpu'
-include "backends:gdx-teavm-webgpu"
+include ":backends:gdx-desktop-webgpu"
+include ":backends:gdx-teavm-webgpu"
 
-include ':api-test'
-include ':api-new-test'
-
-include 'tests:gdx-tests-webgpu2'
-include 'tests:gdx-tests-desktop'
-include 'tests:gdx-tests-desktop2'
-include "tests:gdx-tests-teavm"
 include ":tests"
-include ":tests:gdx-tests-webgpu"
-include ":tests:test-api"
+include ":tests:gdx-webgpu-tests"
+include ':tests:gdx-tests-desktop-old'
+include ':tests:gdx-tests-desktop'
+include ":tests:gdx-tests-teavm"
 include ":tests:gdx-tests-android"
+
+include ':api-new-test'

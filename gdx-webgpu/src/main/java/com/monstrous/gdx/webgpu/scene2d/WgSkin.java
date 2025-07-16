@@ -17,7 +17,6 @@
 package com.monstrous.gdx.webgpu.scene2d;
 
 import com.badlogic.gdx.Gdx;
-import com.monstrous.gdx.webgpu.graphics.g2d.WgTextureAtlas;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
@@ -33,6 +32,8 @@ import com.badlogic.gdx.utils.Json.ReadOnlySerializer;
 import com.badlogic.gdx.utils.reflect.ClassReflection;
 import com.badlogic.gdx.utils.reflect.Method;
 import com.badlogic.gdx.utils.reflect.ReflectionException;
+import com.monstrous.gdx.webgpu.graphics.g2d.WgTextureAtlas;
+
 
 /** A skin stores resources for UI widgets to use (texture regions, ninepatches, fonts, colors, etc). Resources are named and can
  * be looked up by name and type. Resources can be described in JSON. Skin provides useful conversions, such as allowing access to

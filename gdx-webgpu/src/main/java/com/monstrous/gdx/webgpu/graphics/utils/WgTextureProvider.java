@@ -17,9 +17,9 @@
 package com.monstrous.gdx.webgpu.graphics.utils;
 
 import com.badlogic.gdx.Gdx;
-import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g3d.utils.TextureProvider;
+import com.monstrous.gdx.webgpu.graphics.WgTexture;
 
 /** Derived from TextureProvider to provide only WebGPUTexture instances
  *

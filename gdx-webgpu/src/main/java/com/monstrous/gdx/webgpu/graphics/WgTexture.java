@@ -17,34 +17,30 @@
 package com.monstrous.gdx.webgpu.graphics;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.TextureData;
+import com.badlogic.gdx.graphics.glutils.PixmapTextureData;
+import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgTextureData;
-import com.monstrous.gdx.webgpu.utils.JavaWebGPU;
-import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.graphics.glutils.PixmapTextureData;
-import com.monstrous.gdx.webgpu.webgpu.*;
-import com.monstrous.gdx.webgpu.wrappers.WebGPUTextureView;
-import jnr.ffi.Pointer;
+
 import java.nio.ByteBuffer;
-
-
 
 public class WgTexture extends Texture {
 
-    private final WebGPUContext webgpu = ((WgGraphics) Gdx.graphics).webgpu;
-    private final WebGPU_JNI webGPU = ((WgGraphics) Gdx.graphics).getWebGPU();
-    protected int mipLevelCount;
-    private Pointer texture;
-    private WebGPUTextureView textureView;
-    private Pointer sampler;
-    private Pointer depthSampler;
+    private final WebGPUContext webgpu = ((WgGraphics) Gdx.graphics).getContext();
+
+    private WGPUTexture texture;
+    private WGPUTextureView textureView;
+    private WGPUSampler sampler;
+    private WGPUSampler depthSampler;
     protected WGPUTextureFormat format;
     protected String label;
+    protected int mipLevelCount;
     private int numSamples;
-//    private TextureFilter minFilter;
-//    private TextureFilter magFilter;
     protected TextureData data; // cannot access data of Texture which is package private
 
     public WgTexture(String label, int width, int height, boolean mipMapping, boolean renderAttachment, WGPUTextureFormat format, int numSamples ) {
@@ -52,13 +48,13 @@ public class WgTexture extends Texture {
         this.label = label;
 
         this.numSamples = numSamples;
-        int textureUsage = WGPUTextureUsage.TextureBinding | WGPUTextureUsage.CopyDst;
+        WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst);
         if (renderAttachment)
-            textureUsage |= (WGPUTextureUsage.RenderAttachment | WGPUTextureUsage.CopySrc);    // todo COPY_SRC is temp
+            textureUsage = textureUsage.or(WGPUTextureUsage.RenderAttachment).or(WGPUTextureUsage.CopySrc);    // todo COPY_SRC is temp
         create( label, mipLevelCount, textureUsage, format, 1, numSamples, null);
     }
 
-    public WgTexture(String label, int width, int height, int mipLevelCount, int textureUsage, WGPUTextureFormat format, int numSamples ) {
+    public WgTexture(String label, int width, int height, int mipLevelCount, WGPUTextureUsage textureUsage, WGPUTextureFormat format, int numSamples ) {
         this.data = new WgTextureData(width, height, 0, 0, 0);
         this.label = label;
         this.numSamples = numSamples;
@@ -68,7 +64,7 @@ public class WgTexture extends Texture {
         create( label, mipLevelCount, textureUsage, format, 1, numSamples, null);
     }
 
-    public WgTexture(String label, int width, int height, int mipLevelCount, int textureUsage, WGPUTextureFormat format, int numSamples, WGPUTextureFormat viewFormat ) {
+    public WgTexture(String label, int width, int height, int mipLevelCount, WGPUTextureUsage textureUsage, WGPUTextureFormat format, int numSamples, WGPUTextureFormat viewFormat ) {
         this.data = new WgTextureData(width, height, 0, 0, 0);
         this.label = label;
         this.numSamples = numSamples;
@@ -134,10 +130,10 @@ public class WgTexture extends Texture {
     }
 
     private void uploadImageData( TextureData data ){
-        mipLevelCount = data.useMipMaps() ? Math.max(1, bitWidth(Math.max(data.getWidth(), data.getHeight()))) : 1;
+        mipLevelCount = data.useMipMaps() ? Math.max(1, bitWidth(Math.min(data.getWidth(), data.getHeight()))) : 1;
         numSamples = 1;
         format = WGPUTextureFormat.RGBA8Unorm; // assumption
-        int textureUsage = WGPUTextureUsage.TextureBinding | WGPUTextureUsage.CopyDst;
+        WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst);
         create( label, mipLevelCount, textureUsage, format, 1, numSamples, null);
         Pixmap pixmap = data.consumePixmap();
 
@@ -159,6 +155,7 @@ public class WgTexture extends Texture {
             pixmap = tmp;
             //disposePixmap = true;
         }
+
 
         load(pixmap.getPixels(), 0);
     }
@@ -182,21 +179,17 @@ public class WgTexture extends Texture {
         return mipLevelCount;
     }
 
-    public WebGPUTextureView getTextureView(){
+    public WGPUTextureView getTextureView(){
         return textureView;
     }
 
-    public Pointer getSampler() {
-        if(sampler == null)
-            buildSampler();
-        return sampler;
-    }
+
 
     public WGPUTextureFormat getFormat(){
         return format;
     }
 
-    public Pointer getHandle(){
+    public WGPUTexture getHandle(){
         return texture;
     }
 
@@ -220,15 +213,15 @@ public class WgTexture extends Texture {
     // numLayers - normally 1, e.g. 6 for a cube map
     // numSamples - for anti-aliasing
     //
-    protected void create( String label, int mipLevelCount, int textureUsage, WGPUTextureFormat format, int numLayers, int numSamples, WGPUTextureFormat viewFormat) {
+    protected void create(String label, int mipLevelCount, WGPUTextureUsage textureUsage, WGPUTextureFormat format, int numLayers, int numSamples, WGPUTextureFormat viewFormat) {
         if (webgpu.device == null || webgpu.queue == null)
             throw new RuntimeException("Texture creation requires device and queue to be available\n");
 
         this.label = label;
 
         // Create the texture
-        WGPUTextureDescriptor textureDesc = WGPUTextureDescriptor.createDirect();
-        textureDesc.setNextInChain();
+        WGPUTextureDescriptor textureDesc = WGPUTextureDescriptor.obtain();
+        textureDesc.setNextInChain(null);
         textureDesc.setLabel(label);
         textureDesc.setDimension(WGPUTextureDimension._2D);
         this.format = format; //
@@ -239,18 +232,14 @@ public class WgTexture extends Texture {
         textureDesc.getSize().setHeight(data.getHeight());
         textureDesc.getSize().setDepthOrArrayLayers(numLayers);
         textureDesc.setUsage(textureUsage);
-        if (viewFormat == null) {
-            textureDesc.setViewFormatCount(0);
-            textureDesc.setViewFormats(JavaWebGPU.createNullPointer());
-        } else {
-            long[] formats = new long[1];       // TMP
-            formats[0] = viewFormat.ordinal();
-            Pointer formatPtr = JavaWebGPU.createLongArrayPointer(formats);
-            textureDesc.setViewFormatCount(1);
-            textureDesc.setViewFormats(formatPtr);
+        WGPUVectorTextureFormat viewFormats = WGPUVectorTextureFormat.obtain();
+        if (viewFormat != null) {
+            viewFormats.push_back(viewFormat);
         }
+        textureDesc.setViewFormats(viewFormats);
 
-        texture = webGPU.wgpuDeviceCreateTexture(webgpu.device.getHandle(), textureDesc);
+        texture = new WGPUTexture();
+        webgpu.device.createTexture(textureDesc, texture);
 
         //System.out.println("dimensions: "+textureDesc.getSize().getDepthOrArrayLayers());
 
@@ -271,35 +260,53 @@ public class WgTexture extends Texture {
                 aspect = WGPUTextureAspect.All;
                 break;
         }
-        textureView = new WebGPUTextureView(this, aspect, dimension, format, 0,
-                mipLevelCount, 0, numLayers);
+        textureView = buildTextureView(texture, aspect, dimension, format, 0, mipLevelCount, 0, numLayers);
     }
 
-    private void buildSampler(){
+    public WGPUTextureView buildTextureView(WGPUTexture texture, WGPUTextureAspect aspect, WGPUTextureViewDimension dimension, WGPUTextureFormat format,
+                             int baseMipLevel, int mipLevelCount, int baseArrayLayer, int arrayLayerCount) {
 
-        // Create a sampler
-        //
-        WGPUSamplerDescriptor samplerDesc = WGPUSamplerDescriptor.createDirect();
-        samplerDesc.setLabel("Standard texture sampler");
-        samplerDesc.setAddressModeU(convertWrap(uWrap));
-        samplerDesc.setAddressModeV(convertWrap(vWrap));
-        samplerDesc.setAddressModeW(WGPUAddressMode.Repeat);
-        samplerDesc.setMagFilter(convertFilter(magFilter));       // default filter in LibGDX is nearest for min and mag filter
-        samplerDesc.setMinFilter(convertFilter(minFilter));
-        samplerDesc.setMipmapFilter(WGPUMipmapFilterMode.Linear);       // todo
-
-        samplerDesc.setLodMinClamp(0);
-        samplerDesc.setLodMaxClamp(mipLevelCount);
-        samplerDesc.setCompare(WGPUCompareFunction.Undefined);
-        samplerDesc.setMaxAnisotropy(1);
-        sampler = webGPU.wgpuDeviceCreateSampler(webgpu.device.getHandle(), samplerDesc);
-
+        // Create the view of the  texture manipulated by the rasterizer
+        WGPUTextureViewDescriptor textureViewDesc = WGPUTextureViewDescriptor.obtain();
+        textureViewDesc.setAspect(WGPUTextureAspect.All);
+        textureViewDesc.setBaseArrayLayer(baseArrayLayer);
+        textureViewDesc.setArrayLayerCount(arrayLayerCount);
+        textureViewDesc.setBaseMipLevel(baseMipLevel);
+        textureViewDesc.setMipLevelCount(mipLevelCount);
+        textureViewDesc.setDimension(dimension);
+        textureViewDesc.setFormat(texture.getFormat());         // should this match surface format instead?
+        textureView = new WGPUTextureView();
+        texture.createView(textureViewDesc, textureView);
+        return textureView;
     }
 
-    public Pointer getDepthSampler(){
+    public WGPUSampler getSampler() {
+        if(sampler == null) {
+            // Create a sampler
+            //
+            WGPUSamplerDescriptor samplerDesc = WGPUSamplerDescriptor.obtain();
+            samplerDesc.setLabel("Standard texture sampler");
+            samplerDesc.setAddressModeU(convertWrap(uWrap));
+            samplerDesc.setAddressModeV(convertWrap(vWrap));
+            samplerDesc.setAddressModeW(WGPUAddressMode.Repeat);
+            samplerDesc.setMagFilter(convertFilter(magFilter));       // default filter in LibGDX is nearest for min and mag filter
+            samplerDesc.setMinFilter(convertFilter(minFilter));
+            samplerDesc.setMipmapFilter(WGPUMipmapFilterMode.Linear);       // todo
+
+            samplerDesc.setLodMinClamp(0);
+            samplerDesc.setLodMaxClamp(mipLevelCount);
+            samplerDesc.setCompare(WGPUCompareFunction.Undefined);
+            samplerDesc.setMaxAnisotropy(1);
+            sampler = new WGPUSampler();
+            webgpu.device.createSampler(samplerDesc, sampler);
+        }
+        return sampler;
+    }
+
+    public WGPUSampler getDepthSampler(){
         if(depthSampler == null) {
             // Create a sampler
-            WGPUSamplerDescriptor samplerDesc = WGPUSamplerDescriptor.createDirect();
+            WGPUSamplerDescriptor samplerDesc = WGPUSamplerDescriptor.obtain();
             samplerDesc.setAddressModeU(WGPUAddressMode.ClampToEdge);
             samplerDesc.setAddressModeV(WGPUAddressMode.ClampToEdge);
             samplerDesc.setAddressModeW(WGPUAddressMode.ClampToEdge);
@@ -311,7 +318,8 @@ public class WgTexture extends Texture {
             samplerDesc.setLodMaxClamp(1);
             samplerDesc.setCompare(WGPUCompareFunction.Less);
             samplerDesc.setMaxAnisotropy(1);
-            depthSampler = webGPU.wgpuDeviceCreateSampler(webgpu.device.getHandle(), samplerDesc);
+            depthSampler = new WGPUSampler();
+            webgpu.device.createSampler(samplerDesc, depthSampler);
         }
         return depthSampler;
     }
@@ -336,12 +344,14 @@ public class WgTexture extends Texture {
         return mode;
     }
 
-    // override this methods to avoid drop to GL functions
+    // override this method to avoid drop to GL functions
     @Override
     public void setFilter(TextureFilter minFilter, TextureFilter magFilter){
         if(minFilter == this.minFilter && magFilter == this.magFilter) return;
         // note: this may invalidate the sampler if it was built already and had other values
-        sampler = null; // invalidate sampler todo release?
+        if(sampler != null)
+            sampler.release();
+        sampler = null; // invalidate sampler
         this.minFilter = minFilter;
         this.magFilter = magFilter;
     }
@@ -362,7 +372,9 @@ public class WgTexture extends Texture {
     @Override
     public void setWrap (TextureWrap u, TextureWrap v){
         if(u == this.uWrap && v == this.vWrap) return;
-        sampler = null; // invalidate sampler todo release?
+        if(sampler != null)
+            sampler.release();
+        sampler = null; // invalidate sampler
 
         // ignored
         this.uWrap = u;
@@ -376,22 +388,6 @@ public class WgTexture extends Texture {
      */
     public void load(ByteBuffer pixelPtr, int layer) {
 
-        // Arguments telling which part of the texture we upload to
-        // (together with the last argument of writeTexture)
-        WGPUImageCopyTexture destination = WGPUImageCopyTexture.createDirect();
-        destination.setTexture(texture);
-        destination.setMipLevel(0);
-        destination.getOrigin().setX(0);
-        destination.getOrigin().setY(0);
-        destination.getOrigin().setZ(0);
-        destination.setAspect(WGPUTextureAspect.All);   // not relevant
-
-        // Arguments telling how the C++ side pixel memory is laid out
-        WGPUTextureDataLayout source = WGPUTextureDataLayout.createDirect();
-        source.setOffset(0);
-        source.setBytesPerRow(4L *data.getWidth());
-        source.setRowsPerImage( data.getHeight());
-
         // Generate mipmap levels
         // candidate for compute shader
 
@@ -399,19 +395,14 @@ public class WgTexture extends Texture {
         int mipLevelHeight = data.getHeight();
         int numComponents = numComponents(format);
 
-        WGPUExtent3D ext = WGPUExtent3D.createDirect();
+        ByteBuffer prev = pixelPtr;
+        ByteBuffer next = pixelPtr;
 
-        byte[] prevPixels = null;
         for(int mipLevel = 0; mipLevel < mipLevelCount; mipLevel++) {
 
-            byte[] pixels = new byte[4 * mipLevelWidth * mipLevelHeight];
 
-            if(mipLevel == 0){
-                // fast copy for most common case: mip level 0
-                pixelPtr.position(0);
-                pixelPtr.get(pixels, 0, numComponents * mipLevelWidth * mipLevelHeight);
-            }
-            else {
+            if(mipLevel != 0){
+
                 // todo with compute shader
                 int offset = 0;
                 for (int y = 0; y < mipLevelHeight; y++) {
@@ -425,57 +416,37 @@ public class WgTexture extends Texture {
 
                         // Average r, g and b components
                         // beware that java bytes are signed. So we convert to integer first
-                        int r = toUnsignedInt(prevPixels[offset00]) + toUnsignedInt(prevPixels[offset01]) + toUnsignedInt(prevPixels[offset10]) + toUnsignedInt(prevPixels[offset11]);
-                        int g = toUnsignedInt(prevPixels[offset00 + 1]) + toUnsignedInt(prevPixels[offset01 + 1]) + toUnsignedInt(prevPixels[offset10 + 1]) + toUnsignedInt(prevPixels[offset11 + 1]);
-                        int b = toUnsignedInt(prevPixels[offset00 + 2]) + toUnsignedInt(prevPixels[offset01 + 2]) + toUnsignedInt(prevPixels[offset10 + 2]) + toUnsignedInt(prevPixels[offset11 + 2]);
-                        int a = toUnsignedInt(prevPixels[offset00 + 3]) + toUnsignedInt(prevPixels[offset01 + 3]) + toUnsignedInt(prevPixels[offset10 + 3]) + toUnsignedInt(prevPixels[offset11 + 3]);
-                        pixels[offset++] = (byte) (r >> 2);    // divide by 4
-                        pixels[offset++] = (byte) (g >> 2);
-                        pixels[offset++] = (byte) (b >> 2);
-                        pixels[offset++] = (byte) (a >> 2);  // alpha
+                        int r = toUnsignedInt(prev.get(offset00)) + toUnsignedInt(prev.get(offset01)) + toUnsignedInt(prev.get(offset10)) + toUnsignedInt(prev.get(offset11));
+                        int g = toUnsignedInt(prev.get(offset00 + 1)) + toUnsignedInt(prev.get(offset01 + 1)) + toUnsignedInt(prev.get(offset10 + 1)) + toUnsignedInt(prev.get(offset11 + 1));
+                        int b = toUnsignedInt(prev.get(offset00 + 2)) + toUnsignedInt(prev.get(offset01 + 2)) + toUnsignedInt(prev.get(offset10 + 2)) + toUnsignedInt(prev.get(offset11 + 2));
+                        int a = toUnsignedInt(prev.get(offset00 + 3)) + toUnsignedInt(prev.get(offset01 + 3)) + toUnsignedInt(prev.get(offset10 + 3)) + toUnsignedInt(prev.get(offset11 + 3));
+
+                        next.put( (byte) (r >> 2) );    // divide by 4
+                        next.put( (byte) (g >> 2) );
+                        next.put( (byte) (b >> 2) );
+                        next.put( (byte) (a >> 2) );  // alpha
                     }
                 }
+                next.flip();
             }
-
-
-            destination.setMipLevel(mipLevel);
-            destination.getOrigin().setZ(layer);
-
-            source.setBytesPerRow(4L *mipLevelWidth);
-            source.setRowsPerImage(mipLevelHeight);
-
-            ext.setWidth(mipLevelWidth);
-            ext.setHeight(mipLevelHeight);
-            ext.setDepthOrArrayLayers(1);
-
-            pixelPtr.position(0);
-            Pointer pp = JavaWebGPU.createByteBufferPointer(pixelPtr);  // convert ByteBuffer to Pointer
-
-            if(mipLevel == 0){
-                webGPU.wgpuQueueWriteTexture(webgpu.queue.getHandle(), destination, pp, (long) mipLevelWidth * mipLevelHeight * 4, source, ext);
-            } else {
-
-                // wrap byte array in native pointer
-                Pointer pixelData = JavaWebGPU.createByteArrayPointer(pixels);
-                // N.B. using textureDesc.getSize() for param won't work!
-                webGPU.wgpuQueueWriteTexture(webgpu.queue.getHandle(), destination, pixelData, (long) mipLevelWidth * mipLevelHeight * 4, source, ext);
-            }
+            loadMipLevel(next, mipLevelWidth, mipLevelHeight, 0,  mipLevel);
 
             mipLevelWidth /= 2;
             mipLevelHeight /= 2;
-            prevPixels = pixels;
+
+            prev = next;
+            next = ByteBuffer.allocateDirect( mipLevelWidth * mipLevelHeight * 4);
         }
     }
 
     /** Load image data into a specific layer and mip level
      *
      */
-
-    protected void loadMipLevel(Pointer data, int width, int height, int layer, int mipLevel) {
+     protected void loadMipLevel(ByteBuffer data, int width, int height, int layer, int mipLevel) {
 
         // Arguments telling which part of the texture we upload to
         // (together with the last argument of writeTexture)
-        WGPUImageCopyTexture destination = WGPUImageCopyTexture.createDirect();
+        WGPUTexelCopyTextureInfo destination = WGPUTexelCopyTextureInfo.obtain();
         destination.setTexture(texture);
         destination.setMipLevel(mipLevel);
         destination.getOrigin().setX(0);
@@ -483,18 +454,45 @@ public class WgTexture extends Texture {
         destination.getOrigin().setZ(layer);
         destination.setAspect(WGPUTextureAspect.All);   // not relevant
 
-        // Arguments telling how the C++ side pixel memory is laid out
-        WGPUTextureDataLayout source = WGPUTextureDataLayout.createDirect();
+        // Arguments telling how the pixel data is laid out
+        WGPUTexelCopyBufferLayout source = WGPUTexelCopyBufferLayout.obtain();
         source.setOffset(0);
-        source.setBytesPerRow(4L *width);
+        source.setBytesPerRow(4 *width);
         source.setRowsPerImage(height);
 
-        WGPUExtent3D ext = WGPUExtent3D.createDirect();
-        ext.setWidth(width);
-        ext.setHeight(height);
-        ext.setDepthOrArrayLayers(1);
+        WGPUExtent3D extent = WGPUExtent3D.obtain();
+        extent.setWidth(width);
+        extent.setHeight(height);
+        extent.setDepthOrArrayLayers(1);
 
-        webGPU.wgpuQueueWriteTexture(webgpu.queue.getHandle(), destination, data, 4L * width * height, source, ext);
+        webgpu.queue.writeTexture(destination, data, 4*width*height, source, extent);
+    }
+
+    @Deprecated
+    protected void load(ByteBuffer pixels) {
+
+        // Arguments telling which part of the texture we upload to
+        // (together with the last argument of writeTexture)
+        WGPUTexelCopyTextureInfo destination = WGPUTexelCopyTextureInfo.obtain();
+        destination.setTexture(texture);
+        destination.setMipLevel(0);
+        destination.getOrigin().setX(0);
+        destination.getOrigin().setY(0);
+        destination.getOrigin().setZ(0);
+        destination.setAspect(WGPUTextureAspect.All);   // not relevant
+
+        // Arguments telling how the pixel data is laid out
+        WGPUTexelCopyBufferLayout source = WGPUTexelCopyBufferLayout.obtain();
+        source.setOffset(0);
+        source.setBytesPerRow(4 *data.getWidth());
+        source.setRowsPerImage( data.getHeight());
+
+        WGPUExtent3D extent = WGPUExtent3D.obtain();
+        extent.setWidth(data.getWidth());
+        extent.setHeight(data.getHeight());
+        extent.setDepthOrArrayLayers(1);
+
+        webgpu.queue.writeTexture(destination, pixels, pixels.limit(), source, extent);
     }
 
 
@@ -505,7 +503,7 @@ public class WgTexture extends Texture {
     }
 
     public static int numComponents(WGPUTextureFormat format ){
-        int n = 4;
+        int n;
         switch(format) {
             case R8Unorm: n = 1; break;
             case RG8Uint: n = 2; break;
@@ -513,7 +511,6 @@ public class WgTexture extends Texture {
             case RGBA8Unorm: n = 4; break;
             case BGRA8Unorm: n = 4; break;
             default: throw new IllegalArgumentException("Unsupported format: "+format);
-
         }
         return n;
     }
@@ -523,12 +520,14 @@ public class WgTexture extends Texture {
 
         if(texture != null) {   // guard against double dispose
             //System.out.println("Destroy texture " + label);
-            // todo released when?
-            //LibGPU.webGPU.wgpuSamplerRelease(sampler);
+            if(sampler != null) {
+                sampler.release();
+                sampler.dispose();
+            }
+            textureView.release();
             textureView.dispose();
-
-            webGPU.wgpuTextureDestroy(texture);
-            webGPU.wgpuTextureRelease(texture);
+            texture.destroy();
+            texture.dispose();
             texture = null;
         }
         super.dispose();

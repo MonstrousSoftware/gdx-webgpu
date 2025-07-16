@@ -16,17 +16,20 @@
 
 package com.monstrous.gdx.webgpu.scene2d;
 
-import com.badlogic.gdx.*;
-import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
-import com.monstrous.gdx.webgpu.graphics.utils.WgShapeRenderer;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.scenes.scene2d.*;
-import com.badlogic.gdx.utils.*;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.Group;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.utils.Scaling;
+import com.badlogic.gdx.utils.SnapshotArray;
 import com.badlogic.gdx.utils.viewport.ScalingViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
+import com.monstrous.gdx.webgpu.graphics.utils.WgShapeRenderer;
 
 /** Version of Stage for WebGPU.
  * Just makes sure we use a WebGPUSpriteBatch and a WebGPUViewport.
@@ -71,7 +74,7 @@ public class WgStage extends Stage {
 		// However we cannot access this package private static member. We add stage.enableDebug() to block debug drawing including the recursive descent.
 		// (but maybe this is not a good idea as it can lead to confusion why debug doesn't work)
 		//if(debugEnabled)
-		drawDebug(camera);
+			drawDebug(camera);
 	}
 
 	/** Allow debug drawing (default is enabled).

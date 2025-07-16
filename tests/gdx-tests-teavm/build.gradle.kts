@@ -15,9 +15,11 @@ dependencies {
     implementation("com.badlogicgames.gdx:gdx:$gdxVersion")
     implementation("com.github.xpenatan.gdx-teavm:backend-teavm:$gdxTeaVMVersion")
 
-    implementation(project(":backends:gdx-teavm-webgpu"))
-    implementation(project(":tests:gdx-tests-webgpu2"))
-    implementation(project(":tests:gdx-tests-webgpu")) // Have Build errors
+    //implementation(project(":tests:gdx-tests-webgpu2")) // module deleted
+    implementation(project(":tests:gdx-webgpu-tests"))
+    implementation(project(":backends:gdx-teavm-webgpu"))     // broken: could not resolve
+
+    // Have Build errors
 }
 
 val mainClassName = "main.java.com.monstrous.gdx.tests.webgpu.BuildTeaVM"

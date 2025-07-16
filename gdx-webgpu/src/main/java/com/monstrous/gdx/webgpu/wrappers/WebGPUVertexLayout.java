@@ -17,39 +17,32 @@
 package com.monstrous.gdx.webgpu.wrappers;
 
 
-import com.monstrous.gdx.webgpu.webgpu.WGPUVertexAttribute;
-import com.monstrous.gdx.webgpu.webgpu.WGPUVertexBufferLayout;
-import com.monstrous.gdx.webgpu.webgpu.WGPUVertexFormat;
-import com.monstrous.gdx.webgpu.webgpu.WGPUVertexStepMode;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
-
+import com.github.xpenatan.webgpu.*;
 
 
 public class WebGPUVertexLayout {
 
     /** create a vertex buffer layout object from the VertexAttributes */
-    public static WGPUVertexBufferLayout buildVertexBufferLayout( VertexAttributes attributes ){
+    public static WGPUVertexBufferLayout buildVertexBufferLayout(VertexAttributes attributes ){
 
-        WGPUVertexAttribute[] attribs = new WGPUVertexAttribute[attributes.size()];
+        WGPUVectorVertexAttribute attribs = WGPUVectorVertexAttribute.obtain();
 
-        int index = 0;
         int offset = 0;
         for(VertexAttribute attrib : attributes ){
-                WGPUVertexFormat format = convertFormat(attrib);
+            WGPUVertexFormat format = convertFormat(attrib);
 
-                attribs[index] = WGPUVertexAttribute.createDirect();
-                attribs[index].setFormat(format);
-                attribs[index].setOffset(offset);
-                attribs[index].setShaderLocation(getLocation(attrib.usage));
-
-                offset += getSize(format);
-                index++;
+            WGPUVertexAttribute attribute = WGPUVertexAttribute.obtain();
+            attribute.setFormat(format);
+            attribute.setOffset(offset);
+            attribute.setShaderLocation(getLocation(attrib.usage));
+            attribs.push_back(attribute);
+            offset += getSize(format);
         }
 
-        WGPUVertexBufferLayout vertexBufferLayout = WGPUVertexBufferLayout.createDirect();
-        vertexBufferLayout.setAttributeCount(attributes.size());
+        WGPUVertexBufferLayout vertexBufferLayout = WGPUVertexBufferLayout.obtain();
         vertexBufferLayout.setAttributes(attribs);
         vertexBufferLayout.setArrayStride(offset);
         vertexBufferLayout.setStepMode(WGPUVertexStepMode.Vertex);
@@ -57,7 +50,7 @@ public class WebGPUVertexLayout {
     }
 
     private static WGPUVertexFormat convertFormat(VertexAttribute attrib){
-        WGPUVertexFormat format = WGPUVertexFormat.Undefined;
+        WGPUVertexFormat format  = WGPUVertexFormat.CUSTOM;
 
         // todo complete all combinations
         switch(attrib.type){
@@ -77,7 +70,7 @@ public class WebGPUVertexLayout {
                 break;
 
         }
-        if(format == WGPUVertexFormat.Undefined) {
+        if(format == WGPUVertexFormat.CUSTOM) {
             throw new RuntimeException("Unsupported vertex attribute format type: " + attrib.type + " numComponents: " + attrib.numComponents);
         }
         return format;
@@ -105,7 +98,7 @@ public class WebGPUVertexLayout {
             case Sint32:
             case Float16x2:
             case Float32:
-            case Unorm1010102:
+            //case Unorm1010102:
                 return 4;
 
             case Uint16x4:
@@ -128,7 +121,6 @@ public class WebGPUVertexLayout {
             case Sint32x4:
                 return 16;
 
-            case Undefined:
             default:
                 throw new RuntimeException("Unknown vertex format: " + format);
 

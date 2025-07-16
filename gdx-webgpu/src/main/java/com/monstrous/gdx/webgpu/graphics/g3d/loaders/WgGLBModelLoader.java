@@ -18,10 +18,10 @@ package com.monstrous.gdx.webgpu.graphics.g3d.loaders;
 
 import com.badlogic.gdx.assets.loaders.FileHandleResolver;
 import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.graphics.g3d.model.data.*;
-import com.badlogic.gdx.utils.BaseJsonReader;
-import com.badlogic.gdx.utils.JsonReader;
-import com.monstrous.gdx.webgpu.graphics.g3d.loaders.gltf.*;
+import com.badlogic.gdx.graphics.g3d.model.data.ModelData;
+import com.monstrous.gdx.webgpu.graphics.g3d.loaders.gltf.GLTF;
+import com.monstrous.gdx.webgpu.graphics.g3d.loaders.gltf.GLTFRawBuffer;
+import com.monstrous.gdx.webgpu.graphics.g3d.loaders.gltf.ParserGLTF;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
@@ -33,8 +33,6 @@ import java.nio.charset.StandardCharsets;
 /** Loader for glb model format (binary GLTF).
  *
  */
-
-
 public class WgGLBModelLoader extends WgModelLoader<WgModelLoader.ModelParameters> {
 
 	public WgGLBModelLoader() {

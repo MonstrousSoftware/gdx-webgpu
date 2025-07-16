@@ -20,16 +20,12 @@ package com.monstrous.gdx.webgpu.graphics.g3d.loaders.gltf;
 
 // JSON parser of the GLTF file format into a set of GLTF class objects
 
-import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.utils.BaseJsonReader;
 import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
-
-import java.io.StringReader;
 
 public class ParserGLTF {
 
@@ -173,7 +169,7 @@ public class ParserGLTF {
                         JsonValue attribs = p.get("attributes");
                         JsonValue attrib = attribs.child;
                         while(attrib != null){
-                            //System.out.println(attrib.name);
+                            System.out.println("GLTF attribute: " + attrib.name);
                             GLTFAttribute attribute = new GLTFAttribute(attrib.name, attrib.asInt());
                             primitive.attributes.add(attribute);
                             attrib = attrib.next;

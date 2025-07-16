@@ -28,10 +28,10 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTestWrapper;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplication;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopApplicationConfiguration;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopGraphics;
-import com.monstrous.gdx.webgpu.backends.lwjgl3.WgDesktopWindowConfiguration;
+import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopApplication;
+import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopApplicationConfiguration;
+import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopGraphics;
+import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopWindowConfiguration;
 import com.monstrous.gdx.webgpu.scene2d.WgSkin;
 import com.monstrous.gdx.webgpu.scene2d.WgStage;
 
@@ -47,9 +47,9 @@ public class WebGPUTestStarter {
 
 		WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
 		config.setWindowedMode(320, 640);
-        config.enableGPUtiming = true;
+        config.enableGPUtiming = false;
         config.backend = WebGPUContext.Backend.VULKAN;
-        config.useVsync(false);
+        config.useVsync(true);
 
 		new WgDesktopApplication(new TestChooser(), config);
 	}
@@ -60,8 +60,7 @@ public class WebGPUTestStarter {
 		TextButton lastClickedTestButton;
 
 		public void create () {
-// System.out.println("OpenGL renderer: " + Gdx.graphics.getGLVersion().getRendererString());
-// System.out.println("OpenGL vendor: " + Gdx.graphics.getGLVersion().getVendorString());
+
 
 			final Preferences prefs = Gdx.app.getPreferences("webgpu-tests");
 
@@ -102,7 +101,7 @@ public class WebGPUTestStarter {
 							((WgDesktopGraphics)Gdx.graphics).getWindow().getPositionY() + 40);
 						winConfig.useVsync(false);
 						Gdx.app.setLogLevel(Application.LOG_DEBUG);
-						((WgDesktopApplication)Gdx.app).newWindow(new GdxTestWrapper(test, false), winConfig);
+						((WgDesktopApplication)Gdx.app).newWindow(test, winConfig);
 						System.out.println("Started test: " + testName);
 						prefs.putString("LastTest", testName);
 						prefs.flush();

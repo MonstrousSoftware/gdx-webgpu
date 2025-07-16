@@ -16,10 +16,10 @@
 
 package com.monstrous.gdx.webgpu.graphics.g2d;
 
-import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page;
+import com.monstrous.gdx.webgpu.graphics.WgTexture;
 
 /** Loads images from texture atlases created by TexturePacker.<br>
  * <br>

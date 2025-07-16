@@ -4,6 +4,7 @@ public enum RenderPassType {
     DEPTH_ONLY,
     COLOR_AND_DEPTH,
 
+    // todo remove unused types
     SHADOW_PASS,
     DEPTH_PREPASS,
     COLOR_PASS,

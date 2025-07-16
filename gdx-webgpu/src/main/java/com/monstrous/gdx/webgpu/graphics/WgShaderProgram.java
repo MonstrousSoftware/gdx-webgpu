@@ -16,38 +16,33 @@
 
 package com.monstrous.gdx.webgpu.graphics;
 
-
 import com.badlogic.gdx.Gdx;
-import com.monstrous.gdx.webgpu.application.WebGPUApplication;
-import com.monstrous.gdx.webgpu.application.WgGraphics;
-import com.monstrous.gdx.webgpu.webgpu.WGPUSType;
-import com.monstrous.gdx.webgpu.webgpu.WGPUShaderModuleDescriptor;
-import com.monstrous.gdx.webgpu.webgpu.WGPUShaderModuleWGSLDescriptor;
-import com.monstrous.gdx.webgpu.webgpu.WebGPU_JNI;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.utils.Disposable;
-import jnr.ffi.Pointer;
+import com.github.xpenatan.webgpu.WGPUSType;
+import com.github.xpenatan.webgpu.WGPUShaderModule;
+import com.github.xpenatan.webgpu.WGPUShaderModuleDescriptor;
+import com.github.xpenatan.webgpu.WGPUShaderSourceWGSL;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 
 public class WgShaderProgram implements Disposable {
 
     private final WgGraphics gfx = (WgGraphics) Gdx.graphics;
-    private final WebGPU_JNI webGPU = gfx.getWebGPU();
-    private final WebGPUApplication webgpu = gfx.getContext();
+    private final WebGPUContext webgpu = gfx.getContext();
     private String name;
-    private Pointer shaderModule;
+    private WGPUShaderModule shaderModule;
 
     public WgShaderProgram(FileHandle fileHandle) {
         this(fileHandle, "");
     }
 
     public WgShaderProgram(FileHandle fileHandle, String prefix) {
-        String source = null;
-        source = fileHandle.readString();
+        String source = fileHandle.readString();
         compile(fileHandle.file().getName(), prefix+source);
     }
 
     public WgShaderProgram(String name, String shaderSource, String prefix){
-
         compile(name, prefix+shaderSource);
     }
 
@@ -57,24 +52,23 @@ public class WgShaderProgram implements Disposable {
         String processedSource = Preprocessor.process(shaderSource);
 
         // Create Shader Module
-        WGPUShaderModuleDescriptor shaderDesc = WGPUShaderModuleDescriptor.createDirect();
-            shaderDesc.setLabel(name);
+        WGPUShaderModuleDescriptor shaderDesc = WGPUShaderModuleDescriptor.obtain();
+        shaderDesc.setLabel(name);
 
-        WGPUShaderModuleWGSLDescriptor shaderCodeDesc = WGPUShaderModuleWGSLDescriptor.createDirect();
-            shaderCodeDesc.getChain().setNext();
-            shaderCodeDesc.getChain().setSType(WGPUSType.ShaderModuleWGSLDescriptor);
-            shaderCodeDesc.setCode(processedSource);
+        WGPUShaderSourceWGSL shaderCodeDesc = WGPUShaderSourceWGSL.obtain();
+        shaderCodeDesc.getChain().setNext(null);
+        shaderCodeDesc.getChain().setSType(WGPUSType.ShaderSourceWGSL);
+        shaderCodeDesc.setCode(processedSource);
 
-            shaderDesc.getNextInChain().set(shaderCodeDesc.getPointerTo());
-
-        shaderModule = webGPU.wgpuDeviceCreateShaderModule(webgpu.device.getHandle(), shaderDesc);
-        if(shaderModule == null)
-            throw new RuntimeException("ShaderModule: compile failed "+name);
+        shaderDesc.setNextInChain(shaderCodeDesc.getChain());
+        shaderModule = new WGPUShaderModule();
+        webgpu.device.createShaderModule(shaderDesc, shaderModule);
+        // compile errors will invoke the error callback
 
         //System.out.println(name+": "+processedSource);
     }
 
-    public Pointer getHandle(){
+    public WGPUShaderModule getShaderModule() {
         return shaderModule;
     }
 
@@ -82,13 +76,10 @@ public class WgShaderProgram implements Disposable {
         return name;
     }
 
-//    //public String getShaderSource() {
-//        return shaderSource;
-//    }
-
     @Override
     public void dispose(){
-        webGPU.wgpuShaderModuleRelease(shaderModule);
+        shaderModule.release();
+        shaderModule.dispose();
         shaderModule = null;
     }
 

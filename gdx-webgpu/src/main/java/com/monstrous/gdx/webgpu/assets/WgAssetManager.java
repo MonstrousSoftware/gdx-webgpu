@@ -16,14 +16,11 @@
 
 package com.monstrous.gdx.webgpu.assets;
 
-import com.badlogic.gdx.assets.*;
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.*;
 import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
-import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgG3dModelLoader;
-import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLTFModelLoader;
-import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgObjLoader;
 import com.badlogic.gdx.graphics.Cubemap;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
@@ -31,7 +28,14 @@ import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.utils.*;
+import com.badlogic.gdx.utils.I18NBundle;
+import com.badlogic.gdx.utils.JsonReader;
+import com.badlogic.gdx.utils.UBJsonReader;
+import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgG3dModelLoader;
+import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLBModelLoader;
+import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLTFModelLoader;
+import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgObjLoader;
+
 
 /** Replacement for AssetManager which has some new default loaders for:
  * Texture, Model
@@ -58,7 +62,7 @@ public class WgAssetManager extends AssetManager {
 			setLoader(Pixmap.class, new PixmapLoader(resolver));
 			setLoader(Sound.class, new SoundLoader(resolver));
 			setLoader(TextureAtlas.class, new TextureAtlasLoader(resolver));
-			setLoader(Texture.class, new WgTextureLoader( resolver));
+			setLoader(Texture.class, new WgTextureLoader( resolver));           // loads WgTexture
 			setLoader(Skin.class, new SkinLoader(resolver));
 			setLoader(ParticleEffect.class, new ParticleEffectLoader(resolver));
 			setLoader(com.badlogic.gdx.graphics.g3d.particles.ParticleEffect.class,
@@ -69,7 +73,8 @@ public class WgAssetManager extends AssetManager {
 			setLoader(Model.class, ".g3db", new WgG3dModelLoader(new UBJsonReader(), resolver));
 			setLoader(Model.class, ".obj", new WgObjLoader(resolver));
             setLoader(Model.class, ".gltf", new WgGLTFModelLoader(resolver));
-			setLoader(ShaderProgram.class, new ShaderProgramLoader(resolver));
+            setLoader(Model.class, ".glb", new WgGLBModelLoader(resolver));
+            setLoader(ShaderProgram.class, new ShaderProgramLoader(resolver));
 			setLoader(Cubemap.class, new CubemapLoader(resolver));
 		}
 	}

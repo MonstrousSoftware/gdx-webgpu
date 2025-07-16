@@ -1,5 +1,6 @@
 plugins {
   id 'java'
+  id 'java-library'
 }
 
 apply from: "../dependencies.gradle"
@@ -11,10 +12,13 @@ java {
 
 dependencies {
   api "com.badlogicgames.gdx:gdx:$gdxVersion"
-  implementation 'com.github.jnr:jnr-ffi:2.2.17'
+  //implementation 'com.github.jnr:jnr-ffi:2.2.17'
+
+  api 'com.github.xpenatan.jWebGPU:webgpu-core:-SNAPSHOT'
+  api 'com.github.xpenatan.jWebGPU:webgpu-desktop:-SNAPSHOT'
 
   // need this for MemoryStack in e.g. RenderPass, is it platform dependent?
-  implementation 'org.lwjgl:lwjgl:3.3.3'
+ // implementation 'org.lwjgl:lwjgl:3.3.3'
 
   implementation 'org.jetbrains:annotations:24.0.0'
 }

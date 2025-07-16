@@ -1,6 +1,5 @@
 ext {
   mainTestClass = "com.monstrous.gdx.tests.webgpu.WebGPUTestStarter"
-  ext.j2w_version = "1.01"
 }
 
 apply from: "../../dependencies.gradle"
@@ -13,15 +12,10 @@ if (JavaVersion.current().isJava9Compatible()) {
   }
 }
 
-
 dependencies {
-  implementation project(":gdx-webgpu")
-  implementation project(":backends:gdx-lwjgl3-webgpu")
-  implementation project(":tests:gdx-tests-webgpu")
-  implementation 'com.github.jnr:jnr-ffi:2.2.17'
-
-  // needed for BufferUtils
-  implementation 'org.lwjgl:lwjgl:3.3.3'
+  implementation project(':gdx-webgpu')
+  implementation project(":backends:gdx-desktop-webgpu")
+    implementation project(':tests:gdx-webgpu-tests')
 }
 
 tasks.register('launchTestsWebGPU', JavaExec) {

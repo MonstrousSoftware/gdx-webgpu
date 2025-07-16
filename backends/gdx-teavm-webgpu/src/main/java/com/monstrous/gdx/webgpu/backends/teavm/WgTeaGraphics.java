@@ -9,7 +9,7 @@ import com.github.xpenatan.gdx.backends.teavm.dom.HTMLDocumentExt;
 import com.github.xpenatan.gdx.backends.teavm.dom.impl.TeaWindow;
 import com.github.xpenatan.webgpu.JWebGPULoader;
 import com.github.xpenatan.webgpu.WGPUSurfaceCapabilities;
-import com.monstrous.gdx.webgpu.application.WebGPUApplication2;
+import com.monstrous.gdx.webgpu.application.WebGPUApplication;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.utils.WgGL20;
@@ -21,7 +21,7 @@ public class WgTeaGraphics extends TeaGraphics implements WgGraphics {
     private static String canvasName = "webgpuCanvas";
     private static String canvasWGPU = "#" + canvasName;
 
-    public WebGPUApplication2 context;
+    public WebGPUApplication context;
 
     public WgTeaGraphics(TeaApplicationConfiguration config) {
         this.config = config;
@@ -59,15 +59,15 @@ public class WgTeaGraphics extends TeaGraphics implements WgGraphics {
             }
         }
 
-        WebGPUApplication2.Configuration configg = new WebGPUApplication2.Configuration(
+        WebGPUApplication.Configuration configg = new WebGPUApplication.Configuration(
             1,
             true,
             false,
             WebGPUContext.Backend.WEBGPU);
 
-        this.context = new WebGPUApplication2(configg, new WebGPUApplication2.OnInitCallback() {
+        this.context = new WebGPUApplication(configg, new WebGPUApplication.OnInitCallback() {
             @Override
-            public void onInit(WebGPUApplication2 application) {
+            public void onInit(WebGPUApplication application) {
                 AssetInstance.getDownloaderInstance().subtractQueue();
                 if(application.isReady()) {
                     application.surface = application.instance.createWebSurface(canvasWGPU);
