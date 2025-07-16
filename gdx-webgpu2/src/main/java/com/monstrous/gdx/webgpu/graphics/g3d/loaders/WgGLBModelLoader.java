@@ -33,8 +33,6 @@ import java.nio.charset.StandardCharsets;
 /** Loader for glb model format (binary GLTF).
  *
  */
-
-
 public class WgGLBModelLoader extends WgModelLoader<WgModelLoader.ModelParameters> {
 
 	public WgGLBModelLoader() {

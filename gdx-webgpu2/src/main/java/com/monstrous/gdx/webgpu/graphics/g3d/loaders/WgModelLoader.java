@@ -37,6 +37,7 @@ import com.monstrous.gdx.webgpu.graphics.utils.WgTextureProvider;
 
 import java.util.Iterator;
 
+/** Abstract class for the different model loaders, e.g. OBJ, G3DJ, G3DB, GLTF and GLB */
 public abstract class WgModelLoader<P extends WgModelLoader.ModelParameters> extends AsynchronousAssetLoader<Model, P> {
 	public WgModelLoader(FileHandleResolver resolver) {
 		super(resolver);

@@ -2,11 +2,10 @@ package com.monstrous.gdx.webgpu.wrappers;
 
 
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.BufferUtils;
 import com.github.xpenatan.webgpu.*;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.IntBuffer;
-import java.nio.ShortBuffer;
+
+import java.nio.*;
 
 public class WebGPUIndexBuffer extends WebGPUBuffer {
 
@@ -58,32 +57,46 @@ public class WebGPUIndexBuffer extends WebGPUBuffer {
             throw new RuntimeException("setIndices: support only 16 bit or 32 bit indices.");
     }
 
-    public void setIndices(int bufferOffset, short[] indices, int srcOffset, int indexCount){
+    /** set a range of indices in the GPU index buffer *
+     *
+     * @param dstOffset offset in destination buffer in bytes
+     * @param indices short array of indices
+     * @param srcOffset offset in the short array to start (in indices)
+     * @param indexCount number of indices to copy
+     */
+    public void setIndices(int dstOffset, short[] indices, int srcOffset, int indexCount){
         this.indexSizeInBytes = 2;  // 2 bytes per short
-        this.indexCount = indexCount;
+        this.indexCount = indexCount;   // note: not so reliable because we are writing with a bufferOffset
         int indexBufferSize = align(indexCount * indexSizeInBytes);
 
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(indexBufferSize);
+        ByteBuffer byteBuffer = BufferUtils.newUnsafeByteBuffer(indexBufferSize);
         byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
-        ShortBuffer iData = byteBuffer.asShortBuffer();
-        for(int i = 0; i < indexCount; i++){
-            iData.put(indices[i+srcOffset]);
-        }
-        write(bufferOffset, byteBuffer, indexBufferSize);
+        ShortBuffer shorts = byteBuffer.asShortBuffer();
+        shorts.put(indices, srcOffset, indexCount);
+        ((Buffer)byteBuffer).limit(indexBufferSize);
+        write(dstOffset, byteBuffer);
+        BufferUtils.disposeUnsafeByteBuffer(byteBuffer);
     }
 
-    public void setIndices(int bufferOffset, int[] indices, int indexCount){
+    /** set a range of integer indices in the GPU index buffer *
+     *
+     * @param dstOffset offset in destination buffer in bytes
+     * @param indices integer array of indices
+     * @param srcOffset offset in the integer array to start (in indices)
+     * @param indexCount number of indices to copy
+     */
+    public void setIndices(int dstOffset, int[] indices, int srcOffset, int indexCount){
         this.indexSizeInBytes = 4;
         this.indexCount = indexCount;
         int indexBufferSize = align(indexCount * indexSizeInBytes);
 
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(indexBufferSize);
+        ByteBuffer byteBuffer = BufferUtils.newUnsafeByteBuffer(indexBufferSize);
         byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
-        IntBuffer iData = byteBuffer.asIntBuffer();
-        for(int i = 0; i < indexCount; i++){
-            iData.put(indices[i]);
-        }
-        write(bufferOffset, byteBuffer, indexBufferSize);
+        IntBuffer intBuffer = byteBuffer.asIntBuffer();
+        intBuffer.put(indices, srcOffset, indexCount);
+        ((Buffer)byteBuffer).limit(indexBufferSize);
+        write(dstOffset, byteBuffer);
+        BufferUtils.disposeUnsafeByteBuffer(byteBuffer);
     }
 
     public void setIndices(Array<Integer> indexValues) {
@@ -94,55 +107,36 @@ public class WebGPUIndexBuffer extends WebGPUBuffer {
         indexCount = indexValues.size;
         int indexBufferSize = align(indexCount * indexSizeInBytes);
 
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(indexBufferSize);
+        ByteBuffer byteBuffer = BufferUtils.newUnsafeByteBuffer(indexBufferSize);
         byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
         if (indexSizeInBytes == 2) {
             ShortBuffer iData = byteBuffer.asShortBuffer();
             for (int i = 0; i < indexCount; i++) {
                 iData.put(indexValues.get(i).shortValue());
             }
+
         } else if (indexSizeInBytes == 4) {
             IntBuffer iData = byteBuffer.asIntBuffer();
             for (int i = 0; i < indexCount; i++) {
                 iData.put(indexValues.get(i));
             }
         }
-        write(0, byteBuffer, indexBufferSize);
+        ((Buffer)byteBuffer).limit(indexBufferSize);
+        write(0, byteBuffer);
+        BufferUtils.disposeUnsafeByteBuffer(byteBuffer);
     }
 
     public void setIndices(ByteBuffer byteData) {
 //        for(int i = 0; i < byteData.limit()/2; i++){
 //            System.out.println("index "+i/2+" : "+byteData.getShort());
 //        }
+        while(byteData.limit() % 4 != 0)    // round up to multiple of 4 for writeBuffer
+            byteData.put((byte)0);
         int sizeInBytes = byteData.limit();
         indexCount = sizeInBytes/2;
-        sizeInBytes = (sizeInBytes + 3) & ~3; // round up to multiple of 4 for writeBuffer
-        if(sizeInBytes > getSize()) throw new IllegalArgumentException("IndexBuffer.setIndices: data too large.");
-
-        // Upload data to the buffer
-        write( 0, byteData, sizeInBytes);
-    }
-
-    @Deprecated
-    public void setIndices(WGPUByteBuffer byteData) {
-        int sizeInBytes = byteData.getLimit();
-        indexCount = sizeInBytes/2;
-        sizeInBytes = (sizeInBytes + 3) & ~3; // round up to multiple of 4 for writeBuffer
         if(sizeInBytes > getSize()) throw new IllegalArgumentException("IndexBuffer.setIndices: data too large.");
 
         // Upload data to the buffer
         write( 0, byteData);
-    }
-
-
-
-    /** fill index buffer with raw data. */
-    // indexBufferSize is ignored
-    @Deprecated
-    private void setIndices(WGPUByteBuffer idata, int bufferOffset, int indexBufferSize) {
-        if(bufferOffset + indexBufferSize > getSize()) throw new IllegalArgumentException("IndexBuffer.setIndices: data too large.");
-
-        // Upload data to the buffer
-        write(bufferOffset, idata);
     }
 }

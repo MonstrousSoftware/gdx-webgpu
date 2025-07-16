@@ -36,8 +36,6 @@ import java.util.Map;
 /** Loader for gltf model format.
  *
  */
-
-
 public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParameters> {
     private final Map<GLTFPrimitive, String> meshMap = new HashMap<>();
     private int fallbackMaterialId;

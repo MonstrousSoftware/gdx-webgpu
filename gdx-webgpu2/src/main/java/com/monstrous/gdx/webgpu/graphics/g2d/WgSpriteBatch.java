@@ -19,10 +19,8 @@ import com.monstrous.gdx.webgpu.graphics.Binder;
 import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.wrappers.*;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
-import java.nio.ShortBuffer;
+
+import java.nio.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -175,40 +173,25 @@ public class WgSpriteBatch implements Batch {
 
     // the index buffer is fixed and only has to be filled on start-up
     private void fillIndexBuffer(int maxSprites){
-        WGPUByteBuffer bb = WGPUByteBuffer.obtain(maxSprites*INDICES_PER_SPRITE*Short.BYTES);
-        WGPUShortBuffer indexData = bb.asShortBuffer();
+        ByteBuffer bb = BufferUtils.newUnsafeByteBuffer(maxSprites*INDICES_PER_SPRITE*Short.BYTES);
+        bb.order(ByteOrder.LITTLE_ENDIAN);  // webgpu expects little endian data
+        ShortBuffer shorts = bb.asShortBuffer();
         for(int i = 0; i < maxSprites; i++){
             short vertexOffset = (short)(i * 4);
             // two triangles per sprite
-            indexData.put(vertexOffset);
-            indexData.put((short)(vertexOffset + 1));
-            indexData.put((short)(vertexOffset + 2));
+            shorts.put(vertexOffset);
+            shorts.put((short)(vertexOffset + 1));
+            shorts.put((short)(vertexOffset + 2));
 
-            indexData.put(vertexOffset);
-            indexData.put((short)(vertexOffset + 2));
-            indexData.put((short)(vertexOffset + 3));
+            shorts.put(vertexOffset);
+            shorts.put((short)(vertexOffset + 2));
+            shorts.put((short)(vertexOffset + 3));
         }
-        indexData.flip();
-        indexBuffer.setIndices(bb);
-    }
-
-    // why does this not work?
-    private void fillIndexBuffer2(int maxSprites){
-        ByteBuffer bb = ByteBuffer.allocateDirect(maxSprites*INDICES_PER_SPRITE*Short.BYTES);
-        for(int i = 0; i < maxSprites; i++){
-            short vertexOffset = (short)(i * 4);
-            // two triangles per sprite
-            bb.putShort(vertexOffset);
-            bb.putShort((short)(vertexOffset + 1));
-            bb.putShort((short)(vertexOffset + 2));
-
-            bb.putShort(vertexOffset);
-            bb.putShort((short)(vertexOffset + 2));
-            bb.putShort((short)(vertexOffset + 3));
-        }
-        bb.flip();
+        // set the limit of the byte buffer to the number of bytes filled
+        ((Buffer)bb).limit(shorts.limit()*Short.BYTES);
 
         indexBuffer.setIndices(bb);
+        BufferUtils.disposeUnsafeByteBuffer(bb);
      }
 
 
