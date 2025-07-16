@@ -130,8 +130,9 @@ public class WebGPUIndexBuffer extends WebGPUBuffer {
 //        for(int i = 0; i < byteData.limit()/2; i++){
 //            System.out.println("index "+i/2+" : "+byteData.getShort());
 //        }
-        while(byteData.limit() % 4 != 0)    // round up to multiple of 4 for writeBuffer
-            byteData.put((byte)0);
+        int limit = byteData.limit();
+        if(limit % 4 != 0)    // round up the limit to multiple of 4 for writeBuffer
+            byteData.limit(limit + 4 - (limit % 4));
         int sizeInBytes = byteData.limit();
         indexCount = sizeInBytes/2;
         if(sizeInBytes > getSize()) throw new IllegalArgumentException("IndexBuffer.setIndices: data too large.");

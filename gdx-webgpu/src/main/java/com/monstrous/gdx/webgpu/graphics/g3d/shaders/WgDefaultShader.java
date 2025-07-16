@@ -24,6 +24,7 @@ import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
+import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector4;
 import com.badlogic.gdx.utils.Array;
@@ -64,6 +65,8 @@ public class WgDefaultShader extends WgShader implements Disposable {
     protected int numPointLights;
     protected PointLight[] pointLights;
     private final Vector4 tmpVec4 = new Vector4();
+    private final long materialAttributesMask;
+    private final long vertexAttributesMask;
 
 
     public static class Config {
@@ -171,7 +174,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
         // note: put shorter uniforms last for padding reasons
 
-        System.out.println("offset:"+offset+" "+uniformBufferSize);
+        //System.out.println("offset:"+offset+" "+uniformBufferSize);
         if(offset > uniformBufferSize) throw new RuntimeException("Mismatch in frame uniform buffer size");
         //binder.defineUniform("modelMatrix", 2, 0, 0);
 
@@ -193,6 +196,8 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
         binder.setBuffer("instanceUniforms", instanceBuffer, 0,  instanceSize *config.maxInstances);
 
+        vertexAttributesMask = renderable.meshPart.mesh.getVertexAttributes().getMask();
+        materialAttributesMask = renderable.material.getMask();
 
         // get pipeline layout which aggregates all the bind group layouts
         WGPUPipelineLayout pipelineLayout = binder.getPipelineLayout("ModelBatch pipeline layout");
@@ -285,8 +290,16 @@ public class WgDefaultShader extends WgShader implements Disposable {
     }
 
     @Override
-    public boolean canRender(Renderable instance) {
-        return instance.meshPart.mesh.getVertexAttributes().getMask() == vertexAttributes.getMask();
+    /** check if the provided renderable is similar enough to the one used to create this shader, that it can be rendered.
+     * Look at vertex attributes, material attributes.
+     */
+    public boolean canRender(Renderable renderable) {
+        //System.out.println("Can Render? "+instance.meshPart.id+" mask: "+instance.meshPart.mesh.getVertexAttributes().getMask()+" ==? "+vertexAttributes.getMask());
+        if (renderable.meshPart.mesh.getVertexAttributes().getMask() != vertexAttributes.getMask())
+            return false;
+        if (renderable.material.getMask() != materialAttributesMask)
+            return false;
+        return true;
     }
 
     private final Attributes combinedAttributes = new Attributes();

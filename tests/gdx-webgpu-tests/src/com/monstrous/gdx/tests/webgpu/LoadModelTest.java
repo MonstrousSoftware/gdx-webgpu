@@ -52,10 +52,12 @@ public class LoadModelTest extends GdxTest {
 
 	final static String[] fileNames = {
         "data/g3d/gltf/StanfordDragon/stanfordDragon.gltf",
+        "data/g3d/ducky.obj",
+
         "data/g3d/gltf/DamagedHelmet/DamagedHelmet.gltf",
         "data/g3d/gltf/waterbottle/waterbottle.glb",
 
-            "data/g3d/ducky.obj",
+
         "data/g3d/head.g3db", "data/g3d/invaders.g3dj",
 			"data/g3d/monkey.g3db", "data/g3d/skydome.g3db", "data/g3d/teapot.g3db",
 
@@ -166,11 +168,11 @@ public class LoadModelTest extends GdxTest {
 			instance = new ModelInstance(model);
 		}
 
-
 		if(loaded)
 			instance.transform.rotate(Vector3.Y, 15f*delta);
 
 		WgScreenUtils.clear(Color.TEAL,true);
+
 
 		cam.update();
 		modelBatch.begin(cam);

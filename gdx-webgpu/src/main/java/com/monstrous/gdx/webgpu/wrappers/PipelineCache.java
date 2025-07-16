@@ -41,6 +41,8 @@ public class PipelineCache implements Disposable {
         // if not found, create a new pipeline
         WebGPUPipeline pipeline = new WebGPUPipeline(pipelineLayout, spec);
         pipelines.add(pipeline);    // add to cache
+        System.out.println("Added pipeline to the cache, count: "+pipelines.size);
+
         return pipeline;
     }
 
