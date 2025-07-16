@@ -155,7 +155,7 @@ resize will just set a flag and the actual resize is performed just before the r
 to do:
 - DepthClearTest behaves strangely like depth sorting doesn't work.
 - ShapeRenderer test gives only black screen
-- SuperKaolio seems to fast and not sure the character behaves correctly.
+- SuperKaolio has incorrect collision detection? Also sky is darker in libgdx version.
 - When switching between models, e.g. in LoadModelTest, it seems the wrong pipeline is used. Textures look strange.
 
 

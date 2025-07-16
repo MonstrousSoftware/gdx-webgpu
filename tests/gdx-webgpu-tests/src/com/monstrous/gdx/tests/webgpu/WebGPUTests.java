@@ -55,6 +55,7 @@ public class WebGPUTests {
 		Scene2dTest.class,
 		ImmediateModeRendererTest.class,
 		ShapeRendererTest.class,
+        ShapeRenderer2DTest.class,
 		NinePatchTest.class,
 		ModelBatchTest.class,
 		WrapAndFilterTest.class,
