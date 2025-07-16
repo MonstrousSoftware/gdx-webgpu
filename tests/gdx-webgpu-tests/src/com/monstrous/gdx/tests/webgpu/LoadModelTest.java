@@ -76,7 +76,8 @@ public class LoadModelTest extends GdxTest {
 	ScreenViewport viewport;
 	WgStage stage;
 	WgSkin skin;
-	boolean loaded;
+	boolean loadedFirst;
+    boolean loaded;
 	WgSpriteBatch batch;
 	WgBitmapFont font;
     Environment environment;
@@ -99,10 +100,13 @@ public class LoadModelTest extends GdxTest {
 
 
 		// queue for asynchronous loading
+        // load one asset first to appear responsive
+        // load the rest of the assets while the user is still gawping at the dragon
 		assets = new WgAssetManager();
 		loaded = false;
-		for(String fileName : fileNames)
-			assets.load(fileName, Model.class);
+        loadedFirst = false;
+        assets.load(fileNames[0], Model.class);
+
 
         // Create an environment with lights
         environment = new Environment();
@@ -162,13 +166,19 @@ public class LoadModelTest extends GdxTest {
 
 	public void render () {
 		float delta = Gdx.graphics.getDeltaTime();
+        if(!loadedFirst && assets.update()) {	// advance loading
+            loadedFirst = true;
+            model = assets.get(fileNames[0], Model.class);
+            instance = new ModelInstance(model);
+            for(int i = 1; i < fileNames.length; i++){
+                assets.load(fileNames[i], Model.class);
+            }
+        }
 		if(!loaded && assets.update()) {	// advance loading
 			loaded = true;
-			model = assets.get(fileNames[0], Model.class);
-			instance = new ModelInstance(model);
 		}
 
-		if(loaded)
+		if(loadedFirst)
 			instance.transform.rotate(Vector3.Y, 15f*delta);
 
 		WgScreenUtils.clear(Color.TEAL,true);
@@ -177,13 +187,13 @@ public class LoadModelTest extends GdxTest {
 		cam.update();
 		modelBatch.begin(cam);
 
-		if(loaded)
+		if(loadedFirst)
 			modelBatch.render(instance, environment);
 
 		modelBatch.end();
 
-
-		stage.act();
+        if(loaded)
+		    stage.act();
 		stage.draw();
 
 		if(!loaded) {
@@ -198,8 +208,8 @@ public class LoadModelTest extends GdxTest {
 	public void resize(int width, int height) {
 		cam.viewportWidth = width;
 		cam.viewportHeight = height;
-		cam.update();
-
+		cam.update(true);
+        stage.getViewport().update(width, height, true);
 
 	}
 
