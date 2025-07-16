@@ -75,16 +75,11 @@ public class WgModel extends Model {
 		meshes.add(mesh);
 		disposables.add(mesh);
 
-        // todo is BufferUtils.copy faster?
         mesh.setVertices(modelMesh.vertices);
-		//BufferUtils.copy(modelMesh.vertices, mesh.getVerticesBuffer(true), modelMesh.vertices.length, 0);
 		int offset = 0;
 
 
         if(needWideIndices){
-            IntBuffer intBuffer = ((WgIndexBuffer)mesh.getIndexData()).getIntBuffer(true);
-            ((Buffer)intBuffer).clear();
-
             for (ModelMeshPart part : modelMesh.parts) {
                 MeshPart meshPart = new WgMeshPart();
                 meshPart.id = part.id;
@@ -93,15 +88,12 @@ public class WgModel extends Model {
                 meshPart.size = hasIndices ?  ((WgModelMeshPart)part).indices32.length : numVertices;
                 meshPart.mesh = mesh;
                 if (hasIndices) {
-                    intBuffer.put(((WgModelMeshPart)part).indices32);
+                   ((WgIndexBuffer)mesh.getIndexData()).updateIndices(offset, ((WgModelMeshPart)part).indices32, 0, meshPart.size);
                 }
                 offset += meshPart.size;
                 meshParts.add(meshPart);
             }
-            ((Buffer)intBuffer).position(0);
         } else {
-            ShortBuffer shortBuffer = mesh.getIndexData().getBuffer(true);
-            shortBuffer.clear();
             for (ModelMeshPart part : modelMesh.parts) {
                 MeshPart meshPart = new WgMeshPart();
                 meshPart.id = part.id;
@@ -110,7 +102,7 @@ public class WgModel extends Model {
                 meshPart.size = hasIndices ?  part.indices.length : numVertices;
                 meshPart.mesh = mesh;
                 if (hasIndices) {
-                    shortBuffer.put(part.indices);
+                    mesh.getIndexData().updateIndices(offset, part.indices, 0, meshPart.size);
                 }
                 offset += meshPart.size;
                 meshParts.add(meshPart);

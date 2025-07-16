@@ -7,17 +7,16 @@ import com.github.xpenatan.webgpu.WGPUIndexFormat;
 import com.monstrous.gdx.webgpu.wrappers.WebGPUIndexBuffer;
 import com.monstrous.gdx.webgpu.wrappers.WebGPURenderPass;
 
-import java.nio.Buffer;
-import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
-import java.nio.ShortBuffer;
+import java.nio.*;
 
-/** equivalent to IndexBufferObject, or IndexArray */
+/** equivalent to IndexBufferObject, or IndexArray
+ * Supports 16-bit (short) and 32-bit (int) indices
+ * */
 public class WgIndexBuffer implements IndexData {
 
+    final ByteBuffer byteBuffer;
     final ShortBuffer shortBuffer;
     final IntBuffer intBuffer;
-    final ByteBuffer byteBuffer;
     protected WebGPUIndexBuffer indexBuffer = null;
     private boolean isDirty = true;
     private final boolean wideIndices;
@@ -43,11 +42,12 @@ public class WgIndexBuffer implements IndexData {
         int sizeInBytes = maxIndices * indexSize;
         sizeInBytes = (sizeInBytes + 3) & ~3; // round up to multiple of 4
         byteBuffer = BufferUtils.newUnsafeByteBuffer(sizeInBytes);
+        byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
         shortBuffer = byteBuffer.asShortBuffer();
         intBuffer = byteBuffer.asIntBuffer();
-        ((Buffer) shortBuffer).flip();
-        ((Buffer) intBuffer).flip();
-        ((Buffer)byteBuffer).flip();
+//        ((Buffer) shortBuffer).flip();
+//        ((Buffer) intBuffer).flip();
+//        ((Buffer)byteBuffer).flip();
         WGPUBufferUsage usage = WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Index);
         indexBuffer = new WebGPUIndexBuffer(usage, sizeInBytes, indexSize);
     }
@@ -70,10 +70,10 @@ public class WgIndexBuffer implements IndexData {
     public void setIndices(short[] indices, int offset, int count) {
         ((Buffer) shortBuffer).clear();
         shortBuffer.put(indices, offset, count);
-
-        ((Buffer) shortBuffer).flip();
-        ((Buffer)byteBuffer).position(0);
-        ((Buffer)byteBuffer).limit(count << 1);
+//
+//        ((Buffer) shortBuffer).flip();
+//        ((Buffer)byteBuffer).position(0);
+//        ((Buffer)byteBuffer).limit(count << 1);
         isDirty = true;
     }
 
@@ -83,19 +83,26 @@ public class WgIndexBuffer implements IndexData {
         ((Buffer) shortBuffer).clear();
         ((Buffer) shortBuffer).limit(indices.remaining());
         shortBuffer.put(indices);
-        ((Buffer) shortBuffer).flip();
-        ((Buffer)indices).position(pos);
-        ((Buffer)byteBuffer).position(0);
-        ((Buffer)byteBuffer).limit(shortBuffer.limit() << 1);
+//        ((Buffer) shortBuffer).flip();
+//        ((Buffer)indices).position(pos);
+//        ((Buffer)byteBuffer).position(0);
+//        ((Buffer)byteBuffer).limit(shortBuffer.limit() << 1);
         isDirty = true;
     }
 
+
+    /** targetOffset in indices */
     @Override
     public void updateIndices(int targetOffset, short[] indices, int offset, int count) {
-        final int pos = byteBuffer.position();
-        ((Buffer)byteBuffer).position(targetOffset * 2);
-        BufferUtils.copy(indices, offset, byteBuffer, count);
-        ((Buffer)byteBuffer).position(pos);
+        ((Buffer)shortBuffer).position(targetOffset);
+        shortBuffer.put(indices, offset, count);
+        isDirty = true;
+    }
+
+    /** targetOffset in indices */
+    public void updateIndices(int targetOffset, int[] indices, int offset, int count) {
+        ((Buffer)intBuffer).position(targetOffset);
+        intBuffer.put(indices, offset, count);
         isDirty = true;
     }
 
@@ -119,7 +126,8 @@ public class WgIndexBuffer implements IndexData {
     public void bind() {
         if(isDirty){
             // upload data to GPU buffer if needed
-
+            ((Buffer)shortBuffer).flip();
+            ((Buffer)intBuffer).flip();
             // copy limit from short or int buffer to byte buffer
             int byteLimit;
             if(wideIndices)
@@ -137,7 +145,6 @@ public class WgIndexBuffer implements IndexData {
         bind();
         // bind index buffer to render pass
         int size = indexBuffer.getSize();  // in bytes
-
         renderPass.setIndexBuffer( indexBuffer.getBuffer(), (wideIndices ? WGPUIndexFormat.Uint32 : WGPUIndexFormat.Uint16), 0, size);
     }
 

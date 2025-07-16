@@ -12,7 +12,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgIndexBuffer;
-import com.monstrous.gdx.webgpu.graphics.g3d.WgVertexData;
+import com.monstrous.gdx.webgpu.graphics.g3d.WgVertexBuffer;
 import com.monstrous.gdx.webgpu.wrappers.WebGPURenderPass;
 
 import java.nio.FloatBuffer;
@@ -36,7 +36,7 @@ public class WgMesh extends Mesh {
      * @param attributes the {@link VertexAttribute}s. Each vertex attribute defines one property of a vertex such as position,
      *           normal or texture coordinate */
     public WgMesh(boolean isStatic, int maxVertices, int maxIndices, VertexAttribute... attributes) {
-        this(new WgVertexData(maxVertices,new VertexAttributes(attributes)), new WgIndexBuffer(maxIndices), false);
+        this(new WgVertexBuffer(maxVertices,new VertexAttributes(attributes)), new WgIndexBuffer(maxIndices), false);
     }
 
     /** Creates a new Mesh with the given attributes.
@@ -47,7 +47,7 @@ public class WgMesh extends Mesh {
      * @param attributes the {@link VertexAttributes}. Each vertex attribute defines one property of a vertex such as position,
      *           normal or texture coordinate */
     public WgMesh(boolean isStatic, int maxVertices, int maxIndices, VertexAttributes attributes) {
-        this(new WgVertexData(maxVertices, attributes), new WgIndexBuffer(maxIndices), false);
+        this(new WgVertexBuffer(maxVertices, attributes), new WgIndexBuffer(maxIndices), false);
     }
 
     /** Creates a new Mesh with the given attributes. Adds extra optimizations for dynamic (frequently modified) meshes.
@@ -61,7 +61,7 @@ public class WgMesh extends Mesh {
      *
      * @author Jaroslaw Wisniewski <j.wisniewski@appsisle.com> **/
     public WgMesh(boolean staticVertices, boolean staticIndices, int maxVertices, int maxIndices, VertexAttributes attributes) {
-        this(new WgVertexData(maxVertices, attributes), new WgIndexBuffer(maxIndices), false);
+        this(new WgVertexBuffer(maxVertices, attributes), new WgIndexBuffer(maxIndices), false);
     }
 
     /** Creates a new Mesh with the given attributes. This is an expert method with no error checking. Use at your own risk.
@@ -73,7 +73,7 @@ public class WgMesh extends Mesh {
      * @param attributes the {@link VertexAttribute}s. Each vertex attribute defines one property of a vertex such as position,
      *           normal or texture coordinate */
     public WgMesh(VertexDataType type, boolean isStatic, int maxVertices, int maxIndices, VertexAttribute... attributes) {
-        this(new WgVertexData(maxVertices,new VertexAttributes(attributes)), new WgIndexBuffer(maxIndices), false);
+        this(new WgVertexBuffer(maxVertices,new VertexAttributes(attributes)), new WgIndexBuffer(maxIndices), false);
     }
 
     /** Creates a new Mesh with the given attributes. This is an expert method with no error checking. Use at your own risk.
@@ -84,12 +84,12 @@ public class WgMesh extends Mesh {
      * @param maxIndices the maximum number of indices this mesh can hold
      * @param attributes the {@link VertexAttributes}. */
     public WgMesh(VertexDataType type, boolean isStatic, int maxVertices, int maxIndices, VertexAttributes attributes) {
-        this(new WgVertexData(maxVertices, attributes), new WgIndexBuffer(maxIndices), false);
+        this(new WgVertexBuffer(maxVertices, attributes), new WgIndexBuffer(maxIndices), false);
     }
 
     // version that allows to request wide indices
     public WgMesh(boolean isStatic, int maxVertices, int maxIndices, boolean wideIndices, VertexAttributes attributes) {
-        this(new WgVertexData(maxVertices, attributes), new WgIndexBuffer(maxIndices, wideIndices), false);
+        this(new WgVertexBuffer(maxVertices, attributes), new WgIndexBuffer(maxIndices, wideIndices), false);
     }
 
     public VertexData getVertexData(){
@@ -107,7 +107,7 @@ public class WgMesh extends Mesh {
     public void render (WebGPURenderPass renderPass, int primitiveType, int offset, int size, int numInstances, int firstInstance){
 
         // bind vertices
-        ((WgVertexData)vertices).bind(renderPass);
+        ((WgVertexBuffer)vertices).bind(renderPass);
 
         if( getIndexData() != null) {   // is it an indexed mesh?
             ((WgIndexBuffer)getIndexData()).bind(renderPass);// bind indices
