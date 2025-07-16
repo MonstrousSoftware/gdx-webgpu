@@ -19,6 +19,7 @@ package com.monstrous.gdx.tests.webgpu;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g3d.Environment;
@@ -39,6 +40,7 @@ import com.monstrous.gdx.webgpu.assets.WgAssetManager;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
+import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLBModelLoader;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 import com.monstrous.gdx.webgpu.scene2d.WgSkin;
 import com.monstrous.gdx.webgpu.scene2d.WgStage;
@@ -51,7 +53,7 @@ public class LoadModelTest extends GdxTest {
 	final static String[] fileNames = {
         "data/g3d/gltf/StanfordDragon/stanfordDragon.gltf",
         "data/g3d/gltf/DamagedHelmet/DamagedHelmet.gltf",
-       /// "data/g3d/gltf/waterbottle/waterbottle.glb",
+        "data/g3d/gltf/waterbottle/waterbottle.glb",
 
             "data/g3d/ducky.obj",
         "data/g3d/head.g3db", "data/g3d/invaders.g3dj",
@@ -91,9 +93,8 @@ public class LoadModelTest extends GdxTest {
 		cam.far = 1000f;		// extend far distance to avoid clipping the skybox
 
 
-		//String modelFileName = "data/g3d/head.g3db";
-//		FileHandle file = Gdx.files.internal(modelFileName);
-//		model = new WebGPUG3dModelLoader(new JsonReader()).loadModel(file);
+
+
 
 		// queue for asynchronous loading
 		assets = new WgAssetManager();

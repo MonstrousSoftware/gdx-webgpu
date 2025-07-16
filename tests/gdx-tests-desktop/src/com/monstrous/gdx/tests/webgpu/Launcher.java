@@ -20,7 +20,7 @@ public class Launcher {
 
         //new WgDesktopApplication(new ImmediateModeRendererTest(), config);
         //new WgDesktopApplication(new ColorTest(), config);
-        new WgDesktopApplication(new FrameBufferTest(), config);
+        new WgDesktopApplication(new LoadModelTest(), config);
         //new WgDesktopApplication(new DistanceFontTest(), config);
         //new WgDesktopApplication(new FontTest(), config);
         //new WgDesktopApplication(new FullScreenTest(), config);

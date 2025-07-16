@@ -33,6 +33,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.ObjectMap;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModel;
+import com.monstrous.gdx.webgpu.graphics.g3d.model.PBRModelTexture;
 import com.monstrous.gdx.webgpu.graphics.utils.WgTextureProvider;
 
 import java.util.Iterator;
@@ -94,8 +95,12 @@ public abstract class WgModelLoader<P extends WgModelLoader.ModelParameters> ext
 
 		for (final ModelMaterial modelMaterial : data.materials) {
 			if (modelMaterial.textures != null) {
-				for (final ModelTexture modelTexture : modelMaterial.textures)
-					deps.add(new AssetDescriptor(modelTexture.fileName, Texture.class, textureParameter));
+				for (final ModelTexture modelTexture : modelMaterial.textures) {
+                    // if texture was preloaded from a binary chunk, don't add as dependency
+                    if(!(modelTexture instanceof PBRModelTexture) || ((PBRModelTexture)modelTexture).pixmap == null) {
+                        deps.add(new AssetDescriptor(modelTexture.fileName, Texture.class, textureParameter));
+                    }
+                }
 			}
 		}
 		return deps;
