@@ -24,12 +24,13 @@ import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
-import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector4;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import com.github.xpenatan.webgpu.*;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.Binder;
 import com.monstrous.gdx.webgpu.graphics.WgMesh;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
@@ -41,6 +42,7 @@ import static com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888;
 /** Default shader to render renderables  */
 public class WgDefaultShader extends WgShader implements Disposable {
 
+    private WebGPUContext webgpu;
     private final Config config;
     private static String defaultShader;
     private final WgTexture defaultTexture;
@@ -67,6 +69,8 @@ public class WgDefaultShader extends WgShader implements Disposable {
     private final Vector4 tmpVec4 = new Vector4();
     private final long materialAttributesMask;
     private final long vertexAttributesMask;
+    private int frameNumber;
+    private int instanceIndex;
 
 
     public static class Config {
@@ -89,6 +93,9 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
     public WgDefaultShader(final Renderable renderable, Config config) {
         this.config = config;
+
+        WgGraphics gfx = (WgGraphics)Gdx.graphics;
+        webgpu = gfx.getContext();
 
         // fallback texture
         Pixmap pixmap = new Pixmap(1,1,RGBA8888);
@@ -229,6 +236,8 @@ public class WgDefaultShader extends WgShader implements Disposable {
         combined = new Matrix4();
         // matrix to transform OpenGL projection to WebGPU projection by modifying the Z scale
         shiftDepthMatrix = new Matrix4().scl(1,1,-0.5f).trn(0,0,0.5f);
+
+        frameNumber = -1;
     }
 
     @Override
@@ -246,6 +255,8 @@ public class WgDefaultShader extends WgShader implements Disposable {
     public void begin(Camera camera, Renderable renderable, WebGPURenderPass renderPass){
         this.renderPass = renderPass;
 
+
+
         // set global uniforms, that do not depend on renderables
         // e.g. camera, lighting, environment uniforms
         //
@@ -260,6 +271,8 @@ public class WgDefaultShader extends WgShader implements Disposable {
         tmpVec4.set(camera.position.x, camera.position.y, camera.position.z, 1.1881f / (camera.far * camera.far));
         binder.setUniform("cameraPosition", tmpVec4);
         uniformBuffer.flush();
+        // note: if we call WgModelBatch multiple times per frame with a different camera, the old ones are lost
+
 
         // todo: different shaders may overwrite lighting uniforms if renderables have other environments ...
         bindLights(renderable.environment);
@@ -270,10 +283,12 @@ public class WgDefaultShader extends WgShader implements Disposable {
         // idem for group 2 (instances), we will fill in the buffer as we go
         binder.bindGroup(renderPass, 2);
 
-
-
+        if(webgpu.frameNumber != this.frameNumber ){
+            instanceIndex = 0;
+            numMaterials = 0;
+            this.frameNumber = webgpu.frameNumber;
+        }
         numRenderables = 0;
-        numMaterials = 0;
         drawCalls = 0;
         prevRenderable = null;  // to store renderable that still needs to be rendered
 
@@ -318,7 +333,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
     private int instanceCount;
 
     public void render (Renderable renderable, Attributes attributes) {
-        if(numRenderables > config.maxInstances) {
+        if(instanceIndex > config.maxInstances) {
             Gdx.app.error("WebGPUModelBatch", "Too many instances, max is " + config.maxInstances);
             return;
         }
@@ -326,7 +341,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         // renderable-specific data
 
         // add instance data to instance buffer (instance transform)
-        int offset = numRenderables * 16 * Float.BYTES;
+        int offset = instanceIndex * 16 * Float.BYTES;
         instanceBuffer.set(offset,  renderable.worldTransform);
         // todo normal matrix per instance
 
@@ -351,6 +366,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
 
         numRenderables++;
+        instanceIndex++;
     }
 
     // to combine instances in single draw call if they have same mesh part

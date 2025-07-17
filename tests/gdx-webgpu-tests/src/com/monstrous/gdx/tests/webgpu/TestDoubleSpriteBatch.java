@@ -11,6 +11,7 @@ import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 // Test you can use sprite batch multiple times in a render frame
 // without the last loop overwriting the earlier ones.
 
+
 public class TestDoubleSpriteBatch extends GdxTest {
 
     private WgSpriteBatch batch;

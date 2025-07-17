@@ -1,5 +1,20 @@
-package com.monstrous.gdx.webgpu.graphics.g3d;
+/*******************************************************************************
+ * Copyright 2025 Monstrous Software.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ******************************************************************************/
 
+package com.monstrous.gdx.webgpu.graphics.g3d;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
@@ -20,7 +35,6 @@ import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgDefaultRenderableSorter;
 import com.monstrous.gdx.webgpu.wrappers.RenderPassBuilder;
 import com.monstrous.gdx.webgpu.wrappers.RenderPassType;
 import com.monstrous.gdx.webgpu.wrappers.WebGPURenderPass;
-
 
 /**
  * Class for 3d rendering, e.g. to render model instances.
@@ -97,11 +111,11 @@ public class WgModelBatch implements Disposable {
     }
 
     public void begin(final Camera camera){
-        begin(camera, null, true, RenderPassType.COLOR_AND_DEPTH);
+        begin(camera, null, false, RenderPassType.COLOR_AND_DEPTH);
     }
 
     public void begin(final Camera camera, final Color clearColor) {
-        begin(camera, clearColor, true, RenderPassType.COLOR_AND_DEPTH);
+        begin(camera, clearColor, false, RenderPassType.COLOR_AND_DEPTH);
     }
 
     public void begin(final Camera camera, final Color clearColor, boolean clearDepth){

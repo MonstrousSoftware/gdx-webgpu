@@ -92,13 +92,16 @@ public class DepthClearTest extends GdxTest {
 		cam.update();
 		modelBatch.begin(cam);
 		modelBatch.render(instanceClose);
-        //modelBatch.render(instanceFar);
 		modelBatch.end();
 
-        //WgScreenUtils.clear(Color.TEAL, false);
-        modelBatch.begin(cam);
-        modelBatch.render(instanceFar);
-        modelBatch.end();
+        // note: we need a different model batch here
+        WgScreenUtils.clear(Color.TEAL, false);
+        modelBatch2.begin(cam);
+        modelBatch2.render(instanceFar);
+        modelBatch2.end();
+
+        // You should see the far cube, but a gap where the close cube is.  The close cube is invisible, but the depth of it still
+        // hides part of the far cube.
 
 
 		batch.begin();
