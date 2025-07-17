@@ -328,7 +328,9 @@ public class WgSpriteBatch implements Batch {
         maxSpritesInBatch = 0;
         renderCalls = 0;
         numFlushes = 0;
-        //uniformBuffer.setDynamicOffsetIndex(numFlushes);
+        uniformBuffer.setDynamicOffsetIndex(0); // reset the dynamic offset to the start
+        // beware: if the same spritebatch is used multiple times per frame this will overwrite the previous pass
+        // to solve this we should reset at the start of a new frame.
 
         prevPipeline = null;
 
@@ -403,6 +405,7 @@ public class WgSpriteBatch implements Batch {
         vertexData.clear(); // reset fill position for next batch
         numSprites = 0;   // reset
         numFlushes++;
+        // advance the dynamic offset in the uniform buffer ready for the next flush
         uniformBuffer.setDynamicOffsetIndex(numFlushes);
     }
 
@@ -468,6 +471,7 @@ public class WgSpriteBatch implements Batch {
         if(drawing)
             flush();
         projectionMatrix.set(projection);
+        projectionMatrix.setToOrtho2D(0, 0, Gdx.graphics.getWidth(),  Gdx.graphics.getHeight(), 0, 100);        // TMP HACK
         mustUpdateMatrices = true;
     }
 

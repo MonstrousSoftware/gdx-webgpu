@@ -50,13 +50,13 @@ public class SpriteBatchTest extends GdxTest {
 
         try {
             for (int i = 0; i < SPRITES; i++) {
-                int x = (int) (Math.random() * (screenWidth - width + width * 0.5f));
-                int y = (int) (Math.random() * (screenHeight - height + height * 0.5f));
+                int x = (int) (Math.random() * screenWidth);
+                int y = (int) (Math.random() * screenHeight);
                 if(sprites[i] == null) {
                     sprites[i] = new Sprite(texture, width, height);
                     sprites[i].setOrigin(width * 0.5f, height * 0.5f);
                 }
-                sprites[i].setPosition(x, y);
+                sprites[i].setOriginBasedPosition(x, y);
 
             }
         } catch (Throwable t) {

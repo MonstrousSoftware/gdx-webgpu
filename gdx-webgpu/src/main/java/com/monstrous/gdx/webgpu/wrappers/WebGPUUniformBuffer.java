@@ -148,7 +148,7 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
     public void setDynamicOffsetIndex(int index){
         if(index < 0 || index >= maxSlices)
             throw new IllegalArgumentException("setDynamicOffsetIndex: index out of range, maxSlices = "+maxSlices);
-        if(index != dynamicOffsetIndex)
+       if(index != dynamicOffsetIndex)
             flush();
         dynamicOffsetIndex = index;
     }

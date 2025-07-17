@@ -88,7 +88,8 @@ public class WebGPUTests {
         TestTextureMipMap.class,
         Basic3DTest.class,
         TestMesh.class,
-        TestMeshBuilder.class
+        TestMeshBuilder.class,
+        TestTexture.class
 
 		// @on
 
