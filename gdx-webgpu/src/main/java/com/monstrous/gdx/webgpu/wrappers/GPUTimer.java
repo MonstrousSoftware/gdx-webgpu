@@ -18,10 +18,14 @@ package com.monstrous.gdx.webgpu.wrappers;
 
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.utils.BufferUtils;
 import com.badlogic.gdx.utils.Disposable;
 import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
+
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 
 /** Class to facilitate GPU benchmarking of render passes.
@@ -37,15 +41,13 @@ public class GPUTimer implements Disposable {
     private boolean timeStampMapOngoing = false;
     private int passNumber;
     private int numPasses;
+    private ByteBuffer ram;
 
 
     public GPUTimer(WGPUDevice device, boolean enabled) {
         this.enabled = enabled;
         if(!enabled)
             return;
-
-//        WgGraphics gfx = (WgGraphics) Gdx.graphics;
-//        WebGPUContext webgpu = gfx.getContext();
 
         // Create timestamp queries
         WGPUQuerySetDescriptor querySetDescriptor =  WGPUQuerySetDescriptor.obtain();
@@ -73,6 +75,9 @@ public class GPUTimer implements Disposable {
         device.createBuffer(bufferDesc, timeStampMapBuffer);
 
         passNumber = -1;
+
+        ram = BufferUtils.newUnsafeByteBuffer(8 * 2 * MAX_PASSES);
+        ram.order(ByteOrder.LITTLE_ENDIAN);
     }
 
 
@@ -132,34 +137,26 @@ public class GPUTimer implements Disposable {
             return;
 
 
-        //todo
-//        timeStampMapOngoing = true;
-//        WGPUFuture webGPUFuture = timeStampMapBuffer.mapAsync(WGPUMapMode.Read, 0, 8 * 2 * MAX_PASSES, WGPUCallbackMode.AllowProcessEvents, new BufferMapCallback() {
-//            @Override
-//            protected void onCallback(WGPUMapAsyncStatus status, String message) {
-//                //System.out.println("Buffer mapped with status " + status);
-//                if(status == WGPUMapAsyncStatus.Success) {
-//
-//                    WGPUByteBuffer ram = new WGPUByteBuffer(8 * 2 * MAX_PASSES);    // ?
-//                    timeStampMapBuffer.getConstMappedRange(0, 8 * 2 * MAX_PASSES, ram);
-//                    for (int pass = 0; pass < numPasses; pass++) {
-//                        // todo convert to long, there is no getLong()
-//                        int off = 8*2*pass;
-//                        int n1 = ram.getInt(off);
-//                        int n2 = ram.getInt(off + 4);
-//                        int n3 = ram.getInt(off + 8);
-//                        int n4 = ram.getInt(off + 12);
-//                        long start = n1 + 65536L* n2;
-//                        long end = n3 + 65536L* n4;
-//                        long ns = end - start;
-//                        addTimeSample(pass, ns);
-//                    }
-//                    timeStampMapBuffer.unmap();
-//                    ram.dispose();
-//                }
-//                timeStampMapOngoing = false;
-//            }
-//        });
+
+        timeStampMapOngoing = true;
+        WGPUFuture webGPUFuture = timeStampMapBuffer.mapAsync(WGPUMapMode.Read, 0, 8 * 2 * MAX_PASSES, WGPUCallbackMode.AllowProcessEvents, new BufferMapCallback() {
+            @Override
+            protected void onCallback(WGPUMapAsyncStatus status, String message) {
+
+                if(status == WGPUMapAsyncStatus.Success) {
+                    ram.position(0);
+                    timeStampMapBuffer.getConstMappedRange(0, 8 * 2 * MAX_PASSES, ram);
+                    for (int pass = 0; pass < numPasses; pass++) {
+                        long start = ram.getLong();
+                        long end = ram.getLong();
+                        long nanoseconds = end - start;
+                        addTimeSample(pass, nanoseconds);
+                    }
+                    timeStampMapBuffer.unmap();
+                }
+                timeStampMapOngoing = false;
+            }
+        });
     }
 
     @Override
@@ -172,10 +169,9 @@ public class GPUTimer implements Disposable {
 //            // todo device.tick();
 //        }
 
-        timestampQuerySet.destroy();
+        BufferUtils.disposeUnsafeByteBuffer(ram);
 
-        // the following causes a crash when uncommented
-        //timestampQuerySet.destroy();
+        timestampQuerySet.destroy();
 
         timeStampMapBuffer.destroy();
         timeStampResolveBuffer.destroy();
