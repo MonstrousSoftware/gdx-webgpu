@@ -53,6 +53,10 @@ subprojects {
     maven { url 'https://jitpack.io' }
     maven { url 'https://teavm.org/maven/repository/' }
   }
+
+//  tasks.withType(JavaCompile) {
+//    options.compilerArgs += ['-Xlint:deprecation']
+//  }
 }
 
 eclipse.project.name = 'gdx-webgpu' + '-parent'

@@ -89,7 +89,8 @@ public class WebGPUTests {
         Basic3DTest.class,
         TestMesh.class,
         TestMeshBuilder.class,
-        TestTexture.class
+        TestTexture.class,
+        TestDoubleSpriteBatch.class
 
 		// @on
 

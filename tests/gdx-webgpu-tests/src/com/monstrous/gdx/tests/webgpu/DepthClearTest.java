@@ -92,12 +92,13 @@ public class DepthClearTest extends GdxTest {
 		cam.update();
 		modelBatch.begin(cam);
 		modelBatch.render(instanceClose);
+        //modelBatch.render(instanceFar);
 		modelBatch.end();
 
         //WgScreenUtils.clear(Color.TEAL, false);
-        modelBatch2.begin(cam);
-        modelBatch2.render(instanceFar);
-        modelBatch2.end();
+        modelBatch.begin(cam);
+        modelBatch.render(instanceFar);
+        modelBatch.end();
 
 
 		batch.begin();

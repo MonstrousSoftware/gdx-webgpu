@@ -41,6 +41,7 @@ public abstract class WebGPUContext {
     public WGPUTextureFormat surfaceFormat;
     public WGPUTextureView targetView;
     public WgTexture depthTexture;
+    public int frameNumber;
 
     abstract WGPUDevice getDevice ();
     abstract WGPUQueue getQueue ();

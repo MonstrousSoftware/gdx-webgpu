@@ -39,7 +39,7 @@ public class WgSpriteBatch implements Batch {
     private boolean drawing;
     private final int vertexSize;
     private final ByteBuffer vertexBB;
-    private final FloatBuffer vertexData;     // float buffer view on byte buffer
+    private final FloatBuffer vertexFloats;     // float buffer view on byte buffer
 
     public int numSprites;
     private final Color tint;
@@ -73,6 +73,7 @@ public class WgSpriteBatch implements Batch {
     private final Binder binder;
     private static String defaultShader;
     private boolean mustUpdateMatrices = true;  // to save a buffer write if the matrix is unchanged
+    private int frameNumber;
 
     public WgSpriteBatch() {
         this(2000); // default nr
@@ -116,7 +117,7 @@ public class WgSpriteBatch implements Batch {
         vertexBB = BufferUtils.newUnsafeByteBuffer(maxSprites * VERTS_PER_SPRITE * vertexSize);
         vertexBB.order(ByteOrder.LITTLE_ENDIAN);
         // important, webgpu expects little endian.  ByteBuffer defaults to big endian.
-        vertexData = vertexBB.asFloatBuffer();
+        vertexFloats = vertexBB.asFloatBuffer();
 
         projectionMatrix = new Matrix4();
         transformMatrix = new Matrix4();
@@ -169,6 +170,7 @@ public class WgSpriteBatch implements Batch {
         transformMatrix.idt();
 
         drawing = false;
+        frameNumber = -1;
     }
 
     // the index buffer is fixed and only has to be filled on start-up
@@ -315,23 +317,26 @@ public class WgSpriteBatch implements Batch {
 
     public void begin(Color clearColor) {
         renderPass = RenderPassBuilder.create("SpriteBatch", clearColor, webgpu.getSamples());
-        Rectangle view = webgpu.getViewportRectangle();
-        renderPass.setViewport(view.x, view.y, view.width, view.height, 0, 1);
-
 
         if (drawing)
             throw new RuntimeException("Must end() before begin()");
 
-        numSprites = 0;
-        vbOffset = 0;
-        vertexData.clear();
-        maxSpritesInBatch = 0;
-        renderCalls = 0;
-        numFlushes = 0;
-        uniformBuffer.setDynamicOffsetIndex(0); // reset the dynamic offset to the start
-        // beware: if the same spritebatch is used multiple times per frame this will overwrite the previous pass
-        // to solve this we should reset at the start of a new frame.
+        if(webgpu.frameNumber != this.frameNumber) {
+            this.frameNumber = webgpu.frameNumber;
 
+            Rectangle view = webgpu.getViewportRectangle();
+            renderPass.setViewport(view.x, view.y, view.width, view.height, 0, 1);
+
+            uniformBuffer.setDynamicOffsetIndex(0); // reset the dynamic offset to the start
+            // beware: if the same spritebatch is used multiple times per frame this will overwrite the previous pass
+            // to solve this we should reset at the start of a new frame.
+            numSprites = 0;
+            vbOffset = 0;
+            vertexFloats.clear();
+            maxSpritesInBatch = 0;
+            numFlushes = 0;
+        }
+        renderCalls = 0;
         prevPipeline = null;
 
         // set default state
@@ -402,7 +407,7 @@ public class WgSpriteBatch implements Batch {
         //bg.release();
 
         vbOffset += numBytes;
-        vertexData.clear(); // reset fill position for next batch
+        vertexFloats.clear(); // reset fill position for next batch
         numSprites = 0;   // reset
         numFlushes++;
         // advance the dynamic offset in the uniform buffer ready for the next flush
@@ -732,7 +737,7 @@ public class WgSpriteBatch implements Batch {
         int remaining = 20*(maxSprites - numSprites);
         if(numFloats > remaining)   // avoid buffer overflow by truncating as needed
             numFloats = remaining;
-        vertexData.put(spriteVertices, offset, numFloats);
+        vertexFloats.put(spriteVertices, offset, numFloats);
         numSprites += numFloats/20;
     }
 
@@ -985,14 +990,14 @@ public class WgSpriteBatch implements Batch {
         float col = tint.toFloatBits();
 
 
-        vertexData.put(x);
-        vertexData.put(y);
+        vertexFloats.put(x);
+        vertexFloats.put(y);
         if (hasColor) {
-            vertexData.put(col);
+            vertexFloats.put(col);
         }
         if (hasUV) {
-            vertexData.put(u);
-            vertexData.put(v);
+            vertexFloats.put(u);
+            vertexFloats.put(v);
         }
 
 

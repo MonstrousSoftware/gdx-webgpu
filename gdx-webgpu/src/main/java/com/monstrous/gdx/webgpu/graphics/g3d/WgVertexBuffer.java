@@ -81,6 +81,7 @@ public class WgVertexBuffer implements VertexData {
     }
 
     @Override
+    @Deprecated
     public FloatBuffer getBuffer() {
         return floatBuffer;
     }

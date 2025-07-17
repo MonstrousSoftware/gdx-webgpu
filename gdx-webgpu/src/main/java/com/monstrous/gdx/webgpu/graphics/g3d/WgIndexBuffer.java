@@ -109,6 +109,7 @@ public class WgIndexBuffer implements IndexData {
     }
 
     @Override
+    @Deprecated
     public ShortBuffer getBuffer() {
         return shortBuffer;
     }

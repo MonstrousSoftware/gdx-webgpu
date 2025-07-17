@@ -72,10 +72,10 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
 	public final WebGPUApplication context;
 
 
-	IntBuffer tmpBuffer = BufferUtils.createIntBuffer(1);
-	IntBuffer tmpBuffer2 = BufferUtils.createIntBuffer(1);
+	final IntBuffer tmpBuffer = BufferUtils.createIntBuffer(1);
+	final IntBuffer tmpBuffer2 = BufferUtils.createIntBuffer(1);
 
-	GLFWFramebufferSizeCallback resizeCallback = new GLFWFramebufferSizeCallback() {
+	final GLFWFramebufferSizeCallback resizeCallback = new GLFWFramebufferSizeCallback() {
 		@Override
 		public void invoke (long windowHandle, final int width, final int height) {
 			if (!"glfw_async".equals(Configuration.GLFW_LIBRARY_NAME.get())) {
@@ -330,6 +330,7 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
 	}
 
     @Override
+    @Deprecated
     public float getRawDeltaTime() {
         return 0;
     }
@@ -428,7 +429,8 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
 	@Override
 	public Monitor[] getMonitors () {
 		PointerBuffer glfwMonitors = GLFW.glfwGetMonitors();
-		Monitor[] monitors = new Monitor[glfwMonitors.limit()];
+        assert glfwMonitors != null;
+        Monitor[] monitors = new Monitor[glfwMonitors.limit()];
 		for (int i = 0; i < glfwMonitors.limit(); i++) {
 			monitors[i] = WgDesktopApplicationConfiguration.toWebGPUMonitor(glfwMonitors.get(i));
 		}

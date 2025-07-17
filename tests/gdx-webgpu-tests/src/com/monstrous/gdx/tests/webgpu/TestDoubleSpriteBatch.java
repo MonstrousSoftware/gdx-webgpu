@@ -4,12 +4,14 @@ package com.monstrous.gdx.tests.webgpu;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.badlogic.gdx.utils.viewport.Viewport;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 
-public class TestTexture extends GdxTest {
+// Test you can use sprite batch multiple times in a render frame
+// without the last loop overwriting the earlier ones.
+
+public class TestDoubleSpriteBatch extends GdxTest {
 
     private WgSpriteBatch batch;
     private WgTexture texture;
@@ -29,8 +31,15 @@ public class TestTexture extends GdxTest {
         viewport.apply();
         batch.setProjectionMatrix(viewport.getCamera().combined);
 
+        // do 2 sprite batch loops
+        // we should see the result of both
+
         batch.begin(Color.WHITE);
         batch.draw(texture, 0, 0);
+        batch.end();
+
+        batch.begin();
+        batch.draw(texture, 300, 200);
         batch.end();
     }
 

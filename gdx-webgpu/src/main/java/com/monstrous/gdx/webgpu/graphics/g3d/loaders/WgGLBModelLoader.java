@@ -72,9 +72,9 @@ public class WgGLBModelLoader extends WgModelLoader<WgModelLoader.ModelParameter
         int version = bb.getInt();
         int len = bb.getInt();
 
-        System.out.println("Magic: "+Integer.toHexString(magic)); //  0x46546C67
-        System.out.println("Version: "+version);
-        System.out.println("Length: "+len);
+//        System.out.println("Magic: "+Integer.toHexString(magic)); //  0x46546C67
+//        System.out.println("Version: "+version);
+//        System.out.println("Length: "+len);
 
         if(magic != 0x46546C67)
             throw new RuntimeException("GLB file invalid: "+name);

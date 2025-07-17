@@ -205,6 +205,7 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
 
 
     public void renderFrame (ApplicationListener listener) {
+
         if(mustResize){
             doResize(newWidth, newHeight);
             listener.resize(newWidth, newHeight);
@@ -243,7 +244,7 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
         if(WGPU.getPlatformType() != WGPUPlatformType.WGPU_Web) {
             surface.present();
         }
-
+        frameNumber++;
     }
 
 
