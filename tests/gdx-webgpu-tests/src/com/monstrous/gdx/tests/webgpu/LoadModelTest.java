@@ -27,6 +27,7 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
+import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
@@ -69,7 +70,7 @@ public class LoadModelTest extends GdxTest {
 
 	WgModelBatch modelBatch;
 	PerspectiveCamera cam;
-	PerspectiveCamController controller;
+    CameraInputController controller;
 	Model model;
 	ModelInstance instance;
 	AssetManager assets;
@@ -107,7 +108,6 @@ public class LoadModelTest extends GdxTest {
         loadedFirst = false;
         assets.load(fileNames[0], Model.class);
 
-
         // Create an environment with lights
         environment = new Environment();
 
@@ -119,7 +119,7 @@ public class LoadModelTest extends GdxTest {
         dirLight1.setColor(Color.YELLOW);
         environment.add(dirLight1);
 
-		controller = new PerspectiveCamController(cam);
+		controller = new CameraInputController(cam);
 		Gdx.input.setInputProcessor(controller);
 
 		// Add some GUI

@@ -18,9 +18,8 @@ package com.monstrous.gdx.webgpu.wrappers;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Disposable;
-import com.github.xpenatan.webgpu.WGPUComputePipeline;
-import com.github.xpenatan.webgpu.WGPUComputePipelineDescriptor;
-import com.github.xpenatan.webgpu.WGPUProgrammableStageDescriptor;
+import com.github.xpenatan.webgpu.*;
+import com.monstrous.gdx.webgpu.application.WebGPUApplication;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
@@ -34,6 +33,8 @@ public class WebGPUComputePipeline implements Disposable {
     private  WGPUComputePipeline pipeline;
 
 
+
+
     public WebGPUComputePipeline(WgShaderProgram shader, String entryPoint, WebGPUPipelineLayout layout) {
         gfx = (WgGraphics) Gdx.graphics;
         webgpu = gfx.getContext();
@@ -42,20 +43,14 @@ public class WebGPUComputePipeline implements Disposable {
 
         pipelineDesc.setNextInChain(null);
 
+        pipelineDesc.getCompute().setModule(shader.getShaderModule());
+        pipelineDesc.getCompute().setEntryPoint(entryPoint);
+        WGPUVectorConstantEntry constants = WGPUVectorConstantEntry.obtain();
+        pipelineDesc.getCompute().setConstants(constants);       // can you also pass null instead of an empty vector?
 
+        pipelineDesc.setLayout(layout.getLayout());
 
-        // not supported in API??
-        WGPUProgrammableStageDescriptor compute = pipelineDesc.getCompute();
- //       compute.
-//
-//        pipelineDesc.getCompute().setModule(shader.getHandle());
-//        pipelineDesc.getCompute().setEntryPoint(entryPoint);
-//        pipelineDesc.getCompute().setConstantCount(0);
-//        pipelineDesc.getCompute().setConstants();
-//
-//        pipelineDesc.setLayout(layout.getHandle());
-//
-//        pipeline = new WGPUComputePipeline();
+        pipeline =  new WGPUComputePipeline();
         webgpu.device.createComputePipeline(pipelineDesc, pipeline);
     }
 

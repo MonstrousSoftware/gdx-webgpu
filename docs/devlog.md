@@ -153,10 +153,15 @@ resize will just set a flag and the actual resize is performed just before the r
 - Fixed loading WgModel from ModelData. Issue was index buffer filling via ShortBuffer.  Model loading works now including GTLF models. 
 
 to do:
-- DepthClearTest behaves strangely like depth sorting doesn't work.
+- Fixed: DepthClearTest behaves strangely like depth sorting doesn't work.
 - Fixed: ShapeRenderer test gives only black screen. (Used ScreenUtils instead of WgScerenUtils)
-- SuperKaolio has incorrect collision detection? Also sky is darker in libgdx version.
-- When switching between models, e.g. in LoadModelTest, it seems the wrong pipeline is used. Textures look strange.
+- SuperKaolio :  sky is darker in libgdx version.
+- Fixed: When switching between models, e.g. in LoadModelTest, it seems the wrong pipeline is used. Textures look strange.
+
+to do/test: 
+- blended materials.
+- cube map
+- texture array
 
 
 

@@ -3,6 +3,7 @@ package main.java.com.monstrous.gdx.tests.webgpu;
 import com.github.xpenatan.gdx.backends.teavm.TeaApplicationConfiguration;
 import com.monstrous.gdx.tests.webgpu.ASimpleGame;
 import com.monstrous.gdx.tests.webgpu.LightingTest;
+import com.monstrous.gdx.tests.webgpu.LoadModelTest;
 import com.monstrous.gdx.webgpu.backends.teavm.WgTeaApplication;
 
 
@@ -16,7 +17,7 @@ public class TeaVMTestLauncher {
         config.preloadAssets = true;
         config.useGL30 = true;
 
-        new WgTeaApplication(new LightingTest(), config);
+        new WgTeaApplication(new LoadModelTest(), config);
 //        new WgTeaApplication(new HelloTexture(), config);
     }
 }

@@ -16,6 +16,7 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
+import com.monstrous.gdx.webgpu.application.WebGPUApplication;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
@@ -49,7 +50,7 @@ public class ComputeMoldSlime extends GdxTest {
 
     private WebGPUContext webgpu;
     private WebGPUComputePipeline pipeline1, pipeline2, pipeline3;
-    private WgTexture texture, texture2;
+    private WgTexture texture1, texture2;
     private WebGPUBindGroup bindGroupMove, bindGroupEvap, bindGroupBlur;
     private WGPUQueue queue;
     private WebGPUUniformBuffer uniforms;
@@ -84,17 +85,18 @@ public class ComputeMoldSlime extends GdxTest {
         config.senseAngleSpacing = 0.2f;
         config.turnSpeed = 10f;
 
-        viewport = new ScreenViewport();
-        stage = new WgStage(viewport);
-        skin = new WgSkin();
-
         // Add some GUI
         //
         viewport = new ScreenViewport();
         stage = new WgStage(viewport);
-        Gdx.input.setInputProcessor(stage);
         skin = new WgSkin(Gdx.files.internal("data/uiskin.json"));
-        //rebuildStage();
+
+        Gdx.input.setInputProcessor(stage);
+
+        width = Gdx.graphics.getWidth();
+        height = Gdx.graphics.getHeight();
+
+        // let resize() build the stage, and start the sim
     }
 
 
@@ -105,13 +107,13 @@ public class ComputeMoldSlime extends GdxTest {
         WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or( WGPUTextureUsage.StorageBinding).or( WGPUTextureUsage.CopyDst).or( WGPUTextureUsage.CopySrc);
 
         //public WgTexture(String label, int width, int height, int mipLevelCount, int textureUsage, WGPUTextureFormat format, int numSamples )
-        texture = new WgTexture("texture0", width, height, 1, textureUsage, WGPUTextureFormat.RGBA8Unorm, 1);
+        texture1 = new WgTexture("texture1", width, height, 1, textureUsage, WGPUTextureFormat.RGBA8Unorm, 1);
         texture2 = new WgTexture("texture2", width, height, 1, textureUsage, WGPUTextureFormat.RGBA8Unorm, 1);
 
         Pixmap pm = new Pixmap(width, height, Pixmap.Format.RGBA8888);
         pm.setColor(Color.BLACK);
         pm.fill();
-        texture.load(pm.getPixels(), 0);
+        texture1.load(pm.getPixels(), 0);
 
         // Create input and output textures
 
@@ -148,9 +150,9 @@ public class ComputeMoldSlime extends GdxTest {
         pipelineLayout.dispose();
 
         // as we switch between 2 textures the output of the last pass will be the input for the first pass in the next iteration
-        bindGroupMove = makeBindGroup(bindGroupLayout, uniforms, agents, texture2.getTextureView(), texture.getTextureView());
-        bindGroupEvap = makeBindGroup(bindGroupLayout, uniforms, agents, texture.getTextureView(), texture2.getTextureView());
-        bindGroupBlur = makeBindGroup(bindGroupLayout, uniforms, agents, texture2.getTextureView(), texture.getTextureView());
+        bindGroupMove = makeBindGroup(bindGroupLayout, uniforms, agents, texture2.getTextureView(), texture1.getTextureView());
+        bindGroupEvap = makeBindGroup(bindGroupLayout, uniforms, agents, texture1.getTextureView(), texture2.getTextureView());
+        bindGroupBlur = makeBindGroup(bindGroupLayout, uniforms, agents, texture2.getTextureView(), texture1.getTextureView());
 
         bindGroupLayout.dispose();
         shader.dispose();
@@ -158,7 +160,7 @@ public class ComputeMoldSlime extends GdxTest {
 
     // clean up all the resources
     private void exitSim(){
-        texture.dispose();
+        texture1.dispose();
         texture2.dispose();
         uniforms.dispose();
         agents.dispose();
@@ -259,6 +261,7 @@ public class ComputeMoldSlime extends GdxTest {
         pass.dispose();
     }
 
+
     private void initAgents(  WGPUQueue queue, WebGPUBuffer agents, int numAgents ){
         ByteBuffer byteBuffer = BufferUtils.newUnsafeByteBuffer( agentSize * numAgents * Float.BYTES);
         byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
@@ -337,7 +340,7 @@ public class ComputeMoldSlime extends GdxTest {
             Pixmap pm = new Pixmap(width, height, Pixmap.Format.RGBA8888);
             pm.setColor(Color.BLACK);
             pm.fill();
-            texture.load(pm.getPixels(), 0);
+            texture1.load(pm.getPixels(), 0);
         }
 
         step(Gdx.graphics.getDeltaTime());
@@ -355,10 +358,10 @@ public class ComputeMoldSlime extends GdxTest {
         batch.getProjectionMatrix().setToOrtho2D(0, 0, width, height);
         this.width = width;
         this.height = height;
-        if(texture != null) // sim was running already?
-            exitSim();
+//        if(texture1 != null) // sim was running already?
+//            exitSim();
         initSim(width, height);
-        //viewport.update(width, height);
+        viewport.update(width, height);
         viewport.setWorldSize(width, height);
         stage.getViewport().update(width, height, true);
         rebuildStage();
