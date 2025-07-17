@@ -131,35 +131,35 @@ public class GPUTimer implements Disposable {
         if( !enabled || timeStampMapOngoing)
             return;
 
-        timeStampMapOngoing = true;
-        WGPUFuture webGPUFuture = timeStampMapBuffer.mapAsync(WGPUMapMode.Read, 0, 8 * 2 * MAX_PASSES, WGPUCallbackMode.AllowProcessEvents, new BufferMapCallback() {
-            @Override
-            protected void onCallback(WGPUMapAsyncStatus status, String message) {
-                //System.out.println("Buffer mapped with status " + status);
-                if(status == WGPUMapAsyncStatus.Success) {
 
-                    WGPUByteBuffer ram = timeStampMapBuffer.getConstMappedRange(0, 8 * 2 * MAX_PASSES);
-                    for (int pass = 0; pass < numPasses; pass++) {
-                        // todo convert to long, there is no getLong()
-                        int off = 8*2*pass;
-                        int n1 = ram.getInt(off);
-                        int n2 = ram.getInt(off + 4);
-                        int n3 = ram.getInt(off + 8);
-                        int n4 = ram.getInt(off + 12);
-                        long start = n1 + 65536L* n2;
-                        long end = n3 + 65536L* n4;
-                        //System.out.println("gpu timing: "+n1+" , "+n2+" , "+n3+" , "+n4+" longs:"+start+" - "+end);
-//                        long start = ram.getInt(8 * 2 * pass) + 65536L * ram.getInt(8 *2*pass + 4);
-//                        long end = ram.getInt(8 * 2 * pass + 8) + 65536L * ram.getInt(8 *2*pass + 12);
-                        long ns = end - start;
-                        addTimeSample(pass, ns);
-                    }
-                    timeStampMapBuffer.unmap();
-                    ram.dispose();
-                }
-                timeStampMapOngoing = false;
-            }
-        });
+        //todo
+//        timeStampMapOngoing = true;
+//        WGPUFuture webGPUFuture = timeStampMapBuffer.mapAsync(WGPUMapMode.Read, 0, 8 * 2 * MAX_PASSES, WGPUCallbackMode.AllowProcessEvents, new BufferMapCallback() {
+//            @Override
+//            protected void onCallback(WGPUMapAsyncStatus status, String message) {
+//                //System.out.println("Buffer mapped with status " + status);
+//                if(status == WGPUMapAsyncStatus.Success) {
+//
+//                    WGPUByteBuffer ram = new WGPUByteBuffer(8 * 2 * MAX_PASSES);    // ?
+//                    timeStampMapBuffer.getConstMappedRange(0, 8 * 2 * MAX_PASSES, ram);
+//                    for (int pass = 0; pass < numPasses; pass++) {
+//                        // todo convert to long, there is no getLong()
+//                        int off = 8*2*pass;
+//                        int n1 = ram.getInt(off);
+//                        int n2 = ram.getInt(off + 4);
+//                        int n3 = ram.getInt(off + 8);
+//                        int n4 = ram.getInt(off + 12);
+//                        long start = n1 + 65536L* n2;
+//                        long end = n3 + 65536L* n4;
+//                        long ns = end - start;
+//                        addTimeSample(pass, ns);
+//                    }
+//                    timeStampMapBuffer.unmap();
+//                    ram.dispose();
+//                }
+//                timeStampMapOngoing = false;
+//            }
+//        });
     }
 
     @Override

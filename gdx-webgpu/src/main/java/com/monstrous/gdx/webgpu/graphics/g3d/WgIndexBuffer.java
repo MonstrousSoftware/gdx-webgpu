@@ -2,6 +2,7 @@ package com.monstrous.gdx.webgpu.graphics.g3d;
 
 import com.badlogic.gdx.graphics.glutils.IndexData;
 import com.badlogic.gdx.utils.BufferUtils;
+import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.github.xpenatan.webgpu.WGPUBufferUsage;
 import com.github.xpenatan.webgpu.WGPUIndexFormat;
 import com.monstrous.gdx.webgpu.wrappers.WebGPUIndexBuffer;
@@ -18,36 +19,39 @@ public class WgIndexBuffer implements IndexData {
     final ShortBuffer shortBuffer;
     final IntBuffer intBuffer;
     protected WebGPUIndexBuffer indexBuffer = null;
+    private final boolean isStatic;
     private boolean isDirty = true;
+    private boolean isFrozen;
     private final boolean wideIndices;
 
 
     /** Create index buffer.
      *
+     * @param isStatic will this index buffer never change? Allows to free the internal backing buffer after use.
      * @param maxIndices maximum number of indices to be stored
      */
-    public WgIndexBuffer(int maxIndices) {
+    public WgIndexBuffer(boolean isStatic, int maxIndices) {
         // use wide indices (i.e. int rather than short) is maxIndices is too large for shorts
-        this(maxIndices, (maxIndices >= Short.MAX_VALUE));
+        this(isStatic, maxIndices, (maxIndices >= Short.MAX_VALUE));
     }
 
     /** Create index buffer.
      *
+     * @param isStatic will this index buffer never change? Allows to free the internal backing buffer after use.
      * @param maxIndices maximum number of indices to be stored
      * @param wideIndices false for 16 bit indices (short), true for 32 bit indices (int)
      */
-    public WgIndexBuffer(int maxIndices, boolean wideIndices) {
+    public WgIndexBuffer(boolean isStatic, int maxIndices, boolean wideIndices) {
+        this.isStatic = isStatic;
         this.wideIndices = wideIndices;
         int indexSize = wideIndices ? 4 : 2;
         int sizeInBytes = maxIndices * indexSize;
         sizeInBytes = (sizeInBytes + 3) & ~3; // round up to multiple of 4
         byteBuffer = BufferUtils.newUnsafeByteBuffer(sizeInBytes);
         byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+        isFrozen = false;
         shortBuffer = byteBuffer.asShortBuffer();
         intBuffer = byteBuffer.asIntBuffer();
-//        ((Buffer) shortBuffer).flip();
-//        ((Buffer) intBuffer).flip();
-//        ((Buffer)byteBuffer).flip();
         WGPUBufferUsage usage = WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Index);
         indexBuffer = new WebGPUIndexBuffer(usage, sizeInBytes, indexSize);
     }
@@ -68,25 +72,21 @@ public class WgIndexBuffer implements IndexData {
 
     @Override
     public void setIndices(short[] indices, int offset, int count) {
+        if(isStatic && isFrozen) throw new GdxRuntimeException("WgIndexBuffer: static buffer cannot be modified.");
         ((Buffer) shortBuffer).clear();
         shortBuffer.put(indices, offset, count);
-//
-//        ((Buffer) shortBuffer).flip();
-//        ((Buffer)byteBuffer).position(0);
-//        ((Buffer)byteBuffer).limit(count << 1);
         isDirty = true;
     }
 
+    /** Set indices using a ShortBuffer. Uses values from the ShortBuffer's current position to its limit
+     * */
     @Override
     public void setIndices(ShortBuffer indices) {
+        if(isFrozen) throw new GdxRuntimeException("WgIndexBuffer: static buffer cannot be modified.");
         int pos = indices.position();
         ((Buffer) shortBuffer).clear();
         ((Buffer) shortBuffer).limit(indices.remaining());
         shortBuffer.put(indices);
-//        ((Buffer) shortBuffer).flip();
-//        ((Buffer)indices).position(pos);
-//        ((Buffer)byteBuffer).position(0);
-//        ((Buffer)byteBuffer).limit(shortBuffer.limit() << 1);
         isDirty = true;
     }
 
@@ -94,6 +94,7 @@ public class WgIndexBuffer implements IndexData {
     /** targetOffset in indices */
     @Override
     public void updateIndices(int targetOffset, short[] indices, int offset, int count) {
+        if(isFrozen) throw new GdxRuntimeException("WgIndexBuffer: static buffer cannot be modified.");
         ((Buffer)shortBuffer).position(targetOffset);
         shortBuffer.put(indices, offset, count);
         isDirty = true;
@@ -101,6 +102,7 @@ public class WgIndexBuffer implements IndexData {
 
     /** targetOffset in indices */
     public void updateIndices(int targetOffset, int[] indices, int offset, int count) {
+        if(isFrozen) throw new GdxRuntimeException("WgIndexBuffer: static buffer cannot be modified.");
         ((Buffer)intBuffer).position(targetOffset);
         intBuffer.put(indices, offset, count);
         isDirty = true;
@@ -113,11 +115,13 @@ public class WgIndexBuffer implements IndexData {
 
     @Override
     public ShortBuffer getBuffer(boolean forWriting) {
+        if(forWriting && isFrozen) throw new GdxRuntimeException("WgIndexBuffer: static buffer cannot be modified.");
         isDirty |= forWriting;
         return shortBuffer;
     }
 
     public IntBuffer getIntBuffer(boolean forWriting) {
+        if(forWriting && isFrozen) throw new GdxRuntimeException("WgIndexBuffer: static buffer cannot be modified.");
         isDirty |= forWriting;
         return intBuffer;
     }
@@ -136,8 +140,14 @@ public class WgIndexBuffer implements IndexData {
                 byteLimit = Short.BYTES * shortBuffer.limit();
             byteBuffer.limit(byteLimit);
             byteBuffer.position(0);     // reset position for reading
-            indexBuffer.setIndices(byteBuffer);
+            indexBuffer.setIndices(byteBuffer);     // write to GPU buffer
             isDirty = false;
+
+            // if this is a static buffer, we can release the backing buffer.
+            if(isStatic) {
+                BufferUtils.disposeUnsafeByteBuffer(byteBuffer);
+                isFrozen = true;    // no more modifications allowed
+            }
         }
     }
 
@@ -155,12 +165,13 @@ public class WgIndexBuffer implements IndexData {
 
     @Override
     public void invalidate() {
-
+        // no-op
     }
 
     @Override
     public void dispose() {
         indexBuffer.dispose();
-        BufferUtils.disposeUnsafeByteBuffer(byteBuffer);
+        if(!isFrozen)
+            BufferUtils.disposeUnsafeByteBuffer(byteBuffer);
     }
 }

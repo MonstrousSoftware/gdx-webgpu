@@ -471,7 +471,6 @@ public class WgSpriteBatch implements Batch {
         if(drawing)
             flush();
         projectionMatrix.set(projection);
-        projectionMatrix.setToOrtho2D(0, 0, Gdx.graphics.getWidth(),  Gdx.graphics.getHeight(), 0, 100);        // TMP HACK
         mustUpdateMatrices = true;
     }
 
