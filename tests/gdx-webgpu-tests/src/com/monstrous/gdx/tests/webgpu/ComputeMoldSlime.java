@@ -160,8 +160,8 @@ public class ComputeMoldSlime extends GdxTest {
 
     // clean up all the resources
     private void exitSim(){
-        texture1.dispose();
-        texture2.dispose();
+//        texture1.dispose();
+//        texture2.dispose();
         uniforms.dispose();
         agents.dispose();
 
@@ -358,8 +358,8 @@ public class ComputeMoldSlime extends GdxTest {
         batch.getProjectionMatrix().setToOrtho2D(0, 0, width, height);
         this.width = width;
         this.height = height;
-//        if(texture1 != null) // sim was running already?
-//            exitSim();
+        if(texture1 != null) // sim was running already?
+            exitSim();
         initSim(width, height);
         viewport.update(width, height);
         viewport.setWorldSize(width, height);

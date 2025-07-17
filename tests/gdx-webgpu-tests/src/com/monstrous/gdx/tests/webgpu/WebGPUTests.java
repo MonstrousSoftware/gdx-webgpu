@@ -71,9 +71,6 @@ public class WebGPUTests {
         ParticleEmitterTest.class,
         ParticleEmittersTest.class,
         HeightMapTest.class,
-//        TestCompute.class,
-//        TestComputeRNG.class,
-//        ComputeMoldSlime.class,
         FullScreenTest.class,
         GPUTimerTest.class,
         FrameBufferTest.class,
@@ -91,7 +88,9 @@ public class WebGPUTests {
         TestMeshBuilder.class,
         TestTexture.class,
         TestDoubleSpriteBatch.class,
-        TransparencyTest.class
+        TransparencyTest.class,
+        TestCompute.class,
+        ComputeMoldSlime.class
 
 		// @on
 
