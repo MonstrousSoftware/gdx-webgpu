@@ -217,11 +217,18 @@ public class WgDefaultShader extends WgShader implements Disposable {
         pipelineSpec.name = "ModelBatch pipeline";
 
         // default blending values
-        // todo should depend on renderable?
-        pipelineSpec.enableBlending();
-        pipelineSpec.setBlendFactor(WGPUBlendFactor.SrcAlpha, WGPUBlendFactor.OneMinusSrcAlpha);
+        final boolean blended = renderable.material.has(BlendingAttribute.Type)
+            && ((BlendingAttribute)renderable.material.get(BlendingAttribute.Type)).blended;
+        if(blended) {
+            pipelineSpec.enableBlending();
+            pipelineSpec.setBlendFactor(WGPUBlendFactor.SrcAlpha, WGPUBlendFactor.OneMinusSrcAlpha);
+            pipelineSpec.cullMode = WGPUCullMode.None;
+        } else {
+            pipelineSpec.disableBlending();
+            pipelineSpec.cullMode = WGPUCullMode.Back;
+        }
+
         pipelineSpec.environment = renderable.environment;
-        pipelineSpec.cullMode = WGPUCullMode.None; //None;
         if(renderable.meshPart.primitiveType == GL20.GL_LINES)  // todo all cases
             pipelineSpec.topology = WGPUPrimitiveTopology.LineList;
 
