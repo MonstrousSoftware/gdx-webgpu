@@ -17,8 +17,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 
-// TODO: Validation error on the async mapping operation
-
 /**
  * Demonstration of using a compute shader: performs a simple function on the array of input floats.
  * Follows example from https://eliemichel.github.io/LearnWebGPU/basic-compute/compute-pipeline.html#
@@ -89,9 +87,6 @@ public class TestCompute extends GdxTest {
     }
 
 
-
-
-
     private void compute(WebGPUBindGroup bindGroup, WebGPUUniformBuffer inputBuffer, WebGPUBuffer outputBuffer, WebGPUBuffer mapBuffer) {
 
         // create a queue
@@ -144,32 +139,32 @@ public class TestCompute extends GdxTest {
         // feed the command buffer to the queue
         queue.submit(1, commandBuffer);
 
-        boolean[] done = { false };
-        WGPUFuture webGPUFuture = mapBuffer.getBuffer().mapAsync(WGPUMapMode.Read, 0, BUFFER_SIZE, WGPUCallbackMode.AllowProcessEvents, new BufferMapCallback() {
+        //boolean[] done = { false };
+        boolean [] done = new boolean[1];
+        WGPUBuffer map = mapBuffer.getBuffer();
+        WGPUFuture webGPUFuture = map.mapAsync(WGPUMapMode.Read, 0, BUFFER_SIZE, WGPUCallbackMode.AllowProcessEvents, new BufferMapCallback() {
             @Override
             protected void onCallback(WGPUMapAsyncStatus status, String message) {
                 System.out.println("Callback: " + status+ " "+message);
                 if (status == WGPUMapAsyncStatus.Success) {
                     buf.position(0);
-                    mapBuffer.getBuffer().getConstMappedRange(0, BUFFER_SIZE, buf);
-                    for (int i = 0; i < numFloats; i++) {
+                    map.getConstMappedRange(0, BUFFER_SIZE, buf);
+                    for (int i = 0; i < BUFFER_SIZE / Float.BYTES; i++) {
                         outputData[i] = buf.getFloat();
                     }
-                    mapBuffer.getBuffer().unmap();
+                    map.unmap();
                 } else
-                    System.out.println("Buffer map async error: " + status);
+                    Gdx.app.error("mapAsync", "Buffer map async error: " + status);
                 done[0] = true; // signal that the call back was executed
             }
         });
 
-        for(int i = 0; i < 5; i++)
+        // need to wait until we are done by calling instance.processEvents()
+        //
+        while(!done[0]) {
             System.out.println("Tick.");
-
-//        while(!done[0]) {
-//            System.out.println("Tick.");
-//
-//            //gfx.getContext().device.tick();
-//        }
+            webgpu.instance.processEvents();
+        }
 
         System.out.println("output: ");
         for(int i = 0; i < 5; i++)

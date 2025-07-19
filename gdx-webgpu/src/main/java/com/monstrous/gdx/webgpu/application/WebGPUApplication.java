@@ -244,6 +244,7 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
         if(WGPU.getPlatformType() != WGPUPlatformType.WGPU_Web) {
             surface.present();
         }
+        instance.processEvents();
         frameNumber++;
     }
 

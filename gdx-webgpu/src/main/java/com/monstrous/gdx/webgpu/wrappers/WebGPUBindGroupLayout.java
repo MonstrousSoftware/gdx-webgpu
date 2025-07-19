@@ -121,6 +121,7 @@ public class WebGPUBindGroupLayout implements Disposable {
         //System.out.println("Create binding layout : "+entries.size() + "  "+label);
         layout = new WGPUBindGroupLayout();
         webgpu.device.createBindGroupLayout(bindGroupLayoutDesc, layout);
+
     }
 
     public int getEntryCount(){
@@ -161,6 +162,10 @@ public class WebGPUBindGroupLayout implements Disposable {
 
     @Override
     public void dispose() {
+        // dispose after use
+        for(WGPUBindGroupLayoutEntry entry : entries.values())
+            entry.dispose();
+        entries.clear();
         layout.release();
         layout.dispose();
         layout = null;

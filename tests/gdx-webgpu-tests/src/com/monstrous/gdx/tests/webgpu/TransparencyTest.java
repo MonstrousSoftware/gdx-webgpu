@@ -29,14 +29,14 @@ import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.utils.Array;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
-import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
-import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 
 /** Test rendering of semi-transparent models
- *
+ *  Shows a number of cubes and 'window panes'.
+ *  If you look from different angles, you should see the cubes through the panes.
+ *  and overlapping panes should get progressively more opaque.
  */
 public class TransparencyTest extends GdxTest {
 
@@ -55,13 +55,11 @@ public class TransparencyTest extends GdxTest {
 		cam.near = 0.1f;
         cam.far = 100;
 
-
 		//controller = new PerspectiveCamController(cam);
         controller = new CameraInputController(cam);
 		Gdx.input.setInputProcessor(controller);
 
         instances = new Array<>();
-
 
         ColorAttribute colorAttribute = new ColorAttribute(ColorAttribute.Diffuse, 0, 0, 1, 0.3f);
         BlendingAttribute blendingAttribute = new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
