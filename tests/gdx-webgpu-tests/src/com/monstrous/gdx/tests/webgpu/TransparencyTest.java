@@ -26,7 +26,6 @@ import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
@@ -44,9 +43,8 @@ public class TransparencyTest extends GdxTest {
 	WgModelBatch modelBatch;
 	PerspectiveCamera cam;
     CameraInputController controller;
-	WgSpriteBatch batch;
-	WgBitmapFont font;
-    Model box;
+    Model boxTrans;
+    Model boxOpaque;
     Array<ModelInstance> instances;
 
 
@@ -61,43 +59,43 @@ public class TransparencyTest extends GdxTest {
 		//controller = new PerspectiveCamController(cam);
         controller = new CameraInputController(cam);
 		Gdx.input.setInputProcessor(controller);
-		batch = new WgSpriteBatch();
-		font = new WgBitmapFont();
 
         instances = new Array<>();
 
-		//
+
+        ColorAttribute colorAttribute = new ColorAttribute(ColorAttribute.Diffuse, 0, 0, 1, 0.3f);
+        BlendingAttribute blendingAttribute = new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+        blendingAttribute.opacity = 0.15f;
+        blendingAttribute.blended = true;
+        Material matTrans = new Material(colorAttribute, blendingAttribute);
+
+        WgTexture texture2 = new WgTexture(Gdx.files.internal("data/badlogic.jpg"), true);
+        texture2.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear);
+        Material matSolid = new Material(TextureAttribute.createDiffuse(texture2));
+
+
+        //
 		// Create some model instances
 		//
         ModelBuilder modelBuilder = new WgModelBuilder();
-        ColorAttribute colorAttribute = new ColorAttribute(ColorAttribute.Diffuse, 0, 1, 0, 0.5f);
-        BlendingAttribute blendingAttribute = new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-        Material mat = new Material(colorAttribute, blendingAttribute);
         long attribs = VertexAttributes.Usage.Position | VertexAttributes.Usage.TextureCoordinates | VertexAttributes.Usage.Normal ;
-        box = modelBuilder.createBox(1, 1, 1, mat, attribs);
-
-        blendingAttribute.opacity = 0.25f;
-
-        instances.add( new ModelInstance(box, 0, 0, -2));
-        instances.add( new ModelInstance(box, 0, 0, -5));
-        instances.add( new ModelInstance(box, 0, 0, -10));
+        boxTrans = modelBuilder.createBox(3, 3, 0.2f, matTrans, attribs);
+        boxOpaque = modelBuilder.createBox(1, 1, 1, matSolid, attribs);
 
 
+        instances.add( new ModelInstance(boxTrans, 0, 1, -2));
+        instances.add( new ModelInstance(boxOpaque, 0, 0, -5));
+        instances.add( new ModelInstance(boxTrans, 0, 1, -8));
+        instances.add( new ModelInstance(boxOpaque, 0, 0, -11));
+        instances.add( new ModelInstance(boxTrans, 0, 1, -14));
 	}
 
 	public void render () {
-		float delta = Gdx.graphics.getDeltaTime();
-
-		WgScreenUtils.clear(Color.TEAL, true);
+		WgScreenUtils.clear(Color.WHITE, true);
 		cam.update();
 		modelBatch.begin(cam);
 		modelBatch.render(instances);
 		modelBatch.end();
-
-
-		batch.begin();
-		font.draw(batch, "fps: " + Gdx.graphics.getFramesPerSecond(), 0, 20);
-		batch.end();
 	}
 
 	@Override
@@ -110,10 +108,9 @@ public class TransparencyTest extends GdxTest {
 
 	@Override
 	public void dispose () {
-		batch.dispose();
-		font.dispose();
 		modelBatch.dispose();
-		box.dispose();
+		boxOpaque.dispose();
+        boxTrans.dispose();
 	}
 
 }

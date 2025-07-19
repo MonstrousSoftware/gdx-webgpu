@@ -18,6 +18,7 @@ package com.monstrous.gdx.webgpu.graphics.g3d.utils;
 
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.g3d.Renderable;
+import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.g3d.utils.RenderableSorter;
 import com.badlogic.gdx.math.Matrix4;
@@ -55,27 +56,27 @@ public class WgDefaultRenderableSorter implements RenderableSorter, Comparator<R
 
 	@Override
 	public int compare (final Renderable o1, final Renderable o2) {
-//		final boolean b1 = o1.material.has(BlendingAttribute.Type)
-//			&& ((BlendingAttribute)o1.material.get(BlendingAttribute.Type)).blended;
-//		final boolean b2 = o2.material.has(BlendingAttribute.Type)
-//			&& ((BlendingAttribute)o2.material.get(BlendingAttribute.Type)).blended;
-//		if (b1 != b2) return b1 ? 1 : -1;		// blended goes after opaque
-//		// FIXME implement better sorting algorithm
-//		// final boolean same = o1.shader == o2.shader && o1.mesh == o2.mesh && (o1.lights == null) == (o2.lights == null) &&
-//		// o1.material.equals(o2.material);
-//		getTranslation(o1.worldTransform, o1.meshPart.center, tmpV1);
-//		getTranslation(o2.worldTransform, o2.meshPart.center, tmpV2);
-//		final float dst = (int)(1000f * camera.position.dst2(tmpV1)) - (int)(1000f * camera.position.dst2(tmpV2));
-//		final int result = dst < 0 ? -1 : (dst > 0 ? 1 : 0);
-//		return b1 ? -result : result;
+        // if one renderable is opaque and the other is blended, put the blended last
+		final boolean b1 = o1.material.has(BlendingAttribute.Type)
+			&& ((BlendingAttribute)o1.material.get(BlendingAttribute.Type)).blended;
+		final boolean b2 = o2.material.has(BlendingAttribute.Type)
+			&& ((BlendingAttribute)o2.material.get(BlendingAttribute.Type)).blended;
+		if (b1 != b2) return b1 ? 1 : -1;		// blended goes after opaque
 
-		// todo blending and distance, material?
+        if(b1){ // renderables are blended, need to be depth sorted, closest one last
+            getTranslation(o1.worldTransform, o1.meshPart.center, tmpV1);
+            getTranslation(o2.worldTransform, o2.meshPart.center, tmpV2);
+            final float dst = camera.position.dst2(tmpV1) - camera.position.dst2(tmpV2);
+            return dst < 0 ? 1 : (dst > 0 ? -1 : 0);
+        }
 
+        // we could sort opaques closest first to maximize occlusion
+        // but here are maximizing on clustering mesh parts to allow instanced drawing
 
 		int h1 = hashCode(o1.meshPart);
 		int h2  = hashCode(o2.meshPart);
 
-		return h1 - h2;	// sort by mesh part
+		return h1 - h2;	// sort by mesh part to cluster the same mesh parts together
 	}
 
 	private int hashCode(MeshPart meshPart) {

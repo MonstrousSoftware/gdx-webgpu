@@ -110,11 +110,13 @@ fn vs_main(in: VertexInput, @builtin(instance_index) instance: u32) -> VertexOut
 #else
    out.uv = vec2f(0);
 #endif
-   var diffuseColor = vec4f(1); // default white
+
 #ifdef COLOR
-   diffuseColor = in.color;
+   var diffuseColor = in.color;
+#else
+   var diffuseColor = vec4f(1); // default white
 #endif
-   diffuseColor *= vec4f(material.diffuseColor.rgb, 1.0);
+   diffuseColor *= material.diffuseColor;
    out.color = diffuseColor;
 
 #ifdef NORMAL
@@ -161,7 +163,6 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
 #else
    var color = in.color;
 #endif
-
 
 #ifdef SHADOW_MAP
     let visibility = getShadowNess(in.shadowPos);
@@ -246,7 +247,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
 
 #ifdef FOG
     // fog needs to come after gamma correction
-    color = vec4f(mix(color.rgb, uFrame.fogColor.rgb, in.fogDepth), 1);
+    color = vec4f(mix(color.rgb, uFrame.fogColor.rgb, in.fogDepth), color.a);
 #endif
 
     //return vec4f(emissiveColor, 1.0);
@@ -255,7 +256,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
     //return material.diffuseColor;
     //return vec4f(in.fogDepth, 0, 0, 1);
 
-    return color;
+    return color; //vec4f(color.rgb, 0.2f);
 };
 
 #ifdef SHADOW_MAP
