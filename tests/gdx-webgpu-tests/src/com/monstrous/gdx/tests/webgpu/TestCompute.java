@@ -36,7 +36,6 @@ public class TestCompute extends GdxTest {
     float[] inputData = new float[BUFFER_SIZE/Float.BYTES];
     float[] outputData = new float[BUFFER_SIZE/Float.BYTES];
 
-
     @Override
     public void create() {
         batch = new WgSpriteBatch();
@@ -83,7 +82,8 @@ public class TestCompute extends GdxTest {
 
         inputBuffer.dispose();
         outputBuffer.dispose();
-        mapBuffer.dispose();
+        // don't dispose mapBuffer because it is part of an async operation
+        // the callback will dispose it.
     }
 
 
@@ -139,8 +139,6 @@ public class TestCompute extends GdxTest {
         // feed the command buffer to the queue
         queue.submit(1, commandBuffer);
 
-        //boolean[] done = { false };
-        boolean [] done = new boolean[1];
         WGPUBuffer map = mapBuffer.getBuffer();
         WGPUFuture webGPUFuture = map.mapAsync(WGPUMapMode.Read, 0, BUFFER_SIZE, WGPUCallbackMode.AllowProcessEvents, new BufferMapCallback() {
             @Override
@@ -155,21 +153,12 @@ public class TestCompute extends GdxTest {
                     map.unmap();
                 } else
                     Gdx.app.error("mapAsync", "Buffer map async error: " + status);
-                done[0] = true; // signal that the call back was executed
+                mapBuffer.dispose();
             }
         });
-
-        // need to wait until we are done by calling instance.processEvents()
-        //
-        while(!done[0]) {
-            System.out.println("Tick.");
-            webgpu.instance.processEvents();
-        }
-
-        System.out.println("output: ");
-        for(int i = 0; i < 5; i++)
-            System.out.print(" "+outputData[i]);
-        System.out.println();
+        // don't wait for the async to complete
+        // just enter the render loop which will at some point
+        // show the new outputData[] values
 
         commandBuffer.release();
         commandBuffer.dispose();
