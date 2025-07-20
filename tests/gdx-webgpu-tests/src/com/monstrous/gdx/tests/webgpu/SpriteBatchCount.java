@@ -11,11 +11,11 @@ import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 
-// Test behaviour with many different textures
+// Place all textures on screen
 
 
-public class SpriteBatchTextures extends GdxTest {
-    public static int NUM_SPRITES = 17000;
+public class SpriteBatchCount extends GdxTest {
+    public static int NUM_SPRITES = 20;
     public static int NUM_TEXTURES = 200;
 
     private WgSpriteBatch batch;
@@ -47,15 +47,18 @@ public class SpriteBatchTextures extends GdxTest {
         viewport.apply();
         batch.setProjectionMatrix(viewport.getCamera().combined);
 
-        //MathUtils.random.setSeed(1234);
+
+        int W = Gdx.graphics.getWidth();
+        int H = Gdx.graphics.getHeight();
+        int SZ = 2;
 
         // pass a clear color to batch begin
         batch.begin(Color.TEAL);
         for(int i = 0; i < NUM_SPRITES; i++) {
-            int x = MathUtils.random(Gdx.graphics.getWidth() - 32);
-            int y = MathUtils.random(Gdx.graphics.getHeight() - 32);
+            int x = (i * SZ) % W;
+            int y = SZ;
             WgTexture texture = textures[MathUtils.random(NUM_TEXTURES-1)];
-            batch.draw(texture, x, y, 32, 32);
+            batch.draw(texture, x, y, 2,2);
         }
         batch.end();
 

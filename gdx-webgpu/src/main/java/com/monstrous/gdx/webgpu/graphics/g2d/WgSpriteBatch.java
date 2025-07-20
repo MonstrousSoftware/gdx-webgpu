@@ -185,6 +185,8 @@ public class WgSpriteBatch implements Batch {
         bb.order(ByteOrder.LITTLE_ENDIAN);  // webgpu expects little endian data
         ShortBuffer shorts = bb.asShortBuffer();
         for(int i = 0; i < maxSprites; i++){
+//            if(i == 8200)
+//                System.out.println("overflow...");
             short vertexOffset = (short)(i * 4);
             // two triangles per sprite
             shorts.put(vertexOffset);
