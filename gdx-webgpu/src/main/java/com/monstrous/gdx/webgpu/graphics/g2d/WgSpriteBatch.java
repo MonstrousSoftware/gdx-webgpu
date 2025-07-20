@@ -178,6 +178,7 @@ public class WgSpriteBatch implements Batch {
         frameNumber = -1;
     }
 
+    // todo should we use ints if maxSprites is too large for shorts?
     // the index buffer is fixed and only has to be filled on start-up
     private void fillIndexBuffer(int maxSprites){
         ByteBuffer bb = BufferUtils.newUnsafeByteBuffer(maxSprites*INDICES_PER_SPRITE*Short.BYTES);
