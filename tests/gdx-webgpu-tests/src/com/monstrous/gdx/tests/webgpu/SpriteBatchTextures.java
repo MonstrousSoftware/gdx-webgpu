@@ -50,7 +50,7 @@ public class SpriteBatchTextures extends GdxTest {
         //MathUtils.random.setSeed(1234);
 
         // pass a clear color to batch begin
-        batch.begin(Color.WHITE);
+        batch.begin(Color.TEAL);
         for(int i = 0; i < NUM_SPRITES; i++) {
             int x = MathUtils.random(Gdx.graphics.getWidth() - 32);
             int y = MathUtils.random(Gdx.graphics.getHeight() - 32);
@@ -59,6 +59,7 @@ public class SpriteBatchTextures extends GdxTest {
         }
         batch.end();
 
+        textBatch.setProjectionMatrix(viewport.getCamera().combined);
         textBatch.begin();
         font.draw(textBatch,  "fps: "+Gdx.graphics.getFramesPerSecond(), 10, 100);
         font.draw(textBatch,  "numSprites: "+batch.numSprites, 10, 80);

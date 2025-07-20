@@ -379,8 +379,8 @@ public class WgSpriteBatch implements Batch {
             return;
         if(numSpritesPerFlush > maxSpritesInBatch)
             maxSpritesInBatch = numSpritesPerFlush;
-        if(flushCount >= maxFlushes-1){
-            Gdx.app.error("WgSpriteBatch", "Too many flushes (> "+maxFlushes+"). Increase maxFlushes.");
+        if(flushCount > maxFlushes-1){
+            Gdx.app.error("WgSpriteBatch", "Too many flushes ("+flushCount+"). Increase maxFlushes.");
             return;
         }
         renderCalls++;
