@@ -12,7 +12,7 @@ import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 // without the last loop overwriting the earlier ones.
 
 
-public class TestDoubleSpriteBatch extends GdxTest {
+public class SpriteBatchDoubleLoop extends GdxTest {
 
     private WgSpriteBatch batch;
     private WgTexture texture;
@@ -39,7 +39,7 @@ public class TestDoubleSpriteBatch extends GdxTest {
         batch.draw(texture, 0, 0);
         batch.end();
 
-        batch.begin();
+        batch.begin(); // don't clear
         batch.draw(texture, 300, 200);
         batch.end();
     }

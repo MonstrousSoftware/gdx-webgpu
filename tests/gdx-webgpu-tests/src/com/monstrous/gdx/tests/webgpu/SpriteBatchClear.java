@@ -9,9 +9,9 @@ import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 
-// Texture centred on screen.
+// Test WgSpriteBatch integrated clear
 
-public class SpriteBatchBasic extends GdxTest {
+public class SpriteBatchClear extends GdxTest {
 
     private WgSpriteBatch batch;
     private WgTexture texture;
@@ -31,8 +31,11 @@ public class SpriteBatchBasic extends GdxTest {
         viewport.apply();
         batch.setProjectionMatrix(viewport.getCamera().combined);
 
-        WgScreenUtils.clear(Color.WHITE);
-        batch.begin();
+        // we don't need this
+        //WgScreenUtils.clear(Color.WHITE);
+
+        // pass a clear color to batch begin
+        batch.begin(Color.WHITE);
         batch.draw(texture,
             (Gdx.graphics.getWidth()-texture.getWidth())/2f,
             (Gdx.graphics.getHeight()-texture.getHeight())/2f);

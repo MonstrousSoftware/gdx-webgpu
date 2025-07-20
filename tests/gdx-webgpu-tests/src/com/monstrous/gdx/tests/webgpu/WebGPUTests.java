@@ -87,11 +87,15 @@ public class WebGPUTests {
         TestMesh.class,
         TestMeshBuilder.class,
         TestTexture.class,
-        TestDoubleSpriteBatch.class,
+        SpriteBatchDoubleLoop.class,
         TransparencyTest.class,
         TestCompute.class,
         ComputeMoldSlime.class,
-        SpriteBatchBasic.class
+        SpriteBatchBasic.class,
+        SpriteBatchClear.class,
+        SpriteBatchDraw.class,
+        SpriteBatchLimit.class,
+        SpriteBatchTextures.class
 
 		// @on
 
