@@ -319,9 +319,6 @@ public class ComputeMoldSlime extends GdxTest {
 
     @Override
     public void render(){
-//        int allocatedBytesUnsafe = BufferUtils.getAllocatedBytesUnsafe();
-//        System.out.println("allocatedBytesUnsafe: " + allocatedBytesUnsafe);
-
         if(Gdx.input.isKeyPressed(Input.Keys.ESCAPE)){
             Gdx.app.exit();
             return;
