@@ -56,8 +56,8 @@ public class Basic3DTest extends GdxTest {
 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		cam.position.set(10f, 10f, 10f);
 		cam.lookAt(0, 0, 0);
-		cam.near = 10f;
-		cam.far = 30f;
+		cam.near = 0.1f;
+		cam.far = 150f;
 		cam.update();
 
         ModelBuilder modelBuilder = new WgModelBuilder();

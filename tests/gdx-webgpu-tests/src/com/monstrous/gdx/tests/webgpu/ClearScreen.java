@@ -14,6 +14,7 @@ public class ClearScreen extends GdxTest {
 
 	@Override
 	public void render () {
+
         WgScreenUtils.clear(Color.CORAL);	// use ScreenUtils variant to clear the screen
 	}
 

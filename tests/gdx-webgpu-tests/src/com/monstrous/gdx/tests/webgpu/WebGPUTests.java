@@ -90,7 +90,8 @@ public class WebGPUTests {
         TestDoubleSpriteBatch.class,
         TransparencyTest.class,
         TestCompute.class,
-        ComputeMoldSlime.class
+        ComputeMoldSlime.class,
+        SpriteBatchBasic.class
 
 		// @on
 

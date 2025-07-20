@@ -159,7 +159,7 @@ to do:
 - Fixed: When switching between models, e.g. in LoadModelTest, it seems the wrong pipeline is used. Textures look strange.
 
 to do/test: 
-- blended materials.
+- Done: blended materials.
 - cube map
 - texture array
 
