@@ -1,7 +1,5 @@
 package com.monstrous.gdx.webgpu.application;
 
-
-
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Rectangle;
@@ -19,6 +17,7 @@ import com.github.xpenatan.webgpu.WGPUQueue;
 import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.wrappers.GPUTimer;
+import com.monstrous.gdx.webgpu.wrappers.WebGPURenderPass;
 
 
 /** WebGPU graphics context and implementation of application life cycle. Used to initialize and terminate WebGPU and to render frames.
@@ -417,6 +416,7 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
 
         surface.release();
         command.dispose();
+        WebGPURenderPass.clearPool();
     }
 
 
@@ -440,8 +440,6 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
         return targetView;
     }
 
-
-
     /** Push a texture view to use for output, instead of the screen. */
     @Override
     public RenderOutputState pushTargetView(WgTexture texture, WgTexture depth) {
@@ -454,7 +452,6 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
         setViewportRectangle(0,0,texture.getWidth(), texture.getHeight());
         return state;
     }
-
 
     @Override
     public void popTargetView(RenderOutputState prevState) {

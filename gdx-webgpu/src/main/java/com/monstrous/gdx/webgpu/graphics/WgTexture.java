@@ -22,6 +22,7 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.TextureData;
 import com.badlogic.gdx.graphics.glutils.PixmapTextureData;
+import com.badlogic.gdx.utils.BufferUtils;
 import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
@@ -434,8 +435,17 @@ public class WgTexture extends Texture {
             mipLevelWidth /= 2;
             mipLevelHeight /= 2;
 
+            if(prev != pixelPtr) {
+                BufferUtils.disposeUnsafeByteBuffer(prev);
+            }
             prev = next;
-            next = ByteBuffer.allocateDirect( mipLevelWidth * mipLevelHeight * 4);
+            next = BufferUtils.newUnsafeByteBuffer( mipLevelWidth * mipLevelHeight * 4);
+        }
+        if(prev != pixelPtr) {
+            BufferUtils.disposeUnsafeByteBuffer(prev);
+        }
+        if(next != pixelPtr) {
+            BufferUtils.disposeUnsafeByteBuffer(next);
         }
     }
 

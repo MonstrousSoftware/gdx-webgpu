@@ -16,44 +16,60 @@
 
 package com.monstrous.gdx.webgpu.wrappers;
 
-
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Disposable;
+import com.badlogic.gdx.utils.Pool;
 import com.github.xpenatan.webgpu.*;
-import com.monstrous.gdx.webgpu.application.WebGPUContext;
-import com.monstrous.gdx.webgpu.application.WgGraphics;
 
-
-public class WebGPURenderPass  {
-    private final WGPURenderPassEncoder renderPass;                   // handle used by WebGPU
-    public final RenderPassType type;
-    private final WGPUTextureFormat textureFormat;
-    private final WGPUTextureFormat depthFormat;
+public class WebGPURenderPass implements Disposable  {
+    private WGPURenderPassEncoder renderPass;                   // handle used by WebGPU
+    public RenderPassType type;
+    private WGPUTextureFormat textureFormat;
+    private WGPUTextureFormat depthFormat;
     public int targetWidth, targetHeight;
     private int sampleCount;
-    WebGPUContext webgpu;
+
+    private static Pool<WebGPURenderPass> renderPassPool = new Pool<WebGPURenderPass>() {
+        @Override
+        protected WebGPURenderPass newObject() {
+            WebGPURenderPass webGPURenderPass = new WebGPURenderPass();
+            return webGPURenderPass;
+        }
+    };
+
+    public static WebGPURenderPass obtain() {
+        WebGPURenderPass renderPass = renderPassPool.obtain();
+        return renderPass;
+    }
+
+    public static void free(WebGPURenderPass renderPass) {
+        renderPassPool.free(renderPass);
+    }
+
+    public static void clearPool() {
+        while(renderPassPool.getFree() > 0) {
+            renderPassPool.obtain().dispose();
+        }
+    }
 
     // don't call this directly, use RenderPassBuilder.create()
-    WebGPURenderPass(WGPURenderPassEncoder renderPass, RenderPassType type, WGPUTextureFormat textureFormat, WGPUTextureFormat depthFormat, int sampleCount, int targetWidth, int targetHeight) {
-        super();
+    WebGPURenderPass() {
+        renderPass = new WGPURenderPassEncoder();
+    }
 
-        this.renderPass = renderPass;
+    public void begin(WGPUCommandEncoder encoder, WGPURenderPassDescriptor renderPassDescriptor, RenderPassType type, WGPUTextureFormat textureFormat, WGPUTextureFormat depthFormat, int sampleCount, int targetWidth, int targetHeight) {
         this.type = type;
         this.textureFormat = textureFormat;
         this.depthFormat = depthFormat;
         this.sampleCount = sampleCount;
         this.targetWidth = targetWidth;
         this.targetHeight = targetHeight;
-
-        WgGraphics gfx = (WgGraphics) Gdx.graphics;
-        webgpu = gfx.getContext();
+        encoder.beginRenderPass(renderPassDescriptor, renderPass);
     }
-
 
     public void end() {
         renderPass.end();
         renderPass.release();
-        renderPass.dispose();
+        WebGPURenderPass.free(this);
     }
 
     public WGPURenderPassEncoder getRenderPassEncoder() {
@@ -102,7 +118,6 @@ public class WebGPURenderPass  {
         renderPass.setBindGroup(groupIndex, bindGroup, dynamicOffsets);
     }
 
-
     public void setVertexBuffer(int slot, WGPUBuffer vertexBuffer, int offset, int size) {
         renderPass.setVertexBuffer(slot, vertexBuffer, offset, size);
     }
@@ -131,5 +146,11 @@ public class WebGPURenderPass  {
         draw(numVertices, 1, 0, 0);
     }
 
-
+    @Override
+    public void dispose() {
+        if(renderPass != null) {
+            renderPass.dispose();
+            renderPass = null;
+        }
+    }
 }

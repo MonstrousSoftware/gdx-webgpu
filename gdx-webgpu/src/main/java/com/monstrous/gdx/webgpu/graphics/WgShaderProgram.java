@@ -39,7 +39,7 @@ public class WgShaderProgram implements Disposable {
 
     public WgShaderProgram(FileHandle fileHandle, String prefix) {
         String source = fileHandle.readString();
-        compile(fileHandle.file().getName(), prefix+source);
+        compile(fileHandle.name(), prefix+source);
     }
 
     public WgShaderProgram(String name, String shaderSource, String prefix){

@@ -22,6 +22,7 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.Vector4;
+import com.badlogic.gdx.utils.BufferUtils;
 import com.github.xpenatan.webgpu.WGPUBufferUsage;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
@@ -91,7 +92,7 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
         dirty = false;
 
         // working buffer in native memory to use as input to WriteBuffer
-        dataBuf = ByteBuffer.allocateDirect(contentSize);
+        dataBuf = BufferUtils.newUnsafeByteBuffer(contentSize);
         dataBuf.order(ByteOrder.LITTLE_ENDIAN);
         floatData = dataBuf.asFloatBuffer();
     }
@@ -197,5 +198,9 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
         dirty = true;
     }
 
-
+    @Override
+    public void dispose() {
+        BufferUtils.disposeUnsafeByteBuffer(dataBuf);
+        super.dispose();
+    }
 }

@@ -174,12 +174,12 @@ public class RenderPassBuilder {
             renderPassDescriptor.setTimestampWrites(query);
         }
 
-        WGPURenderPassEncoder renderPass = new WGPURenderPassEncoder();
-        webgpu.encoder.beginRenderPass(renderPassDescriptor, renderPass);
 
-        WebGPURenderPass pass = new WebGPURenderPass(renderPass, passType, colorFormat, depthTexture.getFormat(), sampleCount,
-                outTexture == null ? Gdx.graphics.getWidth() : outTexture.getWidth(),
-                outTexture == null ? Gdx.graphics.getHeight() : outTexture.getHeight());
+        WebGPURenderPass pass = WebGPURenderPass.obtain();
+
+        pass.begin(webgpu.encoder, renderPassDescriptor, passType, colorFormat, depthTexture.getFormat(), sampleCount,
+            outTexture == null ? Gdx.graphics.getWidth() : outTexture.getWidth(),
+            outTexture == null ? Gdx.graphics.getHeight() : outTexture.getHeight());
 
         // todo may change over time
         Rectangle view = webgpu.getViewportRectangle();
