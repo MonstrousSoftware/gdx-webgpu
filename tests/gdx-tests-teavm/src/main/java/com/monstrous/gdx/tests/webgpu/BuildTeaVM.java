@@ -24,10 +24,8 @@ public class BuildTeaVM {
         TeaVMTool tool = TeaBuilder.config(teaBuildConfiguration);
         tool.setObfuscated(false);
         tool.setTargetType(TeaVMTargetType.WEBASSEMBLY_GC);
-//        tool.setOptimizationLevel(TeaVMOptimizationLevel.ADVANCED);
+        tool.setOptimizationLevel(TeaVMOptimizationLevel.ADVANCED);
         tool.setMainClass(TeaVMTestLauncher.class.getName());
-//        int size = 64 * (1 << 20);
-//        tool.setMaxDirectBuffersSize(size);
         TeaBuilder.build(tool);
     }
 }

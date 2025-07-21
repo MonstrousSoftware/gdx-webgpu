@@ -55,6 +55,7 @@ public class ComputeMoldSlime extends GdxTest {
     private WGPUQueue queue;
     private WebGPUUniformBuffer uniforms;
     private WebGPUBuffer agents;
+    private WGPUComputePassEncoder pass;
     private Config config;
     private Viewport viewport;
     private WgStage stage;
@@ -105,7 +106,7 @@ public class ComputeMoldSlime extends GdxTest {
 
     private void initSim(int width, int height){
 
-
+        pass = new WGPUComputePassEncoder();
         WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or( WGPUTextureUsage.StorageBinding).or( WGPUTextureUsage.CopyDst).or( WGPUTextureUsage.CopySrc);
 
         //public WgTexture(String label, int width, int height, int mipLevelCount, int textureUsage, WGPUTextureFormat format, int numSamples )
@@ -116,6 +117,7 @@ public class ComputeMoldSlime extends GdxTest {
         pm.setColor(Color.BLACK);
         pm.fill();
         texture1.load(pm.getPixels(), 0);
+        pm.dispose();
 
         // Create input and output textures
 
@@ -194,7 +196,6 @@ public class ComputeMoldSlime extends GdxTest {
         encoderDesc.setLabel("Command Encoder");
         webgpu.device.createCommandEncoder(encoderDesc, encoder);
 
-        WGPUComputePassEncoder pass = new WGPUComputePassEncoder();
         WGPUComputePassDescriptor passDescriptor = WGPUComputePassDescriptor.obtain();
         passDescriptor.setNextInChain(null);
         passDescriptor.setTimestampWrites(null);
@@ -268,7 +269,6 @@ public class ComputeMoldSlime extends GdxTest {
         encoder.release();
         encoder.dispose();
         pass.release();
-        pass.dispose();
     }
 
 
@@ -351,6 +351,7 @@ public class ComputeMoldSlime extends GdxTest {
             pm.setColor(Color.BLACK);
             pm.fill();
             texture1.load(pm.getPixels(), 0);
+            pm.dispose();
         }
 
         step(Gdx.graphics.getDeltaTime());
@@ -385,6 +386,7 @@ public class ComputeMoldSlime extends GdxTest {
         exitSim();
         batch.dispose();
         font.dispose();
+        pass.dispose();
     }
 
 

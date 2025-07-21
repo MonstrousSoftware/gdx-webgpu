@@ -42,7 +42,7 @@ public class GPUTimer implements Disposable {
     private int passNumber;
     private int numPasses;
     private ByteBuffer ram;
-
+    private BufferMapCallback callback;
 
     public GPUTimer(WGPUDevice device, boolean enabled) {
         this.enabled = enabled;
@@ -131,32 +131,33 @@ public class GPUTimer implements Disposable {
         encoder.copyBufferToBuffer(timeStampResolveBuffer, 0,  timeStampMapBuffer, 0,8*2*numPasses);
     }
 
-
     public void fetchTimestamps(){
         if( !enabled || timeStampMapOngoing)
             return;
 
+        if(callback == null) {
+            callback = new BufferMapCallback() {
+                @Override
+                protected void onCallback(WGPUMapAsyncStatus status, String message) {
 
+                    if(status == WGPUMapAsyncStatus.Success) {
+                        ram.position(0);
+                        timeStampMapBuffer.getConstMappedRange(0, 8 * 2 * MAX_PASSES, ram);
+                        for (int pass = 0; pass < numPasses; pass++) {
+                            long start = ram.getLong();
+                            long end = ram.getLong();
+                            long nanoseconds = end - start;
+                            addTimeSample(pass, nanoseconds);
+                        }
+                        timeStampMapBuffer.unmap();
+                    }
+                    timeStampMapOngoing = false;
+                }
+            };
+        }
 
         timeStampMapOngoing = true;
-        WGPUFuture webGPUFuture = timeStampMapBuffer.mapAsync(WGPUMapMode.Read, 0, 8 * 2 * MAX_PASSES, WGPUCallbackMode.AllowProcessEvents, new BufferMapCallback() {
-            @Override
-            protected void onCallback(WGPUMapAsyncStatus status, String message) {
-
-                if(status == WGPUMapAsyncStatus.Success) {
-                    ram.position(0);
-                    timeStampMapBuffer.getConstMappedRange(0, 8 * 2 * MAX_PASSES, ram);
-                    for (int pass = 0; pass < numPasses; pass++) {
-                        long start = ram.getLong();
-                        long end = ram.getLong();
-                        long nanoseconds = end - start;
-                        addTimeSample(pass, nanoseconds);
-                    }
-                    timeStampMapBuffer.unmap();
-                }
-                timeStampMapOngoing = false;
-            }
-        });
+        timeStampMapBuffer.mapAsync(WGPUMapMode.Read, 0, 8 * 2 * MAX_PASSES, WGPUCallbackMode.AllowProcessEvents, callback);
     }
 
     @Override

@@ -21,6 +21,7 @@ import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.glutils.ImmediateModeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.utils.BufferUtils;
 import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
@@ -95,7 +96,7 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 
 		createBuffers();
 
-        vertexByteBuffer = ByteBuffer.allocateDirect(maxVertices * vertexSize * Float.BYTES);
+        vertexByteBuffer = BufferUtils.newUnsafeByteBuffer(maxVertices * vertexSize * Float.BYTES);
 		vertexByteBuffer.order(ByteOrder.LITTLE_ENDIAN); // webgpu expects little endian data
         vertexFloatBuffer = vertexByteBuffer.asFloatBuffer();  // float view on the byte buffer
 
@@ -362,5 +363,6 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 		uniformBuffer.dispose();
 		bindGroupLayout.dispose();
 		pipelineLayout.dispose();
+        BufferUtils.disposeUnsafeByteBuffer(vertexByteBuffer);
 	}
 }

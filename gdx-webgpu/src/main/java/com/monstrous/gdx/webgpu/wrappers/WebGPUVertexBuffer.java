@@ -1,6 +1,7 @@
 package com.monstrous.gdx.webgpu.wrappers;
 
 
+import com.badlogic.gdx.utils.BufferUtils;
 import com.github.xpenatan.webgpu.WGPUBufferUsage;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -23,7 +24,7 @@ public class WebGPUVertexBuffer extends WebGPUBuffer {
         // Create vertex buffer
         int size = vertexData.length * Float.BYTES;
         if(size > getSize()) throw new IllegalArgumentException("VertexBuffer.setVertices: data set too large.");
-        ByteBuffer dataBuf = ByteBuffer.allocateDirect(size);
+        ByteBuffer dataBuf = BufferUtils.newUnsafeByteBuffer(size);
         dataBuf.order(ByteOrder.LITTLE_ENDIAN);
         FloatBuffer floatBuf = dataBuf.asFloatBuffer();
         for(float f : vertexData)
@@ -36,7 +37,7 @@ public class WebGPUVertexBuffer extends WebGPUBuffer {
         int size = floats.size()*Float.BYTES;
         if(size > getSize()) throw new IllegalArgumentException("VertexBuffer.setVertices: data set too large.");
 
-        ByteBuffer dataBuf = ByteBuffer.allocateDirect(size);
+        ByteBuffer dataBuf = BufferUtils.newUnsafeByteBuffer(size);
         dataBuf.order(ByteOrder.LITTLE_ENDIAN);
         FloatBuffer floatBuf = dataBuf.asFloatBuffer();
         for (int i = 0; i < floats.size(); i++) {
@@ -44,6 +45,8 @@ public class WebGPUVertexBuffer extends WebGPUBuffer {
         }
         // Upload geometry data to the buffer
         write(0, dataBuf, size);
+
+        BufferUtils.disposeUnsafeByteBuffer(dataBuf);
     }
 
     public void setVertices(ByteBuffer byteData, int targetOffset, int sizeInBytes) {

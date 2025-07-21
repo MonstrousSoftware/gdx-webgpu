@@ -3,6 +3,7 @@ package com.monstrous.gdx.tests.webgpu;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.utils.BufferUtils;
 import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
@@ -43,7 +44,7 @@ public class TestCompute extends GdxTest {
         WgGraphics gfx = (WgGraphics) Gdx.graphics;
         webgpu = gfx.getContext();
 
-        buf = ByteBuffer.allocateDirect(BUFFER_SIZE);
+        buf = BufferUtils.newUnsafeByteBuffer(BUFFER_SIZE);
         buf.order(ByteOrder.LITTLE_ENDIAN);
 
         // do the compute pass once on start up
@@ -194,6 +195,7 @@ public class TestCompute extends GdxTest {
         // cleanup
         batch.dispose();
         font.dispose();
+        BufferUtils.disposeUnsafeByteBuffer(buf);
     }
 
     @Override
