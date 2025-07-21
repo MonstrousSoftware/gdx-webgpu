@@ -1,16 +1,11 @@
 # Gdx-webgpu
 by Monstrous Software
 
-## What is it?
-This is an extension for LibGDX which allows you to use the WebGPU graphics API instead of OpenGL.
-
-WebGPU is a modern graphics API that was developed for browsers, but can also be used for native applications. 
-WebGPU can make use of different backends, such as Vulkan, Metal or DirectX. 
-
 ## How to use it?
-Instead of the regular application launcher, use the gdx-webgpu launcher for your platform as described below. (At this moment, only Windows desktop is supported).
+Instead of the regular application launcher, use the gdx-webgpu launcher for your platform as described below. 
 
-Then in your application, you can generally code as normal for LibGDX applications, except that for some graphics classes you need to use an alternative class.
+Then in your application, you can generally code as normal for LibGDX applications, except that for some graphics classes you need to use an alternative class. Any LibGDX functions not related to graphics should just work, e.g. maths classes, audio, networking, etc.
+
 Gdx-webgpu provides substitute classes for many of the LibGDX graphics classes.  
 For example, instead of `Texture`, you would use `WgTexture`, instead of `SpriteBatch` you would use `WgSpriteBatch`, instead of `Stage` you would use `WgStage`, etcetera.
 
@@ -52,30 +47,52 @@ public class HelloTexture extends ApplicationAdapter {
 ```
 Note in the example that WgTexture was used to create the Texture object.  WgTexture is a subclass of Texture, suitable for WebGPU.  Also note that WgSpriteBatch was used instead of SpriteBatch.  In this example, these are the only two changes from a regular LibGDX application: Using types with a Wg- prefix instead of the standard LibGDX graphics classes. 
 
+When using the WebGPU for rendering, the substitute classes need to be used as the original classes will not work without a GL context and this will generally lead to an error message.
 
-When using the WebGPU for rendering, the substitute classes need to be used as the original classes will not work without a GL context and this will generally lead to a run-time exception.
+Sometimes the substitute class is subclassed from the original class (as in the WgTexture from the example, which is subclassed from Texture).  In these cases you can provide the subclass as a method parameter where the original class is expected, as long as you use the constructor of the substitute class (i.e. the `new` operator).  This allows a lot of existing code to remain unchanged. For example, this is valid:
 
-Sometimes the substitute class is subclassed from the original class (as in the WgTexture from the example, which is subclassed from Texture).  In these cases you can provide the subclass as a method parameter where the original class is expected, as long as you use the constructor of the substitute class (i.e. the `new` operator).  This allows a lot of existing code to remain unchanged.
+```java
+    WgTexture texture = new WgTexture(128, 128);
+```
 
-Example:
+But this is also valid, because WgTexture is a subclass of Texture.
 
+```java
+    Texture texture = new WgTexture(128, 128);
+```
+
+And this allows you to do things like this:
+
+```java
     Texture texture = new WgTexture(128, 128);
     TextureRegion region = new TextureRegion(texture);
     Sprite sprite = new Sprite(texture);
+```
 
+## Launcher code
 
+To start up a gdx-webgpu application, a platform-specific [starter class](https://libgdx.com/wiki/app/starter-classes-and-configuration) will call the relevant back-end and run the application specific code.
 
-## Launcher
-To launch a gdx-webgpu application, create a `WgApplication` and pass it an instance of `ApplicationListener` and optionally a configuration object.
+For example to launch a gdx-webgpu application for desktop, create a `WgApplication` and pass it an instance of `ApplicationListener` and optionally a configuration object.
 
 ```java
-	// launcher
-	public static void main (String[] argv) {
-		WgApplicationConfiguration config = new WgApplicationConfiguration();
-		config.setWindowedMode(1200, 800);
-		new WgApplication(new MyGame(), config);
-	}
+package com.example.mygame;
+
+import com.example.mygame.MyGame;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopApplication;
+import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopApplicationConfiguration;
+
+public class Launcher {
+
+    public static void main (String[] argv) {
+  		WgApplicationConfiguration config = new WgApplicationConfiguration();
+  		config.setWindowedMode(1200, 800);
+  		new WgApplication(new MyGame(), config);
+  	}
+  }
 ```
+
 
 Some useful configuration options:
 
@@ -88,31 +105,6 @@ Some useful configuration options:
 | `config.enableGPUtiming` | Default is false. Can be set to true to allow GPU timing measurements.                                                                                                                                                                                  |
  
 Configuration settings are platform dependent.
-
-The `ApplicationListener` object provides the entry points for your application. A bare-bones application listener looks as follows:
-
-```java
-        public class MyGame implements ApplicationListener {
-           public void create () {
-           }
-        
-           public void render () {        
-           }
-        
-           public void resize (int width, int height) {
-           }
-        
-           public void pause () {
-           }
-        
-           public void resume () {
-           }
-        
-           public void dispose () {
-           }
-        }
-```
-See [LibGDX Application Life Cycle](https://libgdx.com/wiki/app/the-life-cycle) for more details.
 
 
 ## Substitute classes
@@ -151,10 +143,11 @@ classes that replace an existing LibGDX class.
 
 ## Some general comments
 
-### WGSL
+### WGSL Shader Language
 WebGPU uses a different shader language than OpenGL: WGSL instead of GLSL.  It looks a bit different because it uses Rust syntax, but it is fairly easy to pick up if 
-you are already familiar with shader languages.  One nice aspect is that the vertex shader and fragment shader can be defined in the same source file. WGSL does not
-support preprocessor commands.  Some rudimentary preprocessing is provided by gdx-webgpu to support conditional compilation, e.g.
+you are already familiar with shader languages.  One nice aspect is that the vertex shader and fragment shader can be defined in the same source file. [Introduction to WGSL](https://google.github.io/tour-of-wgsl/)
+
+Standard WGSL does not support preprocessor commands. However shaders used by gdx-webgpu can use some basic preprocessor commands, for example to support conditional compilation, e.g.
 
 ```WGSL
     #ifdef TEXTURE_COORDINATE
@@ -168,12 +161,7 @@ Calling OpenGL commands from code is not supported (silently ignored) with very 
 To clear the screen use `ScreenUtils.clear(Color.WHITE)` or pass a clear color paramter to `WgSpriteBatch` or `WgModelBatch`.
 
 ### WebGPU Projection matrix
-A WebGPU projection matrix is slightly different from an OpenGL one, because the Z coordinate is mapped to [0..1] instead if [-1 .. 1].  The matrix classes have however not
-been changed. SpriteBatch will make an internal adjustment to compensate if provided a projection transform.
-
-### Non-graphics classes
-Any LibGDX functions not related to graphics should just work, e.g. maths classes, audio, networking, etc.
-
+The WebGPU coordinate system is slightly different from that of OpenGL, because in clip space the Z coordinate is mapped to [0..1] instead if [-1 .. 1].  This also means the projection matrix needs to be different. The LibGDX matrix classes (such as `Matrix4#setToProjection` and `Matrix4#setToOrtho`) have however not been changed. `WgSpriteBatch` and `WgModelBatch` will make internal adjustments to their projection transforms to adapt the Z axis to WebGPU clip space.
 
 ## Class specific comments
 This section provides some considerations to keep in mind for specific classes. In general, the classes should behave as their original LibGDX counterpart, but in a few cases there are some caveats.
@@ -192,20 +180,33 @@ On the other hand, `WgSpriteBatch` cannot flush intermediate batches to the GPU 
 
 
 ### Blend Factor
-There are two methods to set blending parameters. One is for backwards compatibility with and uses GL constants.
-- setBlendFunction
-- setBlendFunctionSeparate
+There are two methods to set blending parameters. One is for backwards compatibility with and uses GL constants. For example:
+
+```java
+setBlendFunction(Gdx.gl20.GL_SRC_ALPHA,  Gdx.gl20.GL_ONE_MINUS_SRC_ALPHA);
+setBlendFunctionSeparateGdx.gl.glBlendFuncSeparate(
+                Gdx.gl20.GL_DST_COLOR, 
+                Gdx.gl20.GL_SRC_COLOR,
+                Gdx.gl20.GL_ONE,
+                Gdx.gl20.GL_ONE);
+```
  
-The new methods use WebGPU constants (enum WGPUBlendFactor): 
-- setBlendFactor
-- setBlendFactorSeparate
+The new methods use WebGPU constants (enum WGPUBlendFactor), for example:
+```java
+setBlendFactor(WGPUBlendFactor_SrcAlpha, WGPUBlendFactor_OneMinusSrcAlpha);
+setBlendFactorSeparate(
+        WGPUBlendFactor_DstColor,
+        WGPUBlendFactor_SrcColor,
+        WGPUBlendFactor_One,
+        WGPUBlendFactor_One);
+```
 
 ### Clear color
-The `WgSpriteBatch#begin()` method takes an optional `Color` parameter to clear the screen at the start of the render pass, which is *slightly* more efficient than using `ScreenUtils.clear()` which runs a dedicated render pass.
+The `WgSpriteBatch#begin()` method takes an optional `Color` parameter to clear the screen at the start of the render pass, which is slightly more efficient than using `ScreenUtils.clear()` which runs a dedicated render pass.
 
 ### Set Shader
 It is possible to set a shader program, either in the constructor or by using `setShader()`.  The shader program needs to be a WgShaderProgram which encapsulates a shader written in WGSL. 
-The shader code needs to be compatible with the standard sprite batch shader (res/shaders/spritebatch.wgsl) in terms of binding groups.
+The shader code needs to be compatible with the standard sprite batch shader ([res/shaders/spritebatch.wgsl](gdx-webgpu/res/shaders/spritebatch.wgsl)) e.g. in terms of binding groups.
 
 ### Texture, TextureRegion
 Where a Texture is passed one of the draw methods, it must be a WgTexture. Where a TextureRegion is passed, it must be a region of a WgTexture.
@@ -214,7 +215,7 @@ Where a Texture is passed one of the draw methods, it must be a WgTexture. Where
 The constructors allow to specify a label per texture.  This can be useful for debugging, it has no functional impact and labels don’t have to be unique.
 
 If a texture is intended to be used as render output, it needs to be constructed with the parameter `renderAttachment` set to true.  This can be used instead of OpenGL frame buffer objects (FBO).  
-If anti-aliasing is desired, the parameter `numSamples` should be set to 4 (valid values are 1 and 4).
+For anti-aliasing, the parameter `numSamples` should be set to 4 (valid values are 1 and 4).
 
 If a WgTexture is constructed from a TextureData, it must be a WgTextureData.
 
