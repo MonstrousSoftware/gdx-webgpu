@@ -1,6 +1,7 @@
 
 plugins {
-  id 'java'
+  id 'java-library'
+  id 'maven-publish'
 }
 
 apply from: "../../dependencies.gradle"
@@ -14,10 +15,35 @@ dependencies {
   implementation "com.badlogicgames.gdx:gdx:$gdxVersion"
   implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
   implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
-    implementation project(':gdx-webgpu')
-    implementation 'org.lwjgl:lwjgl-glfw:3.3.3'
+  implementation project(':gdx-webgpu')
+  implementation 'org.lwjgl:lwjgl-glfw:3.3.3'
   implementation 'org.lwjgl:lwjgl:3.3.3'
- // implementation 'com.github.jnr:jnr-ffi:2.2.17'
+  api 'com.github.xpenatan.jWebGPU:webgpu-desktop:-SNAPSHOT'
 }
+
+
+afterEvaluate {
+  publishing {
+    publications {
+      mavenJava(MavenPublication) {
+        from components.java
+
+        groupId = "com.monstrous.gdx-webgpu"
+        artifactId = "gdx-desktop-webgpu"
+        version = "0.1"
+
+        artifact sourcesJar
+      }
+    }
+  }
+}
+
+tasks.register('sourcesJar', Jar) {
+  archiveClassifier.set("sources")
+  from sourceSets.main.allJava
+}
+
+
+
 
 

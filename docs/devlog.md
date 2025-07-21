@@ -169,5 +169,77 @@ there are > 16K sprites per flush). 16K should be enough for anyone and is now s
 improbable use case).
 
 
+Gradle : publishing to maven local
+https://www.youtube.com/watch?v=-hYlA2AWPR4
 
-	
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+}
+...
+
+afterEvaluate {
+    publishing {
+        publications {
+            mavenJava(MavenPublication) {
+                from components.java
+            
+                    groupId = "com.monstrous.gdx-webgpu"
+                    artifactId = "gdx-desktop-webgpu"
+                    version = "0.1"
+            
+                    artifact sourcesJar
+                  }
+                }
+    }
+}
+
+tasks.register('sourcesJar', Jar) {
+    archiveClassifier.set("sources")
+    from sourceSets.main.allJava
+}
+
+=====
+How to prepare your app.
+
+Use gdx-liftoff as normal.
+
+In the core module add the following to build.gradle:
+
+    dependencies {
+        implementation 'com.monstrous.gdx-webgpu:gdx-webgpu:0.1'
+    }
+
+In the lwjgl3 module add the following to build.gradle:
+
+    dependencies {
+        implementation 'com.monstrous.gdx-webgpu:gdx-desktop-webgpu:0.1'
+    }
+
+In the lwjgl3 module add the following file:
+
+Launcher.java:
+```java
+    package com.monstrous.test.lwjgl3;
+    
+    import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopApplication;
+    import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopApplicationConfiguration;
+    import com.monstrous.test.Main;
+    
+    public class Launcher {
+    public static void main (String[] argv) {
+    
+            WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
+            config.setWindowedMode(640, 480);
+            config.setTitle("WebGPU");
+            config.enableGPUtiming = false;
+            config.useVsync(true);
+            new WgDesktopApplication(new Main(), config);
+        }
+    }
+```
+
+In the lwjgl3 module change the following line in build.gradle:
+
+    //mainClassName = 'com.monstrous.test.lwjgl3.Lwjgl3Launcher'
+    mainClassName = 'com.monstrous.test.lwjgl3.Launcher'
