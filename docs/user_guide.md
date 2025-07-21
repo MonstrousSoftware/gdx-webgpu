@@ -206,7 +206,7 @@ The `WgSpriteBatch#begin()` method takes an optional `Color` parameter to clear 
 
 ### Set Shader
 It is possible to set a shader program, either in the constructor or by using `setShader()`.  The shader program needs to be a WgShaderProgram which encapsulates a shader written in WGSL. 
-The shader code needs to be compatible with the standard sprite batch shader ([res/shaders/spritebatch.wgsl](gdx-webgpu/res/shaders/spritebatch.wgsl)) e.g. in terms of binding groups.
+The shader code needs to be compatible with the standard sprite batch shader ([res/shaders/spritebatch.wgsl](../gdx-webgpu/res/shaders/spritebatch.wgsl)) e.g. in terms of binding groups.
 
 ### Texture, TextureRegion
 Where a Texture is passed one of the draw methods, it must be a WgTexture. Where a TextureRegion is passed, it must be a region of a WgTexture.
