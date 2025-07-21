@@ -23,7 +23,7 @@ public class BuildTeaVM {
 
         TeaVMTool tool = TeaBuilder.config(teaBuildConfiguration);
         tool.setObfuscated(false);
-        tool.setTargetType(TeaVMTargetType.JAVASCRIPT);
+        tool.setTargetType(TeaVMTargetType.WEBASSEMBLY_GC);
         tool.setOptimizationLevel(TeaVMOptimizationLevel.ADVANCED);
         tool.setMainClass(TeaVMTestLauncher.class.getName());
         TeaBuilder.build(tool);

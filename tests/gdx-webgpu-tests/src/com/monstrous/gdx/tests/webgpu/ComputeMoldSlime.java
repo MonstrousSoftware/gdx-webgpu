@@ -350,6 +350,7 @@ public class ComputeMoldSlime extends GdxTest {
             pm.setColor(Color.BLACK);
             pm.fill();
             texture1.load(pm.getPixels(), 0);
+            pm.dispose();
         }
 
         step(Gdx.graphics.getDeltaTime());
