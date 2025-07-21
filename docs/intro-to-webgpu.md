@@ -3,25 +3,29 @@
 This is a very brief overview of a WebGPU application.  Please note that when using gdx-webgpu this is all taken care of behind the scenes.
 But now and then you may want to dig a little deeper, and this introduction tries to explain some basic concepts. To keep this simple, some details and error handling has been omitted.
 
+A very good step-by-step introduction by Elie Michel to using native WebGPU from C++ can be found here [LearnWebGPU](https://eliemichel.github.io/LearnWebGPU/).  This will give some more explanation on the steps below.
+
+The interface from Java to WebGPU is performed via [jWebGPU](https://github.com/xpenatan/jWebGPU) by Xpe.
+
 # Initializing WebGPU
 WebGPU needs to be set up for use when an application is started.  There are a number of steps involved.
 
 1. Obtain an Instance
-To work with WebGPU, first we need an Instance of WebGPU.  We need this in order to obtain a so-called Adapter.
+To work with WebGPU, first we need an Instance of WebGPU.  If you look at WebGPU in javascript examples, this is equivalent to `navigator.gpu`. 
 
 ```java
 	WGPUInstance instance = WGPU.createInstance();
 ```
 2. Obtain an Adapter
 
-To obtain an Adapter we use an asynchronous call.  This is done by providing a callback object to the request.  The method onCallback
+You can think of an Adapter as a physical GPU on your system.  If you have multiple GPUs, you can select which one you will want to use.  To obtain an Adapter we use an asynchronous call.  This is done by providing a callback object to the request.  The method `onCallback`
 is executed once the adapter is available and the callback is called.  In practice, this is instantaneous on the native platform.
 ```java
 	RequestAdapterCallback callback = new RequestAdapterCallback() {
 		@Override
 		protected void onCallback(WGPURequestAdapterStatus status, WGPUAdapter adapter) {
 		   if(status == WGPURequestAdapterStatus.Success) {
-				WebGPUApplication.this.adapter = adapter;
+			WebGPUApplication.this.adapter = adapter;
 		   }
 		}
 	};
@@ -30,13 +34,12 @@ is executed once the adapter is available and the callback is called.  In practi
 	options.setBackendType( WGPUBackendType.Vulkan);	// request Vulkan backend for example
 	instance.requestAdapter(options, WGPUCallbackMode.AllowProcessEvents, callback);
 ```		
-Once we have the Adapter, we no longer need the Instance.
-```java	
-        instance.release()	
-```
-4. Obtain a Device
 
-A Device is also obtained with an asynchronous call.
+4. Obtain a Device
+   
+We will not use an Adapter directly, but via a Device.  A Device corresponds to a specific configuration of the Adapter offering specific capabilities, which may be a subset of what the Adapter can do.  This helps keep your application portable across different systems. If the target system can provide the requested Device it should be able to run your application.
+
+A Device is also obtained with an asynchronous call, very much following the same pattern:
 
 ```java
 	RequestDeviceCallback callback = new RequestDeviceCallback() {
@@ -50,10 +53,12 @@ A Device is also obtained with an asynchronous call.
 
 	WGPUDeviceDescriptor deviceDescriptor = WGPUDeviceDescriptor.obtain();
 	deviceDescriptor.setLabel("My Device");
+        // for example: we need the feature depth clip control
+        WGPUVectorFeatureName features = WGPUVectorFeatureName.obtain();
+        features.push_back(WGPUFeatureName.DepthClipControl);
+        deviceDescriptor.setRequiredFeatures(features);
 	adapter.requestDevice(deviceDescriptor, WGPUCallbackMode.AllowProcessEvents, callback); 
 ```		
-
-
 Once we have the Device we are finished with the Adapter and we can release it:
 
 ```java
@@ -113,6 +118,7 @@ during the initialisation and that were not released already during the start-up
 	queue.dispose();
         device.destroy();
 	device.dispose();
+        instance.release();
 ```
 
 # Render Loop
@@ -157,7 +163,7 @@ from the texture:
 
 	WGPUTextureView targetView = new WGPUTextureView();
 	textureOut.createView(viewDescriptor, targetView);
-	  textureOut.release();
+        textureOut.release();
 ```	
 		 
 2. Create a command encoder.
@@ -246,7 +252,7 @@ Note: step 3 to 5 are performed by the user's code in ApplicationListener.render
 
 ```java		
 	if(WGPU.getPlatformType() != WGPUPlatformType.WGPU_Web) 
-		surface.present();
+	        surface.present();
 ```
 
 
