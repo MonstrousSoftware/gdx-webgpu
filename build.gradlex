@@ -14,9 +14,15 @@ buildscript {
   }
 }
 
+//plugins {
+//  id 'java-library'
+//  id 'maven-publish'
+//}
+
 apply from: "dependencies.gradle"
 
 allprojects {
+  //group = 'com.github.MonstrousSoftware'
   group = 'com.monstrous.gdx-webgpu'
   version = versions.gdx_webgpu
 
@@ -36,11 +42,23 @@ allprojects {
     // Check for updates every sync
     resolutionStrategy.cacheChangingModulesFor(0, "seconds")
   }
-
-
 }
 
 
+
+//publishing {
+//  publications {
+//    maven(MavenPublication) {
+//      //groupId 'com.github.MonstrousSoftware'
+//      groupId = 'com.monstrous.gdx-webgpu'
+//      artifactId 'gdx-webgpu'
+//      version "0.1"
+//      from components.java
+//    }
+//  }
+//}
+
+apply from: rootProject.file('publish.gradle')
 
 
 subprojects {

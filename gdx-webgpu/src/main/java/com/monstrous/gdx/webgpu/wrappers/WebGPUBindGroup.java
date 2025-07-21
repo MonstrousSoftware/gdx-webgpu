@@ -144,17 +144,19 @@ public class WebGPUBindGroup implements Disposable {
             if(bindGroup != null) {
                 //System.out.println("Releasing bind group");
                 bindGroup.release();
-                bindGroup.dispose();
+                // don't dispose, because we will reuse the object.
+            }
+            if(bindGroup == null){  // lazy allocation
+                bindGroup = new WGPUBindGroup();
+                //System.out.println("Creating bind group wrapper");
             }
 
             WGPUVectorBindGroupEntry entryVector = WGPUVectorBindGroupEntry.obtain();
             for (int i = 0; i < numEntries; i++) {
                 entryVector.push_back(entryArray[i]);
             }
-            //System.out.println("Creating bind group");
-
             bindGroupDescriptor.setEntries(entryVector);
-            bindGroup = new WGPUBindGroup();
+
             webgpu.device.createBindGroup(bindGroupDescriptor, bindGroup);
             dirty = false;
         }

@@ -28,17 +28,15 @@ public class WebGPURenderPass implements Disposable  {
     public int targetWidth, targetHeight;
     private int sampleCount;
 
-    private static Pool<WebGPURenderPass> renderPassPool = new Pool<WebGPURenderPass>() {
+    private static final Pool<WebGPURenderPass> renderPassPool = new Pool<WebGPURenderPass>() {
         @Override
         protected WebGPURenderPass newObject() {
-            WebGPURenderPass webGPURenderPass = new WebGPURenderPass();
-            return webGPURenderPass;
+            return new WebGPURenderPass();
         }
     };
 
     public static WebGPURenderPass obtain() {
-        WebGPURenderPass renderPass = renderPassPool.obtain();
-        return renderPass;
+        return renderPassPool.obtain();
     }
 
     public static void free(WebGPURenderPass renderPass) {

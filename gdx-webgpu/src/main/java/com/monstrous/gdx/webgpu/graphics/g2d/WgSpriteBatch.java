@@ -407,6 +407,7 @@ public class WgSpriteBatch implements Batch {
         WGPUBindGroup bg = wbg.getBindGroup();
         renderPass.setBindGroup( 0, bg, dynamicOffset );
 
+
         // append new vertex data to GPU vertex buffer
         int numBytes = numSpritesPerFlush * VERTS_PER_SPRITE * vertexSize;
         vertexBuffer.setVertices(vertexBB, vbOffset, numBytes);

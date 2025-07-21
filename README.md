@@ -104,6 +104,8 @@ Apart from the graphics platform, gdx-webgpu offers some new features with regar
 - support for GLTF and GLB model format (still with some limitations)
 - debug feature to measure GPU time per render pass
 
+[![](https://jitpack.io/v/MonstrousSoftware/gdx-webgpu.svg)](https://jitpack.io/#MonstrousSoftware/gdx-webgpu)
+
 
 
 
