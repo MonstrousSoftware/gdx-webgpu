@@ -163,6 +163,11 @@ to do/test:
 - cube map
 - texture array
 
+Note on max sprites. If maxSprites is > 8192 (the libgdx maximum) the short index overflow is not an issue because the GPU will read the negative short
+as an unsigned int32. If there are more sprites than 16384 the index would roll over to 0 and sprites will not show correctly. (Note this only if 
+there are > 16K sprites per flush). 16K should be enough for anyone and is now set as a hard limit (rather than switching to 32 bit index values for this
+improbable use case).
+
 
 
 	

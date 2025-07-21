@@ -11,6 +11,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.BufferUtils;
+import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.Null;
 import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
@@ -97,6 +98,9 @@ public class WgSpriteBatch implements Batch {
         gfx = (WgGraphics) Gdx.graphics;
         webgpu = gfx.getContext();
 
+        if(maxSprites > 16384)
+            throw new GdxRuntimeException("Too many sprites. Max is 16384.");
+
         this.maxSprites = maxSprites;
         this.specificShader = specificShader;
 
@@ -178,15 +182,17 @@ public class WgSpriteBatch implements Batch {
         frameNumber = -1;
     }
 
-    // todo should we use ints if maxSprites is too large for shorts?
+
     // the index buffer is fixed and only has to be filled on start-up
     private void fillIndexBuffer(int maxSprites){
         ByteBuffer bb = BufferUtils.newUnsafeByteBuffer(maxSprites*INDICES_PER_SPRITE*Short.BYTES);
         bb.order(ByteOrder.LITTLE_ENDIAN);  // webgpu expects little endian data
         ShortBuffer shorts = bb.asShortBuffer();
         for(int i = 0; i < maxSprites; i++){
-//            if(i == 8200)
-//                System.out.println("overflow...");
+            // note: even if there is overflow above 32767 and the short becomes negative
+            // the GPU will interpret it as a uint32, and it will still work.
+            // The real limit is where there are more than 16384 * 4 indices (per flush!),
+            // and it wraps back to zero.
             short vertexOffset = (short)(i * 4);
             // two triangles per sprite
             shorts.put(vertexOffset);

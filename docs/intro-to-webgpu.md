@@ -33,7 +33,12 @@ is executed once the adapter is available and the callback is called.  In practi
 	WGPURequestAdapterOptions options = WGPURequestAdapterOptions.obtain();
 	options.setBackendType( WGPUBackendType.Vulkan);	// request Vulkan backend for example
 	instance.requestAdapter(options, WGPUCallbackMode.AllowProcessEvents, callback);
-```		
+```
+Note on `obtain()`: When you use jWebGPU, there are two ways to get a WGPU object. You can either use `new WGPURequestAdapterOptions()` or you can use `WGPURequestAdapterOptions.obtain()`.
+If you need an object only for a very short time, `obtain()` is faster. But be careful not to rely on the object for too long.
+The obtain() method provides a temporary singleton object designed for quick configuration. It creates a single Java object, but each call replaces the previous C++ static value object. 
+For example, in a multithreaded scenario, if multiple threads call obtain() simultaneously, it may lead to unexpected behavior due to the shared nature of the singleton.
+
 
 4. Obtain a Device
    

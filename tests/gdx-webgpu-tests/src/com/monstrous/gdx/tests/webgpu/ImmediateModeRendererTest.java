@@ -24,6 +24,7 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.webgpu.graphics.utils.WgImmediateModeRenderer;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
+import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 
 public class ImmediateModeRendererTest extends GdxTest {
 	Matrix4 projMatrix = new Matrix4();
@@ -43,7 +44,7 @@ public class ImmediateModeRendererTest extends GdxTest {
 
 	@Override
 	public void render () {
-        ScreenUtils.clear(Color.TEAL, true);
+        WgScreenUtils.clear(Color.TEAL, true);
 
 		renderer.begin(projMatrix, GL20.GL_TRIANGLES);
 		renderer.setTexture(texture);

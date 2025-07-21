@@ -11,23 +11,25 @@ import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 
-// Place all textures on screen
-
-
+// Stress test: Place lots of different textures on the screen.
+// Almost every texture will cause a flush (texture swap)
+//
 public class SpriteBatchCount extends GdxTest {
-    public static int NUM_SPRITES = 20;
-    public static int NUM_TEXTURES = 200;
+    public static int NUM_SPRITES = 10000;
+    public static int NUM_TEXTURES = 100;
 
     private WgSpriteBatch batch;
     private WgSpriteBatch textBatch;
     private WgTexture[] textures;
     private ScreenViewport viewport;
     private WgBitmapFont font;
+    private Pixmap pm;
 
     @Override
     public void create() {
         font = new WgBitmapFont();
         textures = new WgTexture[NUM_TEXTURES];
+        pm  = new Pixmap(32, 32, Pixmap.Format.RGBA8888);
         for(int i = 0; i < NUM_TEXTURES; i++)
             textures[i] = genTexture();
 
@@ -47,23 +49,25 @@ public class SpriteBatchCount extends GdxTest {
         viewport.apply();
         batch.setProjectionMatrix(viewport.getCamera().combined);
 
+        MathUtils.random.setSeed(1234);
 
         int W = Gdx.graphics.getWidth();
-        int H = Gdx.graphics.getHeight();
-        int SZ = 2;
+        int SZ = 4;
+        int spritesPerLine = W/SZ;
 
         // pass a clear color to batch begin
         batch.begin(Color.TEAL);
         for(int i = 0; i < NUM_SPRITES; i++) {
-            int x = (i * SZ) % W;
-            int y = SZ;
+            int x = (i % spritesPerLine) * SZ;
+            int y = (i/spritesPerLine)*SZ;
             WgTexture texture = textures[MathUtils.random(NUM_TEXTURES-1)];
-            batch.draw(texture, x, y, 2,2);
+            batch.draw(texture, x, y, SZ, SZ);
         }
         batch.end();
 
         textBatch.setProjectionMatrix(viewport.getCamera().combined);
         textBatch.begin();
+        font.setColor(Color.YELLOW);
         font.draw(textBatch,  "fps: "+Gdx.graphics.getFramesPerSecond(), 10, 100);
         font.draw(textBatch,  "numSprites: "+batch.numSprites, 10, 80);
         font.draw(textBatch,  "numFlushes: "+batch.flushCount, 10, 60);
@@ -83,10 +87,12 @@ public class SpriteBatchCount extends GdxTest {
         for(int i = 0; i < NUM_TEXTURES; i++)
             textures[i].dispose();
         batch.dispose();
+        pm.dispose();
     }
 
+
+
     private WgTexture genTexture(){
-        Pixmap pm = new Pixmap(32, 32, Pixmap.Format.RGBA8888);
         Color bg = new Color(MathUtils.random(),MathUtils.random(),MathUtils.random(),1 );
         Color fg = new Color(MathUtils.random(),MathUtils.random(),MathUtils.random(),1 );
         pm.setColor(bg);

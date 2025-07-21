@@ -15,7 +15,7 @@ import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 
 
 public class SpriteBatchTextures extends GdxTest {
-    public static int NUM_SPRITES = 17000;
+    public static int NUM_SPRITES = 16000;
     public static int NUM_TEXTURES = 200;
 
     private WgSpriteBatch batch;
@@ -23,10 +23,12 @@ public class SpriteBatchTextures extends GdxTest {
     private WgTexture[] textures;
     private ScreenViewport viewport;
     private WgBitmapFont font;
+    private Pixmap pm;
 
     @Override
     public void create() {
         font = new WgBitmapFont();
+        pm = new Pixmap(32, 32, Pixmap.Format.RGBA8888);
         textures = new WgTexture[NUM_TEXTURES];
         for(int i = 0; i < NUM_TEXTURES; i++)
             textures[i] = genTexture();
@@ -83,7 +85,7 @@ public class SpriteBatchTextures extends GdxTest {
     }
 
     private WgTexture genTexture(){
-        Pixmap pm = new Pixmap(32, 32, Pixmap.Format.RGBA8888);
+
         Color bg = new Color(MathUtils.random(),MathUtils.random(),MathUtils.random(),1 );
         Color fg = new Color(MathUtils.random(),MathUtils.random(),MathUtils.random(),1 );
         pm.setColor(bg);
