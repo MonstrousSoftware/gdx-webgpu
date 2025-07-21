@@ -104,7 +104,56 @@ Apart from the graphics platform, gdx-webgpu offers some new features with regar
 - support for GLTF and GLB model format (still with some limitations)
 - debug feature to measure GPU time per render pass
 
+## How to get it
+
+The library is available via jitpack.io. 
+
 [![](https://jitpack.io/v/MonstrousSoftware/gdx-webgpu.svg)](https://jitpack.io/#MonstrousSoftware/gdx-webgpu)
+
+To include it in your project add the following lines to your `build.gradle` file in the `core` module:
+
+    dependencies {
+        implementation 'com.monstrous.gdx-webgpu:gdx-webgpu:-SNAPSHOT'
+    }
+
+Assuming we want to use only the LWJGL3 platform, add the following to `build.gradle` in the `lwjgl3` module:
+
+    dependencies {
+        implementation 'com.monstrous.gdx-webgpu:gdx-desktop-webgpu:-SNAPSHOT'
+    }
+
+In the `lwjgl3` module add a file called `Launcher.java` with a content as follows:
+
+Launcher.java:
+```java
+    package com.monstrous.test.lwjgl3;
+    
+    import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopApplication;
+    import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopApplicationConfiguration;
+    import com.monstrous.test.Main;
+    
+    public class Launcher {
+        public static void main (String[] argv) {
+    
+            WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
+            config.setWindowedMode(640, 480);
+            config.setTitle("WebGPU");
+            config.enableGPUtiming = false;
+            config.useVsync(true);
+            new WgDesktopApplication(new Main(), config);
+        }
+    }
+```
+
+In the `lwjgl3` module find the line in `build.gradle` which defines `mainClassName` and change it as follows:
+
+    // old line: 
+    //mainClassName = 'com.monstrous.test.lwjgl3.Lwjgl3Launcher'
+
+    // new line:
+    mainClassName = 'com.monstrous.test.lwjgl3.Launcher'
+
+
 
 
 
