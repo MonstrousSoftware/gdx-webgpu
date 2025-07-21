@@ -8,18 +8,13 @@ plugins {
 
 
 include ':gdx-webgpu'
-include ':gdx-webgpu-old'
 
 include ":backends"
-include ":backends:gdx-lwjgl3-webgpu"
 include ":backends:gdx-desktop-webgpu"
 include ":backends:gdx-teavm-webgpu"
 
 include ":tests"
 include ":tests:gdx-webgpu-tests"
-include ':tests:gdx-tests-desktop-old'
 include ':tests:gdx-tests-desktop'
 include ":tests:gdx-tests-teavm"
 include ":tests:gdx-tests-android"
-
-include ':api-new-test'
