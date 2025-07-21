@@ -87,7 +87,10 @@ public class Launcher {
   	}
   }
 ```
+## Can I call WebGPU directly?
+Yes, you can call WebGPU functions directly through the `jWebGPU` interface. This may be necessary for example when working with compute shaders.
 
+See here for some more information: [intro to WebGPU](docs/intro-to-webgpu.md)
 
 ## Can I see a demo?
 
