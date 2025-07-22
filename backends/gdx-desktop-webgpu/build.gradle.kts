@@ -2,6 +2,7 @@ plugins {
     id("java")
     id("maven-publish")
 }
+
 val javaVersion = JavaVersion.toVersion(project.property("java") as String)
 
 java {
@@ -11,19 +12,21 @@ java {
 
 dependencies {
     val gdxVersion = project.property("gdxVersion") as String
-    val gdxTeaVMVersion = project.property("gdxTeaVMVersion") as String
     val jWebGPUVVersion = project.property("jWebGPUVVersion") as String
 
     implementation("com.badlogicgames.gdx:gdx:$gdxVersion")
-    implementation("com.github.xpenatan.gdx-teavm:backend-teavm:$gdxTeaVMVersion")
-    implementation("com.github.xpenatan.jWebGPU:webgpu-teavm:${jWebGPUVVersion}")
+    implementation("com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion")
+    implementation("com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop")
     implementation(project(":gdx-webgpu"))
+    implementation("org.lwjgl:lwjgl-glfw:3.3.3")
+    implementation("org.lwjgl:lwjgl:3.3.3")
+    implementation("com.github.xpenatan.jWebGPU:webgpu-desktop:$jWebGPUVVersion")
 }
 
 publishing {
     publications {
         create<MavenPublication>("maven") {
-            artifactId = "gdx-teavm-webgpu"
+            artifactId = "gdx-desktop-webgpu"
             from(components["java"])
         }
     }

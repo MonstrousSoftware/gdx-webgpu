@@ -14,22 +14,19 @@
  * limitations under the License.
  ******************************************************************************/
 
-apply from: "../dependencies.gradle"
+val javaVersion = project.property("java") as String
 
-configure(subprojects - project(":tests:gdx-tests-android")) {
-  apply plugin: "java"
-
-  if (JavaVersion.current().isJava9Compatible()) {
-    compileJava {
-      options.release = versions.java
-    }
-  }
-  sourceCompatibility = versions.java
-  targetCompatibility = versions.java
-
-  sourceSets.main.java.srcDirs = ["src"]
-  sourceSets.main.resources.srcDirs = ["res"]
-
-  configurations { natives }
+dependencies {
+    implementation(project(":gdx-webgpu"))
 }
+
+
+if (JavaVersion.current().isJava9Compatible) {
+    tasks.withType<JavaCompile> {
+        options.release.set(javaVersion.toInt())
+    }
+}
+
+
+// note: do not add dependencies here on platform specific modules
 

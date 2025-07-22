@@ -1,9 +1,3 @@
-plugins {
-    id("java")
-   // id("maven-publish")
-    id("signing")
-}
-
 buildscript {
     repositories {
         mavenCentral()
@@ -38,3 +32,4 @@ allprojects()  {
     }
 }
 
+apply(from = "publish.gradle.kts")
