@@ -41,7 +41,7 @@ configure(libProjects) {
             if (this is MavenPublication) {
                 pom {
                     name.set(LibExt.libName)
-                    description.set("Libgdx WebGPU extension") // TODO update description
+                    description.set("WebGPU extension for LibGDX") // TODO update description
                     url.set("https://github.com/MonstrousSoftware/gdx-webgpu")
                     developers {
                         developer {

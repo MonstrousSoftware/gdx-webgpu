@@ -106,23 +106,22 @@ Apart from the graphics platform, gdx-webgpu offers some new features with regar
 
 ## How to get it
 
-The library is available via jitpack.io. 
+The library is available via Maven Central. 
 
-[![](https://jitpack.io/v/MonstrousSoftware/gdx-webgpu.svg)](https://jitpack.io/#MonstrousSoftware/gdx-webgpu)
 
 To include it in your project add the following lines to your `build.gradle` file in the `core` module:
 
     dependencies {
-        implementation 'com.monstrous.gdx-webgpu:gdx-webgpu:-SNAPSHOT'
+        implementation 'io.github.monstroussoftware.gdx-webgpu:gdx-webgpu:-SNAPSHOT'
     }
 
 Assuming we want to use only the LWJGL3 platform, add the following to `build.gradle` in the `lwjgl3` module:
 
     dependencies {
-        implementation 'com.monstrous.gdx-webgpu:gdx-desktop-webgpu:-SNAPSHOT'
+        implementation 'io.github.monstroussoftware:gdx-desktop-webgpu:-SNAPSHOT'
     }
 
-In the `lwjgl3` module add a file called `Launcher.java` with a content as follows:
+In the `lwjgl3` module add a starter class called `Launcher.java` with a content as follows:
 
 Launcher.java:
 ```java
@@ -145,7 +144,7 @@ Launcher.java:
     }
 ```
 
-In the `lwjgl3` module find the line in `build.gradle` which defines `mainClassName` and change it as follows:
+In the `lwjgl3` module find the line in `build.gradle` which defines `mainClassName` and point it to the new starter class (you can delete Lwjgl3Launcher.java):
 
     // old line: 
     //mainClassName = 'com.monstrous.test.lwjgl3.Lwjgl3Launcher'
