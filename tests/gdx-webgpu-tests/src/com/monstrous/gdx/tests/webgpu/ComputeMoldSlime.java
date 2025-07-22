@@ -116,7 +116,7 @@ public class ComputeMoldSlime extends GdxTest {
         Pixmap pm = new Pixmap(width, height, Pixmap.Format.RGBA8888);
         pm.setColor(Color.BLACK);
         pm.fill();
-        texture1.load(pm.getPixels(), 0);
+        texture1.load(pm.getPixels() );
         pm.dispose();
 
         // Create input and output textures
@@ -350,7 +350,7 @@ public class ComputeMoldSlime extends GdxTest {
             Pixmap pm = new Pixmap(width, height, Pixmap.Format.RGBA8888);
             pm.setColor(Color.BLACK);
             pm.fill();
-            texture1.load(pm.getPixels(), 0);
+            texture1.load(pm.getPixels());
             pm.dispose();
         }
 
