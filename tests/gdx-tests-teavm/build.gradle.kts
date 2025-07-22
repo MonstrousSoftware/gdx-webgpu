@@ -22,7 +22,7 @@ dependencies {
     // Have Build errors
 }
 
-val mainClassName = "main.java.com.monstrous.gdx.tests.webgpu.BuildTeaVM"
+val mainClassName = "com.monstrous.gdx.tests.webgpu.BuildTeaVM"
 
 tasks.register<JavaExec>("core-build") {
     group = "example-teavm"

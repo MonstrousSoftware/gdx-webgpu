@@ -1,4 +1,4 @@
-package main.java.com.monstrous.gdx.tests.webgpu;
+package com.monstrous.gdx.tests.webgpu;
 
 import com.github.xpenatan.gdx.backends.teavm.TeaApplicationConfiguration;
 import com.monstrous.gdx.tests.webgpu.ASimpleGame;
