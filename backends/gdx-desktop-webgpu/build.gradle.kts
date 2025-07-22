@@ -27,8 +27,6 @@ publishing {
     publications {
         create<MavenPublication>("maven") {
             artifactId = "gdx-desktop-webgpu"
-            group = LibExt.groupId
-            version = LibExt.libVersion
             from(components["java"])
         }
     }

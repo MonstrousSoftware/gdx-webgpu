@@ -2,7 +2,7 @@ import java.io.File
 import java.util.Properties
 
 object LibExt {
-    const val groupId = "com.monstrous.gdx-webgp"
+    const val groupId = "io.github.monstrous.gdx-webgp"
     const val libName = "gdx-webgpu"
     var libVersion: String = ""
         get() {
