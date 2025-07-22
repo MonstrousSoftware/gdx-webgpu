@@ -1,8 +1,0 @@
-
-ext {
-  versions = [:]
-}
-
-versions.java = 11
-versions.gdx_webgpu = 0.1
-versions.jWebGPU = "0.1.0"

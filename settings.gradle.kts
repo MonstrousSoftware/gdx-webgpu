@@ -7,14 +7,14 @@ plugins {
 // if you want to temporarily disable a subproject.
 
 
-include ':gdx-webgpu'
+include(":gdx-webgpu")
 
-include ":backends"
-include ":backends:gdx-desktop-webgpu"
-include ":backends:gdx-teavm-webgpu"
+include(":backends")
+include(":backends:gdx-desktop-webgpu")
+include(":backends:gdx-teavm-webgpu")
 
-include ":tests"
-include ":tests:gdx-webgpu-tests"
-include ':tests:gdx-tests-desktop'
-include ":tests:gdx-tests-teavm"
-include ":tests:gdx-tests-android"
+include(":tests")
+include(":tests:gdx-webgpu-tests")
+include(":tests:gdx-tests-desktop")
+include(":tests:gdx-tests-teavm")
+include(":tests:gdx-tests-android")
