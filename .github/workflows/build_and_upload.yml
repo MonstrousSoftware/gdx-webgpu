@@ -10,9 +10,6 @@ on:
         required: true
         type: boolean
 
-env:
-  RELEASE: ${{ inputs.isRelease }}
-
 jobs:
   build_linux:
     name: Build Linux
