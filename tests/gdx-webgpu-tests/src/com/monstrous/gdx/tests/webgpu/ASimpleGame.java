@@ -16,6 +16,7 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
+import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 
 public class ASimpleGame extends GdxTest {
     WgTexture backgroundTexture;
@@ -117,7 +118,7 @@ public class ASimpleGame extends GdxTest {
     }
 
     private void draw() {
-        ScreenUtils.clear(Color.BLACK);
+        WgScreenUtils.clear(Color.BLACK);
         viewport.apply();
         spriteBatch.setProjectionMatrix(viewport.getCamera().combined);
         spriteBatch.begin();
