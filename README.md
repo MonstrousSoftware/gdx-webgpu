@@ -5,6 +5,7 @@ by Monstrous Software
 This is an extension for LibGDX which allows you to use the WebGPU graphics API instead of OpenGL.
 
 WebGPU is a modern graphics API that was developed for browsers, but can also be used for native applications.
+So it is not just for web, but also for desktop and mobile applications.
 WebGPU can make use of different backends, such as Vulkan, Metal or DirectX.
 
 ## How does it work?
@@ -12,7 +13,7 @@ The gdx-webgpu extension provides a number of graphics classes (WgSpriteBatch, W
 
 The gdx-webgpu extension uses [jWebGPU](https://github.com/xpenatan/jWebGPU) by Xpenatan as underlying API which provides a multi-platform Java interface to a native WebGPU implementation, in particular to WGPU. 
 
-![layers](https://github.com/user-attachments/assets/35e49a65-36bd-42b4-98e9-f2de14f61f02)
+ ![abstraction layers](docs/images/layers.png) 
 
 ## How to use it?
 Instead of the regular application launcher, use the gdx-webgpu launcher for your platform as described below. 
@@ -59,7 +60,7 @@ public class HelloTexture extends ApplicationAdapter {
     }
 }
 ```
-Note in the example that WgTexture was used to create the Texture object.  WgTexture is a subclass of Texture, suitable for WebGPU.  Also note that WgSpriteBatch was used instead of SpriteBatch.  In this example, these are the only two changes from a regular LibGDX application: using types with a Wg- prefix instead of the standard LibGDX graphics classes. 
+Note in the example that `WgTexture` was used to create the `Texture` object.  `WgTexture` is a subclass of `Texture`, suitable for WebGPU.  Also note that `WgSpriteBatch` was used instead of `SpriteBatch`.  In this example, these are the only two changes from a regular LibGDX application: using types with a Wg- prefix instead of the standard LibGDX graphics classes. 
 
 
 For more information see the [User Guide](docs/user_guide.md) in the `docs` folder
@@ -97,12 +98,16 @@ See here for some more information: [intro to WebGPU](docs/intro-to-webgpu.md)
 If you run the `WebGPUTestStarter` application in the tests module, you get a menu with lots of 
 different test cases.
 
+You can also check out the web version here: [tests](https://xpenatan.github.io/gdx-webgpu/tests/).
+(Press Escape to return to the test selection menu).
+
 ## New features 
 
 Apart from the graphics platform, gdx-webgpu offers some new features with regard to LibGDX:
 - support for 32-bit index values for a mesh allowing for larger meshes.
-- support for GLTF and GLB model format (still with some limitations)
-- debug feature to measure GPU time per render pass
+- automatic instancing of identical modelInstances so that they are rendered in a single draw call.
+- support for GLTF and GLB model format (still with some limitations).
+- debug feature to measure GPU time per render pass.
 
 ## How to get it
 

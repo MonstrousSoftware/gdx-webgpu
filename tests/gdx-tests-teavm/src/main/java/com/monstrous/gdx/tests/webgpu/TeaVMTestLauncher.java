@@ -19,6 +19,7 @@ public class TeaVMTestLauncher {
 
 //        new WgTeaApplication(new ComputeMoldSlime(), config);
         new WgTeaApplication(new TestChooser(), config);
+//        new WgTeaApplication(new LoadModelTest(), config);
 //        new WgTeaApplication(new HelloTexture(), config);
     }
 }

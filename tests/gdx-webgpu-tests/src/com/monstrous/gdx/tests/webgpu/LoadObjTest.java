@@ -55,6 +55,7 @@ public class LoadObjTest extends GdxTest {
 		WgObjLoader loader = new WgObjLoader();
 		// these assets need to be put in the class path...
 		model = loader.loadModel(Gdx.files.internal("data/g3d/ducky.obj"), true);
+        //model = loader.loadModel(Gdx.files.internal("data/g3d/webgpu.obj"), true);
 		instance = new ModelInstance(model);
 
 
