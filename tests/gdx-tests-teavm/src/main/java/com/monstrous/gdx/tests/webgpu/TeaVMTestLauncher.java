@@ -18,7 +18,7 @@ public class TeaVMTestLauncher {
         config.preloadAssets = true;
         config.useGL30 = true;
 
-        new WgTeaApplication(new ComputeMoldSlime(), config);
+        new WgTeaApplication(new LoadModelTest(), config);
 //        new WgTeaApplication(new HelloTexture(), config);
     }
 }

@@ -143,7 +143,9 @@ public class LoadModelTest extends GdxTest {
 			public void changed (ChangeEvent event, Actor actor) {
 				System.out.println("Clicked! Is checked: " + selectBox.getSelected());
 				if(loaded) {
+                    System.out.println("Loading model " + selectBox.getSelected());
 					model = assets.get(selectBox.getSelected(), Model.class);
+                    System.out.println("Creating instance");
 					instance = new ModelInstance(model);
 				}
 			}
