@@ -23,6 +23,7 @@ import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
+import com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute;
 
 public class ShaderPrefix {
     private static final StringBuffer sb = new StringBuffer();
@@ -62,15 +63,15 @@ public class ShaderPrefix {
             if((environment.getMask() & ColorAttribute.Fog) != 0){
                 sb.append("#define FOG\n");
             }
+            if((environment.getMask() & WgCubemapAttribute.EnvironmentMap) != 0){
+                sb.append("#define ENVIRONMENT_MAP\n");
+            }
             if(environment.shadowMap != null){
                 sb.append("#define SHADOW_MAP\n");
             }
         }
 //        if (environment != null && !environment.depthPass && environment.renderShadows) {
 //            sb.append("#define SHADOWS\n");
-//        }
-//        if (environment != null && environment.cubeMap != null) {
-//            sb.append("#define CUBEMAP\n");
 //        }
 //        if (environment != null && environment.useImageBasedLighting) {
 //            sb.append("#define USE_IBL\n");

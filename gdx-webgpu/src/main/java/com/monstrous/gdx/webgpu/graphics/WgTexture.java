@@ -35,14 +35,14 @@ public class WgTexture extends Texture {
 
     private final WebGPUContext webgpu = ((WgGraphics) Gdx.graphics).getContext();
 
-    private WGPUTexture texture;
-    private WGPUTextureView textureView;
-    private WGPUSampler sampler;
-    private WGPUSampler depthSampler;
+    protected WGPUTexture texture;
+    protected WGPUTextureView textureView;
+    protected WGPUSampler sampler;
+    protected WGPUSampler depthSampler;
     protected WGPUTextureFormat format;
     protected String label;
     protected int mipLevelCount;
-    private int numSamples;
+    protected int numSamples;
     protected TextureData data; // cannot access data of Texture which is package private
 
     public WgTexture(String label, int width, int height, boolean mipMapping, boolean renderAttachment, WGPUTextureFormat format, int numSamples ) {
@@ -53,6 +53,7 @@ public class WgTexture extends Texture {
         WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst);
         if (renderAttachment)
             textureUsage = textureUsage.or(WGPUTextureUsage.RenderAttachment).or(WGPUTextureUsage.CopySrc);    // todo COPY_SRC is temp
+        mipLevelCount = 1;
         create( label, mipLevelCount, textureUsage, format, 1, numSamples, null);
     }
 
@@ -73,6 +74,19 @@ public class WgTexture extends Texture {
         this.mipLevelCount = mipLevelCount;
         this.format = format;
         create( label, mipLevelCount, textureUsage, format, 1, numSamples, viewFormat);
+    }
+
+    // for cube map or texture array
+    public WgTexture(String label, int width, int height, int numLayers, boolean mipMapping, boolean renderAttachment, WGPUTextureFormat format, int numSamples ) {
+        this.data = new WgTextureData(width, height, 0, 0, 0);
+        this.label = label;
+
+        this.numSamples = numSamples;
+        WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst);
+        if (renderAttachment)
+            textureUsage = textureUsage.or(WGPUTextureUsage.RenderAttachment).or(WGPUTextureUsage.CopySrc);    // todo COPY_SRC is temp
+        mipLevelCount = 1; // todo
+        create( label, mipLevelCount, textureUsage, format, numLayers, numSamples, null);
     }
 
     /*
@@ -442,7 +456,7 @@ public class WgTexture extends Texture {
                 }
                 next.flip();
             }
-            loadMipLevel(texture, next, mipLevelWidth, mipLevelHeight, 0,  mipLevel);
+            loadMipLevel(texture, next, mipLevelWidth, mipLevelHeight, layer,  mipLevel);
 
             mipLevelWidth /= 2;
             mipLevelHeight /= 2;

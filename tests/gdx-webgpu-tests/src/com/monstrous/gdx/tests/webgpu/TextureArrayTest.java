@@ -25,9 +25,15 @@ import com.badlogic.gdx.graphics.g3d.utils.FirstPersonCameraController;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.profiling.GLProfiler;
 import com.badlogic.gdx.math.Matrix4;
+import com.github.xpenatan.webgpu.WGPUPipelineLayout;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.webgpu.graphics.WgMesh;
 import com.monstrous.gdx.webgpu.graphics.WgTextureArray;
+import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
+import com.monstrous.gdx.webgpu.wrappers.PipelineSpecification;
+import com.monstrous.gdx.webgpu.wrappers.RenderPassBuilder;
+import com.monstrous.gdx.webgpu.wrappers.WebGPUPipeline;
+import com.monstrous.gdx.webgpu.wrappers.WebGPURenderPass;
 
 
 // TO BE CONVERTED
@@ -35,29 +41,21 @@ import com.monstrous.gdx.webgpu.graphics.WgTextureArray;
 /** @author Tomski **/
 public class TextureArrayTest extends GdxTest {
 
-	TextureArray textureArray;
-	Mesh terrain;
+	WgTextureArray textureArray;
+	WgMesh terrain;
 
 	ShaderProgram shaderProgram;
+    WebGPUPipeline pipeline;
 
 	PerspectiveCamera camera;
 	FirstPersonCameraController cameraController;
 
 	Matrix4 modelView = new Matrix4();
 
-	GLProfiler glProfiler;
+
 
 	@Override
 	public void create () {
-		glProfiler = new GLProfiler(Gdx.graphics);
-		glProfiler.enable();
-
-		ShaderProgram.prependVertexCode = Gdx.app.getType().equals(Application.ApplicationType.Desktop)
-			? "#version 140\n #extension GL_EXT_texture_array : enable\n"
-			: "#version 300 es\n";
-		ShaderProgram.prependFragmentCode = Gdx.app.getType().equals(Application.ApplicationType.Desktop)
-			? "#version 140\n #extension GL_EXT_texture_array : enable\n"
-			: "#version 300 es\n";
 
 		String[] texPaths = new String[] {"data/g3d/materials/Searing Gorge.jpg", "data/g3d/materials/Lava Cracks.jpg",
 			"data/g3d/materials/Deep Fire.jpg"};
@@ -75,16 +73,16 @@ public class TextureArrayTest extends GdxTest {
 			texFiles[i] = Gdx.files.internal(texPaths[i]);
 		}
 
-		textureArray = new TextureArray(true, texFiles);
-		textureArray.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
-		textureArray.setFilter(TextureFilter.MipMapLinearLinear, TextureFilter.Linear);
-		shaderProgram = new ShaderProgram(Gdx.files.internal("data/shaders/texturearray.vert"),
-			Gdx.files.internal("data/shaders/texturearray.frag"));
-		System.out.println(shaderProgram.getLog());
+		textureArray = new WgTextureArray(true, texFiles);
+//		textureArray.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
+//		textureArray.setFilter(TextureFilter.MipMapLinearLinear, TextureFilter.Linear);
+//		shaderProgram = new ShaderProgram(Gdx.files.internal("data/shaders/texturearray.vert"),
+//			Gdx.files.internal("data/shaders/texturearray.frag"));
+//		System.out.println(shaderProgram.getLog());
 
 		int vertexStride = 6;
 		int vertexCount = 100 * 100;
-		terrain = new Mesh(false, vertexCount * 6, 0, new VertexAttributes(VertexAttribute.Position(),
+		terrain = new WgMesh(false, vertexCount * 6, 0, new VertexAttributes(VertexAttribute.Position(),
 			new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 3, ShaderProgram.TEXCOORD_ATTRIBUTE + 0)));
 
 		Pixmap data = new Pixmap(Gdx.files.internal("data/g3d/heightmap.png"));
@@ -104,6 +102,12 @@ public class TextureArrayTest extends GdxTest {
 		terrain.setVertices(vertices);
 
 		data.dispose();
+
+        // create a render pipeline with the given shader code
+        VertexAttributes vattr = new VertexAttributes(VertexAttribute.Position(), VertexAttribute.TexCoords(0));
+        PipelineSpecification pipelineSpec = new PipelineSpecification(vattr, getShaderSource());
+        pipelineSpec.name = "pipeline";
+        pipeline = new WebGPUPipeline((WGPUPipelineLayout) null, pipelineSpec);
 	}
 
 	Color tmpColor = new Color();
@@ -122,22 +126,42 @@ public class TextureArrayTest extends GdxTest {
 
 	@Override
 	public void render () {
-		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
-		Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
-		Gdx.gl.glDepthFunc(GL20.GL_LEQUAL);
-		Gdx.gl.glCullFace(GL20.GL_BACK);
+//		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+//		Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
+//		Gdx.gl.glDepthFunc(GL20.GL_LEQUAL);
+//		Gdx.gl.glCullFace(GL20.GL_BACK);
+
+        WgScreenUtils.clear(Color.BLACK, true);
 
 		modelView.translate(10f, 0, 10f).rotate(0, 1f, 0, 2f * Gdx.graphics.getDeltaTime()).translate(-10f, 0, -10f);
 
 		cameraController.update();
 
-		textureArray.bind();
+        // create a render pass
+        WebGPURenderPass pass = RenderPassBuilder.create( "Test Mesh", Color.SKY );
 
-		shaderProgram.bind();
-		shaderProgram.setUniformi("u_textureArray", 0);
-		shaderProgram.setUniformMatrix("u_projViewTrans", camera.combined);
-		shaderProgram.setUniformMatrix("u_modelView", modelView);
-		terrain.render(shaderProgram, GL20.GL_TRIANGLES);
+        pass.setPipeline(pipeline);
+
+        // to render the whole mesh (a rectangle)
+        //mesh.render(pass, GL20.GL_TRIANGLES, 0, mesh.getNumIndices(), 1, 0);
+
+        // to render a mesh
+        //public void render (WebGPURenderPass renderPass, int primitiveType, int offset, int size, int numInstances, int firstInstance)
+        int size = terrain.getNumVertices();
+        terrain.render(pass, GL20.GL_TRIANGLES, 0, size, 1, 0);
+
+        // end the render pass
+        pass.end();
+
+		//textureArray.bind();
+
+//		shaderProgram.bind();
+//		shaderProgram.setUniformi("u_textureArray", 0);
+//		shaderProgram.setUniformMatrix("u_projViewTrans", camera.combined);
+//		shaderProgram.setUniformMatrix("u_modelView", modelView);
+
+
+//		terrain.render(shaderProgram, GL20.GL_TRIANGLES);
 	}
 
 	@Override
@@ -145,4 +169,40 @@ public class TextureArrayTest extends GdxTest {
 		terrain.dispose();
 		shaderProgram.dispose();
 	}
+
+    private String getShaderSource() {
+        return "\n" +
+            "\n" +
+            "\n" +
+            "struct VertexInput {\n" +
+            "    @location(0) position: vec3f,\n" +
+            "    @location(1) uv: vec2f,\n" +
+
+            "};\n" +
+            "\n" +
+            "struct VertexOutput {\n" +
+            "    @builtin(position) position: vec4f,\n" +
+            "    @location(0) uv : vec2f,\n" +
+            "};\n" +
+            "\n" +
+            "\n" +
+            "@vertex\n" +
+            "fn vs_main(in: VertexInput) -> VertexOutput {\n" +
+            "   var out: VertexOutput;\n" +
+            "\n" +
+            "   var pos =  vec4f(in.position,  1.0);\n" +
+            "   out.position = pos;\n" +
+            "   out.uv = vec2f(0,0);\n" +
+            "\n" +
+            "   return out;\n" +
+            "}\n" +
+            "\n" +
+            "@fragment\n" +
+            "fn fs_main(in : VertexOutput) -> @location(0) vec4f {\n" +
+            "\n" +
+            "    let color = vec4f(1,1,1,1);\n" +
+            "    return vec4f(color);\n" +
+            "}";
+    }
+
 }

@@ -243,3 +243,24 @@ In the lwjgl3 module change the following line in build.gradle:
 
     //mainClassName = 'com.monstrous.test.lwjgl3.Lwjgl3Launcher'
     mainClassName = 'com.monstrous.test.lwjgl3.Launcher'
+
+
+23/07: Gamma correction
+The gamma correction in the model batch shader is probably wrong, but the same one in spritebatch is probably right.
+For spritebatch we generally load textures from file, which will be gamma corrected already as most editing software does.
+So these texture are in SRBG space.  When we project to a SRBG output surface, it means it expects linear input and will then correct it to SRGB.
+Since the content is already SRGB, we need to convert it to linear for output to a SRGB surface which will then convert it back.
+This code does that inverse gamma correction.
+
+    #ifdef GAMMA_CORRECTION
+        let linearColor: vec3f = pow(color.rgb, vec3f(2.2));
+        color = vec4f(linearColor, color.a);
+    #endif
+
+Alternative is to convert to linear when we are reading the textures, but this is also valid assuming spritebatch works in SRGB space.
+However, note if you hard code a color of a sprite, it should be SRGB values.
+
+In ModelBatch on the other hand you are doing complex lighting calculations, for which you need to work in linear space.
+So here the textures should be converted to linear on loading, calculations done in linear, and a gamma correction is then not needed for a SRGB surface.
+For a RGB surface we should however do a gamma correction since the surface is not doing it: raise to the power 1/2.2
+

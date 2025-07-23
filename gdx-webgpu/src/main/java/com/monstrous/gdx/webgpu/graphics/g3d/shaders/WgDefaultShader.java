@@ -35,6 +35,7 @@ import com.monstrous.gdx.webgpu.graphics.Binder;
 import com.monstrous.gdx.webgpu.graphics.WgMesh;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.PBRTextureAttribute;
+import com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute;
 import com.monstrous.gdx.webgpu.wrappers.*;
 
 import static com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888;
@@ -110,6 +111,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         defaultBlackTexture = new WgTexture(pixmap);
 
         boolean hasShadowMap = renderable.environment != null && renderable.environment.shadowMap != null;
+        boolean hasCubeMap = renderable.environment != null && renderable.environment.has(WgCubemapAttribute.EnvironmentMap);
 
         // Create uniform buffer for global (per-frame) uniforms, e.g. projection matrix, camera position, etc.
         uniformBufferSize = (16 + 16 + 4 + 4 +4+4 +   +32
@@ -127,7 +129,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
         binder = new Binder();
         // define groups
-        binder.defineGroup(0, createFrameBindGroupLayout(uniformBufferSize, hasShadowMap));
+        binder.defineGroup(0, createFrameBindGroupLayout(uniformBufferSize, hasShadowMap, hasCubeMap));
         binder.defineGroup(1, createMaterialBindGroupLayout(materialSize));
         binder.defineGroup(2, createInstancingBindGroupLayout());
 
@@ -137,6 +139,10 @@ public class WgDefaultShader extends WgShader implements Disposable {
         if(hasShadowMap) {
             binder.defineBinding("shadowMap", 0, 1);
             binder.defineBinding("shadowSampler", 0, 2);
+        }
+        if(hasCubeMap) {
+            binder.defineBinding("cubeMap", 0, 3);
+            binder.defineBinding("cubeSampler", 0, 4);
         }
 
 
@@ -479,13 +485,17 @@ public class WgDefaultShader extends WgShader implements Disposable {
         //prevMaterial = material;
     }
 
-    private WebGPUBindGroupLayout createFrameBindGroupLayout(int uniformBufferSize, boolean hasShadowMap) {
+    private WebGPUBindGroupLayout createFrameBindGroupLayout(int uniformBufferSize, boolean hasShadowMap, boolean hasCubeMap) {
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch bind group layout (frame)");
         layout.begin();
         layout.addBuffer(0, WGPUShaderStage.Vertex.or(WGPUShaderStage.Fragment), WGPUBufferBindingType.Uniform, uniformBufferSize, false);
         if(hasShadowMap) {
             layout.addTexture(1, WGPUShaderStage.Fragment, WGPUTextureSampleType.Depth, WGPUTextureViewDimension._2D, false);
             layout.addSampler(2, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Comparison);
+        }
+        if(hasCubeMap) {
+            layout.addTexture(3, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension.Cube, false);
+            layout.addSampler(4, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering);
         }
         layout.end();
         return layout;
@@ -599,6 +609,14 @@ public class WgDefaultShader extends WgShader implements Disposable {
             binder.setTexture("shadowMap", shadowMap.getTextureView());
             binder.setSampler("shadowSampler", shadowMap.getDepthSampler());
 
+        }
+
+        final WgCubemapAttribute cubemapAttribute = lights.get(WgCubemapAttribute.class, WgCubemapAttribute.EnvironmentMap);
+        if ( cubemapAttribute != null) {
+            //System.out.println("Setting cube map via binder");
+            WgTexture cubeMap = cubemapAttribute.textureDescription.texture;
+            binder.setTexture("cubeMap", cubeMap.getTextureView());
+            binder.setSampler("cubeSampler", cubeMap.getSampler());
         }
     }
 

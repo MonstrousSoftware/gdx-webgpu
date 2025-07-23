@@ -97,6 +97,11 @@ public class WgMesh extends Mesh {
     }
 
     @Override
+    public void render (ShaderProgram shader, int primitiveType){
+        Gdx.app.error("WebGPUMesh", "render(ShaderProgram shader, ....) (ignored)");
+    }
+
+    @Override
     public void render (ShaderProgram shader, int primitiveType, int offset, int count, boolean autoBind){
         Gdx.app.error("WebGPUMesh", "render(ShaderProgram shader, ....) (ignored)");
     }
