@@ -57,10 +57,8 @@ public class CubeMapTest extends GdxTest {
 	public void create () {
 		modelBatch = new WgModelBatch();
 
-
-
 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		cam.position.set(10f, 10f, 10f);
+		cam.position.set(5f, 5f, 5f);
 		cam.lookAt(0, 0, 0);
 		cam.near = 0.1f;
 		cam.far = 150f;
@@ -75,11 +73,13 @@ public class CubeMapTest extends GdxTest {
 
 		Gdx.input.setInputProcessor(new InputMultiplexer(this, inputController = new CameraInputController(cam)));
 
-        //String[] sides = { "NX.png", "NY.png", "NZ.png", "PX.png", "PY.png", "PZ.png" };
-        //String prefix = "data/g3d/environment/environment_02_";
+        String[] sides = { "PX.png","NX.png", "PY.png", "NY.png", "PZ.png", "NZ.png"  };
+        String prefix = "data/g3d/environment/environment_01_";
         //String prefix = "data/g3d/environment/debug_";
-        String[] sides = {  "pos-x.jpg","neg-x.jpg", "pos-y.jpg","neg-y.jpg", "pos-z.jpg", "neg-z.jpg"   };
-        String prefix = "data/g3d/environment/leadenhall/";
+
+        //String[] sides = {  "pos-x.jpg","neg-x.jpg", "pos-y.jpg","neg-y.jpg", "pos-z.jpg", "neg-z.jpg"   };
+        //String prefix = "data/g3d/environment/leadenhall/";
+
         FileHandle[] files = new FileHandle[6];
         for(int i = 0; i < sides.length; i++){
             files[i] = Gdx.files.internal(prefix + sides[i]);
@@ -97,7 +97,6 @@ public class CubeMapTest extends GdxTest {
 	public void render () {
 		inputController.update();
 
-
         WgScreenUtils.clear(Color.TEAL, true);
 
 		modelBatch.begin(cam);
@@ -111,13 +110,11 @@ public class CubeMapTest extends GdxTest {
 		model.dispose();
 	}
 
-
-	public void resume () {
-	}
-
+    @Override
 	public void resize (int width, int height) {
+        cam.viewportWidth = width;
+        cam.viewportHeight = height;
+        cam.update();
 	}
 
-	public void pause () {
-	}
 }
