@@ -69,6 +69,8 @@ public class ModelBatchTest extends GdxTest {
 		WgTexture texture1 = new WgTexture(Gdx.files.internal("data/planet_earth.png"), true);
 		texture1.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear);
 		Material mat1 = new Material(TextureAttribute.createDiffuse(texture1));
+        //Material mat1 = new Material(ColorAttribute.createDiffuse(Color.ROYAL));
+
 		WgTexture texture2 = new WgTexture(Gdx.files.internal("data/badlogic.jpg"), true);
 		texture2.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear);
 		Material mat2 = new Material(TextureAttribute.createDiffuse(texture2));

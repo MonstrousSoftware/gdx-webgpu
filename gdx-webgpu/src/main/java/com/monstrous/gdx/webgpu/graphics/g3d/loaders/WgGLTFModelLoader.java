@@ -458,7 +458,13 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
             int offset = view.byteOffset + indexAccessor.byteOffset;
             rawBuffer.byteBuffer.position(offset);
 
-            if(indexAccessor.componentType == GLTF.USHORT16) {
+            if(indexAccessor.componentType == GLTF.UBYTE8) {
+                modelMeshPart.indices = new short[indexAccessor.count];
+
+                for (int i = 0; i < indexAccessor.count; i++) {
+                    modelMeshPart.indices[i] = rawBuffer.byteBuffer.get();
+                }
+            } else if(indexAccessor.componentType == GLTF.USHORT16) {
                 modelMeshPart.indices = new short[indexAccessor.count];
 
                 for (int i = 0; i < indexAccessor.count; i++) {

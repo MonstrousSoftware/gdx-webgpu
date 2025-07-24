@@ -72,6 +72,8 @@ public class WgDefaultShader extends WgShader implements Disposable {
     private final long materialAttributesMask;
     private final long vertexAttributesHash;
     private final long environmentMask;
+    private final boolean blended;
+    private final int primitiveType;
     private int frameNumber;
     private int instanceIndex;
 
@@ -220,7 +222,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
         vertexAttributesHash = renderable.meshPart.mesh.getVertexAttributes().hashCode();
         materialAttributesMask = renderable.material.getMask();
-        environmentMask = renderable.environment.getMask();
+        environmentMask = renderable.environment != null ? renderable.environment.getMask() : 0;
 
         material = new Material(renderable.material);
 
@@ -233,7 +235,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         pipelineSpec.name = "ModelBatch pipeline";
 
         // default blending values
-        final boolean blended = renderable.material.has(BlendingAttribute.Type)
+        blended = renderable.material.has(BlendingAttribute.Type)
             && ((BlendingAttribute)renderable.material.get(BlendingAttribute.Type)).blended;
         if(blended) {
             pipelineSpec.enableBlending();
@@ -244,9 +246,12 @@ public class WgDefaultShader extends WgShader implements Disposable {
             pipelineSpec.cullMode = WGPUCullMode.Back;
         }
 
-        pipelineSpec.environment = new Environment();
-        pipelineSpec.environment.set( renderable.environment );
-        if(renderable.meshPart.primitiveType == GL20.GL_LINES)  // todo all cases
+        if(renderable.environment != null) {
+            pipelineSpec.environment = new Environment();
+            pipelineSpec.environment.set(renderable.environment);
+        }
+        primitiveType = renderable.meshPart.primitiveType;
+        if(primitiveType == GL20.GL_LINES)  // todo all cases
             pipelineSpec.topology = WGPUPrimitiveTopology.LineList;
 
         //System.out.println("pipeline spec: "+pipelineSpec.hashCode()+pipelineSpec.vertexAttributes);
@@ -346,9 +351,18 @@ public class WgDefaultShader extends WgShader implements Disposable {
             return false;
         if (renderable.material.getMask() != materialAttributesMask)
             return false;
-        if (renderable.environment.getMask() != environmentMask)
+        if(environmentMask == 0 && renderable.environment != null)
             return false;
-        // todo add blending, primitive,
+        if (environmentMask != 0 && (renderable.environment == null || renderable.environment.getMask() != environmentMask))
+            return false;
+
+        if(renderable.meshPart.primitiveType != primitiveType)
+            return false;
+        boolean renderableBlended = renderable.material.has(BlendingAttribute.Type)
+            && ((BlendingAttribute)renderable.material.get(BlendingAttribute.Type)).blended;
+        if(blended != renderableBlended)
+            return false;
+
         return true;
     }
 
@@ -364,6 +378,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
     }
 
     private Renderable prevRenderable;
+    private int prevMaterialHash;
     private int firstInstance;
     private int instanceCount;
 
@@ -380,12 +395,11 @@ public class WgDefaultShader extends WgShader implements Disposable {
         instanceBuffer.set(offset,  renderable.worldTransform);
         // todo normal matrix per instance
 
-        boolean newMaterial = false;
-        int hash = renderable.material.attributesHash();
-        if(prevRenderable == null || hash != prevRenderable.material.attributesHash())
-            newMaterial = true;
 
-        if(!newMaterial && prevRenderable != null && renderable.meshPart.equals(prevRenderable.meshPart)){
+        int materialHash = renderable.material.hashCode();
+
+        if( prevRenderable != null && materialHash == prevMaterialHash && renderable.meshPart.equals(prevRenderable.meshPart)){
+            // renderable is similar to the previous one, add to an instance batch
             // note that renderables get a copy of a mesh part not a reference to the Model's mesh part, so you can just compare references.
             instanceCount++;
         } else {    // either a new material or a new mesh part, we need to flush the run of instances
@@ -397,9 +411,8 @@ public class WgDefaultShader extends WgShader implements Disposable {
             instanceCount = 1;
             firstInstance = numRenderables;
             prevRenderable = renderable;
+            prevMaterialHash = materialHash;
         }
-
-
         numRenderables++;
         instanceIndex++;
     }
