@@ -16,7 +16,7 @@ import java.text.DecimalFormat;
 public class SpriteBatchTest extends GdxTest {
     private static final String TAG = "SpriteBatchTest";
     DecimalFormat df = new DecimalFormat("000.0000000000");
-    int SPRITES = 20000;
+    int SPRITES = 16000;
 
     long startTime = TimeUtils.nanoTime();
     int frames = 0;

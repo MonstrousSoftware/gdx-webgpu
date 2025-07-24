@@ -151,7 +151,7 @@ public class ShadowTest extends GdxTest {
         //WgScreenUtils.clear(Color.TEAL, true);
         modelBatch.begin(cam,Color.TEAL, true);
         modelBatch.render(instances, environment);
-        modelBatch.render(lightInstance, environment);
+//        modelBatch.render(lightInstance, environment);
         modelBatch.end();
 
 		batch.begin();

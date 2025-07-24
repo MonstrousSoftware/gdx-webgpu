@@ -73,6 +73,8 @@ public class WgDefaultShader extends WgShader implements Disposable {
     private final long vertexAttributesHash;
     private final long environmentMask;
     private final boolean blended;
+    private final boolean hasShadowMap;
+    private final boolean hasCubeMap;
     private final int primitiveType;
     private int frameNumber;
     private int instanceIndex;
@@ -121,8 +123,8 @@ public class WgDefaultShader extends WgShader implements Disposable {
         defaultBlackTexture = new WgTexture(pixmap);
         defaultBlackTexture.setLabel("default (black))");
 
-        boolean hasShadowMap = renderable.environment != null && renderable.environment.shadowMap != null;
-        boolean hasCubeMap = renderable.environment != null && renderable.environment.has(WgCubemapAttribute.EnvironmentMap);
+        hasShadowMap = renderable.environment != null && renderable.environment.shadowMap != null;
+        hasCubeMap = renderable.environment != null && renderable.environment.has(WgCubemapAttribute.EnvironmentMap);
 
         // Create uniform buffer for global (per-frame) uniforms, e.g. projection matrix, camera position, etc.
         uniformBufferSize = (16 + 16 + 4 + 4 +4+4 +   +32
@@ -246,10 +248,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
             pipelineSpec.cullMode = WGPUCullMode.Back;
         }
 
-        if(renderable.environment != null) {
-            pipelineSpec.environment = new Environment();
-            pipelineSpec.environment.set(renderable.environment);
-        }
+        pipelineSpec.environment = renderable.environment;
         primitiveType = renderable.meshPart.primitiveType;
         if(primitiveType == GL20.GL_LINES)  // todo all cases
             pipelineSpec.topology = WGPUPrimitiveTopology.LineList;
@@ -354,6 +353,8 @@ public class WgDefaultShader extends WgShader implements Disposable {
         if(environmentMask == 0 && renderable.environment != null)
             return false;
         if (environmentMask != 0 && (renderable.environment == null || renderable.environment.getMask() != environmentMask))
+            return false;
+        if(hasShadowMap && (renderable.environment == null || renderable.environment.shadowMap == null))
             return false;
 
         if(renderable.meshPart.primitiveType != primitiveType)
