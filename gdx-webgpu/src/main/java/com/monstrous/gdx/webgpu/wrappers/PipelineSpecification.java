@@ -200,21 +200,20 @@ public class PipelineSpecification {
     /** to be called whenever relevant content changes (to avoid doing this in hashCode which is called a lot) */
     public void recalcHash() {
         hash = Objects.hash(
-            vertexAttributes == null ? 0 : vertexAttributes.hashCode()
-//                shaderSource,
-//                isDepthPass, afterDepthPrepass,
-//                useDepthTest, noDepthAttachment,
-//                topology, indexFormat,
-//                blendingEnabled,
-//                // blend factors should be ignored when !blendingEnabled
-//                blendingEnabled ? blendSrcColor : 0,
-//                blendingEnabled ? blendDstColor : 0,
-//                blendingEnabled ? blendOpColor : 0,
-//                blendingEnabled ? blendSrcAlpha: 0,
-//                blendingEnabled ? blendDstAlpha: 0,
-//                blendingEnabled ? blendOpAlpha : 0,
-//                numSamples, cullMode, isSkyBox, depthFormat, numSamples
-
+            vertexAttributes == null ? 0 : vertexAttributes.hashCode(),
+            shaderSource,
+            isDepthPass, afterDepthPrepass,
+            useDepthTest, noDepthAttachment,
+            topology, indexFormat,
+            blendingEnabled,
+            // blend factors should be ignored when !blendingEnabled
+            blendingEnabled ? blendSrcColor : 0,
+            blendingEnabled ? blendDstColor : 0,
+            blendingEnabled ? blendOpColor : 0,
+            blendingEnabled ? blendSrcAlpha: 0,
+            blendingEnabled ? blendDstAlpha: 0,
+            blendingEnabled ? blendOpAlpha : 0,
+            numSamples, cullMode, isSkyBox, depthFormat, numSamples
         );
     }
 
