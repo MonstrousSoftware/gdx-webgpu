@@ -320,8 +320,6 @@ public class WgTexture extends Texture {
             samplerDesc.setLabel("Standard texture sampler");
             samplerDesc.setAddressModeU(convertWrap(uWrap));
             samplerDesc.setAddressModeV(convertWrap(vWrap));
-//       samplerDesc.setAddressModeU(WGPUAddressMode.Repeat);
-//       samplerDesc.setAddressModeV(WGPUAddressMode.Repeat);
             samplerDesc.setAddressModeW(WGPUAddressMode.Repeat);
             samplerDesc.setMagFilter(convertFilter(magFilter));       // default filter in LibGDX is nearest for min and mag filter
             samplerDesc.setMinFilter(convertFilter(minFilter));
@@ -361,6 +359,9 @@ public class WgTexture extends Texture {
 
     /** convert from LibGDX enum value to WebGPU enum value */
     private WGPUFilterMode convertFilter(TextureFilter filter ){
+        if(filter == null)
+            return WGPUFilterMode.Nearest;
+
         WGPUFilterMode mode;
         switch(filter){
             case Nearest:mode = WGPUFilterMode.Nearest; break;
@@ -406,13 +407,15 @@ public class WgTexture extends Texture {
     @Override
     public void setWrap (TextureWrap u, TextureWrap v){
         if(u == this.uWrap && v == this.vWrap) return;
+        if(u == null && v == null) return;
         if(sampler != null)
             sampler.release();
         sampler = null; // invalidate sampler
 
-        // ignored
-        this.uWrap = u;
-        this.vWrap = v;
+        if(u != null)
+            this.uWrap = u;
+        if(v != null)
+            this.vWrap = v;
     }
 
     /** Load pixel data into texture.

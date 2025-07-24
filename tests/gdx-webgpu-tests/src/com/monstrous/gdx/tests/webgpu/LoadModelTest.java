@@ -52,6 +52,7 @@ import com.monstrous.gdx.webgpu.scene2d.WgStage;
 public class LoadModelTest extends GdxTest {
 
 	final static String[] fileNames = {
+
         "data/g3d/gltf/StanfordDragon/stanfordDragon.gltf",
         "data/g3d/ducky.obj",
 

@@ -73,12 +73,12 @@ public class CubeMapTest extends GdxTest {
 
 		Gdx.input.setInputProcessor(new InputMultiplexer(this, inputController = new CameraInputController(cam)));
 
-        String[] sides = { "PX.png","NX.png", "PY.png", "NY.png", "PZ.png", "NZ.png"  };
-        String prefix = "data/g3d/environment/environment_01_";
+//        String[] sides = { "PX.png","NX.png", "PY.png", "NY.png", "PZ.png", "NZ.png"  };
+//        String prefix = "data/g3d/environment/environment_01_";
         //String prefix = "data/g3d/environment/debug_";
 
-        //String[] sides = {  "pos-x.jpg","neg-x.jpg", "pos-y.jpg","neg-y.jpg", "pos-z.jpg", "neg-z.jpg"   };
-        //String prefix = "data/g3d/environment/leadenhall/";
+        String[] sides = {  "pos-x.jpg","neg-x.jpg", "pos-y.jpg","neg-y.jpg", "pos-z.jpg", "neg-z.jpg"   };
+        String prefix = "data/g3d/environment/leadenhall/";
 
         FileHandle[] files = new FileHandle[6];
         for(int i = 0; i < sides.length; i++){

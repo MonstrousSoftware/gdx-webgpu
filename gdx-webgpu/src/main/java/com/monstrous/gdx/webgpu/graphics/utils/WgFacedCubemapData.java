@@ -160,6 +160,7 @@ public class WgFacedCubemapData implements WgCubemapData {
         Gdx.app.error("consumeCubemapData", "Not supported");
     }
 
+    /** fill the existing cube map texture with the texture data provided in the constructor or via load(...) */
     @Override
 	public void consumeCubemapDataCreate (  WGPUTexture texture ) {
         System.out.println("ConsumeCubemap Data");
@@ -170,23 +171,20 @@ public class WgFacedCubemapData implements WgCubemapData {
 				data[i].consumeCustomData(GL20.GL_TEXTURE_CUBE_MAP_POSITIVE_X + i);
 			} else {
 				Pixmap pixmap = data[i].consumePixmap();
-				boolean disposePixmap = data[i].disposePixmap();
-                Pixmap.Format dataFormat = Pixmap.Format.RGBA8888;
-                //if (data.getFormat() != pixmap.getFormat()) {
-                if ( dataFormat != pixmap.getFormat()) {
-				//if (data[i].getFormat() != pixmap.getFormat()) {
-					Pixmap tmp = new Pixmap(pixmap.getWidth(), pixmap.getHeight(), dataFormat); //data[i].getFormat());
+				boolean mustDisposePixmap = data[i].disposePixmap();
+				if (data[i].getFormat() != pixmap.getFormat()) {
+					Pixmap tmp = new Pixmap(pixmap.getWidth(), pixmap.getHeight(), data[i].getFormat());
 					tmp.setBlending(Blending.None);
 					tmp.drawPixmap(pixmap, 0, 0, 0, 0, pixmap.getWidth(), pixmap.getHeight());
 					if (data[i].disposePixmap()) pixmap.dispose();
 					pixmap = tmp;
-					disposePixmap = true;
+					mustDisposePixmap = true;
 				}
 
-                int mipLevelCount = 1; // todo
+                int mipLevelCount = data[i].useMipMaps() ? Math.max(1, WgTexture.bitWidth(Math.min(data[i].getWidth(), data[i].getHeight()))) : 1;
                 WgTexture.load(texture, pixmap.getPixels(),pixmap.getWidth(), pixmap.getHeight(), mipLevelCount, i);
 
-				if (disposePixmap) pixmap.dispose();
+				if (mustDisposePixmap) pixmap.dispose();
 			}
 		}
 	}
