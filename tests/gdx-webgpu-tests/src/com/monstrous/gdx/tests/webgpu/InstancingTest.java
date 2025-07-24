@@ -54,8 +54,8 @@ import com.monstrous.gdx.webgpu.scene2d.WgStage;
 public class InstancingTest extends GdxTest {
 	final static int MAX_INSTANCES = 10000;
 
-	final static String[] fileNames = {  "data/g3d/ducky.obj", "data/g3d/head.g3db",
-			"data/g3d/monkey.g3db", "data/g3d/teapot.g3db", "data/g3d/cube.g3dj",
+	final static String[] fileNames = {  "data/g3d/gltf/ducky.glb", "data/g3d/head.g3db",
+			"data/g3d/monkey.g3db", "data/g3d/teapot.g3db",
 			"data/g3d/ship.obj", "data/g3d/webgpu.obj"
 	};
 
