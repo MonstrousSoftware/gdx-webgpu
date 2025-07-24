@@ -245,7 +245,7 @@ In the lwjgl3 module change the following line in build.gradle:
     mainClassName = 'com.monstrous.test.lwjgl3.Launcher'
 
 
-23/07: Gamma correction
+## 23/07: Gamma correction
 The gamma correction in the model batch shader is probably wrong, but the same one in spritebatch is probably right.
 For spritebatch we generally load textures from file, which will be gamma corrected already as most editing software does.
 So these texture are in SRBG space.  When we project to a SRBG output surface, it means it expects linear input and will then correct it to SRGB.
@@ -263,4 +263,33 @@ However, note if you hard code a color of a sprite, it should be SRGB values.
 In ModelBatch on the other hand you are doing complex lighting calculations, for which you need to work in linear space.
 So here the textures should be converted to linear on loading, calculations done in linear, and a gamma correction is then not needed for a SRGB surface.
 For a RGB surface we should however do a gamma correction since the surface is not doing it: raise to the power 1/2.2
+
+## 24/7: Texture filtering in wrapping
+
+How are texture filtering and wrapping managed in libgdx?
+
+Texture is derived from GLTexture which has minFilter, magFilter, uWrap and vWrap attributes.
+Furthermore there is a class called TextureDescriptor which holds a Texture and filter and wrap attributes (can be null).
+A TextureAttribute holds a TextureDescriptor and offsetU,V and scaleU,V (which is similar in effect to TextureRegion).
+A Renderable has a Material which is derived from Attributes.
+
+When the BaseShader sets a texture uniform to the TextureDescriptor of a texture attribute (e.g. DiffuseTexture) 
+it calls the DefaultTextureBinder, which will call texture.unsafeSetWrap(TextureDescriptor.uWrap/vWrap) to synch the texture
+attributes to the texture descriptor (if not null) and to issue the related GL commands.
+
+In effect, the texture descriptor can overrule the default filter and wrapping of the texture itself.
+
+When a Model is created from ModelData, i.e. at model loading time, the texture descriptor is filled with the wrap and filter values from the texture.
+The texture is loaded from file by the TextureProvider.
+
+TextureProvider.load(filename) will set a texture's wrap and filter to standard values.  By default: Linear, Repeat but they can be set at FileTextureProvider level. 
+
+So the wrapping and filtering are set to default values in the texture when read from file. These are then copied to the texture descriptor for the Material and used when binding the texture to a uniform. So where, if anywhere, is the texture descriptor changed?
+It seems the OBJ loader and G3D loader have no options to set wrap/filter per material.  
+For GLTF, however, there is a sampler that can be set per material.
+
+When loading via the AssetManager, texture are loaded via the TextureLoader.  This will set wrap/filter by default to Nearest/Clamp (but can be parameterized).
+Note that this is different from the TextureProvider defaults.
+Then again ModelLoader sets ModelParameters by default to Linear/Repeat.
+When you load a model via AssetManager does it use TextureLoader for its dependent textures? Or does it let the Model use TextureProvider.
 
