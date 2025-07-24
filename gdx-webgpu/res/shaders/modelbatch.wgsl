@@ -45,6 +45,10 @@ struct MaterialUniforms {
     @group(0) @binding(1) var shadowMap: texture_depth_2d;
     @group(0) @binding(2) var shadowSampler: sampler_comparison;
 #endif
+#ifdef ENVIRONMENT_MAP
+    @group(0) @binding(3) var cubeMap:          texture_cube<f32>;
+    @group(0) @binding(4) var cubeMapSampler:   sampler;
+#endif
 
 // material bindings
 @group(1) @binding(0) var<uniform> material: MaterialUniforms;
@@ -234,10 +238,20 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
     let litColor = vec4f( color.rgb * (ambient + visibility * radiance) + visibility*specular, 1.0);
 
     color = litColor;
+
+#ifdef ENVIRONMENT_MAP
+    let rdir:vec3f = reflect(viewVec, normal)*vec3f(-1, -1, 1);
+    var reflection = textureSample(cubeMap, cubeMapSampler, rdir);
+    color = mix(color, reflection, 0.5f);
+#endif
+
+
 #endif // LIGHTING
     let emissiveColor = textureSample(emissiveTexture, emissiveSampler, in.uv).rgb;
 
     color = color + vec4f(emissiveColor, 0);
+
+
 
 
 #ifdef GAMMA_CORRECTION
@@ -252,11 +266,13 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
 
     //return vec4f(emissiveColor, 1.0);
     //return vec4f(normal, 1.0);
+    //return vec4f(viewVec, 1.0);
+    //return vec4f(rdir, 1.0);
     //return vec4f(uFrame.ambientLight.rgb, 1.0);
     //return material.diffuseColor;
     //return vec4f(in.fogDepth, 0, 0, 1);
 
-    return color; //vec4f(color.rgb, 0.2f);
+    return color;
 };
 
 #ifdef SHADOW_MAP

@@ -107,6 +107,7 @@ public class LoadModelTest extends GdxTest {
 		loaded = false;
         loadedFirst = false;
         assets.load(fileNames[0], Model.class);
+        assets.finishLoading();
 
         // Create an environment with lights
         environment = new Environment();
@@ -176,8 +177,11 @@ public class LoadModelTest extends GdxTest {
                 assets.load(fileNames[i], Model.class);
             }
         }
-		if(!loaded && assets.update()) {	// advance loading
-			loaded = true;
+		if(!loaded) {
+            System.out.println("Calling update");
+            if( assets.update(5)) {    // advance loading
+                loaded = true;
+            }
 		}
 
 		if(loadedFirst)

@@ -96,7 +96,8 @@ public class WebGPUTests {
         SpriteBatchDraw.class,
         SpriteBatchLimit.class,
         SpriteBatchTextures.class,
-        SpriteBatchCount.class
+        SpriteBatchCount.class,
+        CubeMapTest.class
 
 		// @on
 
