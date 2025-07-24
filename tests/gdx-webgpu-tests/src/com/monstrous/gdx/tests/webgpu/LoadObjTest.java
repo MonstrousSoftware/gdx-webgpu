@@ -17,6 +17,7 @@
 package com.monstrous.gdx.tests.webgpu;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g3d.Model;
@@ -24,6 +25,7 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.math.Vector3;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.tests.webgpu.utils.PerspectiveCamController;
+import com.monstrous.gdx.webgpu.assets.WgAssetManager;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
@@ -52,10 +54,20 @@ public class LoadObjTest extends GdxTest {
 		cam.lookAt(0,0,0);
 		cam.near = 0.1f;
 
-		WgObjLoader loader = new WgObjLoader();
-		// these assets need to be put in the class path...
-		model = loader.loadModel(Gdx.files.internal("data/g3d/ducky.obj"), true);
-        //model = loader.loadModel(Gdx.files.internal("data/g3d/webgpu.obj"), true);
+
+        String file = "data/g3d/ship.obj";
+        //String file = "data/g3d/ducky.obj";
+        boolean flip = false;
+
+
+        WgAssetManager assets = new WgAssetManager();
+        assets.load(file, Model.class);
+        assets.finishLoading();
+        model = assets.get(file, Model.class);
+
+//		WgObjLoader loader = new WgObjLoader();
+//		model = loader.loadModel(Gdx.files.internal(file));
+
 		instance = new ModelInstance(model);
 
 

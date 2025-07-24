@@ -77,7 +77,7 @@ public class WgObjLoader extends WgModelLoader<WgObjLoader.ObjLoaderParameters> 
 	@Override
 	public ModelData loadModelData (FileHandle file, ObjLoaderParameters parameters) {
 		// default to flip V if not params were provided (e.g. when loading via Asset Manager).
-		return loadModelData(file, parameters == null || parameters.flipV);
+		return loadModelData(file, parameters != null && parameters.flipV);
 	}
 
 	protected ModelData loadModelData (FileHandle file, boolean flipV) {
