@@ -16,6 +16,7 @@ dependencies {
     implementation("com.github.xpenatan.gdx-teavm:backend-teavm:$gdxTeaVMVersion")
 
     //implementation(project(":tests:gdx-tests-webgpu2")) // module deleted
+    implementation(project(":gdx-webgpu"))
     implementation(project(":tests:gdx-webgpu-tests"))
     implementation(project(":backends:gdx-teavm-webgpu"))     // broken: could not resolve
 
