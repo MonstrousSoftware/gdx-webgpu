@@ -293,3 +293,8 @@ Note that this is different from the TextureProvider defaults.
 Then again ModelLoader sets ModelParameters by default to Linear/Repeat.
 When you load a model via AssetManager does it use TextureLoader for its dependent textures? Or does it let the Model use TextureProvider.
 
+## Idea on skinning
+From a writeup Doom Eternal rendering: Perform skinning in a compute shader instead of the vertex shader.
+This will declutter the vertex shader greatly, and also means multiple passes (e.g. shadows) don't need to perform the same skinning.
+
+Another interesting point: shadows from a static light source and static geometry doesn't need to be recalculated every frame. The depth buffer could just persist.
