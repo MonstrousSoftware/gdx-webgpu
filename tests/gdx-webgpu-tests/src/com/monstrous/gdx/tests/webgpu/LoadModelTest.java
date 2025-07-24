@@ -59,7 +59,8 @@ public class LoadModelTest extends GdxTest {
         "data/g3d/gltf/waterbottle/waterbottle.glb",
 
 
-        "data/g3d/head.g3db", "data/g3d/invaders.g3dj",
+        "data/g3d/head.g3db",
+        "data/g3d/invaders.g3dj",
         "data/g3d/monkey.g3db", "data/g3d/skydome.g3db", "data/g3d/teapot.g3db",
 
 
@@ -178,9 +179,9 @@ public class LoadModelTest extends GdxTest {
             }
         }
 		if(!loaded) {
-            System.out.println("Calling update");
             if( assets.update(5)) {    // advance loading
                 loaded = true;
+                System.out.println("Loading complete");
             }
 		}
 

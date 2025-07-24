@@ -59,6 +59,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
     private final WebGPUPipeline pipeline;            // a shader has one pipeline
     private WebGPURenderPass renderPass;
     private final VertexAttributes vertexAttributes;
+    private final Material material;
     private final Matrix4 combined;
     private final Matrix4 projection;
     private final Matrix4 shiftDepthMatrix;
@@ -69,7 +70,8 @@ public class WgDefaultShader extends WgShader implements Disposable {
     protected PointLight[] pointLights;
     private final Vector4 tmpVec4 = new Vector4();
     private final long materialAttributesMask;
-    private final long vertexAttributesMask;
+    private final long vertexAttributesHash;
+    private final long environmentMask;
     private int frameNumber;
     private int instanceIndex;
 
@@ -95,20 +97,27 @@ public class WgDefaultShader extends WgShader implements Disposable {
     public WgDefaultShader(final Renderable renderable, Config config) {
         this.config = config;
 
+//        System.out.println("Create WgDefaultShader "+renderable.meshPart.id+" vert mask: "+renderable.meshPart.mesh.getVertexAttributes().getMask()+
+//            "mat mask: "+renderable.material.getMask());
+
         WgGraphics gfx = (WgGraphics)Gdx.graphics;
         webgpu = gfx.getContext();
 
         // fallback texture
+        // todo these could be static?
         Pixmap pixmap = new Pixmap(1,1,RGBA8888);
-        pixmap.setColor(Color.PINK);
+        pixmap.setColor(Color.WHITE);
         pixmap.fill();
         defaultTexture = new WgTexture(pixmap);
+        defaultTexture.setLabel("default (white)");
         pixmap.setColor(Color.GREEN);
         pixmap.fill();
         defaultNormalTexture = new WgTexture(pixmap);
+        defaultNormalTexture.setLabel("default normal texture");
         pixmap.setColor(Color.BLACK);
         pixmap.fill();
         defaultBlackTexture = new WgTexture(pixmap);
+        defaultBlackTexture.setLabel("default (black))");
 
         boolean hasShadowMap = renderable.environment != null && renderable.environment.shadowMap != null;
         boolean hasCubeMap = renderable.environment != null && renderable.environment.has(WgCubemapAttribute.EnvironmentMap);
@@ -209,13 +218,14 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
         binder.setBuffer("instanceUniforms", instanceBuffer, 0,  instanceSize *config.maxInstances);
 
-        vertexAttributesMask = renderable.meshPart.mesh.getVertexAttributes().getMask();
+        vertexAttributesHash = renderable.meshPart.mesh.getVertexAttributes().hashCode();
         materialAttributesMask = renderable.material.getMask();
+        environmentMask = renderable.environment.getMask();
+
+        material = new Material(renderable.material);
 
         // get pipeline layout which aggregates all the bind group layouts
         WGPUPipelineLayout pipelineLayout = binder.getPipelineLayout("ModelBatch pipeline layout");
-
-        //pipelines = new PipelineCache();    // use static cache?
 
         // vertexAttributes will be set from the renderable
         vertexAttributes = renderable.meshPart.mesh.getVertexAttributes();
@@ -234,9 +244,12 @@ public class WgDefaultShader extends WgShader implements Disposable {
             pipelineSpec.cullMode = WGPUCullMode.Back;
         }
 
-        pipelineSpec.environment = renderable.environment;
+        pipelineSpec.environment = new Environment();
+        pipelineSpec.environment.set( renderable.environment );
         if(renderable.meshPart.primitiveType == GL20.GL_LINES)  // todo all cases
             pipelineSpec.topology = WGPUPrimitiveTopology.LineList;
+
+        //System.out.println("pipeline spec: "+pipelineSpec.hashCode()+pipelineSpec.vertexAttributes);
 
         pipeline = new WebGPUPipeline(pipelineLayout, pipelineSpec);
 
@@ -319,16 +332,23 @@ public class WgDefaultShader extends WgShader implements Disposable {
         return 0; // FIXME compare shaders on their impact on performance
     }
 
-    @Override
+
     /** check if the provided renderable is similar enough to the one used to create this shader, that it can be rendered.
      * Look at vertex attributes, material attributes.
      */
+    @Override
     public boolean canRender(Renderable renderable) {
-        //System.out.println("Can Render? "+instance.meshPart.id+" mask: "+instance.meshPart.mesh.getVertexAttributes().getMask()+" ==? "+vertexAttributes.getMask());
-        if (renderable.meshPart.mesh.getVertexAttributes().getMask() != vertexAttributes.getMask())
+//        System.out.println("Can Render? "+renderable.meshPart.id+" mask: "+renderable.meshPart.mesh.getVertexAttributes().getMask()+" ==? "+vertexAttributes.getMask() +
+//            "mat mask: "+renderable.material.getMask()+" ==? "+material.getMask());
+
+
+        if (renderable.meshPart.mesh.getVertexAttributes().hashCode() != vertexAttributesHash)
             return false;
         if (renderable.material.getMask() != materialAttributesMask)
             return false;
+        if (renderable.environment.getMask() != environmentMask)
+            return false;
+        // todo add blending, primitive,
         return true;
     }
 
@@ -405,12 +425,6 @@ public class WgDefaultShader extends WgShader implements Disposable {
     }
 
     private void applyMaterial(Material material){
-
-        // is this material the same as the previous? then we are done.
-//        if(prevMaterial != null && material.attributesHash() == prevMaterial.attributesHash())  // store hash instead of prev mat?
-//            return;
-//        int hash = material.attributesHash();
-
         if(numMaterials >= config.maxMaterials)
             throw new RuntimeException("Too many materials (> "+config.maxMaterials+"). Increase shader.maxMaterials");
 
@@ -432,9 +446,16 @@ public class WgDefaultShader extends WgShader implements Disposable {
             assert ta != null;
             Texture tex = ta.textureDescription.texture;
             diffuseTexture = (WgTexture)tex;
+            diffuseTexture.setWrap(ta.textureDescription.uWrap, ta.textureDescription.vWrap);
+            diffuseTexture.setFilter(ta.textureDescription.minFilter, ta.textureDescription.magFilter);
         } else {
             diffuseTexture = defaultTexture;
         }
+
+
+        //System.out.println("binding diffuse texture: "+diffuseTexture.getLabel()+diffuseTexture.getUWrap()+diffuseTexture.getVWrap());
+
+
         binder.setTexture("diffuseTexture", diffuseTexture.getTextureView());
         binder.setSampler("diffuseSampler", diffuseTexture.getSampler());
 
@@ -481,8 +502,6 @@ public class WgDefaultShader extends WgShader implements Disposable {
         binder.bindGroup(renderPass, 1, numMaterials*materialBuffer.getUniformStride());
 
         numMaterials++;
-
-        //prevMaterial = material;
     }
 
     private WebGPUBindGroupLayout createFrameBindGroupLayout(int uniformBufferSize, boolean hasShadowMap, boolean hasCubeMap) {
