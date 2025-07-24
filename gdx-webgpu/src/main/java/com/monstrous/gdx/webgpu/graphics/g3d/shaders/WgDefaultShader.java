@@ -341,7 +341,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
 //        System.out.println("Can Render? "+renderable.meshPart.id+" mask: "+renderable.meshPart.mesh.getVertexAttributes().getMask()+" ==? "+vertexAttributes.getMask() +
 //            "mat mask: "+renderable.material.getMask()+" ==? "+material.getMask());
 
-
+        // note: it is not sufficient to compare the mask of the vertex attributes, they need to be in the same order as well
         if (renderable.meshPart.mesh.getVertexAttributes().hashCode() != vertexAttributesHash)
             return false;
         if (renderable.material.getMask() != materialAttributesMask)

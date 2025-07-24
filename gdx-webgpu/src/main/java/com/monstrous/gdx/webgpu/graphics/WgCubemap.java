@@ -46,9 +46,9 @@ public class WgCubemap extends WgTexture {
 	/** Construct a Cubemap with the specified texture files for the sides, optionally generating mipmaps. */
 	public WgCubemap(FileHandle positiveX, FileHandle negativeX, FileHandle positiveY, FileHandle negativeY, FileHandle positiveZ,
                      FileHandle negativeZ, boolean useMipMaps) {
-		this(TextureData.Factory.loadFromFile(positiveX, useMipMaps), TextureData.Factory.loadFromFile(negativeX, useMipMaps),
-			TextureData.Factory.loadFromFile(positiveY, useMipMaps), TextureData.Factory.loadFromFile(negativeY, useMipMaps),
-			TextureData.Factory.loadFromFile(positiveZ, useMipMaps), TextureData.Factory.loadFromFile(negativeZ, useMipMaps));
+		this(TextureData.Factory.loadFromFile(positiveX, Pixmap.Format.RGBA8888, useMipMaps), TextureData.Factory.loadFromFile(negativeX,Pixmap.Format.RGBA8888,  useMipMaps),
+			TextureData.Factory.loadFromFile(positiveY,Pixmap.Format.RGBA8888,  useMipMaps), TextureData.Factory.loadFromFile(negativeY,Pixmap.Format.RGBA8888,  useMipMaps),
+			TextureData.Factory.loadFromFile(positiveZ,Pixmap.Format.RGBA8888,  useMipMaps), TextureData.Factory.loadFromFile(negativeZ,Pixmap.Format.RGBA8888,  useMipMaps));
 	}
 
 	/** Construct a Cubemap with the specified {@link Pixmap}s for the sides, does not generate mipmaps. */
@@ -108,9 +108,6 @@ public class WgCubemap extends WgTexture {
 		return cubemapData.getHeight();
 	}
 
-	public int getDepth () {
-		return 0;
-	}
 
 	/** Disposes all resources associated with the cubemap */
 	@Override
