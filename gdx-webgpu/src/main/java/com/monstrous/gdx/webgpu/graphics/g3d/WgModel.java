@@ -145,7 +145,8 @@ public class WgModel extends Model {
 					texture = textures.get(tex.fileName);
 				} else {
 					texture = textureProvider.load(tex.fileName);
-					textures.put(tex.fileName, texture);
+                    ((WgTexture)texture).setLabel(tex.fileName);
+                    textures.put(tex.fileName, texture);
 					disposables.add(texture);
 				}
 

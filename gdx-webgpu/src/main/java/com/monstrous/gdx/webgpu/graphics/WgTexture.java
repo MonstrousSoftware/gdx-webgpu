@@ -218,6 +218,10 @@ public class WgTexture extends Texture {
         return numSamples;
     }
 
+    public String getLabel(){ return label; }
+
+    public void setLabel( String lab ){ label = lab; }
+
 
     public static int bitWidth(int value) {
         if (value == 0)
@@ -308,13 +312,16 @@ public class WgTexture extends Texture {
     }
 
     public WGPUSampler getSampler() {
-        if(sampler == null) {
+       if(sampler == null) {
+            //System.out.println("create Sampler: "+label + " : "+uWrap);
             // Create a sampler
             //
             WGPUSamplerDescriptor samplerDesc = WGPUSamplerDescriptor.obtain();
             samplerDesc.setLabel("Standard texture sampler");
             samplerDesc.setAddressModeU(convertWrap(uWrap));
             samplerDesc.setAddressModeV(convertWrap(vWrap));
+//       samplerDesc.setAddressModeU(WGPUAddressMode.Repeat);
+//       samplerDesc.setAddressModeV(WGPUAddressMode.Repeat);
             samplerDesc.setAddressModeW(WGPUAddressMode.Repeat);
             samplerDesc.setMagFilter(convertFilter(magFilter));       // default filter in LibGDX is nearest for min and mag filter
             samplerDesc.setMinFilter(convertFilter(minFilter));
