@@ -46,6 +46,8 @@ import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 import com.monstrous.gdx.webgpu.scene2d.WgSkin;
 import com.monstrous.gdx.webgpu.scene2d.WgStage;
 
+import static java.lang.Thread.sleep;
+
 
 /** Test renderable instancing - reducing the number of draw calls if renderables use the same mesh part.
  * */
@@ -54,7 +56,9 @@ import com.monstrous.gdx.webgpu.scene2d.WgStage;
 public class InstancingTest extends GdxTest {
 	final static int MAX_INSTANCES = 10000;
 
-	final static String[] fileNames = {  "data/g3d/gltf/ducky.glb", "data/g3d/head.g3db",
+	final static String[] fileNames = {
+                "data/g3d/head.g3db",
+        "data/g3d/gltf/ducky.glb",
 			"data/g3d/monkey.g3db", "data/g3d/teapot.g3db",
 			"data/g3d/ship.obj", "data/g3d/webgpu.obj"
 	};
@@ -94,9 +98,11 @@ public class InstancingTest extends GdxTest {
 		assets = new WgAssetManager();
 		for(String fileName : fileNames)
 			assets.load(fileName, Model.class);
+        System.out.println("create gonna finishLoading");
 		assets.finishLoading();
+        System.out.println("create finished loading");
 
-		model = assets.get(fileNames[0]);
+        model = assets.get(fileNames[0]);
 		ModelInstance instance = new ModelInstance(model, 0, -1, 0);
 
 		instances.add(instance);
@@ -306,11 +312,13 @@ public class InstancingTest extends GdxTest {
 
 
 		stage.addActor(screenTable);
+        System.out.println("create finished");
 	}
 
 
 
 	public void render () {
+
 		float delta = Gdx.graphics.getDeltaTime();
 		for(ModelInstance instance : instances)
 			instance.transform.rotate(Vector3.Y, 15f*delta);
@@ -336,8 +344,8 @@ public class InstancingTest extends GdxTest {
         batch.end();
 
 
-		stage.act();
-		stage.draw();
+//		stage.act();
+//		stage.draw();
 	}
 
 	@Override

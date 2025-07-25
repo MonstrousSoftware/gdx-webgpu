@@ -298,3 +298,35 @@ From a writeup Doom Eternal rendering: Perform skinning in a compute shader inst
 This will declutter the vertex shader greatly, and also means multiple passes (e.g. shadows) don't need to perform the same skinning.
 
 Another interesting point: shadows from a static light source and static geometry doesn't need to be recalculated every frame. The depth buffer could just persist.
+
+
+## crash
+InstancingTest from the Menu:
+
+[WebGPUStage] create shape renderer
+
+thread '<unnamed>' panicked at src\lib.rs:4171:36:
+invalid texture
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread '<unnamed>' panicked at library\core\src\panicking.rs:218:5:
+panic in a function that cannot unwind
+stack backtrace:
+0:     0x7ffdbc65eb32 - <unknown>
+1:     0x7ffdbc62c36b - <unknown>
+2:     0x7ffdbc65c067 - <unknown>
+
+[WebGPUStage] create shape renderer
+
+thread '<unnamed>' panicked at src\lib.rs:4171:36:
+invalid texture
+stack backtrace:
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+
+thread '<unnamed>' panicked at library\core\src\panicking.rs:218:5:
+panic in a function that cannot unwind
+stack backtrace:
+0:     0x7ffda614eb32 - <unknown>
+1:     0x7ffda611c36b - <unknown>
+2:     0x7ffda614c067 - <unknown>
+3:     0x7ffda614e975 - <unknown>

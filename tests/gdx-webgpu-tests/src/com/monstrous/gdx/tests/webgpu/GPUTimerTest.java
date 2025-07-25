@@ -41,6 +41,7 @@ import com.monstrous.gdx.webgpu.assets.WgAssetManager;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
+import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgObjLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDefaultShader;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 import com.monstrous.gdx.webgpu.scene2d.WgSkin;
@@ -89,7 +90,9 @@ public class GPUTimerTest extends GdxTest {
 
 		// queue for asynchronous loading
 		assets = new WgAssetManager();
-        assets.load("data/g3d/ducky.obj", Model.class);
+
+        // pass extra parameter to flip texture V
+        assets.load("data/g3d/ducky.obj", Model.class, new WgObjLoader.ObjLoaderParameters(true));
 		assets.finishLoading();
 
 		model = assets.get("data/g3d/ducky.obj");
