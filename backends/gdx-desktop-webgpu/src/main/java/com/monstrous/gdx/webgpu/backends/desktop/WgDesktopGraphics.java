@@ -34,6 +34,7 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWFramebufferSizeCallback;
+import org.lwjgl.glfw.GLFWNativeWin32;
 import org.lwjgl.system.Configuration;
 
 import java.nio.IntBuffer;
@@ -158,7 +159,8 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
         WGPUSurface surface = null;
         String osName = System.getProperty("os.name").toLowerCase();
         if(osName.contains("win")) {
-            surface = instance.createWindowsSurface(windowHandle);
+            long display = GLFWNativeWin32.glfwGetWin32Window(windowHandle);
+            surface = instance.createWindowsSurface(display);
         }
         else if(osName.contains("linux")) {
             if(glfwGetPlatform() == GLFW_PLATFORM_WAYLAND) {

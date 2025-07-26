@@ -196,9 +196,11 @@ public class WgDesktopWindow implements Disposable {
 	void create (long windowHandle) {
 		this.windowHandle = windowHandle;
 		this.input = application.createInput(this);
-		long win32handle = GLFWNativeWin32.glfwGetWin32Window(getWindowHandle());
+//		long win32handle = GLFWNativeWin32.glfwGetWin32Window(getWindowHandle());
+//
+//		this.graphics = new WgDesktopGraphics(this,  win32handle);
 
-		this.graphics = new WgDesktopGraphics(this,  win32handle);
+        this.graphics = new WgDesktopGraphics(this,  windowHandle);
 
 		GLFW.glfwSetWindowFocusCallback(windowHandle, focusCallback);
 		GLFW.glfwSetWindowIconifyCallback(windowHandle, iconifyCallback);
