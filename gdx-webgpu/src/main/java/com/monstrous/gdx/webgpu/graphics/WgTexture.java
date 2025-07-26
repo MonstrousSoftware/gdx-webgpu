@@ -85,6 +85,7 @@ public class WgTexture extends Texture {
         WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst);
         if (renderAttachment)
             textureUsage = textureUsage.or(WGPUTextureUsage.RenderAttachment).or(WGPUTextureUsage.CopySrc);    // todo COPY_SRC is temp
+        if(mipMapping) Gdx.app.error("WgTexture", "mipmapping not suppörted yet");
         mipLevelCount = 1; // todo
         create( label, mipLevelCount, textureUsage, format, numLayers, numSamples, null);
     }
@@ -177,7 +178,8 @@ public class WgTexture extends Texture {
                 pixmap.dispose();
             }
             pixmap = tmp;
-            //disposePixmap = true;
+           //disposePixmap = true;
+            // todo dispose pixmap
         }
 
         load(texture, pixmap.getPixels(),data.getWidth(), data.getHeight(), mipLevelCount, 0);
@@ -432,7 +434,7 @@ public class WgTexture extends Texture {
         int mipLevelHeight = height;
         int numComponents = 4; //numComponents(format);
 
-        ByteBuffer prev = pixelPtr;
+        ByteBuffer prev = null;
         ByteBuffer next = pixelPtr;
 
         for(int mipLevel = 0; mipLevel < mipLevelCount; mipLevel++) {
@@ -471,15 +473,20 @@ public class WgTexture extends Texture {
             mipLevelWidth /= 2;
             mipLevelHeight /= 2;
 
-            if(prev != pixelPtr) {
+            if(prev != null && prev != pixelPtr) {
                 BufferUtils.disposeUnsafeByteBuffer(prev);
             }
+//            if(mipLevel == mipLevelCount-1)
+//                break;
+            // todo we should be able to avoid once malloc/free
             prev = next;
             next = BufferUtils.newUnsafeByteBuffer( mipLevelWidth * mipLevelHeight * 4);
         }
-        if(prev != pixelPtr) {
-            BufferUtils.disposeUnsafeByteBuffer(prev);
-        }
+
+        // todo check this logic
+//        if(prev != pixelPtr) {
+//            BufferUtils.disposeUnsafeByteBuffer(prev);
+//        }
         if(next != pixelPtr) {
             BufferUtils.disposeUnsafeByteBuffer(next);
         }

@@ -176,7 +176,7 @@ public class WgFacedCubemapData implements WgCubemapData {
 					Pixmap tmp = new Pixmap(pixmap.getWidth(), pixmap.getHeight(), data[i].getFormat());
 					tmp.setBlending(Blending.None);
 					tmp.drawPixmap(pixmap, 0, 0, 0, 0, pixmap.getWidth(), pixmap.getHeight());
-					if (data[i].disposePixmap()) pixmap.dispose();
+					if (mustDisposePixmap) pixmap.dispose();
 					pixmap = tmp;
 					mustDisposePixmap = true;
 				}
