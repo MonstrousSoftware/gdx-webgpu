@@ -65,14 +65,12 @@ public class GPUTimer implements Disposable {
         bufferDesc.setUsage( WGPUBufferUsage.CopySrc.or(WGPUBufferUsage.QueryResolve) );
         bufferDesc.setSize(8*2*MAX_PASSES);     // space for 2 uint64's per pass
         bufferDesc.setMappedAtCreation(false);
-        timeStampResolveBuffer =  new WGPUBuffer();
-        device.createBuffer(bufferDesc, timeStampResolveBuffer);
+        timeStampResolveBuffer = device.createBuffer(bufferDesc);
 
         bufferDesc.setLabel("timestamp map buffer");
         bufferDesc.setUsage( WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.MapRead) );
         bufferDesc.setSize(8*2*MAX_PASSES);
-        timeStampMapBuffer = new WGPUBuffer();
-        device.createBuffer(bufferDesc, timeStampMapBuffer);
+        timeStampMapBuffer = device.createBuffer(bufferDesc);
 
         passNumber = -1;
 

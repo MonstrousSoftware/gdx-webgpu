@@ -22,9 +22,11 @@ public class BuildTeaVM {
         teaBuildConfiguration.webappPath = new File("build/dist").getCanonicalPath();
 
         TeaVMTool tool = TeaBuilder.config(teaBuildConfiguration);
-        tool.setObfuscated(false);
-        tool.setTargetType(TeaVMTargetType.WEBASSEMBLY_GC);
+        tool.setObfuscated(true);
+        tool.setTargetType(TeaVMTargetType.JAVASCRIPT);
         tool.setOptimizationLevel(TeaVMOptimizationLevel.ADVANCED);
+        int bufferSizeMB = 64;
+        tool.setMaxDirectBuffersSize(bufferSizeMB * 1024 * 1024);
         tool.setMainClass(TeaVMTestLauncher.class.getName());
         TeaBuilder.build(tool);
     }

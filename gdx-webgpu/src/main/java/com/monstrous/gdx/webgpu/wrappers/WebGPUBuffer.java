@@ -55,8 +55,7 @@ public class WebGPUBuffer implements Disposable {
         bufferDesc.setUsage( usage );
         bufferDesc.setSize( bufferSize );
         bufferDesc.setMappedAtCreation(false);
-        buffer = new WGPUBuffer();
-        webgpu.device.createBuffer(bufferDesc, buffer);
+        buffer = webgpu.device.createBuffer(bufferDesc);
     }
 
     public WGPUBuffer getBuffer(){
