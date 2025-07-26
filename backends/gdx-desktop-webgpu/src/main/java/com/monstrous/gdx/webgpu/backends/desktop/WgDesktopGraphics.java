@@ -166,6 +166,7 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
             surface = instance.createWindowsSurface(display);
         }
         else if(osName.contains("linux")) {
+            System.out.println("Platform: "+glfwGetPlatform());
             if(glfwGetPlatform() == GLFW_PLATFORM_WAYLAND) {
                 System.out.println("Wayland");
                 long display = glfwGetWaylandDisplay();
