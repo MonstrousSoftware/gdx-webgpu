@@ -41,7 +41,9 @@ import java.nio.IntBuffer;
 import static org.lwjgl.glfw.GLFW.GLFW_PLATFORM_WAYLAND;
 import static org.lwjgl.glfw.GLFW.glfwGetPlatform;
 import static org.lwjgl.glfw.GLFWNativeWayland.glfwGetWaylandDisplay;
+import static org.lwjgl.glfw.GLFWNativeWayland.glfwGetWaylandWindow;
 import static org.lwjgl.glfw.GLFWNativeX11.glfwGetX11Display;
+import static org.lwjgl.glfw.GLFWNativeX11.glfwGetX11Window;
 
 public class WgDesktopGraphics implements WgGraphics, Disposable {
 
@@ -95,7 +97,7 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
 		}
 	};
 
-	public WgDesktopGraphics(WgDesktopWindow window, long win32handle) {
+	public WgDesktopGraphics(WgDesktopWindow window, long windowHandle) {
 
 		this.window = window;
 
@@ -119,8 +121,8 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
             @Override
             public void onInit(WebGPUApplication application) {
                 if(application.isReady()) {
-                    System.out.println("Creating surface for window handle: "+win32handle);
-                    application.surface = createSurface(application.instance, win32handle);
+                    System.out.println("Creating surface for window handle: "+windowHandle);
+                    application.surface = createSurface(application.instance, windowHandle);
 
                     if(application.surface != null) {
                         System.out.println("surface:" + application.surface);
@@ -158,18 +160,23 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
     private WGPUSurface createSurface(WGPUInstance instance, long windowHandle) {
         WGPUSurface surface = null;
         String osName = System.getProperty("os.name").toLowerCase();
+        System.out.println("os.name: "+osName);
         if(osName.contains("win")) {
             long display = GLFWNativeWin32.glfwGetWin32Window(windowHandle);
             surface = instance.createWindowsSurface(display);
         }
         else if(osName.contains("linux")) {
             if(glfwGetPlatform() == GLFW_PLATFORM_WAYLAND) {
+                System.out.println("Wayland");
                 long display = glfwGetWaylandDisplay();
-                surface = instance.createLinuxSurface(true, windowHandle, display);
+                long surf = glfwGetWaylandWindow(windowHandle);
+                surface = instance.createLinuxSurface(true, surf, display);
             }
             else {
+                System.out.println("X11");
                 long display = glfwGetX11Display();
-                surface = instance.createLinuxSurface(false, windowHandle, display);
+                long surf = glfwGetX11Window(windowHandle);
+                surface = instance.createLinuxSurface(false, surf, display);
             }
         }
         else if(osName.contains("mac")) {
