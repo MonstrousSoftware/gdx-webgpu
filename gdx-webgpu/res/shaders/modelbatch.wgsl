@@ -240,7 +240,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
     color = litColor;
 
 #ifdef ENVIRONMENT_MAP
-    let rdir:vec3f = reflect(viewVec, normal)*vec3f(-1, -1, 1);
+    let rdir:vec3f = normalize(reflect(viewVec, normal)*vec3f(-1, -1, 1));
     var reflection = textureSample(cubeMap, cubeMapSampler, rdir);
     color = mix(color, reflection, 0.5f);
 #endif

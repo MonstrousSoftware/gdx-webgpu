@@ -46,6 +46,7 @@ public class WgTextureLoader extends AsynchronousAssetLoader<Texture, TextureLoa
 
 	@Override
 	public void loadAsync (AssetManager manager, String fileName, FileHandle file, TextureLoader.TextureParameter parameter) {
+        //System.out.println("loadAsync: "+fileName);
 		info.filename = fileName;
 		if (parameter == null || parameter.textureData == null) {
 			Format format = Format.RGBA8888; // force 4 byte format
@@ -68,12 +69,13 @@ public class WgTextureLoader extends AsynchronousAssetLoader<Texture, TextureLoa
 
 	@Override
 	public Texture loadSync (AssetManager manager, String fileName, FileHandle file, TextureLoader.TextureParameter parameter) {
-		if (info == null) return null;
+        System.out.println("loadSync: "+fileName);
+        if (info == null) return null;
 		Texture texture = info.texture;
 		if (texture != null) {
 			texture.load(info.data);
 		} else {
-			texture = new WgTexture(info.data);
+			texture = new WgTexture(info.data, fileName);
 		}
 		if (parameter != null) {
 			texture.setFilter(parameter.minFilter, parameter.magFilter);

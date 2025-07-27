@@ -292,6 +292,7 @@ public class WgTexture extends Texture {
 
         WGPUTexture texture = new WGPUTexture();
         WebGPUContext webgpu = ((WgGraphics) Gdx.graphics).getContext();
+        System.out.println("Create texture "+label);
         webgpu.device.createTexture(textureDesc, texture);
         return texture;
     }
@@ -570,6 +571,7 @@ public class WgTexture extends Texture {
 
     @Override
     public void dispose(){
+        System.out.println("Dispose texture : "+label);
 
         if(texture != null) {   // guard against double dispose
             //System.out.println("Destroy texture " + label);

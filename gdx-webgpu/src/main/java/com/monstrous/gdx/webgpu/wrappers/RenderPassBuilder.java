@@ -19,6 +19,7 @@ package com.monstrous.gdx.webgpu.wrappers;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.utils.Disposable;
 import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
@@ -29,10 +30,6 @@ import com.monstrous.gdx.webgpu.graphics.WgTexture;
  *  use create() to create a pass (at least once per frame)
  */
 public class RenderPassBuilder {
-
-    private static WGPURenderPassDescriptor renderPassDescriptor;
-    private static WGPURenderPassColorAttachment renderPassColorAttachment;
-    private static WGPURenderPassDepthStencilAttachment depthStencilAttachment;
 
     public static WebGPURenderPass create(String name) {
         return create( name, null);
@@ -56,7 +53,6 @@ public class RenderPassBuilder {
         WgGraphics gfx = (WgGraphics)Gdx.graphics;
         return create(name,clearColor, clearDepth,null,  gfx.getContext().getDepthTexture(), sampleCount, passType);
     }
-
 
     public static WebGPURenderPass create(String name, Color clearColor, boolean clearDepth, WgTexture colorTexture, WgTexture depthTexture, int sampleCount){
         return create(name, clearColor, clearDepth, colorTexture, depthTexture, sampleCount, RenderPassType.COLOR_AND_DEPTH);
@@ -84,18 +80,9 @@ public class RenderPassBuilder {
 
         WGPUTextureFormat colorFormat = WGPUTextureFormat.Undefined;
 
-        // create reusable helper objects on first call
-        if (renderPassDescriptor == null) {
-            Gdx.app.log("RenderPassBuilder", "creating descriptors");
-            renderPassDescriptor = new WGPURenderPassDescriptor();
-            renderPassDescriptor.setNextInChain(null);
-            renderPassDescriptor.setOcclusionQuerySet(null);
-
-            renderPassColorAttachment = new WGPURenderPassColorAttachment();
-            renderPassColorAttachment.setNextInChain(null);
-
-            depthStencilAttachment = new WGPURenderPassDepthStencilAttachment();
-        }
+        WGPURenderPassDescriptor renderPassDescriptor = WGPURenderPassDescriptor.obtain();
+        renderPassDescriptor.setNextInChain(null);
+        renderPassDescriptor.setOcclusionQuerySet(null);
         renderPassDescriptor.setLabel(name);
 
 
@@ -107,6 +94,8 @@ public class RenderPassBuilder {
             passType == RenderPassType.SHADOW_PASS ||
             passType == RenderPassType.NO_DEPTH) {
 
+            WGPURenderPassColorAttachment renderPassColorAttachment = WGPURenderPassColorAttachment.obtain();
+            renderPassColorAttachment.setNextInChain(null);
             renderPassColorAttachment.setStoreOp(WGPUStoreOp.Store);
 
             renderPassColorAttachment.setDepthSlice(-1);
@@ -147,6 +136,8 @@ public class RenderPassBuilder {
         renderPassDescriptor.setColorAttachments(colorAttachments);
 
         if (passType != RenderPassType.NO_DEPTH) {
+            WGPURenderPassDepthStencilAttachment depthStencilAttachment = WGPURenderPassDepthStencilAttachment.obtain();
+
             depthStencilAttachment.setDepthClearValue(1.0f);
             depthStencilAttachment.setDepthLoadOp( clearDepth ? WGPULoadOp.Clear : WGPULoadOp.Load);
             //depthStencilAttachment.setDepthLoadOp(passType == RenderPassType.COLOR_PASS_AFTER_DEPTH_PREPASS ? WGPULoadOp.Load : WGPULoadOp.Clear);
@@ -192,4 +183,5 @@ public class RenderPassBuilder {
 
         return pass;
     }
+
 }

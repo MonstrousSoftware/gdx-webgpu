@@ -109,10 +109,4 @@ public class WgCubemap extends WgTexture {
 	}
 
 
-	/** Disposes all resources associated with the cubemap */
-	@Override
-	public void dispose () {
-
-	}
-
 }

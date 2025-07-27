@@ -19,7 +19,6 @@ package com.monstrous.gdx.tests.webgpu;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.assets.AssetManager;
-import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g3d.Environment;
@@ -35,13 +34,11 @@ import com.badlogic.gdx.scenes.scene2d.ui.SelectBox;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
-import com.monstrous.gdx.tests.webgpu.utils.PerspectiveCamController;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.monstrous.gdx.webgpu.assets.WgAssetManager;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
-import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLBModelLoader;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 import com.monstrous.gdx.webgpu.scene2d.WgSkin;
 import com.monstrous.gdx.webgpu.scene2d.WgStage;
@@ -56,14 +53,16 @@ public class LoadModelTest extends GdxTest {
         "data/g3d/gltf/StanfordDragon/stanfordDragon.gltf",
         //"data/g3d/ducky.obj",
         "data/g3d/ship.obj",
-
+//
         "data/g3d/gltf/DamagedHelmet/DamagedHelmet.gltf",
         "data/g3d/gltf/waterbottle/waterbottle.glb",
-
+//
         "data/g3d/head.g3db",
         "data/g3d/invaders.g3dj",
-        "data/g3d/monkey.g3db", "data/g3d/skydome.g3db", "data/g3d/teapot.g3db",
-
+        "data/g3d/monkey.g3db",
+        "data/g3d/skydome.g3db",
+        "data/g3d/teapot.g3db",
+//
         "data/g3d/gltf/Cube/Cube.gltf",
         "data/g3d/gltf/Sponza/Sponza.gltf"
 	};
@@ -78,7 +77,7 @@ public class LoadModelTest extends GdxTest {
 	WgStage stage;
 	WgSkin skin;
 	boolean loadedFirst;
-    boolean loaded;
+    boolean loadedAll;
 	WgSpriteBatch batch;
 	WgBitmapFont font;
     Environment environment;
@@ -102,12 +101,12 @@ public class LoadModelTest extends GdxTest {
 
 		// queue for asynchronous loading
         // load one asset first to appear responsive
-        // load the rest of the assets while the user is still gawping at the dragon
+        // load the rest of the assets while the user is admiring the dragon :-)
 		assets = new WgAssetManager();
-		loaded = false;
+		loadedAll = false;
         loadedFirst = false;
         assets.load(fileNames[0], Model.class);
-        assets.finishLoading();
+
 
         // Create an environment with lights
         environment = new Environment();
@@ -143,7 +142,7 @@ public class LoadModelTest extends GdxTest {
 		selectBox.addListener(new ChangeListener() {
 			public void changed (ChangeEvent event, Actor actor) {
 				System.out.println("Clicked! Is checked: " + selectBox.getSelected());
-				if(loaded) {
+				if(loadedAll) {
                     System.out.println("Loading model " + selectBox.getSelected());
 					model = assets.get(selectBox.getSelected(), Model.class);
                     System.out.println("Creating instance");
@@ -168,18 +167,22 @@ public class LoadModelTest extends GdxTest {
 	}
 
 	public void render () {
+
+
+
 		float delta = Gdx.graphics.getDeltaTime();
         if(!loadedFirst && assets.update()) {	// advance loading
             loadedFirst = true;
             model = assets.get(fileNames[0], Model.class);
             instance = new ModelInstance(model);
+            // start loading rest of assets
             for(int i = 1; i < fileNames.length; i++){
                 assets.load(fileNames[i], Model.class);
             }
         }
-		if(!loaded) {
-            if( assets.update(5)) {    // advance loading
-                loaded = true;
+		if(!loadedAll) {
+            if( assets.update()) {    // advance loading
+                loadedAll = true;
                 System.out.println("Loading complete");
             }
 		}
@@ -198,11 +201,11 @@ public class LoadModelTest extends GdxTest {
 
 		modelBatch.end();
 
-        if(loaded)
+        if(loadedAll)
 		    stage.act();
 		stage.draw();
 
-		if(!loaded) {
+		if(!loadedAll) {
 			batch.begin();
 			font.draw(batch, "Loading models from file...", 100, 100);
 			batch.end();

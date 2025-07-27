@@ -121,7 +121,7 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 		Pixmap pm = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
 		pm.setColor(Color.WHITE);
 		pm.fill();
-		texture = new WgTexture(pm);
+		texture = new WgTexture(pm, "white pixel");
 	}
 
 	public void setShader (ShaderProgram shader) {
@@ -359,6 +359,7 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 	public void dispose(){
 		pipelines.dispose();
 		vertexBuffer.dispose();
+        texture.dispose();
 
 		uniformBuffer.dispose();
 		bindGroupLayout.dispose();

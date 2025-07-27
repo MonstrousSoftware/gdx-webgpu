@@ -22,6 +22,7 @@ import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Material;
@@ -74,22 +75,27 @@ public class CubeMapTest extends GdxTest {
 
 		Gdx.input.setInputProcessor(new InputMultiplexer(this, inputController = new CameraInputController(cam)));
 
-//        String[] sides = { "NX.png","NX.png", "NX.png", "NX.png", "NX.png", "NX.png"  };
+ //       String[] sides = { "NX.png","NX.png", "NX.png", "NX.png", "NX.png", "NX.png"  };
       //  String prefix = "data/g3d/environment/environment_01_";
-
-        String[] sides = { "PX.png","NX.png", "PY.png", "NY.png", "PZ.png", "NZ.png"  };
-//       String prefix = "data/g3d/environment/environment_01_";
-        String prefix = "data/g3d/environment/debug_";
 //
-        // String[] sides = {  "pos-x.jpg","neg-x.jpg", "pos-y.jpg","neg-y.jpg", "pos-z.jpg", "neg-z.jpg"   };
-       // String[] sides = {  "pos-x.jpg","pos-x.jpg", "pos-x.jpg","pos-x.jpg", "pos-x.jpg", "neg-z.jpg"   };
-       // String prefix = "data/g3d/environment/leadenhall/";
+         String[] sides = { "PX.png","NX.png", "PY.png", "NY.png", "PZ.png", "NZ.png"  };
+       //String prefix = "data/g3d/environment/environment_01_";
+        String prefix = "data/g3d/environment/01_";
+//        String prefix = "data/g3d/environment/debug_";
+//
+ //         String[] sides = {  "pos-x.jpg","neg-x.jpg", "pos-y.jpg","neg-y.jpg", "pos-z.jpg", "neg-z.jpg"   };
+//        String[] sides = {  "pos-x.jpg","pos-x.jpg", "pos-x.jpg","pos-x.jpg", "pos-x.jpg", "neg-z.jpg"   };
+//        String prefix = "data/g3d/environment/leadenhall/";
 
         FileHandle[] files = new FileHandle[6];
         for(int i = 0; i < sides.length; i++){
             files[i] = Gdx.files.internal(prefix + sides[i]);
         }
-
+//        Pixmap[] pixmaps = new Pixmap[6];
+//        for(int i = 0; i < sides.length; i++){
+//            pixmaps[i] = new Pixmap(files[i]);
+//        }
+        //cubemap = new WgCubemap(pixmaps[0], pixmaps[1], pixmaps[2], pixmaps[3], pixmaps[4], pixmaps[5], false);
         cubemap = new WgCubemap(files[0], files[1], files[2], files[3], files[4], files[5], false);
 
         environment = new Environment();
@@ -113,6 +119,7 @@ public class CubeMapTest extends GdxTest {
 	public void dispose () {
 		modelBatch.dispose();
 		model.dispose();
+        cubemap.dispose();
 	}
 
     @Override

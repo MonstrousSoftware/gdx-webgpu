@@ -112,16 +112,13 @@ public class WgDefaultShader extends WgShader implements Disposable {
         Pixmap pixmap = new Pixmap(1,1,RGBA8888);
         pixmap.setColor(Color.WHITE);
         pixmap.fill();
-        defaultTexture = new WgTexture(pixmap);
-        defaultTexture.setLabel("default (white)");
+        defaultTexture = new WgTexture(pixmap,"default (white)");
         pixmap.setColor(Color.GREEN);
         pixmap.fill();
-        defaultNormalTexture = new WgTexture(pixmap);
-        defaultNormalTexture.setLabel("default normal texture");
+        defaultNormalTexture = new WgTexture(pixmap,"default normal texture");
         pixmap.setColor(Color.BLACK);
         pixmap.fill();
-        defaultBlackTexture = new WgTexture(pixmap);
-        defaultBlackTexture.setLabel("default (black))");
+        defaultBlackTexture = new WgTexture(pixmap,"default (black)");
 
         hasShadowMap = renderable.environment != null && renderable.environment.shadowMap != null;
         hasCubeMap = renderable.environment != null && renderable.environment.has(WgCubemapAttribute.EnvironmentMap);
@@ -575,6 +572,8 @@ public class WgDefaultShader extends WgShader implements Disposable {
     public void dispose() {
         binder.dispose();
         defaultTexture.dispose();
+        defaultNormalTexture.dispose();
+        defaultBlackTexture.dispose();
         instanceBuffer.dispose();
         uniformBuffer.dispose();
     }
