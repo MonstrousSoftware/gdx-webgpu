@@ -79,8 +79,8 @@ public class CubeMapTest extends GdxTest {
       //  String prefix = "data/g3d/environment/environment_01_";
 //
          String[] sides = { "PX.png","NX.png", "PY.png", "NY.png", "PZ.png", "NZ.png"  };
-       //String prefix = "data/g3d/environment/environment_01_";
-        String prefix = "data/g3d/environment/01_";
+       String prefix = "data/g3d/environment/environment_01_";
+       // String prefix = "data/g3d/environment/01_";
 //        String prefix = "data/g3d/environment/debug_";
 //
  //         String[] sides = {  "pos-x.jpg","neg-x.jpg", "pos-y.jpg","neg-y.jpg", "pos-z.jpg", "neg-z.jpg"   };
