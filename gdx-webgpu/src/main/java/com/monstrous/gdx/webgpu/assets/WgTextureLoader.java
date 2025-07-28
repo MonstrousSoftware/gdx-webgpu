@@ -46,10 +46,11 @@ public class WgTextureLoader extends AsynchronousAssetLoader<Texture, TextureLoa
 
 	@Override
 	public void loadAsync (AssetManager manager, String fileName, FileHandle file, TextureLoader.TextureParameter parameter) {
-        //System.out.println("loadAsync: "+fileName);
+        System.out.println("loadAsync: "+fileName);
+
 		info.filename = fileName;
 		if (parameter == null || parameter.textureData == null) {
-			Format format = Format.RGBA8888; // force 4 byte format
+			Format format = null;
 			boolean genMipMaps = false;
 			info.texture = null;
 
@@ -58,6 +59,8 @@ public class WgTextureLoader extends AsynchronousAssetLoader<Texture, TextureLoa
 				genMipMaps = parameter.genMipMaps;
 				info.texture = parameter.texture;
 			}
+
+            format = Format.RGBA8888; // force 4 byte format
 
 			info.data = TextureData.Factory.loadFromFile(file, format, genMipMaps);
 		} else {

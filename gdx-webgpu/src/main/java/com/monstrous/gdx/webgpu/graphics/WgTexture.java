@@ -112,7 +112,8 @@ public class WgTexture extends Texture {
     }
 
     public WgTexture(FileHandle file, Pixmap.Format format, boolean useMipMaps) {
-        this(TextureData.Factory.loadFromFile(file, format, useMipMaps), file.name());
+      /// override format
+        this(TextureData.Factory.loadFromFile(file, Pixmap.Format.RGBA8888, useMipMaps), file.name());
     }
 
     public WgTexture(Pixmap pixmap) {
@@ -120,7 +121,7 @@ public class WgTexture extends Texture {
     }
 
     public WgTexture(Pixmap pixmap, String label) {
-        this(new PixmapTextureData(pixmap, null, false, false), label);
+        this(new PixmapTextureData(pixmap, Pixmap.Format.RGBA8888, false, false), label);
     }
 
     public WgTexture(TextureData data) {
@@ -169,7 +170,7 @@ public class WgTexture extends Texture {
         // data format is desired format, pixmap format is format from file
         // convert to desired format (typically RGBA) as needed
 
-        dataFormat = Pixmap.Format.RGBA8888;        // force format for now
+        //dataFormat = Pixmap.Format.RGBA8888;        // force format for now
         if (dataFormat != pixmap.getFormat()) {
             Pixmap tmp = new Pixmap(pixmap.getWidth(), pixmap.getHeight(), dataFormat);
             tmp.setBlending(Pixmap.Blending.None);
@@ -285,6 +286,8 @@ public class WgTexture extends Texture {
         textureDesc.getSize().setDepthOrArrayLayers(numLayers);
         textureDesc.setUsage(textureUsage);
         WGPUVectorTextureFormat viewFormats = WGPUVectorTextureFormat.obtain();
+
+        //viewFormats.push_back(((WgGraphics)Gdx.graphics).getContext().surfaceFormat);   // add surface format in any case
         if (viewFormat != null) {
             viewFormats.push_back(viewFormat);
         }

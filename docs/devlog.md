@@ -330,3 +330,11 @@ stack backtrace:
 1:     0x7ffda611c36b - <unknown>
 2:     0x7ffda614c067 - <unknown>
 3:     0x7ffda614e975 - <unknown>
+
+
+28/07:
+Weird bug fixed in CubeMapTest, related to not disposing a pixmap after creating a WgTexture.
+
+
+Regarding texture format, now we are forcing all textures to RBGA8. But, see for example TextureAtlasTest which uses a RGBA4444,
+shouldn't we allow different formats as long as they have a view matching the surface?
