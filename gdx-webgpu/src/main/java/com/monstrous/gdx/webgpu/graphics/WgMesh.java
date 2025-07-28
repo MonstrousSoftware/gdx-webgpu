@@ -114,7 +114,7 @@ public class WgMesh extends Mesh {
         // bind vertices
         ((WgVertexBuffer)vertices).bind(renderPass);
 
-        if( getIndexData() != null) {   // is it an indexed mesh?
+        if( getIndexData().getNumIndices() > 0) {   // is it an indexed mesh?
             ((WgIndexBuffer)getIndexData()).bind(renderPass);// bind indices
             renderPass.drawIndexed(size, numInstances, offset, 0, firstInstance);
         } else {
