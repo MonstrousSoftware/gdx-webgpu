@@ -77,16 +77,16 @@ public class ShaderPrefix {
 //            sb.append("#define USE_IBL\n");
 //        }
 
-        // Add gamma correction if surface format is Srgb
+        // Add gamma correction if surface format is not Srgb
         WgGraphics gfx = (WgGraphics)Gdx.graphics;
         WebGPUContext webgpu = gfx.getContext();
         switch(webgpu.surfaceFormat) {
-            case RGBA8UnormSrgb:
-            case BGRA8UnormSrgb:
-            case BC2RGBAUnormSrgb:
-            case BC3RGBAUnormSrgb:
-            case BC7RGBAUnormSrgb:
-            case ETC2RGBA8UnormSrgb:
+            case RGBA8Unorm:
+            case BGRA8Unorm:
+            case BC2RGBAUnorm:
+            case BC3RGBAUnorm:
+            case BC7RGBAUnorm:
+            case ETC2RGBA8Unorm:
                 // some more exotic formats to add...
                 sb.append("#define GAMMA_CORRECTION\n");
                 break;

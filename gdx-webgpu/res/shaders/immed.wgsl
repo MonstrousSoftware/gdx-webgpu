@@ -39,7 +39,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
 
     let color = in.color * textureSample(texture, textureSampler, in.uv);
 #ifdef GAMMA_CORRECTION
-    let linearColor: vec3f = pow(color.rgb, vec3f(2.2));
+    let linearColor: vec3f = pow(color.rgb, vec3f(1/2.2));
     color = vec4f(linearColor, color.a);
 #endif
     return color;

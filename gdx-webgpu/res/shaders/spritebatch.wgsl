@@ -59,9 +59,9 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
 
 // textures are loaded into linear space already.
 
-//#ifdef GAMMA_CORRECTION
-//    let linearColor: vec3f = pow(color.rgb, vec3f(2.2));
-//    color = vec4f(linearColor, color.a);
-//#endif
+#ifdef GAMMA_CORRECTION
+    let linearColor: vec3f = pow(color.rgb, vec3f(1/2.2));
+    color = vec4f(linearColor, color.a);
+#endif
     return color;
 };
