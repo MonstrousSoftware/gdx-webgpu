@@ -48,6 +48,9 @@ import java.nio.ShortBuffer;
 public class WgModel extends Model {
 
 
+    public WgModel() {
+    }
+
 	public WgModel(ModelData data, TextureProvider textureProvider) {
 		super(data, textureProvider);
 	}
