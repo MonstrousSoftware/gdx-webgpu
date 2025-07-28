@@ -345,3 +345,20 @@ It is as if the malloc that this does need to be freed before continuing further
 
 Regarding texture format, now we are forcing all textures to RBGA8. But, see for example TextureAtlasTest which uses a RGBA4444,
 shouldn't we allow different formats as long as they have a view matching the surface?
+
+
+I've overhauled the way to do the color space.  
+Now textures are marked as Srgb format, so they will be converted from gamma corrected to linear when loading.
+(Image files are almost always gamma corrected). Lighting calculations can be done in linear space
+(so 2 lights will give twice as much light as one light) and then on output there is only gamma correction 
+if the surface is not Srgb. (So not on desktop, but done for Chrome).  
+Now the sky in Superkaolio finally looks correct. (Color values used for clearing the screen are 
+converted to linear color space).  One potential issue: normal maps, specularity maps etc. 
+should not be converted (but they are because we don't make the distinction yet).
+Probably need to have some option when loading a texture to indicate the relevant color space i.e. Linear or sRGB.
+
+
+Another point to note: if you make textures using hand coded pixmaps, you may need to convert the colors, using
+GammaCorrection.toLinear();
+
+

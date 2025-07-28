@@ -487,6 +487,31 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
 //        return config.requestedBackendType;
 //    }
 
+
+    public boolean hasLinearOutput(){
+        switch(surfaceFormat) {
+            case RGBA8UnormSrgb:
+            case BGRA8UnormSrgb:
+            case BC2RGBAUnormSrgb:
+            case BC3RGBAUnormSrgb:
+            case BC7RGBAUnormSrgb:
+            case ETC2RGBA8UnormSrgb:
+                // some more exotic formats to add...
+                return false;
+            case RGBA8Unorm:
+            case BGRA8Unorm:
+            case BC2RGBAUnorm:
+            case BC3RGBAUnorm:
+            case BC7RGBAUnorm:
+            case ETC2RGBA8Unorm:
+                // some more exotic formats to add...
+                return true;
+            default:
+                Gdx.app.error("hasLinearOutput", "surfaceFormat not known: "+surfaceFormat);
+        }
+        return true;
+    }
+
     @Override
     public int getSamples() {
         return config.numSamples;

@@ -43,9 +43,13 @@ public abstract class WebGPUContext {
     public WgTexture depthTexture;
     public int frameNumber;
 
+
+
     abstract WGPUDevice getDevice ();
     abstract WGPUQueue getQueue ();
     public abstract WGPUTextureFormat getSurfaceFormat();
+    public abstract boolean hasLinearOutput();
+
     public abstract WGPUTextureView getTargetView();
 
     /** Use provided texture for output (must have usage RenderAttachment).
