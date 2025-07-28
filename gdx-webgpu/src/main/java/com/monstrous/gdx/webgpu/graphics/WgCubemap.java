@@ -37,6 +37,11 @@ public class WgCubemap extends WgTexture {
 		load(data);
 	}
 
+    // TMP
+    public WgCubemap( int w, int h) {
+        super("cubemap", w, h, 6, false, false, WGPUTextureFormat.RGBA8Unorm, 1);
+    }
+
 	/** Construct a Cubemap with the specified texture files for the sides, does not generate mipmaps. */
 	public WgCubemap(FileHandle positiveX, FileHandle negativeX, FileHandle positiveY, FileHandle negativeY, FileHandle positiveZ,
                      FileHandle negativeZ) {

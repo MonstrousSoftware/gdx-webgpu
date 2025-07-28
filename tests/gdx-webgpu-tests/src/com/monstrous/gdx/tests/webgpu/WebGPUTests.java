@@ -85,6 +85,7 @@ public class WebGPUTests {
         TestTextureMipMap.class,
         Basic3DTest.class,
         TestMesh.class,
+        TestMeshNoIndices.class,
         TestMeshBuilder.class,
         TestTexture.class,
         SpriteBatchDoubleLoop.class,

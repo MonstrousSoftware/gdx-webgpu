@@ -48,7 +48,7 @@ public class WebGPUTestStarter {
 		WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
 		config.setWindowedMode(320, 640);
         config.enableGPUtiming = true;
-        config.backend = WebGPUContext.Backend.DEFAULT;
+        config.backend = WebGPUContext.Backend.VULKAN;
         config.useVsync(true);
 
 		new WgDesktopApplication(new TestChooser(), config);

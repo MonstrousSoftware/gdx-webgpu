@@ -161,6 +161,7 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
                     System.out.println("MaxTextureDimension3D: " + limits.getMaxTextureDimension3D());
                     System.out.println("MaxTextureArrayLayers: " + limits.getMaxTextureArrayLayers());
 
+
                     initCallback.onInit(WebGPUApplication.this);
                 }
                 else {

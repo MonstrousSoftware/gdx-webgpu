@@ -20,10 +20,7 @@ package com.monstrous.gdx.tests.webgpu;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.PerspectiveCamera;
-import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.VertexAttributes;
+import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
@@ -33,9 +30,11 @@ import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
+import com.github.xpenatan.webgpu.WGPUTextureFormat;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.webgpu.graphics.WgCubemap;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
+import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
@@ -53,7 +52,6 @@ public class CubeMapTest extends GdxTest {
     private WgCubemap cubemap;
     private WgTexture texture;
 
-
 	@Override
 	public void create () {
 		modelBatch = new WgModelBatch();
@@ -65,43 +63,42 @@ public class CubeMapTest extends GdxTest {
 		cam.far = 150f;
 		cam.update();
 
-        //texture = new WgTexture("data/webgpu.png", true);
+        FileHandle file = Gdx.files.internal("data/webgpu.png");
+//        Pixmap w = new Pixmap(file);
+//
+//        texture = new WgTexture(w);
+//        w.dispose();
+
+        texture = new WgTexture(file);
+
 
         Material mat = new Material(ColorAttribute.createDiffuse(Color.YELLOW));
         ModelBuilder modelBuilder = new WgModelBuilder();
-		model = modelBuilder.createBox(5f, 5f, 5f, mat, //new Material(TextureAttribute.createDiffuse(texture)),
+		model = modelBuilder.createBox(5f, 5f, 5f, new Material(TextureAttribute.createDiffuse(texture)),
 			VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal| VertexAttributes.Usage.TextureCoordinates);
 		instance = new ModelInstance(model);
 
 		Gdx.input.setInputProcessor(new InputMultiplexer(this, inputController = new CameraInputController(cam)));
 
- //       String[] sides = { "NX.png","NX.png", "NX.png", "NX.png", "NX.png", "NX.png"  };
-      //  String prefix = "data/g3d/environment/environment_01_";
-//
-         String[] sides = { "PX.png","NX.png", "PY.png", "NY.png", "PZ.png", "NZ.png"  };
-       String prefix = "data/g3d/environment/environment_01_";
-       // String prefix = "data/g3d/environment/01_";
+//          String[] sides = { "PX.png","NX.png", "PY.png", "NY.png", "PZ.png", "NZ.png"  };
+//       String prefix = "data/g3d/environment/environment_01_";
 //        String prefix = "data/g3d/environment/debug_";
 //
- //         String[] sides = {  "pos-x.jpg","neg-x.jpg", "pos-y.jpg","neg-y.jpg", "pos-z.jpg", "neg-z.jpg"   };
-//        String[] sides = {  "pos-x.jpg","pos-x.jpg", "pos-x.jpg","pos-x.jpg", "pos-x.jpg", "neg-z.jpg"   };
-//        String prefix = "data/g3d/environment/leadenhall/";
+         String[] sides = {  "pos-x.jpg","neg-x.jpg", "pos-y.jpg","neg-y.jpg", "pos-z.jpg", "neg-z.jpg"   };
+        String prefix = "data/g3d/environment/leadenhall/";
 
-        FileHandle[] files = new FileHandle[6];
+        FileHandle[] fileHandles = new FileHandle[6];
         for(int i = 0; i < sides.length; i++){
-            files[i] = Gdx.files.internal(prefix + sides[i]);
+            fileHandles[i] = Gdx.files.internal(prefix + sides[i]);
         }
-//        Pixmap[] pixmaps = new Pixmap[6];
-//        for(int i = 0; i < sides.length; i++){
-//            pixmaps[i] = new Pixmap(files[i]);
-//        }
-        //cubemap = new WgCubemap(pixmaps[0], pixmaps[1], pixmaps[2], pixmaps[3], pixmaps[4], pixmaps[5], false);
-        cubemap = new WgCubemap(files[0], files[1], files[2], files[3], files[4], files[5], false);
+
+        cubemap = new WgCubemap(fileHandles[0], fileHandles[1], fileHandles[2], fileHandles[3], fileHandles[4], fileHandles[5], false);
 
         environment = new Environment();
         environment.set(new ColorAttribute(ColorAttribute.AmbientLight, .4f, .4f, .4f, 1f));
         environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
         environment.set(new WgCubemapAttribute(EnvironmentMap, cubemap));    // add cube map attribute
+
 	}
 
 	@Override

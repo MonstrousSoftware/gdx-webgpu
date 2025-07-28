@@ -165,6 +165,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         binder.defineBinding("metallicRoughnessSampler", 1, 6);
         binder.defineBinding("emissiveTexture", 1, 7);
         binder.defineBinding("emissiveSampler", 1, 8);
+
         binder.defineBinding("instanceUniforms", 2, 0);
         // define uniforms in uniform buffers with their offset
         // frame uniforms

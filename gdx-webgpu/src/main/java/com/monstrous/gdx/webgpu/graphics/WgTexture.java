@@ -161,28 +161,27 @@ public class WgTexture extends Texture {
         WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst);
         create( label, mipLevelCount, textureUsage, format, 1, numSamples, null);
         Pixmap pixmap = data.consumePixmap();
+        boolean mustDisposePixmap = data.disposePixmap();
 
-        Pixmap.Format dataFormat = data.getFormat();
-        Pixmap.Format pixmapFormat = pixmap.getFormat();
+        //Pixmap.Format dataFormat = data.getFormat();
+        //Pixmap.Format pixmapFormat = pixmap.getFormat();
 
         // data format is desired format, pixmap format is format from file
-        // force 4 byte format!
+        // convert to desired format (typically RGBA) as needed
 
-        dataFormat = Pixmap.Format.RGBA8888;
-        //if (data.getFormat() != pixmap.getFormat()) {
-        if ( dataFormat != pixmap.getFormat()) {
-            Pixmap tmp = new Pixmap(pixmap.getWidth(), pixmap.getHeight(), dataFormat);
+        if (data.getFormat() != pixmap.getFormat()) {
+            Pixmap tmp = new Pixmap(pixmap.getWidth(), pixmap.getHeight(), data.getFormat());
             tmp.setBlending(Pixmap.Blending.None);
             tmp.drawPixmap(pixmap, 0, 0, 0, 0, pixmap.getWidth(), pixmap.getHeight());
-            if (data.disposePixmap()) {
+            if (mustDisposePixmap) {
                 pixmap.dispose();
             }
             pixmap = tmp;
-           //disposePixmap = true;
-            // todo dispose pixmap
+            mustDisposePixmap = true;
         }
 
         load(texture, pixmap.getPixels(),data.getWidth(), data.getHeight(), mipLevelCount, 0);
+        if (mustDisposePixmap) pixmap.dispose();
     }
 
 
