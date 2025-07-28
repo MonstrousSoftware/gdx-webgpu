@@ -38,6 +38,7 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
     private final float[] gpuTime = new float[GPUTimer.MAX_PASSES];
     private boolean mustResize = false;
     private int newWidth, newHeight;    // for resize
+    private WGPUTextureView textureViewOut;
 
     public static class Configuration {
         public int numSamples;
@@ -140,6 +141,7 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
                     command = new WGPUCommandBuffer();
                     gpuTimer = new GPUTimer(device, config.gpuTimingEnabled);
                     encoder = new WGPUCommandEncoder();
+                    textureViewOut = new WGPUTextureView();
 
                     System.out.println("Platform: " + WGPU.getPlatformType());
 
@@ -238,7 +240,9 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
         gpuTimer.fetchTimestamps();
 
         targetView.release();
-        targetView.dispose();
+        if(textureViewOut != targetView) {
+            targetView.dispose();
+        }
         targetView = null;
 
         if(WGPU.getPlatformType() != WGPUPlatformType.WGPU_Web) {
@@ -268,7 +272,6 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
 
 
     private WGPUTextureView getNextSurfaceTextureView() {
-        WGPUTextureView textureViewOut = new WGPUTextureView();
         WGPUSurfaceTexture surfaceTextureOut = WGPUSurfaceTexture.obtain();
         surface.getCurrentTexture(surfaceTextureOut);
 
@@ -414,6 +417,7 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
         device.destroy();
         device.dispose();
         gpuTimer.dispose();
+        textureViewOut.dispose();
 
         surface.release();
         command.dispose();
