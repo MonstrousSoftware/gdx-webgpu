@@ -102,6 +102,7 @@ public class RenderPassBuilder {
 
 
             if (clearColor != null) {
+                GammaCorrection.toLinear(clearColor);      // inverse gamma correction
                 renderPassColorAttachment.setLoadOp( WGPULoadOp.Clear);
 
                 renderPassColorAttachment.getClearValue().setR(clearColor.r);

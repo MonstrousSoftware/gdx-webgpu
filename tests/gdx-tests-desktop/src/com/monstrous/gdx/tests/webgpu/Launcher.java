@@ -21,7 +21,7 @@ public class Launcher {
         //new WgDesktopApplication(new ImmediateModeRendererTest(), config);
         //new WgDesktopApplication(new ColorTest(), config);
         //new WgDesktopApplication(new TransparencyTest(), config);
-        new WgDesktopApplication(new TextureAtlasTest(), config);
+        new WgDesktopApplication(new SpriteBatchBasic(), config);
         //new WgDesktopApplication(new CubeMapTest(), config);
         //new WgDesktopApplication(new FontTest(), config);
         //new WgDesktopApplication(new FullScreenTest(), config);

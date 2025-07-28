@@ -39,7 +39,7 @@ fn vs_main(in: VertexInput) -> VertexOutput {
 #endif
 
 #ifdef COLOR
-   let color:vec4f = in.color;
+   let color:vec4f = vec4f(pow(in.color.rgb, vec3f(2.2)), in.color.a);
 #else
    let color:vec4f = vec4f(1,1,1,1);   // white
 #endif
@@ -57,9 +57,11 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
     var color = in.color;
 #endif
 
-#ifdef GAMMA_CORRECTION
-    let linearColor: vec3f = pow(color.rgb, vec3f(2.2));
-    color = vec4f(linearColor, color.a);
-#endif
+// textures are loaded into linear space already.
+
+//#ifdef GAMMA_CORRECTION
+//    let linearColor: vec3f = pow(color.rgb, vec3f(2.2));
+//    color = vec4f(linearColor, color.a);
+//#endif
     return color;
 };

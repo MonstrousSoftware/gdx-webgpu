@@ -46,7 +46,7 @@ public class WgTextureLoader extends AsynchronousAssetLoader<Texture, TextureLoa
 
 	@Override
 	public void loadAsync (AssetManager manager, String fileName, FileHandle file, TextureLoader.TextureParameter parameter) {
-        System.out.println("loadAsync: "+fileName);
+        //System.out.println("loadAsync: "+fileName);
 
 		info.filename = fileName;
 		if (parameter == null || parameter.textureData == null) {
@@ -72,7 +72,7 @@ public class WgTextureLoader extends AsynchronousAssetLoader<Texture, TextureLoa
 
 	@Override
 	public Texture loadSync (AssetManager manager, String fileName, FileHandle file, TextureLoader.TextureParameter parameter) {
-        System.out.println("loadSync: "+fileName);
+        //System.out.println("loadSync: "+fileName);
         if (info == null) return null;
 		Texture texture = info.texture;
 		if (texture != null) {

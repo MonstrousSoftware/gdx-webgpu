@@ -158,7 +158,8 @@ public class WgTexture extends Texture {
     private void uploadImageData( TextureData data ){
         mipLevelCount = data.useMipMaps() ? Math.max(1, bitWidth(Math.min(data.getWidth(), data.getHeight()))) : 1;
         numSamples = 1;
-        format = WGPUTextureFormat.RGBA8Unorm; // assumption
+        //format = WGPUTextureFormat.RGBA8Unorm; // assumption
+        format = WGPUTextureFormat.RGBA8UnormSrgb; // assumption
         WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst);
         create( label, mipLevelCount, textureUsage, format, 1, numSamples, null);
         Pixmap pixmap = data.consumePixmap();
@@ -295,7 +296,7 @@ public class WgTexture extends Texture {
 
         WGPUTexture texture = new WGPUTexture();
         WebGPUContext webgpu = ((WgGraphics) Gdx.graphics).getContext();
-        System.out.println("Create texture "+label);
+        //System.out.println("Create texture "+label);
         webgpu.device.createTexture(textureDesc, texture);
         return texture;
     }

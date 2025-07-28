@@ -334,7 +334,14 @@ stack backtrace:
 
 28/07:
 Weird bug fixed in CubeMapTest, related to not disposing a pixmap after creating a WgTexture.
+  If you call WebGPUTestStarter and then CubeMapTest it will crash with
+   the mention of "invalid texture" in the log. If you first call some other tests from
+   WebGPUTestStarter it doesn't happen.  It also depends on which textures are
+   loaded. E.g. data/g3d/environment/debug_* is okay, but data/g3d/environment/environment_01_* is
+   not okay.
 
+It means you can still cause this crash by doing Pixmap pm = new Pixmap( filename );
+It is as if the malloc that this does need to be freed before continuing further.
 
 Regarding texture format, now we are forcing all textures to RBGA8. But, see for example TextureAtlasTest which uses a RGBA4444,
 shouldn't we allow different formats as long as they have a view matching the surface?

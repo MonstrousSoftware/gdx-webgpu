@@ -19,6 +19,7 @@ package com.monstrous.gdx.webgpu.graphics.utils;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
+import com.monstrous.gdx.webgpu.wrappers.GammaCorrection;
 import com.monstrous.gdx.webgpu.wrappers.RenderPassBuilder;
 import com.monstrous.gdx.webgpu.wrappers.WebGPURenderPass;
 
@@ -58,6 +59,7 @@ public final class WgScreenUtils {
 	 * @param applyAntialiasing applies multi-sampling for antialiasing if true. */
 	public static void clear (float r, float g, float b, float a, boolean clearDepth, boolean applyAntialiasing) {
 		backgroundColor.set(r,g,b,a);
+        GammaCorrection.toLinear(backgroundColor);      // inverse gamma correction
 		WgGraphics gfx = (WgGraphics) Gdx.graphics;
 		WebGPURenderPass renderPass = RenderPassBuilder.create("ScreenUtils.clear", backgroundColor, clearDepth, gfx.getContext().getSamples());
 		renderPass.end();
