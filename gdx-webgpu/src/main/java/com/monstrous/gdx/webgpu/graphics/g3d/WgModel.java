@@ -141,6 +141,7 @@ public class WgModel extends Model {
                 if(tex instanceof PBRModelTexture && ((PBRModelTexture)tex).pixmap != null){
                     // pixmap read from binary file
                     texture = new WgTexture(((PBRModelTexture)tex).pixmap, tex.id);
+                    // todo dispose pixmap here?
                     textures.put(tex.fileName, texture);    // "bufferView.N"
                     disposables.add(texture);
                 }

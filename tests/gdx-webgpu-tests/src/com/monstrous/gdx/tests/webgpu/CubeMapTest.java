@@ -16,7 +16,6 @@
 
 package com.monstrous.gdx.tests.webgpu;
 
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.files.FileHandle;
@@ -63,14 +62,12 @@ public class CubeMapTest extends GdxTest {
 		cam.far = 150f;
 		cam.update();
 
-        FileHandle file = Gdx.files.internal("data/webgpu.png");
-//        Pixmap w = new Pixmap(file);
-//
-//        texture = new WgTexture(w);
-//        w.dispose();
+        texture = new WgTexture(Gdx.files.internal("data/webgpu.png"));
 
-        texture = new WgTexture(file);
-
+        // Note: a statement like the following may (not always, depends on many factors) cause a crash of this demo
+        // unless you add pm.dispose() immediately after
+        //Pixmap pm = new Pixmap(Gdx.files.internal("data/webgpu.png"));
+        //pm.dispose();
 
         Material mat = new Material(ColorAttribute.createDiffuse(Color.YELLOW));
         ModelBuilder modelBuilder = new WgModelBuilder();

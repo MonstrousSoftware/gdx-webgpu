@@ -163,14 +163,15 @@ public class WgTexture extends Texture {
         Pixmap pixmap = data.consumePixmap();
         boolean mustDisposePixmap = data.disposePixmap();
 
-        //Pixmap.Format dataFormat = data.getFormat();
+        Pixmap.Format dataFormat = data.getFormat();
         //Pixmap.Format pixmapFormat = pixmap.getFormat();
 
         // data format is desired format, pixmap format is format from file
         // convert to desired format (typically RGBA) as needed
 
-        if (data.getFormat() != pixmap.getFormat()) {
-            Pixmap tmp = new Pixmap(pixmap.getWidth(), pixmap.getHeight(), data.getFormat());
+        dataFormat = Pixmap.Format.RGBA8888;        // force format for now
+        if (dataFormat != pixmap.getFormat()) {
+            Pixmap tmp = new Pixmap(pixmap.getWidth(), pixmap.getHeight(), dataFormat);
             tmp.setBlending(Pixmap.Blending.None);
             tmp.drawPixmap(pixmap, 0, 0, 0, 0, pixmap.getWidth(), pixmap.getHeight());
             if (mustDisposePixmap) {
