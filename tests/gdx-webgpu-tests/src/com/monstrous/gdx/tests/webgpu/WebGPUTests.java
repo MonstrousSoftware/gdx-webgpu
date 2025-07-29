@@ -80,7 +80,6 @@ public class WebGPUTests {
         DepthClearTest.class,
         FogTest.class,
         ShadowTest.class,
-        SystemCursorTest.class,
         TextureAtlasTest.class,
         TestTextureMipMap.class,
         Basic3DTest.class,
@@ -99,7 +98,6 @@ public class WebGPUTests {
         SpriteBatchTextures.class,
         SpriteBatchCount.class,
         CubeMapTest.class,
-        TestTexture6.class,
         Gamma3D.class
 
 		// @on

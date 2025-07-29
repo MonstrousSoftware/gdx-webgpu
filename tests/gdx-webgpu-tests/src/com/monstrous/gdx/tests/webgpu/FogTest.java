@@ -38,6 +38,7 @@ import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
+import com.monstrous.gdx.webgpu.wrappers.GammaCorrection;
 
 /** Test fog
  *  We can set the fog color via the environment, this should normally be the same as the background color.
@@ -51,7 +52,7 @@ public class FogTest extends GdxTest {
     Model box;
     ModelInstance instance;
     Environment environment;
-	final Color fogColor = Color.DARK_GRAY;
+	Color fogColor;
 
 
 //	// launcher
@@ -83,9 +84,12 @@ public class FogTest extends GdxTest {
         long attribs = VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal ;
         box = modelBuilder.createBox(5, 5, 5, mat, attribs);
 
+        fogColor = new Color(Color.DARK_GRAY);
+        GammaCorrection.toLinear(fogColor);
+
         environment = new Environment();
         environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1.f));
-		environment.set(new ColorAttribute(ColorAttribute.Fog, fogColor));
+		environment.set(new ColorAttribute(ColorAttribute.Fog,fogColor));
         environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -0.3f, -1f, -0.2f));
 
         instance = new ModelInstance(box, 0,0,0);
@@ -94,7 +98,7 @@ public class FogTest extends GdxTest {
 	public void render () {
 		animate();
 
-		WgScreenUtils.clear(fogColor, true);
+		WgScreenUtils.clear(Color.DARK_GRAY, true);
 		cam.update();
 		modelBatch.begin(cam);
 		modelBatch.render(instance, environment);
