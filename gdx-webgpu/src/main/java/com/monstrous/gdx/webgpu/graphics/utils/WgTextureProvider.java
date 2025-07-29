@@ -27,7 +27,9 @@ import com.monstrous.gdx.webgpu.graphics.WgTexture;
 public interface WgTextureProvider extends TextureProvider {
 	public Texture load (String fileName);
 
-	public static class FileTextureProvider implements WgTextureProvider {
+    Texture load(String fileName, boolean color);
+
+    public static class FileTextureProvider implements WgTextureProvider {
 		private Texture.TextureFilter minFilter, magFilter;
 		private Texture.TextureWrap uWrap, vWrap;
 		private boolean useMipMaps;
@@ -49,11 +51,19 @@ public interface WgTextureProvider extends TextureProvider {
 
 		@Override
 		public Texture load (String fileName) {
-			Texture result = new WgTexture(Gdx.files.internal(fileName), useMipMaps);
+			Texture result = new WgTexture(Gdx.files.internal(fileName), useMipMaps, true);
 			result.setFilter(minFilter, magFilter);
 			result.setWrap(uWrap, vWrap);
 			return result;
 		}
+
+        @Override
+        public Texture load (String fileName, boolean isColor) {
+            Texture result = new WgTexture(Gdx.files.internal(fileName), useMipMaps, isColor);
+            result.setFilter(minFilter, magFilter);
+            result.setWrap(uWrap, vWrap);
+            return result;
+        }
 	}
 
 //	public static class AssetTextureProvider implements WebGPUTextureProvider {

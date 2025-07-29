@@ -39,10 +39,13 @@ import com.monstrous.gdx.webgpu.graphics.g3d.attributes.PBRTextureAttribute;
 import com.monstrous.gdx.webgpu.graphics.g3d.model.PBRModelTexture;
 import com.monstrous.gdx.webgpu.graphics.g3d.model.WgMeshPart;
 import com.monstrous.gdx.webgpu.graphics.g3d.model.WgModelMeshPart;
+import com.monstrous.gdx.webgpu.graphics.utils.WgTextureProvider;
 
 import java.nio.Buffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
+
+import static com.badlogic.gdx.graphics.g3d.model.data.ModelTexture.*;
 
 
 public class WgModel extends Model {
@@ -117,7 +120,7 @@ public class WgModel extends Model {
 			part.update();
 	}
 
-	// unchanged?
+
 	@Override
 	protected Material convertMaterial (ModelMaterial mtl, TextureProvider textureProvider) {
 		Material result = new Material();
@@ -138,21 +141,25 @@ public class WgModel extends Model {
 		if (mtl.textures != null) {
 			for (ModelTexture tex : mtl.textures) {
 				Texture texture;
-                if(tex instanceof PBRModelTexture && ((PBRModelTexture)tex).texture != null){
-                    // pixmap read from binary file
-                    texture = ((PBRModelTexture)tex).texture; //new WgTexture(((PBRModelTexture)tex).pixmap, tex.id);
-                    // todo dispose pixmap here?
-                    textures.put(tex.fileName, texture);    // "bufferView.N"
+
+                if (textures.containsKey(tex.fileName)) {   // get from local cache
+                    texture = textures.get(tex.fileName);
+                }
+                else {
+                    if(tex instanceof PBRModelTexture && ((PBRModelTexture)tex).texture != null){
+                        // preloaded texture from binary file (GLB or BIN)
+                        texture = ((PBRModelTexture)tex).texture;
+                    }
+                    else {
+                        if(textureProvider instanceof WgTextureProvider)
+                            texture = ((WgTextureProvider)textureProvider).load(tex.fileName, isColor(tex.usage));
+                        else
+                            texture = textureProvider.load(tex.fileName);
+                        ((WgTexture)texture).setLabel(tex.fileName);
+                    }
+                    textures.put(tex.fileName, texture);
                     disposables.add(texture);
                 }
-				else if (textures.containsKey(tex.fileName)) {
-					texture = textures.get(tex.fileName);
-				} else {
-					texture = textureProvider.load(tex.fileName);
-                    ((WgTexture)texture).setLabel(tex.fileName);
-                    textures.put(tex.fileName, texture);
-					disposables.add(texture);
-				}
 
 				TextureDescriptor<Texture> descriptor = new TextureDescriptor<>(texture);
                 if(tex instanceof PBRModelTexture){
@@ -174,7 +181,7 @@ public class WgModel extends Model {
 				float scaleV = tex.uvScaling == null ? 1f : tex.uvScaling.y;
 
 				switch (tex.usage) {
-					case ModelTexture.USAGE_DIFFUSE:
+					case USAGE_DIFFUSE:
 						result.set(new TextureAttribute(TextureAttribute.Diffuse, descriptor, offsetU, offsetV, scaleU, scaleV));
 						break;
 					case ModelTexture.USAGE_SPECULAR:
@@ -186,10 +193,10 @@ public class WgModel extends Model {
 					case ModelTexture.USAGE_NORMAL:
 						result.set(new TextureAttribute(TextureAttribute.Normal, descriptor, offsetU, offsetV, scaleU, scaleV));
 						break;
-					case ModelTexture.USAGE_AMBIENT:
+					case USAGE_AMBIENT:
 						result.set(new TextureAttribute(TextureAttribute.Ambient, descriptor, offsetU, offsetV, scaleU, scaleV));
 						break;
-					case ModelTexture.USAGE_EMISSIVE:
+					case USAGE_EMISSIVE:
 						result.set(new TextureAttribute(TextureAttribute.Emissive, descriptor, offsetU, offsetV, scaleU, scaleV));
 						break;
 					case ModelTexture.USAGE_REFLECTION:
@@ -204,6 +211,19 @@ public class WgModel extends Model {
 
 		return result;
 	}
+
+
+    private boolean isColor(int usage){
+        switch(usage){
+            case USAGE_DIFFUSE:
+            case USAGE_EMISSIVE:
+            case USAGE_AMBIENT:
+                return true;
+            default:
+                // specular, normal, roughness etc.
+                return false;
+        }
+    }
 
 	@Override
 	public void dispose(){

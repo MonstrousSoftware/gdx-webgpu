@@ -125,7 +125,7 @@ public class LoadGLTFTest extends GdxTest {
 		font = new WgBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
 
         environment = new Environment();
-        float amb = 0.7f;
+        float amb = 0.4f;
         ColorAttribute ambient =  ColorAttribute.createAmbientLight(amb, amb, amb, 1f);
         environment.set(ambient);
 

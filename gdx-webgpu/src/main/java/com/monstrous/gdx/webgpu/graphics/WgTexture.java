@@ -95,23 +95,35 @@ public class WgTexture extends Texture {
      */
 
     public WgTexture(String fileName) {
-        this(fileName, true);
+        this(fileName, true, true);
     }
 
-    public WgTexture(String fileName, boolean mipMapping) {
-        this(Gdx.files.internal(fileName), mipMapping);
+    public WgTexture(String fileName, boolean useMipMaps){
+        this(Gdx.files.internal(fileName), useMipMaps, true);
+    }
+
+    public WgTexture(String fileName, boolean useMipMaps, boolean isColor) {
+        this(Gdx.files.internal(fileName), useMipMaps, isColor);
     }
 
     public WgTexture(FileHandle file) {
-        this(file, null, false);
+        this(file, null, false, true);
     }
 
     public WgTexture(FileHandle file, boolean useMipMaps) {
-        this(file, null, useMipMaps);
+        this(file, null, useMipMaps, true);
+    }
+
+    public WgTexture(FileHandle file, boolean useMipMaps, boolean isColor) {
+        this(file, null, useMipMaps, isColor);
     }
 
     public WgTexture(FileHandle file, Pixmap.Format format, boolean useMipMaps) {
-        this(TextureData.Factory.loadFromFile(file, format, useMipMaps), file.name());
+        this(TextureData.Factory.loadFromFile(file, format, useMipMaps), file.name(), true);
+    }
+
+    public WgTexture(FileHandle file, Pixmap.Format format, boolean useMipMaps, boolean isColor) {
+        this(TextureData.Factory.loadFromFile(file, format, useMipMaps), file.name(), isColor);
     }
 
     public WgTexture(Pixmap pixmap) {
@@ -119,46 +131,34 @@ public class WgTexture extends Texture {
     }
 
     public WgTexture(Pixmap pixmap, String label) {
-        this(new PixmapTextureData(pixmap, null, false, false), label);
+        this(new PixmapTextureData(pixmap, null, false, false), label, true);
+    }
+
+    public WgTexture(Pixmap pixmap, String label, boolean isColor) {
+        this(new PixmapTextureData(pixmap, null, false, false), label, isColor);
     }
 
     public WgTexture(TextureData data) {
-        this(data, "texture");
+        this(data, "texture", true);
     }
-
-
 
     public WgTexture(TextureData data, String label) {
-        load(data, label);
+        this(data, label, true);
     }
 
 
-    public void load (TextureData data, String label) {
+    public WgTexture(TextureData data, String label, boolean isColor) {
         this.data = data;
         this.label = label;
 
         if (!data.isPrepared()) data.prepare();
 
-        uploadImageData(data);
-    }
-
-//    public void load(TextureArrayData data, String label){
-//        this.label = label;
-//        this.format = WGPUTextureFormat.RGBA8Unorm; // force format
-//        if (!data.isPrepared()) data.prepare();
-//
-//        // this will create a WebGPU texture and upload the images
-//        data.consumeTextureArrayData();
-//    }
-
-
-    // should we use data.consume .. ?
-    //
-    private void uploadImageData( TextureData data ){
         mipLevelCount = data.useMipMaps() ? Math.max(1, bitWidth(Math.min(data.getWidth(), data.getHeight()))) : 1;
         numSamples = 1;
 
-        format = WGPUTextureFormat.RGBA8UnormSrgb; // assumption
+        // for color textures set format to Srgb so that on sampling it will be inverse gamma corrected to provide a linear color value
+        // for non-color texture, e.g. normal map, leave content as is.
+        format = isColor ? WGPUTextureFormat.RGBA8UnormSrgb : WGPUTextureFormat.RGBA8Unorm;
 
         WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst);
         create( label, mipLevelCount, textureUsage, format, 1, numSamples, null);
@@ -187,6 +187,14 @@ public class WgTexture extends Texture {
         if (mustDisposePixmap) pixmap.dispose();
     }
 
+//    public void load(TextureArrayData data, String label){
+//        this.label = label;
+//        this.format = WGPUTextureFormat.RGBA8Unorm; // force format
+//        if (!data.isPrepared()) data.prepare();
+//
+//        // this will create a WebGPU texture and upload the images
+//        data.consumeTextureArrayData();
+//    }
 
     @Override
     public int getWidth () {
