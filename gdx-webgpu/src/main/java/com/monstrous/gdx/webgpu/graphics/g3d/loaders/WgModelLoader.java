@@ -140,6 +140,7 @@ public abstract class WgModelLoader<P extends WgModelLoader.ModelParameters> ext
 
 		public ModelParameters () {
 			textureParameter = new TextureLoader.TextureParameter();
+            textureParameter.genMipMaps = true;
 			textureParameter.minFilter = textureParameter.magFilter = Texture.TextureFilter.Linear;
 			textureParameter.wrapU = textureParameter.wrapV = Texture.TextureWrap.Repeat;
 		}

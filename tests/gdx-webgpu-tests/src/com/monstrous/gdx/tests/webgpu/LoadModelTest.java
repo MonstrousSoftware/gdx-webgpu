@@ -96,15 +96,13 @@ public class LoadModelTest extends GdxTest {
 		cam.far = 1000f;		// extend far distance to avoid clipping the skybox
 
 
-
-
-
 		// queue for asynchronous loading
         // load one asset first to appear responsive
         // load the rest of the assets while the user is admiring the dragon :-)
 		assets = new WgAssetManager();
 		loadedAll = false;
         loadedFirst = false;
+
         assets.load(fileNames[0], Model.class);
 
 
