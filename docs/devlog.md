@@ -362,3 +362,14 @@ Another point to note: if you make textures using hand coded pixmaps, you may ne
 GammaCorrection.toLinear();
 
 
+29/07:
+When loading texture from a GLTF binary chunk they are now directly translated to WgTexture instead of having Pixmaps in PBRModelTexture.
+This way we minimize the heap memory needed when loading. Only one texture file needs to be on the heap at one time.
+Once the image is loaded into WgTexture very little heap space is needed (the pixel data is stored on the GPU).
+
+I had in mind to allow different texture formats to be loaded, e.g. RGB if an alpha channel is not relevant or RGBA4444 is the color
+range is limited, or R8 for a monochrome texture.  This would save some texture memory.
+However, WebGPU does not have a RGB8 format.  The image loading software (stbi_image called from Pixmap) will convert 1 or 2 channel images to 3 channels.
+So Pixmap is always 3 or 4 channels.  And Webgpu does not support 3 channels.  So all textures are converted to RGBA8888 before loading.
+
+

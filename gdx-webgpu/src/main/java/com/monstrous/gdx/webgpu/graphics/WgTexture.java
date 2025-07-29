@@ -52,7 +52,7 @@ public class WgTexture extends Texture {
         this.numSamples = numSamples;
         WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst);
         if (renderAttachment)
-            textureUsage = textureUsage.or(WGPUTextureUsage.RenderAttachment).or(WGPUTextureUsage.CopySrc);    // todo COPY_SRC is temp
+            textureUsage = textureUsage.or(WGPUTextureUsage.RenderAttachment);
         mipLevelCount = 1;
         create( label, mipLevelCount, textureUsage, format, 1, numSamples, null);
     }
@@ -84,7 +84,7 @@ public class WgTexture extends Texture {
         this.numSamples = numSamples;
         WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst);
         if (renderAttachment)
-            textureUsage = textureUsage.or(WGPUTextureUsage.RenderAttachment).or(WGPUTextureUsage.CopySrc);    // todo COPY_SRC is temp
+            textureUsage = textureUsage.or(WGPUTextureUsage.RenderAttachment);    // todo COPY_SRC is temp
         if(mipMapping) Gdx.app.error("WgTexture", "mipmapping not suppörted yet");
         mipLevelCount = 1; // todo
         create( label, mipLevelCount, textureUsage, format, numLayers, numSamples, null);
@@ -102,18 +102,16 @@ public class WgTexture extends Texture {
         this(Gdx.files.internal(fileName), mipMapping);
     }
 
-
     public WgTexture(FileHandle file) {
-        this(file, Pixmap.Format.RGBA8888, false);
+        this(file, null, false);
     }
 
     public WgTexture(FileHandle file, boolean useMipMaps) {
-        this(file, Pixmap.Format.RGBA8888, useMipMaps);
+        this(file, null, useMipMaps);
     }
 
     public WgTexture(FileHandle file, Pixmap.Format format, boolean useMipMaps) {
-      /// override format
-        this(TextureData.Factory.loadFromFile(file, Pixmap.Format.RGBA8888, useMipMaps), file.name());
+        this(TextureData.Factory.loadFromFile(file, format, useMipMaps), file.name());
     }
 
     public WgTexture(Pixmap pixmap) {
@@ -121,7 +119,7 @@ public class WgTexture extends Texture {
     }
 
     public WgTexture(Pixmap pixmap, String label) {
-        this(new PixmapTextureData(pixmap, Pixmap.Format.RGBA8888, false, false), label);
+        this(new PixmapTextureData(pixmap, null, false, false), label);
     }
 
     public WgTexture(TextureData data) {
@@ -138,8 +136,6 @@ public class WgTexture extends Texture {
     public void load (TextureData data, String label) {
         this.data = data;
         this.label = label;
-        this.format = WGPUTextureFormat.RGBA8Unorm; // force format
-
 
         if (!data.isPrepared()) data.prepare();
 
@@ -155,23 +151,27 @@ public class WgTexture extends Texture {
 //        data.consumeTextureArrayData();
 //    }
 
+
+    // should we use data.consume .. ?
+    //
     private void uploadImageData( TextureData data ){
         mipLevelCount = data.useMipMaps() ? Math.max(1, bitWidth(Math.min(data.getWidth(), data.getHeight()))) : 1;
         numSamples = 1;
-        //format = WGPUTextureFormat.RGBA8Unorm; // assumption
+
         format = WGPUTextureFormat.RGBA8UnormSrgb; // assumption
+
         WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst);
         create( label, mipLevelCount, textureUsage, format, 1, numSamples, null);
         Pixmap pixmap = data.consumePixmap();
         boolean mustDisposePixmap = data.disposePixmap();
 
-        Pixmap.Format dataFormat = data.getFormat();
-        //Pixmap.Format pixmapFormat = pixmap.getFormat();
+        Pixmap.Format dataFormat = Pixmap.Format.RGBA8888;
 
         // data format is desired format, pixmap format is format from file
         // convert to desired format (typically RGBA) as needed
+        // Note that for WebGPU, RGB (without alpha) is not a valid texture format
+        // R8Unorm could be uses as one-channel format, in practice we will just force RGBA8888
 
-        //dataFormat = Pixmap.Format.RGBA8888;        // force format for now
         if (dataFormat != pixmap.getFormat()) {
             Pixmap tmp = new Pixmap(pixmap.getWidth(), pixmap.getHeight(), dataFormat);
             tmp.setBlending(Pixmap.Blending.None);

@@ -279,7 +279,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
         }
     }
 
-    /** load image information: either a filename (to be loaded later) or a Pixmap. */
+    /** load image information: either a filename (to be loaded later) or a WgTexture. */
     private void loadTexture(GLTF gltf, PBRModelTexture tex, GLTFImage image, int textureId){
         if(image.uri != null ) {
             if (image.uri.startsWith("data:")) {
@@ -300,6 +300,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
 
             Pixmap pixmap = new Pixmap(bytes, 0, view.byteLength );
             tex.texture = new WgTexture(pixmap,tex.id );
+            pixmap.dispose();
 
             //tex.pixmap = new Pixmap(bytes, 0, view.byteLength );
 
