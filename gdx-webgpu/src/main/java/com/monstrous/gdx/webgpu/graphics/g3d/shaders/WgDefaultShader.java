@@ -78,6 +78,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
     private final int primitiveType;
     private int frameNumber;
     private int instanceIndex;
+    private Color linearFogColor;
 
 
     public static class Config {
@@ -119,6 +120,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         pixmap.setColor(Color.BLACK);
         pixmap.fill();
         defaultBlackTexture = new WgTexture(pixmap,"default (black)");
+        linearFogColor = new Color();
 
         hasShadowMap = renderable.environment != null && renderable.environment.shadowMap != null;
         hasCubeMap = renderable.environment != null && renderable.environment.has(WgCubemapAttribute.EnvironmentMap);
@@ -632,8 +634,12 @@ public class WgDefaultShader extends WgShader implements Disposable {
             binder.setUniform("ambientLight", ambient.color);
 
         final ColorAttribute fog = lights.get(ColorAttribute.class,ColorAttribute.Fog);
-        if(fog != null)
-            binder.setUniform("fogColor", fog.color);
+        if(fog != null) {
+            // Convert provided fog color from SRGB to linear, e.g. to match the background color
+            linearFogColor.set(fog.color);
+            GammaCorrection.toLinear(linearFogColor);
+            binder.setUniform("fogColor", linearFogColor);
+        }
 
         if ( lights.shadowMap != null) {
             binder.setUniform("shadowProjViewTransform", lights.shadowMap.getProjViewTrans());

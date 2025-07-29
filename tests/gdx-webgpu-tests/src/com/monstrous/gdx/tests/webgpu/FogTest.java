@@ -52,18 +52,7 @@ public class FogTest extends GdxTest {
     Model box;
     ModelInstance instance;
     Environment environment;
-	Color fogColor;
-
-
-//	// launcher
-//	public static void main (String[] argv) {
-//
-//		WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
-//		config.setWindowedMode(640, 480);
-//		config.setTitle("WebGPUTest");
-//
-//		new WgDesktopApplication(new FogTest(), config);
-//	}
+	Color fogColor = Color.DARK_GRAY;
 
 	public void create () {
 		modelBatch = new WgModelBatch();
@@ -84,9 +73,6 @@ public class FogTest extends GdxTest {
         long attribs = VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal ;
         box = modelBuilder.createBox(5, 5, 5, mat, attribs);
 
-        fogColor = new Color(Color.DARK_GRAY);
-        GammaCorrection.toLinear(fogColor);
-
         environment = new Environment();
         environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1.f));
 		environment.set(new ColorAttribute(ColorAttribute.Fog,fogColor));
@@ -98,7 +84,7 @@ public class FogTest extends GdxTest {
 	public void render () {
 		animate();
 
-		WgScreenUtils.clear(Color.DARK_GRAY, true);
+		WgScreenUtils.clear(fogColor, true);
 		cam.update();
 		modelBatch.begin(cam);
 		modelBatch.render(instance, environment);
