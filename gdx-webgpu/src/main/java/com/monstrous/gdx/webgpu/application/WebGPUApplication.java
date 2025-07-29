@@ -207,7 +207,6 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
 
 
     public void renderFrame (ApplicationListener listener) {
-
         if(mustResize){
             doResize(newWidth, newHeight);
             listener.resize(newWidth, newHeight);
@@ -223,6 +222,7 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
 
         listener.render();
 
+
         // resolve time stamps after render pass end and before encoder finish
         gpuTimer.resolveTimeStamps(encoder);
 
@@ -235,6 +235,8 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
 
         queue.submit(1, command);
         command.release();
+
+
 
         // fetch time stamps after submitting the command buffer
         gpuTimer.fetchTimestamps();

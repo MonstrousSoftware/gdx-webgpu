@@ -20,6 +20,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Disposable;
+import com.badlogic.gdx.utils.Pool;
 import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
@@ -30,6 +31,7 @@ import com.monstrous.gdx.webgpu.graphics.WgTexture;
  *  use create() to create a pass (at least once per frame)
  */
 public class RenderPassBuilder {
+
 
     public static WebGPURenderPass create(String name) {
         return create( name, null);
@@ -169,6 +171,7 @@ public class RenderPassBuilder {
 
 
         WebGPURenderPass pass = WebGPURenderPass.obtain();
+        //WebGPURenderPass pass = new WebGPURenderPass();
 
         pass.begin(webgpu.encoder, renderPassDescriptor, passType, colorFormat, depthTexture.getFormat(), sampleCount,
             outTexture == null ? Gdx.graphics.getWidth() : outTexture.getWidth(),

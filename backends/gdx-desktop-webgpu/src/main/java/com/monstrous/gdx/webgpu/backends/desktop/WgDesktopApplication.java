@@ -135,6 +135,7 @@ public class WgDesktopApplication implements Application {
 			closedWindows.clear();
 			int targetFramerate = -2;
 			for (WgDesktopWindow window : windows) {
+
 				window.makeCurrent();
 				currentWindow = window;
 

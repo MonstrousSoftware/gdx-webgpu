@@ -32,6 +32,7 @@ import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopApplication;
 import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopApplicationConfiguration;
 import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopGraphics;
 import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopWindowConfiguration;
+import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 import com.monstrous.gdx.webgpu.scene2d.WgSkin;
 import com.monstrous.gdx.webgpu.scene2d.WgStage;
 
@@ -79,8 +80,6 @@ public class WebGPUTestStarter {
 			scroll.setFadeScrollBars(false);
 			stage.setScrollFocus(scroll);
 
-//			stage.addActor(table);
-//			table.setFillParent(true);
 
 			int tableSpace = 4;
 			table.pad(10).defaults().expandX().space(tableSpace);
@@ -137,7 +136,6 @@ public class WebGPUTestStarter {
 
 		@Override
 		public void render () {
-			///ScreenUtils.clear(0, 0, 0, 1);
 			stage.act();
 			stage.draw();
 		}

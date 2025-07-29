@@ -67,6 +67,8 @@ public class WebGPURenderPass implements Disposable  {
     public void end() {
         renderPass.end();
         renderPass.release();
+
+        //renderPass.dispose();
         WebGPURenderPass.free(this);
     }
 

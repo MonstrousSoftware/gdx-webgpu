@@ -100,6 +100,9 @@ public class WgDesktopApplicationConfiguration extends WgDesktopWindowConfigurat
 		preferencesDirectory = config.preferencesDirectory;
 		preferencesFileType = config.preferencesFileType;
 		hdpiMode = config.hdpiMode;
+
+        backend = config.backend;
+        enableGPUtiming = config.enableGPUtiming;
 	}
 
 	/** @param visibility whether the window will be visible on creation. (default true) */
