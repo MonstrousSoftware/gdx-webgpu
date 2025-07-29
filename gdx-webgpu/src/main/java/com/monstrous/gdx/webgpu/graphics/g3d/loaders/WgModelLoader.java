@@ -97,7 +97,7 @@ public abstract class WgModelLoader<P extends WgModelLoader.ModelParameters> ext
 			if (modelMaterial.textures != null) {
 				for (final ModelTexture modelTexture : modelMaterial.textures) {
                     // if texture was preloaded from a binary chunk, don't add as dependency
-                    if(!(modelTexture instanceof PBRModelTexture) || ((PBRModelTexture)modelTexture).pixmap == null) {
+                    if(!(modelTexture instanceof PBRModelTexture) || ((PBRModelTexture)modelTexture).texture == null) {
                         deps.add(new AssetDescriptor(modelTexture.fileName, Texture.class, textureParameter));
                     }
                 }

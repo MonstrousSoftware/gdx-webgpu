@@ -25,6 +25,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.Vector4;
 import com.badlogic.gdx.utils.Array;
+import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.gltf.*;
 import com.monstrous.gdx.webgpu.graphics.g3d.model.PBRModelTexture;
 import com.monstrous.gdx.webgpu.graphics.g3d.model.WgModelMeshPart;
@@ -295,8 +296,13 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
             gltf.rawBuffer.byteBuffer.position(view.byteOffset);
             gltf.rawBuffer.byteBuffer.get(bytes);
 
-            tex.pixmap = new Pixmap(bytes, 0, view.byteLength );
             tex.fileName = "bufferView."+image.bufferView;  // create a unique 'filename' that can be used as key for caching
+
+            Pixmap pixmap = new Pixmap(bytes, 0, view.byteLength );
+            tex.texture = new WgTexture(pixmap,tex.id );
+
+            //tex.pixmap = new Pixmap(bytes, 0, view.byteLength );
+
         }
         GLTFSampler sampler = gltf.samplers.get(gltf.textures.get(textureId).sampler);
         tex.minFilter = convertFilter(sampler.minFilter);

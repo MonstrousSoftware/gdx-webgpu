@@ -17,6 +17,7 @@
 package com.monstrous.gdx.tests.webgpu;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Color;
@@ -50,19 +51,19 @@ public class LoadModelTest extends GdxTest {
 
 	final static String[] fileNames = {
 
-        "data/g3d/gltf/StanfordDragon/stanfordDragon.gltf",
-        "data/g3d/ship.obj",
-
-        "data/g3d/gltf/DamagedHelmet/DamagedHelmet.gltf",
-        "data/g3d/gltf/waterbottle/waterbottle.glb",
-
-        "data/g3d/head.g3db",
-        "data/g3d/invaders.g3dj",
-        "data/g3d/monkey.g3db",
-        "data/g3d/skydome.g3db",
-        "data/g3d/teapot.g3db",
-
-        "data/g3d/gltf/Cube/Cube.gltf",
+//        "data/g3d/gltf/StanfordDragon/stanfordDragon.gltf",
+//        "data/g3d/ship.obj",
+//
+//        "data/g3d/gltf/DamagedHelmet/DamagedHelmet.gltf",
+//        "data/g3d/gltf/waterbottle/waterbottle.glb",
+//
+//        "data/g3d/head.g3db",
+//        "data/g3d/invaders.g3dj",
+//        "data/g3d/monkey.g3db",
+//        "data/g3d/skydome.g3db",
+//        "data/g3d/teapot.g3db",
+//
+//        "data/g3d/gltf/Cube/Cube.gltf",
         "data/g3d/gltf/Sponza/Sponza.gltf"
 	};
 
@@ -104,7 +105,7 @@ public class LoadModelTest extends GdxTest {
 		assets = new WgAssetManager();
 		loadedAll = false;
         loadedFirst = false;
-        assets.load(fileNames[0], Model.class);
+        //assets.load(fileNames[0], Model.class);
 
 
         // Create an environment with lights
@@ -165,12 +166,18 @@ public class LoadModelTest extends GdxTest {
 
 	}
 
+    boolean startLoading = false;
+
 	public void render () {
 
+        if(Gdx.input.isKeyJustPressed(Input.Keys.SPACE)){
+            assets.load(fileNames[0], Model.class);
+            startLoading = true;
+        }
 
 
 		float delta = Gdx.graphics.getDeltaTime();
-        if(!loadedFirst && assets.update()) {	// advance loading
+        if(startLoading && !loadedFirst && assets.update()) {	// advance loading
             loadedFirst = true;
             model = assets.get(fileNames[0], Model.class);
             instance = new ModelInstance(model);
