@@ -37,6 +37,7 @@ import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLBModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLTFModelLoader;
+import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgModelLoader;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 
 
@@ -76,23 +77,26 @@ public class LoadGLTFTest extends GdxTest {
 		cam.far = 100f;
 
         //modelFileName = "data/g3d/gltf/road-straight.glb";
-		modelFileName = "data/g3d/gltf/Cube/Cube.gltf";
+		//modelFileName = "data/g3d/gltf/Cube/Cube.gltf";
         //modelFileName = "data/g3d/gltf/StanfordDragon/stanfordDragon.gltf";
         //modelFileName = "data/g3d/gltf/Cubes/cubes.gltf";
         //modelFileName = "data/g3d/gltf/AntiqueCamera/AntiqueCamera.gltf";
         //modelFileName = "data/g3d/gltf/torus.gltf";
-        //modelFileName = "data/g3d/gltf/Sponza/Sponza.gltf";
+        modelFileName = "data/g3d/gltf/Sponza/Sponza.gltf";
         //modelFileName = "data/g3d/gltf/waterbottle/waterbottle.glb";
         //modelFileName = "data/g3d/gltf/Buggy/Buggy.gltf";
         //modelFileName = "data/g3d/gltf/triangle.gltf";
         //modelFileName = "data/g3d/gltf/Avocado.glb";
 
+        WgModelLoader.ModelParameters params = new WgModelLoader.ModelParameters();
+        params.textureParameter.genMipMaps = true;
+
         long startLoad = System.currentTimeMillis();
         FileHandle file = Gdx.files.internal(modelFileName);
         if(file.extension().contentEquals("gltf"))
-            model = new WgGLTFModelLoader().loadModel(file);
+            model = new WgGLTFModelLoader().loadModel(file, params);
         else if(file.extension().contentEquals("glb"))
-            model = new WgGLBModelLoader().loadModel(file);
+            model = new WgGLBModelLoader().loadModel(file, params);
         else
             System.out.println("File extension not supported: "+modelFileName);
         long endLoad = System.currentTimeMillis();

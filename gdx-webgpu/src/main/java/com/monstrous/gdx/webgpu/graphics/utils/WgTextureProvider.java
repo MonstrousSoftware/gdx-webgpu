@@ -35,7 +35,7 @@ public interface WgTextureProvider extends TextureProvider {
 		public FileTextureProvider () {
 			minFilter = magFilter = Texture.TextureFilter.Linear;
 			uWrap = vWrap = Texture.TextureWrap.Repeat;
-			useMipMaps = false;
+			useMipMaps = true;
 		}
 
 		public FileTextureProvider (Texture.TextureFilter minFilter, Texture.TextureFilter magFilter, Texture.TextureWrap uWrap,
