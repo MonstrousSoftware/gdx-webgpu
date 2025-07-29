@@ -373,3 +373,8 @@ However, WebGPU does not have a RGB8 format.  The image loading software (stbi_i
 So Pixmap is always 3 or 4 channels.  And Webgpu does not support 3 channels.  So all textures are converted to RGBA8888 before loading.
 
 
+Hanging app:
+To reproduce launch the menu starter, open visualVM and run a garbage collection on the menu starter, then from the menu start LightingTest or InstanceTest.
+After a few frames it hangs in queue.submit().  A minimal example is in the side branch: Launch2 and Lighting2.  
+
+
