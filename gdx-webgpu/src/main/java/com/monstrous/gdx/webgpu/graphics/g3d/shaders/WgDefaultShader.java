@@ -307,7 +307,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
 
         // todo: different shaders may overwrite lighting uniforms if renderables have other environments ...
-        bindLights(renderable.environment);
+    ///// TEMP!!    bindLights(renderable.environment);
 
         // bind group 0 (frame) once per frame
         binder.bindGroup(renderPass, 0);
@@ -350,10 +350,11 @@ public class WgDefaultShader extends WgShader implements Disposable {
             return false;
         if (renderable.material.getMask() != materialAttributesMask)
             return false;
-        if(environmentMask == 0 && renderable.environment != null)
+        long envMask = renderable.environment == null ? 0 : renderable.environment.getMask();
+        if(environmentMask != envMask)
             return false;
-        if (environmentMask != 0 && (renderable.environment == null || renderable.environment.getMask() != environmentMask))
-            return false;
+//        if (environmentMask != 0 && (renderable.environment == null || renderable.environment.getMask() != environmentMask))
+//            return false;
         if(hasShadowMap && (renderable.environment == null || renderable.environment.shadowMap == null))
             return false;
 

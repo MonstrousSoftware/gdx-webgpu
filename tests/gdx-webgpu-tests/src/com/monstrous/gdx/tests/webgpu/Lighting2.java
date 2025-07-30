@@ -87,8 +87,8 @@ public class Lighting2 extends GdxTest {
 		instances.add(instance);
 
 		environment = new Environment();
-		ColorAttribute ambient =  ColorAttribute.createAmbientLight(0.0f, 0f, 0f, 1f);
-		environment.set(ambient);
+//		ColorAttribute ambient =  ColorAttribute.createAmbientLight(0.0f, 0f, 0f, 1f);
+//		environment.set(ambient);
 
         controller = new PerspectiveCamController(cam);
 
