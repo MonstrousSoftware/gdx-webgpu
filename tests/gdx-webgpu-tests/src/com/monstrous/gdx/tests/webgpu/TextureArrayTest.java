@@ -16,13 +16,11 @@
 
 package com.monstrous.gdx.tests.webgpu;
 
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
-import com.badlogic.gdx.graphics.g3d.utils.FirstPersonCameraController;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Matrix4;
 import com.github.xpenatan.webgpu.*;
@@ -35,9 +33,8 @@ import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 import com.monstrous.gdx.webgpu.wrappers.*;
 
 
-// TO BE CONVERTED
-
 /** @author Tomski **/
+/** Adapted for gdx-webgpu */
 public class TextureArrayTest extends GdxTest {
 
 	WgTextureArray textureArray;
@@ -106,16 +103,12 @@ public class TextureArrayTest extends GdxTest {
 
 		data.dispose();
 
-        WgTexture texture = new WgTexture(Gdx.files.internal("data/badlogic.jpg"));
-        texture.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
-
-        // Create uniform buffer for global (per-frame) uniforms, e.g. projection matrix, camera position, etc.
+        // Create uniform buffer for global uniforms, e.g. projection matrix, model matrix
         uniformBufferSize = 2 * 16 * Float.BYTES;
         uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Uniform));
         initBinder();
 
-//        binder.setTexture("diffuseTexture", texture.getTextureView());
-//        binder.setSampler("diffuseSampler", texture.getSampler());
+        // bind texture array
         binder.setTexture("diffuseTexture", textureArray.getTextureView());
         binder.setSampler("diffuseSampler", textureArray.getSampler());
 
@@ -209,7 +202,8 @@ public class TextureArrayTest extends GdxTest {
 	@Override
 	public void dispose () {
 		terrain.dispose();
-		shaderProgram.dispose();
+		pipeline.dispose();
+        uniformBuffer.dispose();
 	}
 
     private String getShaderSource() {
