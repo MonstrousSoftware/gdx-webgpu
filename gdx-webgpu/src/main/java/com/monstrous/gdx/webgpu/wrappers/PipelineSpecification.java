@@ -197,24 +197,52 @@ public class PipelineSpecification {
         return hash;
     }
 
-    /** to be called whenever relevant content changes (to avoid doing this in hashCode which is called a lot) */
+    /** to be called whenever relevant content changes (to avoid doing this in hashCode which is called a lot).
+     * Also: avoid Objects.hash() to avoid lots of little allocations.
+     */
     public void recalcHash() {
-        hash = Objects.hash(
-            vertexAttributes == null ? 0 : vertexAttributes.hashCode(),
-            shaderSource,
-            isDepthPass, afterDepthPrepass,
-            useDepthTest, noDepthAttachment,
-            topology, indexFormat,
-            blendingEnabled,
-            // blend factors should be ignored when !blendingEnabled
-            blendingEnabled ? blendSrcColor : 0,
-            blendingEnabled ? blendDstColor : 0,
-            blendingEnabled ? blendOpColor : 0,
-            blendingEnabled ? blendSrcAlpha: 0,
-            blendingEnabled ? blendDstAlpha: 0,
-            blendingEnabled ? blendOpAlpha : 0,
-            numSamples, cullMode, isSkyBox, depthFormat, numSamples
-        );
+        //System.out.println("Recalc pipe spec hash "+((WgGraphics)Gdx.graphics).getFrameId());
+        hash = 1;
+        hash = 31 * hash + (vertexAttributes == null ? 0 : vertexAttributes.hashCode());
+        hash = 31 * hash + (shaderSource == null ? 0 : shaderSource.hashCode());
+        hash = 31 * hash + (isDepthPass ? 1231 : 1237);
+        hash = 31 * hash + (afterDepthPrepass ? 1231 : 1237);
+        hash = 31 * hash + (useDepthTest ? 1231 : 1237);
+        hash = 31 * hash + (noDepthAttachment ? 1231 : 1237);
+        hash = 31 * hash + (topology == null ? 0 : topology.hashCode());
+        hash = 31 * hash + (indexFormat == null ? 0 : indexFormat.hashCode());
+        hash = 31 * hash + (blendingEnabled ? 1231 : 1237);
+        if (blendingEnabled) {
+            hash = 31 * hash + (blendSrcColor == null ? 0 : blendSrcColor.hashCode());
+            hash = 31 * hash + (blendDstColor == null ? 0 : blendDstColor.hashCode());
+            hash = 31 * hash + (blendOpColor == null ? 0 : blendOpColor.hashCode());
+            hash = 31 * hash + (blendSrcAlpha == null ? 0 : blendSrcAlpha.hashCode());
+            hash = 31 * hash + (blendDstAlpha == null ? 0 : blendDstAlpha.hashCode());
+            hash = 31 * hash + (blendOpAlpha == null ? 0 : blendOpAlpha.hashCode());
+        }
+        hash = 31 * hash + numSamples;
+        hash = 31 * hash + (cullMode == null ? 0 : cullMode.hashCode());
+        hash = 31 * hash + (isSkyBox ? 1231 : 1237);
+        hash = 31 * hash + (depthFormat == null ? 0 : depthFormat.hashCode());
+        hash = 31 * hash + numSamples;
+
+//
+//        hash = Objects.hash(
+//            vertexAttributes == null ? 0 : vertexAttributes.hashCode(),
+//            shaderSource,
+//            isDepthPass, afterDepthPrepass,
+//            useDepthTest, noDepthAttachment,
+//            topology, indexFormat,
+//            blendingEnabled,
+//            // blend factors should be ignored when !blendingEnabled
+//            blendingEnabled ? blendSrcColor : 0,
+//            blendingEnabled ? blendDstColor : 0,
+//            blendingEnabled ? blendOpColor : 0,
+//            blendingEnabled ? blendSrcAlpha: 0,
+//            blendingEnabled ? blendDstAlpha: 0,
+//            blendingEnabled ? blendOpAlpha : 0,
+//            numSamples, cullMode, isSkyBox, depthFormat, numSamples
+//        );
     }
 
 

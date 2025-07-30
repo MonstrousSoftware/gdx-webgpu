@@ -72,6 +72,7 @@ public class RenderPassBuilder {
      */
     public static WebGPURenderPass create(String name, Color clearColor, boolean clearDepth, WgTexture outTexture,
                                           WgTexture depthTexture, int sampleCount, RenderPassType passType) {
+        //System.out.println("RenderPassBuilder: create");
         WgGraphics gfx = (WgGraphics) Gdx.graphics;
         WebGPUContext webgpu = gfx.getContext();
 
