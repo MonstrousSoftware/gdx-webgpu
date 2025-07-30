@@ -208,11 +208,11 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
 
     public void renderFrame (ApplicationListener listener) {
 
-        if(mustResize){
-            doResize(newWidth, newHeight);
-            listener.resize(newWidth, newHeight);
-            mustResize = false;
-        }
+//        if(mustResize){
+//            doResize(newWidth, newHeight);
+//            listener.resize(newWidth, newHeight);
+//            mustResize = false;
+//        }
 
         targetView = getNextSurfaceTextureView();
 
@@ -253,11 +253,7 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
 
 
 
-    public void resize(int width, int height){
-        mustResize = true;
-        this.newWidth = width;
-        this.newHeight = height;
-    }
+
 
     public void update() {
         if(instance != null) {
@@ -296,12 +292,20 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
         return textureViewOut;
     }
 
+//    public void resize(int width, int height){
+//        doResize(newWidth, newHeight);
+//        //listener.resize(newWidth, newHeight);
+////        mustResize = true;
+////        this.newWidth = width;
+////        this.newHeight = height;
+//    }
+//
     // Note that normally resize() is called from outside renderFrame(), e.g. targetView is null.
     // If resize is called from within renderFrame() i.e. from ApplicationListener.render()
     // then there may be problems.
     // This also (?) applies for calling newWindow()
     //
-    public void doResize(int width, int height){
+    public void resize(int width, int height){
         System.out.println("resize: "+width+" x "+height);
 
         if(width * height == 0 )   // on minimize, don't create zero sized textures

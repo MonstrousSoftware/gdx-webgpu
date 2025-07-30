@@ -78,24 +78,29 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
 	final IntBuffer tmpBuffer = BufferUtils.createIntBuffer(1);
 	final IntBuffer tmpBuffer2 = BufferUtils.createIntBuffer(1);
 
-	final GLFWFramebufferSizeCallback resizeCallback = new GLFWFramebufferSizeCallback() {
-		@Override
-		public void invoke (long windowHandle, final int width, final int height) {
-			if (!"glfw_async".equals(Configuration.GLFW_LIBRARY_NAME.get())) {
-                System.out.println("resize callback");
-				updateFramebufferInfo();
-				if (!window.isListenerInitialized()) {
-					return;
-				}
-				window.makeCurrent();
-                System.out.println("context resize");
-				context.resize(getWidth(), getHeight());
-			} else {
-				window.asyncResized = true;
-                System.out.println("Window.async resized");
-			}
-		}
-	};
+//	final GLFWFramebufferSizeCallback resizeCallback = new GLFWFramebufferSizeCallback() {
+//		@Override
+//		public void invoke (long windowHandle, final int width, final int height) {
+//            window.postRunnable(new Runnable() {
+//                @Override
+//                public void run() {
+//                    if (!"glfw_async".equals(Configuration.GLFW_LIBRARY_NAME.get())) {
+//                        System.out.println("resize callback");
+//                        updateFramebufferInfo();
+//                        if (!window.isListenerInitialized()) {
+//                            return;
+//                        }
+//                        window.makeCurrent();
+//                        System.out.println("context resize");
+//                        context.resize(getWidth(), getHeight());
+//                    } else {
+//                        window.asyncResized = true;
+//                        System.out.println("Window.async resized");
+//                    }
+//                }
+//            });
+//		}
+//	};
 
 	public WgDesktopGraphics(WgDesktopWindow window, long windowHandle) {
 
@@ -154,7 +159,7 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
 
         context.resize(getWidth(), getHeight());
 
-        GLFW.glfwSetFramebufferSizeCallback(window.getWindowHandle(), resizeCallback);
+        //GLFW.glfwSetFramebufferSizeCallback(window.getWindowHandle(), resizeCallback);
     }
 
     private WGPUSurface createSurface(WGPUInstance instance, long windowHandle) {
@@ -652,7 +657,7 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
 
 	@Override
 	public void dispose () {
-		this.resizeCallback.free();
+		//this.resizeCallback.free();
 		context.dispose();
 	}
 

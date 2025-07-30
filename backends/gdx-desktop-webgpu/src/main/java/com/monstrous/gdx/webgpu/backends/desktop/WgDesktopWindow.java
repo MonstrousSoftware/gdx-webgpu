@@ -25,6 +25,7 @@ import com.badlogic.gdx.utils.Os;
 import com.badlogic.gdx.utils.SharedLibraryLoader;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.*;
+import org.lwjgl.system.Configuration;
 
 import java.nio.IntBuffer;
 
@@ -149,6 +150,32 @@ public class WgDesktopWindow implements Disposable {
 		}
 	};
 
+    private final GLFWFramebufferSizeCallback resizeCallback = new GLFWFramebufferSizeCallback() {
+        @Override
+        public void invoke (long windowHandle, final int width, final int height) {
+            postRunnable(new Runnable() {
+                @Override
+                public void run() {
+                    System.out.println("Runnable resize");
+                    if (!"glfw_async".equals(Configuration.GLFW_LIBRARY_NAME.get())) {
+                        System.out.println("resize callback");
+                        graphics.updateFramebufferInfo();
+                        if (!isListenerInitialized()) {
+                            return;
+                        }
+                        //makeCurrent();
+                        System.out.println("context resize");
+                        listener.resize(width, height);
+                        graphics.context.resize(width, height);
+                    } else {
+                        asyncResized = true;
+                        System.out.println("Window.async resized");
+                    }
+                }
+            });
+        }
+    };
+
 	private final GLFWDropCallback dropCallback = new GLFWDropCallback() {
 		@Override
 		public void invoke (final long windowHandle, final int count, final long names) {
@@ -208,6 +235,7 @@ public class WgDesktopWindow implements Disposable {
 		GLFW.glfwSetWindowCloseCallback(windowHandle, closeCallback);
 		GLFW.glfwSetDropCallback(windowHandle, dropCallback);
 		GLFW.glfwSetWindowRefreshCallback(windowHandle, refreshCallback);
+        GLFW.glfwSetFramebufferSizeCallback(windowHandle, resizeCallback);
 
 		if (windowListener != null) {
 			windowListener.created(this);
@@ -490,6 +518,7 @@ public class WgDesktopWindow implements Disposable {
 		closeCallback.free();
 		dropCallback.free();
 		refreshCallback.free();
+        resizeCallback.free();
 	}
 
 	@Override
