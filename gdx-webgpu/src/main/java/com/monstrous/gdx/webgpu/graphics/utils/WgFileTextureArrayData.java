@@ -37,7 +37,6 @@ public class WgFileTextureArrayData implements WgTextureArrayData {
 	private final Pixmap.Format format;
 	private final int depth;
 	boolean useMipMaps;
-    //private WGPUTexture texture;
 
 	public WgFileTextureArrayData(Pixmap.Format format, boolean useMipMaps, FileHandle[] files) {
 		this.format = format;
@@ -82,10 +81,6 @@ public class WgFileTextureArrayData implements WgTextureArrayData {
     public void consumeTextureArrayData (WGPUTexture texture) {
 
         int mipLevelCount = useMipMaps ? Math.max(1, WgTexture.bitWidth(Math.min(getWidth(), getHeight()))) : 1;
-//        int numSamples = 1;
-//        WGPUTextureFormat format = WGPUTextureFormat.RGBA8Unorm;
-//        WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst);
-        //texture = WgTexture.createTexture("texture array", getWidth(), getHeight(), mipLevelCount, textureUsage, format, getDepth(), numSamples, null);
         for (int i = 0; i < textureDatas.length; i++) {
             TextureData texData = textureDatas[i];
             Pixmap pixmap = texData.consumePixmap();
@@ -107,9 +102,10 @@ public class WgFileTextureArrayData implements WgTextureArrayData {
         }
     }
 
-//    public WGPUTexture getTexture(){
-//        return texture;
-//    }
+    @Override
+    public boolean useMipMaps (){
+        return useMipMaps;
+    }
 
 	@Override
 	public int getWidth () {

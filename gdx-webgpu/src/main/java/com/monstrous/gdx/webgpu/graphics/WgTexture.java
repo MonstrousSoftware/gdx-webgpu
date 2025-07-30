@@ -78,15 +78,16 @@ public class WgTexture extends Texture {
 
     // for cube map or texture array
     public WgTexture(String label, int width, int height, int numLayers, boolean mipMapping, boolean renderAttachment, WGPUTextureFormat format, int numSamples ) {
-        this.data = new WgTextureData(width, height, 0, 0, 0);
+        mipLevelCount = mipMapping ? Math.max(1, bitWidth(Math.min(width, height))) : 1;
+
+        this.data = new WgTextureData(width, height, mipLevelCount, 0, 0);
         this.label = label;
 
         this.numSamples = numSamples;
         WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst);
         if (renderAttachment)
-            textureUsage = textureUsage.or(WGPUTextureUsage.RenderAttachment);    // todo COPY_SRC is temp
-        if(mipMapping) Gdx.app.error("WgTexture", "mipmapping not supported yet");
-        mipLevelCount = 1; // todo
+            textureUsage = textureUsage.or(WGPUTextureUsage.RenderAttachment);
+
         create( label, mipLevelCount, textureUsage, format, numLayers, numSamples, null);
     }
 

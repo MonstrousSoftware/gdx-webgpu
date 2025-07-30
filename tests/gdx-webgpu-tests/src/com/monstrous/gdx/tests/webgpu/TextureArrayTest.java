@@ -60,7 +60,9 @@ public class TextureArrayTest extends GdxTest {
 	@Override
 	public void create () {
 
-		String[] texPaths = new String[] {"data/g3d/materials/Searing Gorge.jpg", "data/g3d/materials/Lava Cracks.jpg",
+		String[] texPaths = new String[] {
+            "data/g3d/materials/Searing Gorge.jpg",
+            "data/g3d/materials/Lava Cracks.jpg",
 			"data/g3d/materials/Deep Fire.jpg"};
 
 		camera = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -76,7 +78,7 @@ public class TextureArrayTest extends GdxTest {
 			texFiles[i] = Gdx.files.internal(texPaths[i]);
 		}
 
-		textureArray = new WgTextureArray(false, texFiles);
+		textureArray = new WgTextureArray(true, texFiles);
 		textureArray.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
 		textureArray.setFilter(TextureFilter.MipMapLinearLinear, TextureFilter.Linear);
 
@@ -137,7 +139,8 @@ public class TextureArrayTest extends GdxTest {
         // texture coord (3d)
 		vertsOut[idx++] = i / 20f;
 		vertsOut[idx++] = j / 20f;
-		vertsOut[idx++] = (tmpColor.r * 3f) - 0.5f;
+        float h =  (tmpColor.r * 3f) - 0.5f;
+		vertsOut[idx++] = h;
 		return idx;
 	}
 

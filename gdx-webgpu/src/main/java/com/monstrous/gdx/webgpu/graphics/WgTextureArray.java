@@ -17,7 +17,7 @@ public class WgTextureArray  extends WgTexture {
     }
 
     public WgTextureArray(FileHandle... files) {
-        this(false, files);
+        this(true, files);
     }
 
     public WgTextureArray(boolean useMipMaps, FileHandle... files) {
@@ -32,7 +32,7 @@ public class WgTextureArray  extends WgTexture {
         // at this point we don't know if we use mipmapping yet
         // should we create texture instead in consumeTextureArrayData ?
         //
-        super("texture array", data.getWidth(), data.getHeight(), data.getDepth(), false, false, WGPUTextureFormat.RGBA8UnormSrgb, 1);
+        super("texture array", data.getWidth(), data.getHeight(), data.getDepth(), data.useMipMaps(), false, WGPUTextureFormat.RGBA8UnormSrgb, 1);
         // create a texture with layers
         // let texture data consume() fill each layer
         load(data, "texture array");
@@ -60,29 +60,4 @@ public class WgTextureArray  extends WgTexture {
         return handles;
     }
 
-
-//    private void load (TextureArrayData data) {
-//        if (this.data != null && data.isManaged() != this.data.isManaged())
-//            throw new GdxRuntimeException("New data must have the same managed status as the old data");
-//        this.data = data;
-//
-//        bind();
-//        Gdx.gl30.glTexImage3D(GL30.GL_TEXTURE_2D_ARRAY, 0, data.getInternalFormat(), data.getWidth(), data.getHeight(),
-//            data.getDepth(), 0, data.getInternalFormat(), data.getGLType(), null);
-//
-//        if (!data.isPrepared()) data.prepare();
-//
-//        data.consumeTextureArrayData();
-//
-//        setFilter(minFilter, magFilter);
-//        setWrap(uWrap, vWrap);
-//        Gdx.gl.glBindTexture(glTarget, 0);
-//    }
-
-//    @Override
-//    protected void reload () {
-//        if (!isManaged()) throw new GdxRuntimeException("Tried to reload an unmanaged TextureArray");
-//        glHandle = Gdx.gl.glGenTexture();
-//        load(data);
-//    }
 }

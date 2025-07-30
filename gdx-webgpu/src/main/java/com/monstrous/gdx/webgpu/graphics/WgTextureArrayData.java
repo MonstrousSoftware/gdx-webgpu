@@ -41,6 +41,9 @@ public interface WgTextureArrayData extends TextureArrayData {
 
 //    public WGPUTexture getTexture();
 
+    /** @return whether to generate mipmaps or not. */
+    public boolean useMipMaps ();
+
 	/** Provides static method to instantiate the right implementation.
 	 * @author Tomski */
 	public static class Factory {
