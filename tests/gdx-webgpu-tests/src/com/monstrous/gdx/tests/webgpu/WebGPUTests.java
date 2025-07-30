@@ -97,9 +97,10 @@ public class WebGPUTests {
         SpriteBatchLimit.class,
         SpriteBatchTextures.class,
         SpriteBatchCount.class,
-        CubeMapTest.class,
+        EnvironmentMapTest.class,
         Gamma3D.class,
-        TextureArrayTest.class
+        TextureArrayTest.class,
+        SkyBoxTest.class
 
 		// @on
 

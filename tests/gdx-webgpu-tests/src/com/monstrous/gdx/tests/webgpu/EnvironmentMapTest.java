@@ -29,11 +29,9 @@ import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
-import com.github.xpenatan.webgpu.WGPUTextureFormat;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.webgpu.graphics.WgCubemap;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
-import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
@@ -41,7 +39,7 @@ import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 
 import static com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute.EnvironmentMap;
 
-public class CubeMapTest extends GdxTest {
+public class EnvironmentMapTest extends GdxTest {
 	public PerspectiveCamera cam;
 	public CameraInputController inputController;
 	public WgModelBatch modelBatch;
@@ -89,7 +87,6 @@ public class CubeMapTest extends GdxTest {
         environment.set(new ColorAttribute(ColorAttribute.AmbientLight, .4f, .4f, .4f, 1f));
         environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
         environment.set(new WgCubemapAttribute(EnvironmentMap, cubemap));    // add cube map attribute
-
 	}
 
 	@Override

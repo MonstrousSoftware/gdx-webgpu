@@ -34,7 +34,7 @@ public class PipelineSpecification {
     public WGPUIndexFormat indexFormat;
     public WGPUPrimitiveTopology topology;
     public Environment environment;
-    public String shaderSource;
+    public String shaderSource; // shader source code
     public String vertexShaderEntryPoint;
     public String fragmentShaderEntryPoint;
     public WgShaderProgram shader;
