@@ -51,7 +51,8 @@ public class TransparencyTest extends GdxTest {
 	public void create () {
 		modelBatch = new WgModelBatch();
 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		cam.position.set(0, 0, 0);
+		cam.position.set(-6.5f, 1.2f, 6.1f);
+        cam.lookAt(0,0,0);
 		cam.near = 0.1f;
         cam.far = 100;
 
@@ -91,6 +92,7 @@ public class TransparencyTest extends GdxTest {
 	public void render () {
 		WgScreenUtils.clear(Color.WHITE, true);
 		cam.update();
+        System.out.println("cam: "+cam.position);
 		modelBatch.begin(cam);
 		modelBatch.render(instances);
 		modelBatch.end();

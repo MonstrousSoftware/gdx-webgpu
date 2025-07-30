@@ -36,7 +36,7 @@ public class WgFrameBuffer implements Disposable {
 
 
     public WgFrameBuffer( int width, int height, boolean hasDepth) {
-        this(WGPUTextureFormat.RGBA8Unorm, width, height, hasDepth);
+        this(WGPUTextureFormat.RGBA8UnormSrgb, width, height, hasDepth);
     }
 
     /** note: requires WGPUTextureFormat instead of Pixmap.Format.  */

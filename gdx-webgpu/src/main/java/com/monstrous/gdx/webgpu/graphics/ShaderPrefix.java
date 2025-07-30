@@ -78,19 +78,25 @@ public class ShaderPrefix {
 //        }
 
         // Add gamma correction if surface format is not Srgb
+
         WgGraphics gfx = (WgGraphics)Gdx.graphics;
         WebGPUContext webgpu = gfx.getContext();
-        switch(webgpu.surfaceFormat) {
-            case RGBA8Unorm:
-            case BGRA8Unorm:
-            case BC2RGBAUnorm:
-            case BC3RGBAUnorm:
-            case BC7RGBAUnorm:
-            case ETC2RGBA8Unorm:
-                // some more exotic formats to add...
-                sb.append("#define GAMMA_CORRECTION\n");
-                break;
+        if(!webgpu.hasLinearOutput()){
+            sb.append("#define GAMMA_CORRECTION\n");
         }
+
+
+//        switch(webgpu.surfaceFormat) {
+//            case RGBA8Unorm:
+//            case BGRA8Unorm:
+//            case BC2RGBAUnorm:
+//            case BC3RGBAUnorm:
+//            case BC7RGBAUnorm:
+//            case ETC2RGBA8Unorm:
+//                // some more exotic formats to add...
+//                sb.append("#define GAMMA_CORRECTION\n");
+//                break;
+//        }
 
         System.out.println("Prefix: "+sb.toString());
         return sb.toString();

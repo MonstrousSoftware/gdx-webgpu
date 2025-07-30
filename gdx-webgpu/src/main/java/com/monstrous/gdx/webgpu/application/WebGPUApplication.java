@@ -496,7 +496,7 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
             case BC7RGBAUnormSrgb:
             case ETC2RGBA8UnormSrgb:
                 // some more exotic formats to add...
-                return false;
+                return true;
             case RGBA8Unorm:
             case BGRA8Unorm:
             case BC2RGBAUnorm:
@@ -504,7 +504,7 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
             case BC7RGBAUnorm:
             case ETC2RGBA8Unorm:
                 // some more exotic formats to add...
-                return true;
+                return false;
             default:
                 Gdx.app.error("hasLinearOutput", "surfaceFormat not known: "+surfaceFormat);
         }

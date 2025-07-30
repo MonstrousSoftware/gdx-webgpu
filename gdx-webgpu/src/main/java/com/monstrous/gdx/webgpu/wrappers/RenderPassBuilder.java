@@ -102,7 +102,7 @@ public class RenderPassBuilder {
 
 
             if (clearColor != null) {
-                if(webgpu.hasLinearOutput())
+                if(!webgpu.hasLinearOutput())
                     GammaCorrection.fromLinear(clearColor);      // inverse gamma correction
                 renderPassColorAttachment.setLoadOp( WGPULoadOp.Clear);
 

@@ -73,7 +73,7 @@ public class FrameBufferTest extends GdxTest {
 		batch = new WgSpriteBatch();
 		font = new WgBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
 
-        fbo = new WgFrameBuffer(WGPUTextureFormat.RGBA8Unorm,  640, 480, true);
+        fbo = new WgFrameBuffer( 640, 480, true);
 	}
 
 	public void render () {
