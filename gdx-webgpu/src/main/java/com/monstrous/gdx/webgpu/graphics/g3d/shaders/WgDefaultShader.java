@@ -71,7 +71,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
     private final Vector4 tmpVec4 = new Vector4();
     private final long materialAttributesMask;
     private final long vertexAttributesHash;
-    private final long environmentMask;
+    private final Environment environment;
     private final boolean blended;
     private final boolean hasShadowMap;
     private final boolean hasCubeMap;
@@ -224,7 +224,9 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
         vertexAttributesHash = renderable.meshPart.mesh.getVertexAttributes().hashCode();
         materialAttributesMask = renderable.material.getMask();
-        environmentMask = renderable.environment != null ? renderable.environment.getMask() : 0;
+        environment = new Environment();
+        environment.set(renderable.environment);
+        environment.shadowMap = renderable.environment != null ? renderable.environment.shadowMap : null;
 
         material = new Material(renderable.material);
 
@@ -350,11 +352,12 @@ public class WgDefaultShader extends WgShader implements Disposable {
             return false;
         if (renderable.material.getMask() != materialAttributesMask)
             return false;
-        if(environmentMask == 0 && renderable.environment != null)
-            return false;
-        if (environmentMask != 0 && (renderable.environment == null || renderable.environment.getMask() != environmentMask))
+
+        if(!this.environment.same(renderable.environment))
             return false;
         if(hasShadowMap && (renderable.environment == null || renderable.environment.shadowMap == null))
+            return false;
+        if(renderable.environment != null &&  renderable.environment.shadowMap != null && !hasShadowMap)
             return false;
 
         if(renderable.meshPart.primitiveType != primitiveType)
@@ -372,6 +375,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
     public void render (Renderable renderable) {
         if (renderable.worldTransform.det3x3() == 0) return;
+        // combine attributes (not used)
         combinedAttributes.clear();
         if (renderable.environment != null) combinedAttributes.set(renderable.environment);
         if (renderable.material != null) combinedAttributes.set(renderable.material);
@@ -383,6 +387,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
     private int firstInstance;
     private int instanceCount;
 
+    // note: the combinedAttributes are not used. The signature is maintained to remain compatible with WgShader.
     public void render (Renderable renderable, Attributes attributes) {
         if(instanceIndex > config.maxInstances) {
             Gdx.app.error("WebGPUModelBatch", "Too many instances, max is " + config.maxInstances);
