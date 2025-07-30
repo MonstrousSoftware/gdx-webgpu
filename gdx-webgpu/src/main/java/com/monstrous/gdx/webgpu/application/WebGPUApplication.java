@@ -292,18 +292,9 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
         return textureViewOut;
     }
 
-//    public void resize(int width, int height){
-//        doResize(newWidth, newHeight);
-//        //listener.resize(newWidth, newHeight);
-////        mustResize = true;
-////        this.newWidth = width;
-////        this.newHeight = height;
-//    }
-//
-    // Note that normally resize() is called from outside renderFrame(), e.g. targetView is null.
-    // If resize is called from within renderFrame() i.e. from ApplicationListener.render()
-    // then there may be problems.
-    // This also (?) applies for calling newWindow()
+
+    // Should not be called during a renderFrame() as the swap chain is then being used.
+    // E.g. WgDesktopWindow calls this via postRunnable() after having received an async resize event from GLFW.
     //
     public void resize(int width, int height){
         System.out.println("resize: "+width+" x "+height);

@@ -71,7 +71,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
     private final Vector4 tmpVec4 = new Vector4();
     private final long materialAttributesMask;
     private final long vertexAttributesHash;
-    private final Environment environment;
+    private final long environmentMask;
     private final boolean blended;
     private final boolean hasShadowMap;
     private final boolean hasCubeMap;
@@ -224,9 +224,12 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
         vertexAttributesHash = renderable.meshPart.mesh.getVertexAttributes().hashCode();
         materialAttributesMask = renderable.material.getMask();
-        environment = new Environment();
-        environment.set(renderable.environment);
-        environment.shadowMap = renderable.environment != null ? renderable.environment.shadowMap : null;
+//        environment = new Environment();
+//        if(renderable.environment != null) {
+//            environment.set(renderable.environment);
+//            environment.shadowMap = renderable.environment.shadowMap;
+//        }
+        environmentMask = renderable.environment == null ? 0 : renderable.environment.getMask();
 
         material = new Material(renderable.material);
 
@@ -353,11 +356,11 @@ public class WgDefaultShader extends WgShader implements Disposable {
         if (renderable.material.getMask() != materialAttributesMask)
             return false;
 
-        if(!this.environment.same(renderable.environment))
+        long renderableEnvironmentMask = renderable.environment == null ? 0 : renderable.environment.getMask();
+        if(environmentMask != renderableEnvironmentMask)
             return false;
-        if(hasShadowMap && (renderable.environment == null || renderable.environment.shadowMap == null))
-            return false;
-        if(renderable.environment != null &&  renderable.environment.shadowMap != null && !hasShadowMap)
+        boolean renderableHasShadowMap = renderable.environment != null && renderable.environment.shadowMap != null;
+        if(hasShadowMap != renderableHasShadowMap)
             return false;
 
         if(renderable.meshPart.primitiveType != primitiveType)
