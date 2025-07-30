@@ -85,7 +85,7 @@ public class WgTexture extends Texture {
         WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst);
         if (renderAttachment)
             textureUsage = textureUsage.or(WGPUTextureUsage.RenderAttachment);    // todo COPY_SRC is temp
-        if(mipMapping) Gdx.app.error("WgTexture", "mipmapping not suppörted yet");
+        if(mipMapping) Gdx.app.error("WgTexture", "mipmapping not supported yet");
         mipLevelCount = 1; // todo
         create( label, mipLevelCount, textureUsage, format, numLayers, numSamples, null);
     }

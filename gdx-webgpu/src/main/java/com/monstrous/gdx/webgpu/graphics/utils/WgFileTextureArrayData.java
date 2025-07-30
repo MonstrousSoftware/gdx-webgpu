@@ -37,7 +37,7 @@ public class WgFileTextureArrayData implements WgTextureArrayData {
 	private final Pixmap.Format format;
 	private final int depth;
 	boolean useMipMaps;
-    private WGPUTexture texture;
+    //private WGPUTexture texture;
 
 	public WgFileTextureArrayData(Pixmap.Format format, boolean useMipMaps, FileHandle[] files) {
 		this.format = format;
@@ -73,71 +73,43 @@ public class WgFileTextureArrayData implements WgTextureArrayData {
 		prepared = true;
 	}
 
-
-	public void consumeTextureArrayDataOrig () {
-		boolean containsCustomData = false;
-		for (int i = 0; i < textureDatas.length; i++) {
-			if (textureDatas[i].getType() == TextureData.TextureDataType.Custom) {
-				textureDatas[i].consumeCustomData(GL30.GL_TEXTURE_2D_ARRAY);
-				containsCustomData = true;
-			} else {
-				TextureData texData = textureDatas[i];
-				Pixmap pixmap = texData.consumePixmap();
-				boolean disposePixmap = texData.disposePixmap();
-				if (texData.getFormat() != pixmap.getFormat()) {
-					Pixmap temp = new Pixmap(pixmap.getWidth(), pixmap.getHeight(), texData.getFormat());
-					temp.setBlending(Pixmap.Blending.None);
-					temp.drawPixmap(pixmap, 0, 0, 0, 0, pixmap.getWidth(), pixmap.getHeight());
-					if (texData.disposePixmap()) {
-						pixmap.dispose();
-					}
-					pixmap = temp;
-					disposePixmap = true;
-				}
-				Gdx.gl30.glTexSubImage3D(GL30.GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, pixmap.getWidth(), pixmap.getHeight(), 1,
-					pixmap.getGLInternalFormat(), pixmap.getGLType(), pixmap.getPixels());
-				if (disposePixmap) pixmap.dispose();
-			}
-		}
-		if (useMipMaps && !containsCustomData) {
-			Gdx.gl20.glGenerateMipmap(GL30.GL_TEXTURE_2D_ARRAY);
-		}
-	}
+    @Override
+    public void consumeTextureArrayData() {
+        Gdx.app.error("consumeTextureArrayData", "Not supported");
+    }
 
     @Override
-    public void consumeTextureArrayData () {
+    public void consumeTextureArrayData (WGPUTexture texture) {
+
         int mipLevelCount = useMipMaps ? Math.max(1, WgTexture.bitWidth(Math.min(getWidth(), getHeight()))) : 1;
-        int numSamples = 1;
-        WGPUTextureFormat format = WGPUTextureFormat.RGBA8Unorm; // assumption
-        WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst);
-        texture = WgTexture.createTexture("texture array", getWidth(), getHeight(), mipLevelCount, textureUsage, format, getDepth(), numSamples, null);
+//        int numSamples = 1;
+//        WGPUTextureFormat format = WGPUTextureFormat.RGBA8Unorm;
+//        WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst);
+        //texture = WgTexture.createTexture("texture array", getWidth(), getHeight(), mipLevelCount, textureUsage, format, getDepth(), numSamples, null);
         for (int i = 0; i < textureDatas.length; i++) {
             TextureData texData = textureDatas[i];
             Pixmap pixmap = texData.consumePixmap();
-            boolean disposePixmap = texData.disposePixmap();
+            boolean mustDisposePixmap = texData.disposePixmap();
+
             Pixmap.Format dataFormat = Pixmap.Format.RGBA8888;
-            //if (texData.getFormat() != pixmap.getFormat()) {
-            if ( dataFormat != pixmap.getFormat()) {
-                Pixmap temp = new Pixmap(pixmap.getWidth(), pixmap.getHeight(), texData.getFormat());
-                temp.setBlending(Pixmap.Blending.None);
-                temp.drawPixmap(pixmap, 0, 0, 0, 0, pixmap.getWidth(), pixmap.getHeight());
-                if (texData.disposePixmap()) {
+            if (dataFormat != pixmap.getFormat()) {
+                Pixmap tmp = new Pixmap(pixmap.getWidth(), pixmap.getHeight(), dataFormat);
+                tmp.setBlending(Pixmap.Blending.None);
+                tmp.drawPixmap(pixmap, 0, 0, 0, 0, pixmap.getWidth(), pixmap.getHeight());
+                if (mustDisposePixmap) {
                     pixmap.dispose();
                 }
-                pixmap = temp;
-                disposePixmap = true;
+                pixmap = tmp;
+                mustDisposePixmap = true;
             }
             WgTexture.load(texture, pixmap.getPixels(), getWidth(), getHeight(), mipLevelCount, i);
-            if (disposePixmap) pixmap.dispose();
-
-            // todo: useMipMaps is ignored
+            if (mustDisposePixmap) pixmap.dispose();
         }
     }
 
-    @Override
-    public WGPUTexture getTexture(){
-        return texture;
-    }
+//    public WGPUTexture getTexture(){
+//        return texture;
+//    }
 
 	@Override
 	public int getWidth () {

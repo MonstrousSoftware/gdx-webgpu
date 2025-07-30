@@ -8,10 +8,8 @@ import com.github.xpenatan.webgpu.WGPUTexture;
 import com.github.xpenatan.webgpu.WGPUTextureFormat;
 
 /** Version of TextureArray that uses WgTexture */
-public class WgTextureArray  {
+public class WgTextureArray  extends WgTexture {
 
-    private final WGPUTexture texture;
-    private String label;
     private WgTextureArrayData data;
 
     public WgTextureArray(String... internalPaths) {
@@ -31,25 +29,28 @@ public class WgTextureArray  {
     }
 
     public WgTextureArray(WgTextureArrayData data) {
+        // at this point we don't know if we use mipmapping yet
+        // should we create texture instead in consumeTextureArrayData ?
+        //
+        super("texture array", data.getWidth(), data.getHeight(), data.getDepth(), false, false, WGPUTextureFormat.RGBA8UnormSrgb, 1);
         // create a texture with layers
         // let texture data consume() fill each layer
         load(data, "texture array");
-        this.texture = data.getTexture();
-
-//        if (data.isManaged()) addManagedTexture(Gdx.app, this);
     }
 
-    public void load(WgTextureArrayData data, String label){
-        if (this.data != null && data.isManaged() != this.data.isManaged())
-            throw new GdxRuntimeException("New data must have the same managed status as the old data");
+    /** Sets the sides of this cubemap to the specified {@link CubemapData}. */
+    public void load (WgTextureArrayData data, String label) {
+        System.out.println("Loading texture array: "+label);
         this.data = data;
         this.label = label;
-        //this.format = WGPUTextureFormat.RGBA8Unorm; // force format
         if (!data.isPrepared()) data.prepare();
 
-        // this will create a WebGPU texture and upload the images
-        data.consumeTextureArrayData();
+        setFilter(TextureFilter.Linear, TextureFilter.Linear);
+        setWrap(TextureWrap.ClampToEdge, TextureWrap.ClampToEdge);
+
+        data.consumeTextureArrayData(texture);
     }
+
 
     private static FileHandle[] getInternalHandles (String... internalPaths) {
         FileHandle[] handles = new FileHandle[internalPaths.length];

@@ -30,17 +30,12 @@ public class WgCubemap extends WgTexture {
 
 	protected CubemapData cubemapData;
 
-	/** Construct a Cubemap based on the given CubemapData. */
-	public WgCubemap(WgCubemapData data) {
-        super("cubemap", data.getWidth(), data.getHeight(), 6, false, false, WGPUTextureFormat.RGBA8Unorm, 1);
-        this.cubemapData = data;
-		load(data);
-	}
+
 
     // TMP
-    public WgCubemap( int w, int h) {
-        super("cubemap", w, h, 6, false, false, WGPUTextureFormat.RGBA8Unorm, 1);
-    }
+//    public WgCubemap( int w, int h) {
+//        super("cubemap", w, h, 6, false, false, WGPUTextureFormat.RGBA8Unorm, 1);
+//    }
 
 	/** Construct a Cubemap with the specified texture files for the sides, does not generate mipmaps. */
 	public WgCubemap(FileHandle positiveX, FileHandle negativeX, FileHandle positiveY, FileHandle negativeY, FileHandle positiveZ,
@@ -88,7 +83,14 @@ public class WgCubemap extends WgTexture {
 		this(new WgFacedCubemapData(positiveX, negativeX, positiveY, negativeY, positiveZ, negativeZ));
 	}
 
-	/** Sets the sides of this cubemap to the specified {@link CubemapData}. */
+    /** Construct a Cubemap based on the given CubemapData. */
+    public WgCubemap(WgCubemapData data) {
+        super("cubemap", data.getWidth(), data.getHeight(), 6, false, false, WGPUTextureFormat.RGBA8Unorm, 1);
+        this.cubemapData = data;
+        load(data);
+    }
+
+    /** Sets the sides of this cubemap to the specified {@link CubemapData}. */
 	public void load (WgCubemapData data) {
         System.out.println("Loading cube map");
 		if (!data.isPrepared()) data.prepare();
