@@ -31,15 +31,15 @@ public class WgTextureData implements TextureData {
 	boolean isPrepared = false;
 
 	/** properties of texture */
-	int mipLevel = 0;
+	boolean useMipMaps;
 	int format;
 	int type;
 
 
-	public WgTextureData(int width, int height, int mipMapLevel, int format, int type) {
+	public WgTextureData(int width, int height, boolean useMipMaps, int format, int type) {
 		this.width = width;
 		this.height = height;
-		this.mipLevel = mipMapLevel;
+		this.useMipMaps = useMipMaps;
 		this.format = format;
 		this.type = type;
 	}
@@ -92,7 +92,7 @@ public class WgTextureData implements TextureData {
 
 	@Override
 	public boolean useMipMaps () {
-		return false;
+		return useMipMaps;
 	}
 
 	@Override

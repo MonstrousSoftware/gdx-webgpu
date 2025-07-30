@@ -24,6 +24,7 @@ import com.badlogic.gdx.graphics.TextureArrayData;
 import com.badlogic.gdx.graphics.TextureData;
 import com.badlogic.gdx.graphics.glutils.PixmapTextureData;
 import com.badlogic.gdx.utils.BufferUtils;
+import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
@@ -45,50 +46,45 @@ public class WgTexture extends Texture {
     protected int numSamples;
     protected TextureData data; // cannot access data of Texture which is package private
 
-    public WgTexture(String label, int width, int height, boolean mipMapping, boolean renderAttachment, WGPUTextureFormat format, int numSamples ) {
-        this.data = new WgTextureData(width, height, 0, 0, 0);
+    public WgTexture(String label, int width, int height, boolean useMipMaps, boolean renderAttachment, WGPUTextureFormat format, int numSamples ) {
+        this.data = new WgTextureData(width, height, useMipMaps, 0, 0);
         this.label = label;
 
         this.numSamples = numSamples;
         WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst);
         if (renderAttachment)
             textureUsage = textureUsage.or(WGPUTextureUsage.RenderAttachment);
-        mipLevelCount = 1;
-        create( label, mipLevelCount, textureUsage, format, 1, numSamples, null);
+        create( label, useMipMaps, textureUsage, format, 1, numSamples, null);
     }
 
-    public WgTexture(String label, int width, int height, int mipLevelCount, WGPUTextureUsage textureUsage, WGPUTextureFormat format, int numSamples ) {
-        this.data = new WgTextureData(width, height, 0, 0, 0);
+    public WgTexture(String label, int width, int height, boolean useMipMaps, WGPUTextureUsage textureUsage, WGPUTextureFormat format, int numSamples ) {
+        this.data = new WgTextureData(width, height, useMipMaps, 0, 0);
         this.label = label;
         this.numSamples = numSamples;
-        this.mipLevelCount = mipLevelCount;
         this.format = format;
 
-        create( label, mipLevelCount, textureUsage, format, 1, numSamples, null);
+        create( label, useMipMaps, textureUsage, format, 1, numSamples, null);
     }
 
-    public WgTexture(String label, int width, int height, int mipLevelCount, WGPUTextureUsage textureUsage, WGPUTextureFormat format, int numSamples, WGPUTextureFormat viewFormat ) {
-        this.data = new WgTextureData(width, height, 0, 0, 0);
+    public WgTexture(String label, int width, int height, boolean useMipMaps, WGPUTextureUsage textureUsage, WGPUTextureFormat format, int numSamples, WGPUTextureFormat viewFormat ) {
+        this.data = new WgTextureData(width, height, useMipMaps, 0, 0);
         this.label = label;
         this.numSamples = numSamples;
-        this.mipLevelCount = mipLevelCount;
         this.format = format;
-        create( label, mipLevelCount, textureUsage, format, 1, numSamples, viewFormat);
+        create( label, useMipMaps, textureUsage, format, 1, numSamples, viewFormat);
     }
 
     // for cube map or texture array
-    public WgTexture(String label, int width, int height, int numLayers, boolean mipMapping, boolean renderAttachment, WGPUTextureFormat format, int numSamples ) {
-        mipLevelCount = mipMapping ? Math.max(1, bitWidth(Math.min(width, height))) : 1;
-
-        this.data = new WgTextureData(width, height, mipLevelCount, 0, 0);
+    public WgTexture(String label, int width, int height, int numLayers, boolean useMipMaps, boolean renderAttachment ) {
+        this.data = new WgTextureData(width, height, useMipMaps, 0, 0);
         this.label = label;
 
-        this.numSamples = numSamples;
+        this.numSamples = 1;
         WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst);
         if (renderAttachment)
             textureUsage = textureUsage.or(WGPUTextureUsage.RenderAttachment);
 
-        create( label, mipLevelCount, textureUsage, format, numLayers, numSamples, null);
+        create( label, useMipMaps, textureUsage, WGPUTextureFormat.RGBA8UnormSrgb, numLayers, numSamples, null);
     }
 
     /*
@@ -108,7 +104,7 @@ public class WgTexture extends Texture {
     }
 
     public WgTexture(FileHandle file) {
-        this(file, null, false, true);
+        this(file, null, true, true);
     }
 
     public WgTexture(FileHandle file, boolean useMipMaps) {
@@ -132,11 +128,11 @@ public class WgTexture extends Texture {
     }
 
     public WgTexture(Pixmap pixmap, String label) {
-        this(new PixmapTextureData(pixmap, null, false, false), label, true);
+        this(new PixmapTextureData(pixmap, null, true, false), label, true);
     }
 
     public WgTexture(Pixmap pixmap, String label, boolean isColor) {
-        this(new PixmapTextureData(pixmap, null, false, false), label, isColor);
+        this(new PixmapTextureData(pixmap, null, true, false), label, isColor);
     }
 
     public WgTexture(TextureData data) {
@@ -154,7 +150,7 @@ public class WgTexture extends Texture {
 
         if (!data.isPrepared()) data.prepare();
 
-        mipLevelCount = data.useMipMaps() ? Math.max(1, bitWidth(Math.min(data.getWidth(), data.getHeight()))) : 1;
+        //mipLevelCount = data.useMipMaps() ? Math.max(1, bitWidth(Math.min(data.getWidth(), data.getHeight()))) : 1;
         numSamples = 1;
 
         // for color textures set format to Srgb so that on sampling it will be inverse gamma corrected to provide a linear color value
@@ -162,7 +158,7 @@ public class WgTexture extends Texture {
         format = isColor ? WGPUTextureFormat.RGBA8UnormSrgb : WGPUTextureFormat.RGBA8Unorm;
 
         WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst);
-        create( label, mipLevelCount, textureUsage, format, 1, numSamples, null);
+        create( label, data.useMipMaps(), textureUsage, format, 1, numSamples, null);
         Pixmap pixmap = data.consumePixmap();
         boolean mustDisposePixmap = data.disposePixmap();
 
@@ -184,7 +180,7 @@ public class WgTexture extends Texture {
             mustDisposePixmap = true;
         }
 
-        load(texture, pixmap.getPixels(),data.getWidth(), data.getHeight(), mipLevelCount, 0);
+        load( pixmap.getPixels(),data.getWidth(), data.getHeight(), 0);
         if (mustDisposePixmap) pixmap.dispose();
     }
 
@@ -251,9 +247,11 @@ public class WgTexture extends Texture {
     // numLayers - normally 1, e.g. 6 for a cube map
     // numSamples - for anti-aliasing
     //
-    protected void create(String label, int mipLevelCount, WGPUTextureUsage textureUsage, WGPUTextureFormat format, int numLayers, int numSamples, WGPUTextureFormat viewFormat) {
+    protected void create(String label, boolean useMipMaps, WGPUTextureUsage textureUsage, WGPUTextureFormat format, int numLayers, int numSamples, WGPUTextureFormat viewFormat) {
         if (webgpu.device == null || webgpu.queue == null)
             throw new RuntimeException("Texture creation requires device and queue to be available\n");
+
+        this.mipLevelCount = useMipMaps ? Math.max(1, bitWidth(Math.min(data.getWidth(), data.getHeight()))) : 1;
 
         texture = createTexture(label, data.getWidth(), data.getHeight(), mipLevelCount, textureUsage, format, numLayers, numSamples, viewFormat);
         this.label = label;
@@ -439,17 +437,20 @@ public class WgTexture extends Texture {
      * @param pixelPtr
      * @param layer which layer to load in case of a 3d texture, otherwise 0
      */
-    public static void load(WGPUTexture texture, ByteBuffer pixelPtr, int width, int height, int mipLevelCount, int layer) {
+    public void load(ByteBuffer pixelPtr, int width, int height, int layer) {
 
-        // Generate mipmap levels
+        // Generate mipmap levels if this.mipLevelCount > 1
         // candidate for compute shader
+        int numComponents = 4;
 
-        int mipLevelWidth = width;
-        int mipLevelHeight = height;
-        int numComponents = 4; //numComponents(format);
+        if(pixelPtr.limit() != width * height * numComponents)
+            throw new GdxRuntimeException("ByteBuffer content size does not match the texture size (pixels must be RGBA8888).");
 
         ByteBuffer prev = null;
         ByteBuffer next = pixelPtr;
+
+        int mipLevelWidth = width;
+        int mipLevelHeight = height;
 
         for(int mipLevel = 0; mipLevel < mipLevelCount; mipLevel++) {
 
@@ -482,7 +483,7 @@ public class WgTexture extends Texture {
                 }
                 next.flip();
             }
-            loadMipLevel(texture, next, mipLevelWidth, mipLevelHeight, layer,  mipLevel);
+            loadMipLevel(next, mipLevelWidth, mipLevelHeight, layer,  mipLevel);
 
             mipLevelWidth /= 2;
             mipLevelHeight /= 2;
@@ -509,7 +510,7 @@ public class WgTexture extends Texture {
     /** Load image data into a specific layer and mip level
      *
      */
-     public static void loadMipLevel(WGPUTexture texture, ByteBuffer data, int width, int height, int layer, int mipLevel) {
+     public void loadMipLevel(ByteBuffer data, int width, int height, int layer, int mipLevel) {
 
         // Arguments telling which part of the texture we upload to
         // (together with the last argument of writeTexture)

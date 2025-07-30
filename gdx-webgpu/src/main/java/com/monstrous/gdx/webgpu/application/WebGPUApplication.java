@@ -390,7 +390,7 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
 
     private void initDepthBuffer(int width, int height, int samples){
         //System.out.println("initDepthBuffer: "+width+" x "+height);
-        depthTexture = new WgTexture("depth texture", width, height, 1, WGPUTextureUsage.RenderAttachment,
+        depthTexture = new WgTexture("depth texture", width, height, false, WGPUTextureUsage.RenderAttachment,
                 WGPUTextureFormat.Depth24Plus, samples, WGPUTextureFormat.Depth24Plus );
     }
 

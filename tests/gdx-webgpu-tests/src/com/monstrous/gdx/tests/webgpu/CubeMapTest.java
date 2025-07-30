@@ -49,9 +49,8 @@ public class CubeMapTest extends GdxTest {
 	public ModelInstance instance;
 	public Environment environment;
     private WgCubemap cubemap;
-    private WgTexture texture;
 
-	@Override
+    @Override
 	public void create () {
 		modelBatch = new WgModelBatch();
 
@@ -62,12 +61,7 @@ public class CubeMapTest extends GdxTest {
 		cam.far = 150f;
 		cam.update();
 
-        texture = new WgTexture(Gdx.files.internal("data/webgpu.png"));
-
-        // Note: a statement like the following may (not always, depends on many factors) cause a crash of this demo
-        // unless you add pm.dispose() immediately after
-        //Pixmap pm = new Pixmap(Gdx.files.internal("data/webgpu.png"));
-        //pm.dispose();
+        WgTexture texture = new WgTexture(Gdx.files.internal("data/webgpu.png"));
 
         Material mat = new Material(ColorAttribute.createDiffuse(Color.YELLOW));
         ModelBuilder modelBuilder = new WgModelBuilder();
@@ -89,7 +83,7 @@ public class CubeMapTest extends GdxTest {
             fileHandles[i] = Gdx.files.internal(prefix + sides[i]);
         }
 
-        cubemap = new WgCubemap(fileHandles[0], fileHandles[1], fileHandles[2], fileHandles[3], fileHandles[4], fileHandles[5], false);
+        cubemap = new WgCubemap(fileHandles[0], fileHandles[1], fileHandles[2], fileHandles[3], fileHandles[4], fileHandles[5], true);
 
         environment = new Environment();
         environment.set(new ColorAttribute(ColorAttribute.AmbientLight, .4f, .4f, .4f, 1f));

@@ -78,10 +78,9 @@ public class WgFileTextureArrayData implements WgTextureArrayData {
     }
 
     @Override
-    public void consumeTextureArrayData (WGPUTexture texture) {
+    public void consumeTextureArrayData (WgTexture texture) {
 
-        int mipLevelCount = useMipMaps ? Math.max(1, WgTexture.bitWidth(Math.min(getWidth(), getHeight()))) : 1;
-        for (int i = 0; i < textureDatas.length; i++) {
+                for (int i = 0; i < textureDatas.length; i++) {
             TextureData texData = textureDatas[i];
             Pixmap pixmap = texData.consumePixmap();
             boolean mustDisposePixmap = texData.disposePixmap();
@@ -97,7 +96,7 @@ public class WgFileTextureArrayData implements WgTextureArrayData {
                 pixmap = tmp;
                 mustDisposePixmap = true;
             }
-            WgTexture.load(texture, pixmap.getPixels(), getWidth(), getHeight(), mipLevelCount, i);
+            texture.load(pixmap.getPixels(), getWidth(), getHeight(), i);
             if (mustDisposePixmap) pixmap.dispose();
         }
     }

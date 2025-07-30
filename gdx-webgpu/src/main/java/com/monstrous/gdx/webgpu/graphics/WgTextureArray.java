@@ -32,7 +32,7 @@ public class WgTextureArray  extends WgTexture {
         // at this point we don't know if we use mipmapping yet
         // should we create texture instead in consumeTextureArrayData ?
         //
-        super("texture array", data.getWidth(), data.getHeight(), data.getDepth(), data.useMipMaps(), false, WGPUTextureFormat.RGBA8UnormSrgb, 1);
+        super("texture array", data.getWidth(), data.getHeight(), data.getDepth(), data.useMipMaps(), false);
         // create a texture with layers
         // let texture data consume() fill each layer
         load(data, "texture array");
@@ -48,7 +48,7 @@ public class WgTextureArray  extends WgTexture {
         setFilter(TextureFilter.Linear, TextureFilter.Linear);
         setWrap(TextureWrap.ClampToEdge, TextureWrap.ClampToEdge);
 
-        data.consumeTextureArrayData(texture);
+        data.consumeTextureArrayData(this);
     }
 
 

@@ -160,9 +160,9 @@ public class WgFacedCubemapData implements WgCubemapData {
         Gdx.app.error("consumeCubemapData", "Not supported");
     }
 
-    /** fill the existing cube map texture with the texture data provided in the constructor or via load(...) */
+	/** fill the existing cube map texture with the texture data provided in the constructor or via load(...) */
     @Override
-	public void consumeCubemapDataCreate (  WGPUTexture texture ) {
+	public void consumeCubemapDataCreate (  WgTexture texture ) {
         System.out.println("ConsumeCubemap Data");
 
 		for (int i = 0; i < data.length; i++) {
@@ -172,8 +172,9 @@ public class WgFacedCubemapData implements WgCubemapData {
 			} else {
 				Pixmap pixmap = data[i].consumePixmap();
 				boolean mustDisposePixmap = data[i].disposePixmap();
-				if (data[i].getFormat() != pixmap.getFormat()) {
-					Pixmap tmp = new Pixmap(pixmap.getWidth(), pixmap.getHeight(), data[i].getFormat());
+				Pixmap.Format dataFormat = Pixmap.Format.RGBA8888;
+				if (dataFormat != pixmap.getFormat()) {
+					Pixmap tmp = new Pixmap(pixmap.getWidth(), pixmap.getHeight(), dataFormat);
 					tmp.setBlending(Blending.None);
 					tmp.drawPixmap(pixmap, 0, 0, 0, 0, pixmap.getWidth(), pixmap.getHeight());
 					if (mustDisposePixmap) pixmap.dispose();
@@ -181,8 +182,7 @@ public class WgFacedCubemapData implements WgCubemapData {
 					mustDisposePixmap = true;
 				}
 
-                int mipLevelCount = data[i].useMipMaps() ? Math.max(1, WgTexture.bitWidth(Math.min(data[i].getWidth(), data[i].getHeight()))) : 1;
-                WgTexture.load(texture, pixmap.getPixels(),pixmap.getWidth(), pixmap.getHeight(), mipLevelCount, i);
+                texture.load( pixmap.getPixels(),pixmap.getWidth(), pixmap.getHeight(),  i);
 
 				if (mustDisposePixmap) pixmap.dispose();
 			}

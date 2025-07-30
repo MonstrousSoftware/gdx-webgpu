@@ -45,9 +45,9 @@ public class WgFrameBuffer implements Disposable {
         webgpu = gfx.getContext();
 
         final WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or( WGPUTextureUsage.CopyDst).or(WGPUTextureUsage.RenderAttachment).or( WGPUTextureUsage.CopySrc);
-        colorTexture = new WgTexture("fbo color", width, height, 1, textureUsage, format, 1, format);
+        colorTexture = new WgTexture("fbo color", width, height, false, textureUsage, format, 1, format);
         if(hasDepth)
-            depthTexture = new WgTexture("fbo depth", width, height, 1, textureUsage, WGPUTextureFormat.Depth24Plus, 1, WGPUTextureFormat.Depth24Plus);
+            depthTexture = new WgTexture("fbo depth", width, height, false, textureUsage, WGPUTextureFormat.Depth24Plus, 1, WGPUTextureFormat.Depth24Plus);
         else
             depthTexture = null;
     }

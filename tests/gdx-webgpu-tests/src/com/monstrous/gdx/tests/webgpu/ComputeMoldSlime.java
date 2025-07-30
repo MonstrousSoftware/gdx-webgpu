@@ -110,8 +110,8 @@ public class ComputeMoldSlime extends GdxTest {
         WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or( WGPUTextureUsage.StorageBinding).or( WGPUTextureUsage.CopyDst).or( WGPUTextureUsage.CopySrc);
 
         //public WgTexture(String label, int width, int height, int mipLevelCount, int textureUsage, WGPUTextureFormat format, int numSamples )
-        texture1 = new WgTexture("texture1", width, height, 1, textureUsage, WGPUTextureFormat.RGBA8Unorm, 1);
-        texture2 = new WgTexture("texture2", width, height, 1, textureUsage, WGPUTextureFormat.RGBA8Unorm, 1);
+        texture1 = new WgTexture("texture1", width, height, false, textureUsage, WGPUTextureFormat.RGBA8Unorm, 1);
+        texture2 = new WgTexture("texture2", width, height,false, textureUsage, WGPUTextureFormat.RGBA8Unorm, 1);
 
         Pixmap pm = new Pixmap(width, height, Pixmap.Format.RGBA8888);
         pm.setColor(Color.BLACK);

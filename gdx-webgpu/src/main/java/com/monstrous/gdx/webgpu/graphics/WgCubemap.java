@@ -31,29 +31,24 @@ public class WgCubemap extends WgTexture {
 	protected CubemapData cubemapData;
 
 
-
-    // TMP
-//    public WgCubemap( int w, int h) {
-//        super("cubemap", w, h, 6, false, false, WGPUTextureFormat.RGBA8Unorm, 1);
-//    }
-
 	/** Construct a Cubemap with the specified texture files for the sides, does not generate mipmaps. */
 	public WgCubemap(FileHandle positiveX, FileHandle negativeX, FileHandle positiveY, FileHandle negativeY, FileHandle positiveZ,
                      FileHandle negativeZ) {
-		this(positiveX, negativeX, positiveY, negativeY, positiveZ, negativeZ, false);
+		this(positiveX, negativeX, positiveY, negativeY, positiveZ, negativeZ, true);
 	}
 
 	/** Construct a Cubemap with the specified texture files for the sides, optionally generating mipmaps. */
 	public WgCubemap(FileHandle positiveX, FileHandle negativeX, FileHandle positiveY, FileHandle negativeY, FileHandle positiveZ,
                      FileHandle negativeZ, boolean useMipMaps) {
-		this(TextureData.Factory.loadFromFile(positiveX, Pixmap.Format.RGBA8888, useMipMaps), TextureData.Factory.loadFromFile(negativeX,Pixmap.Format.RGBA8888,  useMipMaps),
-			TextureData.Factory.loadFromFile(positiveY,Pixmap.Format.RGBA8888,  useMipMaps), TextureData.Factory.loadFromFile(negativeY,Pixmap.Format.RGBA8888,  useMipMaps),
-			TextureData.Factory.loadFromFile(positiveZ,Pixmap.Format.RGBA8888,  useMipMaps), TextureData.Factory.loadFromFile(negativeZ,Pixmap.Format.RGBA8888,  useMipMaps));
+		this(TextureData.Factory.loadFromFile(positiveX, null, useMipMaps), TextureData.Factory.loadFromFile(negativeX,null,  useMipMaps),
+			TextureData.Factory.loadFromFile(positiveY,null,  useMipMaps), TextureData.Factory.loadFromFile(negativeY,null,  useMipMaps),
+			TextureData.Factory.loadFromFile(positiveZ,null,  useMipMaps), TextureData.Factory.loadFromFile(negativeZ,null,  useMipMaps),
+				 useMipMaps);
 	}
 
 	/** Construct a Cubemap with the specified {@link Pixmap}s for the sides, does not generate mipmaps. */
 	public WgCubemap(Pixmap positiveX, Pixmap negativeX, Pixmap positiveY, Pixmap negativeY, Pixmap positiveZ, Pixmap negativeZ) {
-		this(positiveX, negativeX, positiveY, negativeY, positiveZ, negativeZ, false);
+		this(positiveX, negativeX, positiveY, negativeY, positiveZ, negativeZ, true);
 	}
 
 	/** Construct a Cubemap with the specified {@link Pixmap}s for the sides, optionally generating mipmaps. */
@@ -64,41 +59,41 @@ public class WgCubemap extends WgTexture {
 			positiveY == null ? null : new PixmapTextureData(positiveY, null, useMipMaps, false),
 			negativeY == null ? null : new PixmapTextureData(negativeY, null, useMipMaps, false),
 			positiveZ == null ? null : new PixmapTextureData(positiveZ, null, useMipMaps, false),
-			negativeZ == null ? null : new PixmapTextureData(negativeZ, null, useMipMaps, false));
+			negativeZ == null ? null : new PixmapTextureData(negativeZ, null, useMipMaps, false), useMipMaps);
 	}
 
 	/** Construct a Cubemap with {@link Pixmap}s for each side of the specified size. */
 	public WgCubemap(int width, int height, int depth, Format format) {
-		this(new PixmapTextureData(new Pixmap(depth, height, format), null, false, true),
-			new PixmapTextureData(new Pixmap(depth, height, format), null, false, true),
-			new PixmapTextureData(new Pixmap(width, depth, format), null, false, true),
-			new PixmapTextureData(new Pixmap(width, depth, format), null, false, true),
-			new PixmapTextureData(new Pixmap(width, height, format), null, false, true),
-			new PixmapTextureData(new Pixmap(width, height, format), null, false, true));
+		this(new PixmapTextureData(new Pixmap(depth, height, format), null, true, true),
+			new PixmapTextureData(new Pixmap(depth, height, format), null, true, true),
+			new PixmapTextureData(new Pixmap(width, depth, format), null, true, true),
+			new PixmapTextureData(new Pixmap(width, depth, format), null, true, true),
+			new PixmapTextureData(new Pixmap(width, height, format), null, true, true),
+			new PixmapTextureData(new Pixmap(width, height, format), null, true, true), true);
 	}
 
 	/** Construct a Cubemap with the specified {@link TextureData}'s for the sides */
-	public WgCubemap(TextureData positiveX, TextureData negativeX, TextureData positiveY, TextureData negativeY,
-                     TextureData positiveZ, TextureData negativeZ) {
-		this(new WgFacedCubemapData(positiveX, negativeX, positiveY, negativeY, positiveZ, negativeZ));
+	public WgCubemap( TextureData positiveX, TextureData negativeX, TextureData positiveY, TextureData negativeY,
+                     TextureData positiveZ, TextureData negativeZ, boolean useMipMaps) {
+		this(new WgFacedCubemapData(positiveX, negativeX, positiveY, negativeY, positiveZ, negativeZ), useMipMaps);
 	}
 
     /** Construct a Cubemap based on the given CubemapData. */
-    public WgCubemap(WgCubemapData data) {
-        super("cubemap", data.getWidth(), data.getHeight(), 6, false, false, WGPUTextureFormat.RGBA8Unorm, 1);
+    public WgCubemap(WgCubemapData data, boolean useMipMaps) {
+        super("cubemap", data.getWidth(), data.getHeight(), 6, useMipMaps, false);
         this.cubemapData = data;
         load(data);
     }
 
     /** Sets the sides of this cubemap to the specified {@link CubemapData}. */
 	public void load (WgCubemapData data) {
-        System.out.println("Loading cube map");
+        //System.out.println("Loading cube map");
 		if (!data.isPrepared()) data.prepare();
 
         setFilter(TextureFilter.Linear, TextureFilter.Linear);
         setWrap(TextureWrap.ClampToEdge, TextureWrap.ClampToEdge);
 
-		data.consumeCubemapDataCreate(texture);
+		data.consumeCubemapDataCreate(this);
 	}
 
 	public CubemapData getCubemapData () {

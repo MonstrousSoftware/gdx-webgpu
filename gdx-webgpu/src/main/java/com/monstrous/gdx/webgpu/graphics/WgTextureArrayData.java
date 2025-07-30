@@ -37,7 +37,7 @@ import com.monstrous.gdx.webgpu.graphics.utils.WgFileTextureArrayData;
  * @author Tomski */
 public interface WgTextureArrayData extends TextureArrayData {
 
-    public void consumeTextureArrayData (WGPUTexture texture);
+    public void consumeTextureArrayData (WgTexture texture);
 
 //    public WGPUTexture getTexture();
 
