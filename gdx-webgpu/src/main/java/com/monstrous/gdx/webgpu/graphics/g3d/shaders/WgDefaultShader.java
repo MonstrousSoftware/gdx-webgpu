@@ -175,20 +175,27 @@ public class WgDefaultShader extends WgShader implements Disposable {
         binder.defineUniform("projectionViewTransform", 0, 0, offset); offset += 16*4;
         binder.defineUniform("shadowProjViewTransform", 0, 0, offset); offset += 16*4;
 
-        for(int i = 0; i < config.maxDirectionalLights; i++) {
-            binder.defineUniform("dirLight["+i+"].color", 0, 0, offset);
+        if(config.maxDirectionalLights > 0) {
+            // define only a uniform for the initial array elements
+            // you will have to add an offset of i * array element size
+            binder.defineUniform("dirLight[0].color", 0, 0, offset);
             offset += 4 * 4;
-            binder.defineUniform("dirLight["+i+"].direction", 0, 0, offset);
+            binder.defineUniform("dirLight[0].direction", 0, 0, offset);
             offset += 4 * 4;
+            offset += 8*Float.BYTES*(config.maxDirectionalLights-1);
         }
-        for(int i = 0; i < config.maxPointLights; i++) {
-            binder.defineUniform("pointLight["+i+"].color", 0, 0, offset);
+
+        if(config.maxPointLights> 0 ) {
+            binder.defineUniform("pointLight[0].color", 0, 0, offset);
             offset += 4 * 4;
-            binder.defineUniform("pointLight["+i+"].position", 0, 0, offset);
+            binder.defineUniform("pointLight[0].position", 0, 0, offset);
             offset += 4 * 4;
-            binder.defineUniform("pointLight["+i+"].intensity", 0, 0, offset);
+            binder.defineUniform("pointLight[0].intensity", 0, 0, offset);
             offset += 4*4;    // added padding
+            offset += 12*Float.BYTES*(config.maxPointLights-1);
         }
+
+
         binder.defineUniform("ambientLight", 0, 0, offset); offset += 4*4;
         binder.defineUniform("cameraPosition", 0, 0, offset); offset += 4*4;
         binder.defineUniform("fogColor", 0, 0, offset); offset += 4*4;
@@ -612,9 +619,9 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
         numDirectionalLights = dirs == null ? 0 : dirs.size;
         for(int i = 0; i < numDirectionalLights; i++) {
-            // todo probably not so great for memory use to concatenate strings like this
-            binder.setUniform("dirLight["+i+"].color", directionalLights[i].color);
-            binder.setUniform("dirLight["+i+"].direction", directionalLights[i].direction);
+            int offset = i * 8 * Float.BYTES;
+            binder.setUniform("dirLight[0].color", offset, directionalLights[i].color);
+            binder.setUniform("dirLight[0].direction", offset, directionalLights[i].direction);
         }
         binder.setUniform("numDirectionalLights", numDirectionalLights);
 
@@ -631,9 +638,10 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
         numPointLights = points == null ? 0 : points.size;
         for(int i = 0; i < numPointLights; i++) {
-            binder.setUniform("pointLight["+i+"].color", pointLights[i].color);
-            binder.setUniform("pointLight["+i+"].position", pointLights[i].position);
-            binder.setUniform("pointLight["+i+"].intensity", pointLights[i].intensity);
+            int offset = i * 12 * Float.BYTES;
+            binder.setUniform("pointLight[0].color", offset, pointLights[i].color);
+            binder.setUniform("pointLight[0].position", offset, pointLights[i].position);
+            binder.setUniform("pointLight[0].intensity", offset, pointLights[i].intensity);
         }
         binder.setUniform("numPointLights", numPointLights);
 

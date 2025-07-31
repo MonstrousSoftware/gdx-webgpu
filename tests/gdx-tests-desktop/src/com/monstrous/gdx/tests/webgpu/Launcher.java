@@ -14,7 +14,7 @@ public class Launcher {
         config.setTitle("WebGPU");
         config.backend = WebGPUContext.Backend.VULKAN;
 
-        config.enableGPUtiming = true;
+        config.enableGPUtiming = false;
 
         config.useVsync(true);
 
@@ -22,7 +22,7 @@ public class Launcher {
         //new WgDesktopApplication(new ColorTest(), config);
         //new WgDesktopApplication(new TransparencyTest(), config);
 
-        new WgDesktopApplication(new ClearScreen(), config);
+        new WgDesktopApplication(new Basic3DTest(), config);
         //new WgDesktopApplication(new FontTest(), config);
         //new WgDesktopApplication(new FullScreenTest(), config);
     }
