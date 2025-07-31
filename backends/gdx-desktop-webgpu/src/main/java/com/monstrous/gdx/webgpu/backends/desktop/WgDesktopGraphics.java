@@ -107,16 +107,12 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
                     application.surface = createSurface(application.instance, windowHandle);
 
                     if(application.surface != null) {
-                        System.out.println("surface:" + application.surface);
-                        System.out.println("Surface created");
                         // Find out the preferred surface format of the window
                         // = the first one listed under capabilities
                         WGPUSurfaceCapabilities surfaceCapabilities = WGPUSurfaceCapabilities.obtain();
                         application.surface.getCapabilities(adapter, surfaceCapabilities);
                         application.surfaceFormat = surfaceCapabilities.getFormats().get(0);
                         System.out.println("surfaceFormat: " + application.surfaceFormat);
-
-
                     }
                     else {
                         System.out.println("Surface not created");

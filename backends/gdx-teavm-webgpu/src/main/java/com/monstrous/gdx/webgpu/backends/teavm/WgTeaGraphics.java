@@ -8,6 +8,7 @@ import com.github.xpenatan.gdx.backends.teavm.assetloader.AssetInstance;
 import com.github.xpenatan.gdx.backends.teavm.dom.HTMLDocumentExt;
 import com.github.xpenatan.gdx.backends.teavm.dom.impl.TeaWindow;
 import com.github.xpenatan.webgpu.JWebGPULoader;
+import com.github.xpenatan.webgpu.WGPUAdapter;
 import com.github.xpenatan.webgpu.WGPUSurfaceCapabilities;
 import com.monstrous.gdx.webgpu.application.WebGPUApplication;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
@@ -67,7 +68,7 @@ public class WgTeaGraphics extends TeaGraphics implements WgGraphics {
 
         this.context = new WebGPUApplication(configg, new WebGPUApplication.OnInitCallback() {
             @Override
-            public void onInit(WebGPUApplication application) {
+            public void onInit(WebGPUApplication application, WGPUAdapter adapter) {
                 AssetInstance.getDownloaderInstance().subtractQueue();
                 if(application.isReady()) {
                     application.surface = application.instance.createWebSurface(canvasWGPU);
@@ -76,7 +77,7 @@ public class WgTeaGraphics extends TeaGraphics implements WgGraphics {
                         System.out.println("surface:" + context.surface);
                         System.out.println("Surface created");
                         WGPUSurfaceCapabilities surfaceCapabilities = WGPUSurfaceCapabilities.obtain();
-                        application.surface.getCapabilities(application.adapter, surfaceCapabilities);
+                        application.surface.getCapabilities(adapter, surfaceCapabilities);
                         application.surfaceFormat = surfaceCapabilities.getFormats().get(0);
                         System.out.println("surfaceFormat: " + application.surfaceFormat);
                     }

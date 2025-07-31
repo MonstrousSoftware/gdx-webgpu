@@ -71,19 +71,19 @@ public class LoadGLTFTest extends GdxTest {
 
 		modelBatch = new WgModelBatch();
 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		cam.position.set(0, 0, 0.3f);
+		cam.position.set(0, 0, 3f);
 		cam.lookAt(0,0,0);
 		cam.near = 0.001f;
 		cam.far = 100f;
 
-        //modelFileName = "data/g3d/gltf/road-straight.glb";
-		//modelFileName = "data/g3d/gltf/Cube/Cube.gltf";
+
+		modelFileName = "data/g3d/gltf/Cube/Cube.gltf";
         //modelFileName = "data/g3d/gltf/StanfordDragon/stanfordDragon.gltf";
         //modelFileName = "data/g3d/gltf/Cubes/cubes.gltf";
         //modelFileName = "data/g3d/gltf/AntiqueCamera/AntiqueCamera.gltf";
         //modelFileName = "data/g3d/gltf/torus.gltf";
         //modelFileName = "data/g3d/gltf/Sponza/Sponza.gltf";
-        modelFileName = "data/g3d/gltf/waterbottle/waterbottle.glb";
+        //modelFileName = "data/g3d/gltf/waterbottle/waterbottle.glb";
         //modelFileName = "data/g3d/gltf/Buggy/Buggy.gltf";
         //modelFileName = "data/g3d/gltf/triangle.gltf";
         //modelFileName = "data/g3d/gltf/Avocado.glb";
@@ -91,6 +91,7 @@ public class LoadGLTFTest extends GdxTest {
         WgModelLoader.ModelParameters params = new WgModelLoader.ModelParameters();
         params.textureParameter.genMipMaps = true;
 
+        System.out.println("Start loading");
         long startLoad = System.currentTimeMillis();
         FileHandle file = Gdx.files.internal(modelFileName);
         if(file.extension().contentEquals("gltf"))
