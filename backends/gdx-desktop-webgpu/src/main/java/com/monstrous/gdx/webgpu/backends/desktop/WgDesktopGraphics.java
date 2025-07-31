@@ -24,6 +24,7 @@ import com.badlogic.gdx.graphics.glutils.HdpiMode;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.utils.Disposable;
 
+import com.github.xpenatan.webgpu.WGPUAdapter;
 import com.github.xpenatan.webgpu.WGPUInstance;
 import com.github.xpenatan.webgpu.WGPUSurface;
 import com.github.xpenatan.webgpu.WGPUSurfaceCapabilities;
@@ -100,7 +101,7 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
 
         this.context = new WebGPUApplication(config, new WebGPUApplication.OnInitCallback() {
             @Override
-            public void onInit(WebGPUApplication application) {
+            public void onInit(WebGPUApplication application, WGPUAdapter adapter) {
                 if(application.isReady()) {
                     System.out.println("Creating surface for window handle: "+windowHandle);
                     application.surface = createSurface(application.instance, windowHandle);
@@ -111,14 +112,11 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
                         // Find out the preferred surface format of the window
                         // = the first one listed under capabilities
                         WGPUSurfaceCapabilities surfaceCapabilities = WGPUSurfaceCapabilities.obtain();
-                        application.surface.getCapabilities(application.adapter, surfaceCapabilities);
+                        application.surface.getCapabilities(adapter, surfaceCapabilities);
                         application.surfaceFormat = surfaceCapabilities.getFormats().get(0);
                         System.out.println("surfaceFormat: " + application.surfaceFormat);
 
-                        // Release the adapter only after it has been fully utilized
-                        application.adapter.release();
-                        application.adapter.dispose();
-                        application.adapter = null;
+
                     }
                     else {
                         System.out.println("Surface not created");

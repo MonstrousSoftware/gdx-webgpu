@@ -79,5 +79,7 @@ public class WgFrameBuffer implements Disposable {
     @Override
     public void dispose() {
         colorTexture.dispose();
+        if(depthTexture != null)
+            depthTexture.dispose();
     }
 }

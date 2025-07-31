@@ -33,7 +33,6 @@ public abstract class WebGPUContext {
     }
 
     public WGPUInstance instance;
-    public WGPUAdapter adapter;
     public WGPUDevice device;
     public WGPUSurface surface;
     public WGPUQueue queue;

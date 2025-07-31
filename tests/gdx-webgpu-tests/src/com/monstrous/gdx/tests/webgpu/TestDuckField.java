@@ -14,15 +14,18 @@ import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.Array;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLTFModelLoader;
+import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDefaultShader;
 
 
 import java.util.ArrayList;
@@ -36,9 +39,9 @@ public class TestDuckField extends ApplicationAdapter {
     private Camera camera;
     private CameraInputController camController;
     private Model model;
-    private ArrayList<ModelInstance> modelInstances;
+    private Array<ModelInstance> modelInstances;
     private Environment environment;
-    private ArrayList<Matrix4> transforms;
+    private Array<Matrix4> transforms;
     private WgBitmapFont font;
     private WgSpriteBatch batch;
     private String info;
@@ -52,40 +55,43 @@ public class TestDuckField extends ApplicationAdapter {
         startTime = System.nanoTime();
         frames = 0;
 
-        model = new WgGLTFModelLoader().loadModel(Gdx.files.internal("data/g3d/gltf/ducky.gltf"));
+        model = new WgGLTFModelLoader().loadModel(Gdx.files.internal("data/g3d/gltf/Ducky/ducky.gltf"));
 
-        modelInstances = new ArrayList<>();
+        modelInstances = new Array<>();
 
-//        transforms = makeTransforms();
-//        for(Matrix4 transform: transforms) {
-//            ModelInstance modelInstance = new ModelInstance(model, transform);
-//            modelInstances.add(modelInstance);
-//        }
+        transforms = makeTransforms();
+        for(Matrix4 transform: transforms) {
+            ModelInstance modelInstance = new ModelInstance(model, transform);
+            modelInstances.add(modelInstance);
+        }
 
 
         camera = new PerspectiveCamera(70, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         camera.position.set(0, 1, -3);
         camera.direction.set(0,0f, 1f);
         camera.far = 1000f;
+        camera.near = 0.1f;
         camera.update();
 
-//        environment = new Environment();
-//        DirectionalLight light = new DirectionalLight( Color.WHITE, new Vector3(.4f,-1,.2f));
-//        light.setIntensity(5f);
-//        environment.add( light );
-//        environment.ambientLightLevel = 0.4f;
+        environment = new Environment();
+        DirectionalLight light = new DirectionalLight();
+        light.set(Color.WHITE, new Vector3(.4f,-1,.2f));
+        environment.add( light );
+        environment.set(ColorAttribute.createAmbient(0.4f, 04f, 0.4f, 1f));
 
-        modelBatch = new WgModelBatch();
+        WgDefaultShader.Config config = new WgDefaultShader.Config();
+        config.maxInstances = 4000;
+        modelBatch = new WgModelBatch(config );
 
         batch = new WgSpriteBatch();
         font = new WgBitmapFont();
-        info = "Number of instances: "+transforms.size();
+        info = "Number of instances: "+transforms.size;
 
 //        stage = new Stage();
 //        Table sliderTable = new Table();
 //        WrappedFloat side = new WrappedFloat(15);
 //        Slider slider = new Slider(side, 0, 360, 5f);
-//
+
 //        Label.Style style = new Label.Style();
 //        style.font = font;
 //        style.fontColor = Color.WHITE;
@@ -103,24 +109,26 @@ public class TestDuckField extends ApplicationAdapter {
         Gdx.input.setInputProcessor(camController);
     }
 
-//    private ArrayList<Matrix4> makeTransforms(){
-//        ArrayList<Matrix4> transforms = new ArrayList<>();
-//        float N = 60;
-//        float x = -N;
-//
-//        for(int i = 0; i < N; i++, x += 2f) {
-//            float z = -N;
-//            for (int j = 0; j < N; j++, z += 2f) {
-//                transforms.add(new Matrix4().translate(x, 0, z).scale(new Vector3( 1f,1f+.3f*(float)Math.sin(x-z), 1f)).rotate(up, 30f * x + 20f * z));
-//            }
-//        }
-//        System.out.println("Instances: "+transforms.size());
-//        return transforms;
-//    }
+    private Array<Matrix4> makeTransforms(){
+        Array<Matrix4> transforms = new Array<>();
+        float N = 60;
+        float x = -N;
+
+        for(int i = 0; i < N; i++, x += 2f) {
+            float z = -N;
+            for (int j = 0; j < N; j++, z += 2f) {
+                transforms.add(new Matrix4().translate(x, 0, z)
+                    .scale( 1f,1f+.3f*(float)Math.sin(x-z), 1f)
+                    .rotate(up, 30f * x + 20f * z));
+            }
+        }
+        System.out.println("Instances: "+transforms.size);
+        return transforms;
+    }
 
 
 
-    private void rotate(ArrayList<Matrix4> transforms, float deltaTime){
+    private void rotate(Array<Matrix4> transforms, float deltaTime){
         for(Matrix4 transform : transforms)
             transform.rotate(up, 30f*deltaTime);
     }
@@ -149,7 +157,7 @@ public class TestDuckField extends ApplicationAdapter {
 
         // At the end of the frame
         if (System.nanoTime() - startTime > 1000000000) {
-            System.out.println("SpriteBatch : fps: " + frames +" instances: "+ transforms.size() );
+            System.out.println("SpriteBatch : fps: " + frames +" instances: "+ transforms.size);
             fps = frames;
             frames = 0;
             startTime = System.nanoTime();
