@@ -17,10 +17,7 @@
 package com.monstrous.gdx.webgpu.graphics.g3d;
 
 
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Mesh;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.VertexAttributes;
+import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
@@ -148,7 +145,11 @@ public class WgModel extends Model {
                 else {
                     if(tex instanceof PBRModelTexture && ((PBRModelTexture)tex).texture != null){
                         // preloaded texture from binary file (GLB or BIN)
-                        texture = ((PBRModelTexture)tex).texture;
+                        //texture = ((PBRModelTexture)tex).texture;
+                        System.out.println("Converting preloaded pixmap "+Thread.currentThread().getName());
+                        Pixmap pixmap = ((PBRModelTexture)tex).texture;
+                        texture = new WgTexture(pixmap, tex.fileName);
+                        System.out.println("Done");
                     }
                     else {
                         if(textureProvider instanceof WgTextureProvider)

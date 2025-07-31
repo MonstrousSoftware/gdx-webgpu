@@ -13,7 +13,8 @@ public class PBRModelTexture extends ModelTexture {
     public final static int USAGE_OCCLUSION = 21;
 
     // texture data loaded from binary file
-    public WgTexture texture;
+    public Pixmap texture;
+    //public WgTexture texture;
 
     // sampler values
     public Texture.TextureFilter magFilter;

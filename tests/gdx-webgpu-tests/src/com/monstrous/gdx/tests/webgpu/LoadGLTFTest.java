@@ -41,7 +41,7 @@ import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgModelLoader;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 
 
-/** Test G3DJ loading and ModelInstance rendering */
+/** Test GLTF loading and ModelInstance rendering */
 
 
 public class LoadGLTFTest extends GdxTest {
@@ -77,8 +77,8 @@ public class LoadGLTFTest extends GdxTest {
 		cam.far = 100f;
 
 
-		//modelFileName = "data/g3d/gltf/Cube/Cube.gltf";
-        modelFileName = "data/g3d/gltf/StanfordDragon/stanfordDragon.gltf";
+		modelFileName = "data/g3d/gltf/Cube/Cube.gltf";
+        //modelFileName = "data/g3d/gltf/StanfordDragon/stanfordDragon.gltf";
         //modelFileName = "data/g3d/gltf/Cubes/cubes.gltf";
         //modelFileName = "data/g3d/gltf/AntiqueCamera/AntiqueCamera.gltf";
         //modelFileName = "data/g3d/gltf/torus.gltf";

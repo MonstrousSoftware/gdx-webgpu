@@ -304,7 +304,10 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
             tex.fileName = "bufferView."+image.bufferView;  // create a unique 'filename' that can be used as key for caching
 
             Pixmap pixmap = new Pixmap(bytes, 0, view.byteLength );
-            tex.texture = new WgTexture(pixmap,tex.id, isColor );
+            System.out.println("/Creating texture from binary chunk: "+tex.fileName);
+            tex.texture = pixmap;
+            //tex.texture = new WgTexture(pixmap,tex.id, isColor );
+            System.out.println("\\Created texture from binary chunk: "+tex.fileName);
             pixmap.dispose();
 
             //tex.pixmap = new Pixmap(bytes, 0, view.byteLength );

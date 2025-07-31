@@ -55,7 +55,7 @@ public class LoadModelTest extends GdxTest {
         "data/g3d/ship.obj",
 
         "data/g3d/gltf/DamagedHelmet/DamagedHelmet.gltf",
-        "data/g3d/gltf/waterbottle/waterbottle.glb",
+       // "data/g3d/gltf/waterbottle/waterbottle.glb",
 
         "data/g3d/head.g3db",
         "data/g3d/invaders.g3dj",

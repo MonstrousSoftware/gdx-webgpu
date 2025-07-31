@@ -112,6 +112,7 @@ public abstract class WgModelLoader<P extends WgModelLoader.ModelParameters> ext
 
 	@Override
 	public Model loadSync (AssetManager manager, String fileName, FileHandle file, P parameters) {
+        System.out.println("Model.loadSync "+fileName);
 		ModelData data = null;
 		synchronized (items) {
 			for (int i = 0; i < items.size; i++) {
