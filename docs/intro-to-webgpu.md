@@ -63,25 +63,29 @@ A Device is also obtained with an asynchronous call, very much following the sam
         features.push_back(WGPUFeatureName.DepthClipControl);
         deviceDescriptor.setRequiredFeatures(features);
 	adapter.requestDevice(deviceDescriptor, WGPUCallbackMode.AllowProcessEvents, callback); 
-```		
+```
+		
 Once we have the Device we are finished with the Adapter and we can release it:
 
 ```java
 	adapter.release();
 	adapter.dispose();
-```		
+```
+		
 
 5. Get a command queue
 ```java	
 	queue = device.getQueue();
-```		
+```
+
 6. Create a surface
 
 The surface represents the graphics output, i.e. the window canvas.  
 To create it, we need to pass the window handle and call a platform specific method. For example, for Windows:
 ```java		
 	surface = instance.createWindowsSurface(config.windowHandle);
-```		
+```
+
 
 To get the texture format of the surface, we request the capabilities of the adapter and use the first format.
 This is the preferred format for the surface, it is best to always use this for render output so that 
@@ -91,7 +95,7 @@ no conversion needs to be performed.
 	WGPUSurfaceCapabilities surfaceCapabilities = new WGPUSurfaceCapabilities();
 	wgpu.surface.getCapabilities(wgpu.adapter, surfaceCapabilities);
 	surfaceFormat = surfaceCapabilities.getFormats().get(0);	// first entry
-```			
+```
 
 7. Set up Swap Chain
 
@@ -115,15 +119,17 @@ up to be displayed on the screen.
 # Exiting WebGPU
 
 When the application exits, we should release the WebGPU resources that we obtained 
-during the initialisation and that were not released already during the start-up such as Instance and Adapter..
+during the initialisation and that were not released already during the start-up such as Instance and Adapter.
 ```java
-	surface.unconfigure();
-	surface.release();
-        surface.dispose();
-	queue.dispose();
-        device.destroy();
-	device.dispose();
-        instance.release();
+    surface.unconfigure();
+    surface.release();
+    surface.dispose();
+    queue.release();
+    queue.dispose();
+    device.destroy();
+    device.dispose();
+    instance.release();
+    instance.dispose();
 ```
 
 # Render Loop
@@ -139,37 +145,43 @@ the user code does a very simple render pass to just draw one triangle.
 	targetView = getNextSurfaceTextureView();
 ```
 	 
-In actual fact, there are a few steps involved, So we'll go into more detail on what happens in `getNextSurfaceTextureView`:
-First we get the current surface texture from the surface. (Despite the name, a SurfaceTexture is not a Texture but it does contain a Texture).
+In actual fact, there are a few steps involved, So we'll go into more detail on what happens in the method `getNextSurfaceTextureView()`:
+
+First we get the current surface texture from the surface. (Despite the name, a SurfaceTexture is not a Texture, but it does contain a Texture).
 
 ```java
-	WGPUSurfaceTexture surfaceTextureOut = WGPUSurfaceTexture.obtain();
-	surface.getCurrentTexture(surfaceTextureOut);
-```		
+	WGPUSurfaceTexture surfaceTexture = WGPUSurfaceTexture.obtain();
+	surface.getCurrentTexture(surfaceTexture);
+```
+	
 Then we extract the texture from the surface texture
 
 ```java
 	WGPUTexture textureOut = WGPUTexture.obtain();
-	surfaceTextureOut.getTexture(textureOut);
-```		
+	surfaceTexture.getTexture(textureOut);
+```
+		
 To render to a texture, we don't need the texture itself, but a texture view.  So next, construct a texture view
-from the texture:
+for the texture: construct a view descriptor and call `createView`:
 
 ```java
-	WGPUTextureViewDescriptor viewDescriptor = WGPUTextureViewDescriptor.obtain();
-	viewDescriptor.setLabel("Surface texture view");
-	viewDescriptor.setFormat(textureOut.getFormat());
-	viewDescriptor.setDimension(WGPUTextureViewDimension._2D);
-	viewDescriptor.setBaseMipLevel(0);
-	viewDescriptor.setMipLevelCount(1);
-	viewDescriptor.setBaseArrayLayer(0);
-	viewDescriptor.setArrayLayerCount(1);
-	viewDescriptor.setAspect(WGPUTextureAspect.All);
+    WGPUTextureViewDescriptor viewDescriptor = WGPUTextureViewDescriptor.obtain();
+    viewDescriptor.setLabel("Surface texture view");
+    viewDescriptor.setFormat(textureOut.getFormat());
+    viewDescriptor.setDimension(WGPUTextureViewDimension._2D);
+    viewDescriptor.setBaseMipLevel(0);
+    viewDescriptor.setMipLevelCount(1);
+    viewDescriptor.setBaseArrayLayer(0);
+    viewDescriptor.setArrayLayerCount(1);
+    viewDescriptor.setAspect(WGPUTextureAspect.All);
+    
+    WGPUTextureView targetView = new WGPUTextureView();
+    textureOut.createView(viewDescriptor, targetView);
+    //textureOut.release();
+```
 
-	WGPUTextureView targetView = new WGPUTextureView();
-	textureOut.createView(viewDescriptor, targetView);
-        textureOut.release();
-```	
+Now, normally at this point we could release `textureOut` since we have the texture view we need. But in practice, we need to hold on to it until we
+have presented the surface. At least on the WGPU implementation. If we use Dawn, we could release it here.
 		 
 2. Create a command encoder.
 
@@ -178,7 +190,7 @@ from the texture:
 	encoderDesc.setLabel("The Command Encoder");
 	WGPUCommandEncoder encoder = new WGPUCommandEncoder();
 	device.createCommandEncoder(encoderDesc, encoder);
-```	
+```
 
 3. Create a render pass
 
@@ -221,14 +233,14 @@ Note: step 3 to 5 are performed by the user's code in ApplicationListener.render
 ```java
 	renderPass.setPipeline(pipeline);
 	renderPass.draw( 3, 1, 0, 0);
-```	
+```
 
 5. End the render pass.
 
 ```java	
 	renderPass.end();
 	renderPass.release();
-```	
+```
 
 6	Finish the encoder obtained in step 3 and capture the result in a command buffer. Once we have the command buffer, we can release the encoder.
 
@@ -251,7 +263,7 @@ Note: step 3 to 5 are performed by the user's code in ApplicationListener.render
 
 ```java
 	targetView.release();
-```	
+```
 
 9. Depending on the platform (not on Web), we need to present the surface in order to make it visible
 
@@ -260,6 +272,10 @@ Note: step 3 to 5 are performed by the user's code in ApplicationListener.render
 	        surface.present();
 ```
 
+10. And then at the end of the frame we can release the texture of the surface:
 
+```java
+    textureOut.release();
+```
 
 
