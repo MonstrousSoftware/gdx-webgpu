@@ -102,6 +102,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
     public WgDefaultShader(final Renderable renderable, Config config) {
         this.config = config;
 
+
 //        System.out.println("Create WgDefaultShader "+renderable.meshPart.id+" vert mask: "+renderable.meshPart.mesh.getVertexAttributes().getMask()+
 //            "mat mask: "+renderable.material.getMask());
 
@@ -231,11 +232,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
         vertexAttributesHash = renderable.meshPart.mesh.getVertexAttributes().hashCode();
         materialAttributesMask = renderable.material.getMask();
-//        environment = new Environment();
-//        if(renderable.environment != null) {
-//            environment.set(renderable.environment);
-//            environment.shadowMap = renderable.environment.shadowMap;
-//        }
+
         environmentMask = renderable.environment == null ? 0 : renderable.environment.getMask();
 
         material = new Material(renderable.material);
@@ -314,12 +311,16 @@ public class WgDefaultShader extends WgShader implements Disposable {
         // pass a special value in the w component of camera position that is used by the fog calculation
         tmpVec4.set(camera.position.x, camera.position.y, camera.position.z, 1.1881f / (camera.far * camera.far));
         binder.setUniform("cameraPosition", tmpVec4);
-        uniformBuffer.flush();
+
         // note: if we call WgModelBatch multiple times per frame with a different camera, the old ones are lost
 
 
         // todo: different shaders may overwrite lighting uniforms if renderables have other environments ...
         bindLights(renderable.environment);
+
+        // now that we've set all the uniforms (camera,lights, etc.) write the buffer to the gpu
+        uniformBuffer.flush();
+
 
         // bind group 0 (frame) once per frame
         binder.bindGroup(renderPass, 0);
@@ -600,8 +601,9 @@ public class WgDefaultShader extends WgShader implements Disposable {
      * ambient light, directional lights, point lights.
      */
     private void bindLights( Environment lights ){
-        if(lights == null)
+        if(lights == null ) {
             return;
+        }
         final DirectionalLightsAttribute dla = lights.get(DirectionalLightsAttribute.class, DirectionalLightsAttribute.Type);
         final Array<DirectionalLight> dirs = dla == null ? null : dla.lights;
         final PointLightsAttribute pla = lights.get(PointLightsAttribute.class, PointLightsAttribute.Type);
@@ -624,6 +626,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
             binder.setUniform("dirLight[0].direction", offset, directionalLights[i].direction);
         }
         binder.setUniform("numDirectionalLights", numDirectionalLights);
+        //System.out.println("numDirectionalLights "+ numDirectionalLights);
 
         if(points != null){
             if( points.size > config.maxPointLights)
@@ -644,6 +647,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
             binder.setUniform("pointLight[0].intensity", offset, pointLights[i].intensity);
         }
         binder.setUniform("numPointLights", numPointLights);
+        //System.out.println("numPointLights "+ numPointLights);
 
         final ColorAttribute ambient = lights.get(ColorAttribute.class,ColorAttribute.AmbientLight);
         if(ambient != null)

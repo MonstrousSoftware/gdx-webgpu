@@ -54,6 +54,7 @@ public class ShaderPrefix {
             if ((mask & VertexAttributes.Usage.BoneWeight) != 0) {
                 sb.append("#define SKIN\n");
             }
+            // todo this is a very crude test
             if ((mask & VertexAttributes.Usage.Normal) != 0 && environment != null) {
                 // only perform lighting calculations if we have vertex normals and an environment
                 sb.append("#define LIGHTING\n");
@@ -70,6 +71,7 @@ public class ShaderPrefix {
                 sb.append("#define SHADOW_MAP\n");
             }
         }
+
 //        if (environment != null && !environment.depthPass && environment.renderShadows) {
 //            sb.append("#define SHADOWS\n");
 //        }

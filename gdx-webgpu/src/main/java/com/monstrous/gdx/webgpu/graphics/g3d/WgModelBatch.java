@@ -162,6 +162,7 @@ public class WgModelBatch implements Disposable {
             Renderable renderable = renderables.get(i);
             renderable.environment = environment;
             renderable.shader = shaderProvider.getShader(renderable);
+
         }
     }
 

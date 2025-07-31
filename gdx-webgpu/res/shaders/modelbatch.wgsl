@@ -190,7 +190,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
     );
     let worldN = localToWorld * localN;
     let normal = mix(in.normal.xyz, worldN, normalMapStrength);
-#else
+#else // NORMAL_MAP
     let normal = normalize(in.normal.xyz);
 #endif
 
@@ -206,32 +206,38 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
 
     // for each directional light
     // could go to vertex shader but esp. specular lighting will be lower quality
-    for (var i: u32 = 0; i < u32(uFrame.numDirectionalLights); i++) {
-        let light = uFrame.directionalLights[i];
+    let numDirectionalLights = uFrame.numDirectionalLights; //min(uFrame.numDirectionalLights, 3);     // fail-safe
+    if(numDirectionalLights > 0) {
+        for (var i: u32 = 0; i < u32(numDirectionalLights); i++) {
+            let light = uFrame.directionalLights[i];
 
-        let lightVec = -normalize(light.direction.xyz);       // L is vector towards light
-        let irradiance = max(dot(lightVec, normal), 0.0);
-        radiance += irradiance *  light.color.rgb;
+            let lightVec = -normalize(light.direction.xyz);       // L is vector towards light
+            let irradiance = max(dot(lightVec, normal), 0.0);
+            radiance += irradiance *  light.color.rgb;
 
-        let halfDotView = max(0.0, dot(normal, normalize(lightVec + viewVec)));
-        specular += irradiance *  light.color.rgb * pow(halfDotView, shininess);
+            let halfDotView = max(0.0, dot(normal, normalize(lightVec + viewVec)));
+            specular += irradiance *  light.color.rgb * pow(halfDotView, shininess);
+        }
     }
     // for each point light
     // note: default libgdx seems to ignore intensity of point lights
-    for (var i: u32 = 0; i < u32(uFrame.numPointLights); i++) {
-        let light = uFrame.pointLights[i];
+    let numPointLights = min(uFrame.numPointLights, 3); // fail-safe
+    if(numPointLights > 0) {
+        for (var i: u32 = 0; i < u32(numPointLights); i++) {
+            let light = uFrame.pointLights[i];
 
-        var lightVec = light.position.xyz - in.worldPos.xyz;       // L is vector towards light
-        let dist2 : f32 = dot(lightVec,lightVec);
-        lightVec  = normalize(lightVec);
-        let attenuation : f32 = light.intensity/(1.0 + dist2);// attenuation (note this makes an assumption on the world scale)
-        let NdotL : f32 = max(dot(lightVec, normal), 0.0);
-        let irradiance : f32 =  attenuation * NdotL;
+            var lightVec = light.position.xyz - in.worldPos.xyz;       // L is vector towards light
+            let dist2 : f32 = dot(lightVec,lightVec);
+            lightVec  = normalize(lightVec);
+            let attenuation : f32 = light.intensity/(1.0 + dist2);// attenuation (note this makes an assumption on the world scale)
+            let NdotL : f32 = max(dot(lightVec, normal), 0.0);
+            let irradiance : f32 =  attenuation * NdotL;
 
-        radiance += irradiance *  light.color.rgb;
+            radiance += irradiance *  light.color.rgb;
 
-        let halfDotView = max(0.0, dot(normal, normalize(lightVec + viewVec)));
-        specular += irradiance *  light.color.rgb * pow(halfDotView, shininess);
+            let halfDotView = max(0.0, dot(normal, normalize(lightVec + viewVec)));
+            specular += irradiance *  light.color.rgb * pow(halfDotView, shininess);
+        }
     }
 
 

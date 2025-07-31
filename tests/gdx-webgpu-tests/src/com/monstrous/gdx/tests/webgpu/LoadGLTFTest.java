@@ -77,8 +77,8 @@ public class LoadGLTFTest extends GdxTest {
 		cam.far = 100f;
 
 
-		modelFileName = "data/g3d/gltf/Cube/Cube.gltf";
-        //modelFileName = "data/g3d/gltf/StanfordDragon/stanfordDragon.gltf";
+		//modelFileName = "data/g3d/gltf/Cube/Cube.gltf";
+        modelFileName = "data/g3d/gltf/StanfordDragon/stanfordDragon.gltf";
         //modelFileName = "data/g3d/gltf/Cubes/cubes.gltf";
         //modelFileName = "data/g3d/gltf/AntiqueCamera/AntiqueCamera.gltf";
         //modelFileName = "data/g3d/gltf/torus.gltf";
