@@ -22,6 +22,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.Vector4;
 import com.badlogic.gdx.utils.Disposable;
+import com.badlogic.gdx.utils.IntMap;
 import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
@@ -36,8 +37,8 @@ import java.util.Map;
 public class Binder implements Disposable {
     private final BindingDictionary bindMap;
     private final Map<Integer, WebGPUBindGroupLayout> groupLayouts;
-    private final Map<Integer, WebGPUBindGroup> groups;
-    private final Map<Integer, BufferInfo> buffers;
+    private final IntMap<WebGPUBindGroup> groups;
+    private final IntMap<BufferInfo> buffers;
     private WGPUPipelineLayout pipelineLayout;
     private WebGPUContext webgpu;
 
@@ -57,9 +58,9 @@ public class Binder implements Disposable {
         WgGraphics gfx = (WgGraphics) Gdx.graphics;
         webgpu = gfx.getContext();
         bindMap = new BindingDictionary();
-        groupLayouts = new HashMap<>();
-        groups = new HashMap<>();
-        buffers = new HashMap<>();
+        groupLayouts = new HashMap<>(4);
+        groups = new IntMap<>(4);
+        buffers = new IntMap<>(4);
     }
 
     public void defineGroup(int groupId, WebGPUBindGroupLayout layout){

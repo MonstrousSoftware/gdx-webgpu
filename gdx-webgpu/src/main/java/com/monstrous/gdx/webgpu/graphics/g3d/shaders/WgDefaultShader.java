@@ -465,7 +465,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         binder.setUniform("diffuseColor", diffuse == null ? Color.WHITE : diffuse.color);
 
         final FloatAttribute shiny = material.get(FloatAttribute.class,FloatAttribute.Shininess);
-        binder.setUniform("shininess",  shiny == null ? 20 : shiny.value );
+        binder.setUniform("shininess",  shiny == null ? 20f : shiny.value );
 
 
         // diffuse texture

@@ -36,7 +36,7 @@ public class BindingDictionary {
     }
 
     private final Map<String,BindingMap> map = new HashMap<>();
-    private final Map<Integer, Integer> entriesPerGroup = new HashMap<>();
+    //private final Map<Integer, Integer> entriesPerGroup = new HashMap<>();
 
     public void defineUniform(String name, int groupId, int bindingId){
         // store binding information under the uniform name
