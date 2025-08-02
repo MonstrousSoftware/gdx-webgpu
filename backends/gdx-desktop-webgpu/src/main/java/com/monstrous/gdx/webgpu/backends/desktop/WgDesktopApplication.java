@@ -25,6 +25,9 @@ import com.badlogic.gdx.graphics.glutils.GLVersion;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.utils.*;
 import com.github.xpenatan.webgpu.JWebGPULoader;
+import com.github.xpenatan.webgpu.WGPU;
+import com.github.xpenatan.webgpu.WGPUInstance;
+import com.monstrous.gdx.webgpu.application.WebGPUApplication;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.system.Callback;
@@ -53,7 +56,7 @@ public class WgDesktopApplication implements Application {
 	private static GLVersion glVersion;
 	private static Callback glDebugCallback;
 	private final Sync sync;
-
+    private final WGPUInstance instance;
 
 	static void initializeGlfw () {
 		if (errorCallback == null) {
@@ -83,6 +86,7 @@ public class WgDesktopApplication implements Application {
             }
         });
 
+
 		initializeGlfw();
 		setApplicationLogger(new Lwjgl3ApplicationLogger());
 
@@ -109,7 +113,15 @@ public class WgDesktopApplication implements Application {
 
 		this.sync = new Sync();
 
-		createWindow(config, listener);
+
+        // Don't do this straight after JWebGPULoader.init() because that needs time
+        //
+        instance = WGPU.createInstance();
+        if(!instance.isValid())
+            throw new RuntimeException("Could not create WebGPU instance");
+        System.out.println("Created WebGPU instance");
+
+		createWindow(config, instance, listener);
 
 
 		try {
@@ -123,6 +135,8 @@ public class WgDesktopApplication implements Application {
 		} finally {
 			cleanup();
 		}
+
+        instance.release(); // release WebGPU
 	}
 
 	protected void loop () {
@@ -392,14 +406,14 @@ public class WgDesktopApplication implements Application {
 		if (appConfig.title == null) appConfig.title = listener.getClass().getSimpleName();
 
 
-        return createWindow(appConfig, listener);
+        return createWindow(appConfig, instance, listener);
 	}
 
-	private WgDesktopWindow createWindow (final WgDesktopApplicationConfiguration config, ApplicationListener listener) {
+	private WgDesktopWindow createWindow (final WgDesktopApplicationConfiguration config, WGPUInstance instance, ApplicationListener listener) {
 		final WgDesktopWindow window = new WgDesktopWindow(listener, lifecycleListeners, config, this);
 		WgDesktopWindow save = currentWindow;
 		currentWindow = window;
-		createWindow(window, config);
+		createWindow(window, instance, config);
 		windows.add(window);
 		currentWindow = save;
 		if (currentWindow != null) {
@@ -409,9 +423,9 @@ public class WgDesktopApplication implements Application {
 		return window;
 	}
 
-	void createWindow (WgDesktopWindow window, WgDesktopApplicationConfiguration config) {
+	void createWindow (WgDesktopWindow window, WGPUInstance instance, WgDesktopApplicationConfiguration config) {
 		long windowHandle = createGlfwWindow(config, 0);
-		window.create(windowHandle);
+		window.create(instance, windowHandle);
 		window.setVisible(config.initialVisible);
 
 // for (int i = 0; i < 2; i++) {

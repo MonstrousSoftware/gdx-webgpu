@@ -56,52 +56,59 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
     }
 
     // note:  JWebGPULoader.init must be called before we get here to load the native library
-
-    public WebGPUApplication(Configuration config, OnInitCallback initCallback) {
+    public WebGPUApplication(Configuration config, WGPUInstance instance, WGPUSurface surface) {
         this.config = config;
-
-        // create instance, adapter, device and queue
-        init(initCallback);
-
-
+        this.instance = instance;
+        this.surface = surface;
+        initState = InitState.INSTANCE_VALID;
+        requestAdapter();
     }
+//    public WebGPUApplication(Configuration config, OnInitCallback initCallback) {
+//        this.config = config;
+//
+//        // create instance, adapter, device and queue
+//        init(initCallback);
+//
+//
+//    }
 
-    private void init(OnInitCallback initCallback) {
+//    private void init(){ //OnInitCallback initCallback) {
+//
+//        WGPUInstance instance = WGPU.createInstance();
+//        if(instance.isValid()) {
+//            initState = InitState.INSTANCE_VALID;
+//            this.instance = instance;
+//            requestAdapter();
+//        }
+//        else {
+//            initState = InitState.INSTANCE_NOT_VALID;
+//            instance.dispose();
+//            //initCallback.onInit(WebGPUApplication.this, null);
+//        }
+//    }
 
-        WGPUInstance instance = WGPU.createInstance();
-        if(instance.isValid()) {
-            initState = InitState.INSTANCE_VALID;
-            this.instance = instance;
-            requestAdapter(initCallback);
-        }
-        else {
-            initState = InitState.INSTANCE_NOT_VALID;
-            instance.dispose();
-            initCallback.onInit(WebGPUApplication.this, null);
-        }
-    }
-
-    private void requestAdapter(OnInitCallback initCallback) {
+    private void requestAdapter(){ //OnInitCallback initCallback) {
         WGPURequestAdapterOptions op = WGPURequestAdapterOptions.obtain();
         op.setBackendType(convertBackendType(config.requestedBackendType));
+        op.setCompatibleSurface(surface);
         RequestAdapterCallback callback = new RequestAdapterCallback() {
             @Override
             protected void onCallback(WGPURequestAdapterStatus status, WGPUAdapter adapter) {
                 System.out.println("Adapter Status: " + status);
                 if(status == WGPURequestAdapterStatus.Success) {
                     initState = InitState.ADAPTER_VALID;
-                    requestDevice(initCallback, adapter);
+                    requestDevice(adapter);
                 }
                 else {
                     initState = InitState.ADAPTER_NOT_VALID;
-                    initCallback.onInit(WebGPUApplication.this, null);
                 }
             }
         };
         instance.requestAdapter(op, WGPUCallbackMode.AllowProcessEvents, callback);
+        instance.processEvents();
     }
 
-    private void requestDevice(OnInitCallback initCallback, WGPUAdapter adapter) {
+    private void requestDevice(WGPUAdapter adapter) {
         WGPUAdapterInfo info = WGPUAdapterInfo.obtain();
         if(adapter.getInfo(info)) {
             WGPUBackendType backendType = info.getBackendType();
@@ -169,12 +176,12 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
                     System.out.println("MaxTextureDimension3D: " + limits.getMaxTextureDimension3D());
                     System.out.println("MaxTextureArrayLayers: " + limits.getMaxTextureArrayLayers());
 
-
-                    initCallback.onInit(WebGPUApplication.this, adapter);
+                    WGPUSurfaceCapabilities surfaceCapabilities = WGPUSurfaceCapabilities.obtain();
+                    surface.getCapabilities(adapter, surfaceCapabilities);
+                    surfaceFormat = surfaceCapabilities.getFormats().get(0);
                 }
                 else {
                     initState = InitState.DEVICE_NOT_VALID;
-                    initCallback.onInit(WebGPUApplication.this, adapter);
                 }
                 // Release the adapter only after it has been fully utilized
                 adapter.release();
@@ -188,6 +195,7 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
                 initState = InitState.ERROR;
             }
         });
+        instance.processEvents();
     }
 
     public boolean isReady() {

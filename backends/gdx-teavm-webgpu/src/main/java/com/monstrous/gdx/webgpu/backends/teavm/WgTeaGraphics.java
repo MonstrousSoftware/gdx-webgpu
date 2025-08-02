@@ -7,9 +7,7 @@ import com.github.xpenatan.gdx.backends.teavm.TeaGraphics;
 import com.github.xpenatan.gdx.backends.teavm.assetloader.AssetInstance;
 import com.github.xpenatan.gdx.backends.teavm.dom.HTMLDocumentExt;
 import com.github.xpenatan.gdx.backends.teavm.dom.impl.TeaWindow;
-import com.github.xpenatan.webgpu.JWebGPULoader;
-import com.github.xpenatan.webgpu.WGPUAdapter;
-import com.github.xpenatan.webgpu.WGPUSurfaceCapabilities;
+import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.webgpu.application.WebGPUApplication;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
@@ -66,29 +64,46 @@ public class WgTeaGraphics extends TeaGraphics implements WgGraphics {
             false,
             WebGPUContext.Backend.WEBGPU);
 
-        this.context = new WebGPUApplication(configg, new WebGPUApplication.OnInitCallback() {
-            @Override
-            public void onInit(WebGPUApplication application, WGPUAdapter adapter) {
-                AssetInstance.getDownloaderInstance().subtractQueue();
-                if(application.isReady()) {
-                    application.surface = application.instance.createWebSurface(canvasWGPU);
+        System.out.println("Creating WebGPU instance");
+        WGPUInstance instance = WGPU.createInstance();
+        if(!instance.isValid())
+            throw new RuntimeException("Could not create WebGPU instance");
+        System.out.println("Created WebGPU instance");
+        // todo: instance should be released at application shutdown
 
-                    if(context.surface != null) {
-                        System.out.println("surface:" + context.surface);
-                        System.out.println("Surface created");
-                        WGPUSurfaceCapabilities surfaceCapabilities = WGPUSurfaceCapabilities.obtain();
-                        application.surface.getCapabilities(adapter, surfaceCapabilities);
-                        application.surfaceFormat = surfaceCapabilities.getFormats().get(0);
-                        System.out.println("surfaceFormat: " + application.surfaceFormat);
-                    }
-                }
-                else {
-                    throw new RuntimeException("Failed to initialize WebGPU");
-                }
-            }
-        });
+
+        System.out.println("Creating WebGPU surface");
+        WGPUSurface surface = instance.createWebSurface(canvasWGPU);
+        System.out.println("surface:" + context.surface);
+
+        System.out.println("Creating WebGPU device, etc.");
+        this.context = new WebGPUApplication(configg, instance, surface);
+        System.out.println("Created WebGPU context");
+
+//            this.context = new WebGPUApplication(configg, new WebGPUApplication.OnInitCallback() {
+//            @Override
+//            public void onInit(WebGPUApplication application, WGPUAdapter adapter) {
+//                AssetInstance.getDownloaderInstance().subtractQueue();
+//                if(application.isReady()) {
+//                    application.surface = application.instance.createWebSurface(canvasWGPU);
+//
+//                    if(context.surface != null) {
+//                        System.out.println("surface:" + context.surface);
+//                        System.out.println("Surface created");
+//                        WGPUSurfaceCapabilities surfaceCapabilities = WGPUSurfaceCapabilities.obtain();
+//                        application.surface.getCapabilities(adapter, surfaceCapabilities);
+//                        application.surfaceFormat = surfaceCapabilities.getFormats().get(0);
+//                        System.out.println("surfaceFormat: " + application.surfaceFormat);
+//                    }
+//                }
+//                else {
+//                    throw new RuntimeException("Failed to initialize WebGPU");
+//                }
+//            }
+//        });
 
         context.resize(getWidth(), getHeight());
+        System.out.println("Done resize");
 
         // listen to fullscreen changes
         addFullscreenChangeListener(canvas, new FullscreenChanged() {

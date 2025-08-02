@@ -79,7 +79,7 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
 	final IntBuffer tmpBuffer = BufferUtils.createIntBuffer(1);
 	final IntBuffer tmpBuffer2 = BufferUtils.createIntBuffer(1);
 
-	public WgDesktopGraphics(WgDesktopWindow window, long windowHandle) {
+	public WgDesktopGraphics(WgDesktopWindow window, WGPUInstance instance, long windowHandle) {
 
 		this.window = window;
 
@@ -99,34 +99,20 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
             app.getConfiguration().enableGPUtiming,
             app.getConfiguration().backend );
 
-        this.context = new WebGPUApplication(config, new WebGPUApplication.OnInitCallback() {
-            @Override
-            public void onInit(WebGPUApplication application, WGPUAdapter adapter) {
-                if(application.isReady()) {
-                    System.out.println("Creating surface for window handle: "+windowHandle);
-                    application.surface = createSurface(application.instance, windowHandle);
 
-                    if(application.surface != null) {
-                        // Find out the preferred surface format of the window
-                        // = the first one listed under capabilities
-                        WGPUSurfaceCapabilities surfaceCapabilities = WGPUSurfaceCapabilities.obtain();
-                        application.surface.getCapabilities(adapter, surfaceCapabilities);
-                        application.surfaceFormat = surfaceCapabilities.getFormats().get(0);
-                        System.out.println("surfaceFormat: " + application.surfaceFormat);
-                    }
-                    else {
-                        System.out.println("Surface not created");
-                    }
+        System.out.println("Creating surface for window handle: "+windowHandle);
+        WGPUSurface surface = createSurface(instance, windowHandle);
+        if (surface == null) {
+            throw new RuntimeException("WebGPU: Surface could not be created");
+        }
 
-                    // todo webGPU.wgpuInstanceRelease(instance); // we can release the instance now that we have the device
-                    // do we need instance for processEvents?
-                }
-                else {
-                    throw new RuntimeException("Failed to initialize WebGPU");
-                }
-            }
-        });
+        this.context = new WebGPUApplication(config, instance, surface);
 
+        // despite the asynchronous calls in WebGPUApplication, they seem
+        // to perform the callback immediately.
+        // Otherwise, we might have to wait here a bit calling instance.processEvents();
+        if(!context.isReady())
+            throw new RuntimeException("WebGPU init failure");
         context.resize(getWidth(), getHeight());
     }
 
