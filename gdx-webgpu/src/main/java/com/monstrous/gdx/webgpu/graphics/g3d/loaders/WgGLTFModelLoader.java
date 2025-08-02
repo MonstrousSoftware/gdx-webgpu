@@ -304,13 +304,20 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
             tex.fileName = "bufferView."+image.bufferView;  // create a unique 'filename' that can be used as key for caching
 
             Pixmap pixmap = new Pixmap(bytes, 0, view.byteLength );
-            System.out.println("/Creating texture from binary chunk: "+tex.fileName);
-            tex.texture = pixmap;
-            //tex.texture = new WgTexture(pixmap,tex.id, isColor );
-            System.out.println("\\Created texture from binary chunk: "+tex.fileName);
-            pixmap.dispose();
+            //System.out.println("Creating pixmap from binary chunk: "+tex.fileName+" "+Thread.currentThread().getName());
 
-            //tex.pixmap = new Pixmap(bytes, 0, view.byteLength );
+            // convert to desired format
+            // if this is running under AssetManager we prefer to do it in the AssetManager thread
+            // so we don't have to do it in the main thread
+            Pixmap.Format dataFormat = Pixmap.Format.RGBA8888;
+            if (dataFormat != pixmap.getFormat()) {
+                Pixmap tmp = new Pixmap(pixmap.getWidth(), pixmap.getHeight(), dataFormat);
+                tmp.setBlending(Pixmap.Blending.None);
+                tmp.drawPixmap(pixmap, 0, 0, 0, 0, pixmap.getWidth(), pixmap.getHeight());
+                pixmap.dispose();
+                pixmap = tmp;
+            }
+            tex.texture = pixmap;
 
         }
         GLTFSampler sampler = gltf.samplers.get(gltf.textures.get(textureId).sampler);

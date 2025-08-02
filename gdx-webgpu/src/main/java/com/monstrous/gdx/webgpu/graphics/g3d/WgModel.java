@@ -144,12 +144,10 @@ public class WgModel extends Model {
                 }
                 else {
                     if(tex instanceof PBRModelTexture && ((PBRModelTexture)tex).texture != null){
-                        // preloaded texture from binary file (GLB or BIN)
-                        //texture = ((PBRModelTexture)tex).texture;
-                        System.out.println("Converting preloaded pixmap "+Thread.currentThread().getName());
+                        // preloaded pixmap from binary file (GLB or BIN)
+                        //System.out.println("Converting preloaded pixmap "+Thread.currentThread().getName());
                         Pixmap pixmap = ((PBRModelTexture)tex).texture;
                         texture = new WgTexture(pixmap, tex.fileName);
-                        System.out.println("Done");
                     }
                     else {
                         if(textureProvider instanceof WgTextureProvider)

@@ -585,7 +585,7 @@ public class WgTexture extends Texture {
 
     @Override
     public void dispose(){
-        System.out.println("Dispose texture : "+label);
+        //System.out.println("Dispose texture : "+label);
 
         if(texture != null) {   // guard against double dispose
             //System.out.println("Destroy texture " + label);
