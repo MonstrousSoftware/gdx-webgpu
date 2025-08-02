@@ -2,38 +2,45 @@ package com.monstrous.gdx.tests.webgpu;
 
 
 
-import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Model;
-import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Slider;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
+import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 
+import com.monstrous.gdx.webgpu.graphics.g3d.WgModel;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLTFModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDefaultShader;
-
-
-import java.util.ArrayList;
+import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
+import com.monstrous.gdx.webgpu.scene2d.WgSkin;
+import com.monstrous.gdx.webgpu.scene2d.WgStage;
 
 // Test instancing
 // For comparison to DuckField demo but is lacking shadows, PBR shading,etc.
 
-public class TestDuckField extends ApplicationAdapter {
+public class DuckField extends GdxTest {
+    private int ducksInARow = 10;
 
     private WgModelBatch modelBatch;
     private Camera camera;
@@ -44,8 +51,8 @@ public class TestDuckField extends ApplicationAdapter {
     private Array<Matrix4> transforms;
     private WgBitmapFont font;
     private WgSpriteBatch batch;
-    private String info;
-//    private Stage stage;
+    private WgStage stage;
+    private WgSkin skin;
     private int fps;
     private long startTime;
     private int frames;
@@ -58,13 +65,8 @@ public class TestDuckField extends ApplicationAdapter {
         model = new WgGLTFModelLoader().loadModel(Gdx.files.internal("data/g3d/gltf/Ducky/ducky.gltf"));
 
         modelInstances = new Array<>();
-
-        transforms = makeTransforms();
-        for(Matrix4 transform: transforms) {
-            ModelInstance modelInstance = new ModelInstance(model, transform);
-            modelInstances.add(modelInstance);
-        }
-
+        transforms = new Array<>();
+        makeDucks(ducksInARow);
 
         camera = new PerspectiveCamera(70, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         camera.position.set(0, 1, -3);
@@ -85,33 +87,59 @@ public class TestDuckField extends ApplicationAdapter {
 
         batch = new WgSpriteBatch();
         font = new WgBitmapFont();
-        info = "Number of instances: "+transforms.size;
 
-//        stage = new Stage();
-//        Table sliderTable = new Table();
-//        WrappedFloat side = new WrappedFloat(15);
-//        Slider slider = new Slider(side, 0, 360, 5f);
-
-//        Label.Style style = new Label.Style();
-//        style.font = font;
-//        style.fontColor = Color.WHITE;
-//        FloatLabel value = new FloatLabel( side, "count:", style );
-//        sliderTable.add(slider);
-//        sliderTable.row();
-//        sliderTable.add(value);
-//        stage.add(sliderTable).setAlign(Align.topRight);
-
+        buildGUI();
 
         camController = new CameraInputController(camera);
-//        InputMultiplexer im= new InputMultiplexer();
-//        im.addProcessor(stage);
-//        im.addProcessor(camController);
-        Gdx.input.setInputProcessor(camController);
+        InputMultiplexer im= new InputMultiplexer();
+        im.addProcessor(stage);
+        im.addProcessor(camController);
+        Gdx.input.setInputProcessor(im);
+    }
+
+    private void makeDucks(int ducksPerSide){
+        modelInstances.clear();
+        transforms = makeTransforms();
+        for(Matrix4 transform: transforms) {
+            modelInstances.add(new ModelInstance(model, transform));
+        }
+    }
+
+    private void buildGUI(){
+        stage = new WgStage();
+        skin = new WgSkin(Gdx.files.internal("data/uiskin.json"));
+
+        Table screenTable = new Table();
+        screenTable.setFillParent(true);
+
+        Label value = new Label(""+ducksInARow*ducksInARow, skin);
+
+
+        Table sliderTable = new Table();
+        Slider slider = new Slider(1, 60, 1f, false, skin);
+        slider.setValue(ducksInARow);
+        slider.addListener(new ChangeListener() {
+            public void changed (ChangeEvent event, Actor actor) {
+                System.out.println("Ducks/side: " + slider.getValue());
+                ducksInARow = (int)slider.getValue();
+                value.setText(ducksInARow*ducksInARow);
+                makeDucks(ducksInARow);
+
+            }
+        });
+
+
+        sliderTable.add(slider);
+        sliderTable.row();
+        sliderTable.add(value);
+
+        screenTable.add(sliderTable).align(Align.topRight).expand();
+        stage.addActor(screenTable);
     }
 
     private Array<Matrix4> makeTransforms(){
-        Array<Matrix4> transforms = new Array<>();
-        float N = 60;
+        transforms.clear();
+        float N = ducksInARow;
         float x = -N;
 
         for(int i = 0; i < N; i++, x += 2f) {
@@ -143,17 +171,17 @@ public class TestDuckField extends ApplicationAdapter {
         rotate(transforms, Gdx.graphics.getDeltaTime());
 
 
-
-        modelBatch.begin(camera, Color.GRAY);
-        modelBatch.render(modelInstances, environment);
+        WgScreenUtils.clear(Color.SKY, true);
+        modelBatch.begin(camera);
+        modelBatch.render(modelInstances); //, environment);
         modelBatch.end();
 
         batch.begin(null);
-        font.draw(batch, info, 10, 70);
         font.draw(batch, "frames per second: "+fps, 10, 50);
         batch.end();
 
-//        stage.draw();
+        stage.act();
+        stage.draw();
 
         // At the end of the frame
         if (System.nanoTime() - startTime > 1000000000) {
@@ -171,7 +199,8 @@ public class TestDuckField extends ApplicationAdapter {
         modelBatch.dispose();
         batch.dispose();
         font.dispose();
-//        stage.dispose();
+        stage.dispose();
+        skin.dispose();
     }
 
     @Override
@@ -179,7 +208,7 @@ public class TestDuckField extends ApplicationAdapter {
         camera.viewportWidth = width;
         camera.viewportHeight = height;
         camera.update();
-        //stage.resize(width, height);
+        stage.getViewport().update(width, height);
     }
 
 

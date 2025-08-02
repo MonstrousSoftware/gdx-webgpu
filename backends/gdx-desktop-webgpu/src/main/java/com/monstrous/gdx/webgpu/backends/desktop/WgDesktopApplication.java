@@ -75,7 +75,7 @@ public class WgDesktopApplication implements Application {
 
 	public WgDesktopApplication(ApplicationListener listener, WgDesktopApplicationConfiguration config) {
 
-
+        //JWebGPULoader.IS_DAWN_WINDOWS = true;
         JWebGPULoader.init((isSuccess, e) -> {
             System.out.println("WebGPU Init Success: " + isSuccess);
             if(!isSuccess) {

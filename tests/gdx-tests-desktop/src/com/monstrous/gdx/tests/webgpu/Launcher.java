@@ -22,7 +22,7 @@ public class Launcher {
         //new WgDesktopApplication(new ColorTest(), config);
         //new WgDesktopApplication(new TransparencyTest(), config);
 
-        new WgDesktopApplication(new LoadModelTest(), config);
+        new WgDesktopApplication(new DuckField(), config);
         //new WgDesktopApplication(new FontTest(), config);
         //new WgDesktopApplication(new FullScreenTest(), config);
     }

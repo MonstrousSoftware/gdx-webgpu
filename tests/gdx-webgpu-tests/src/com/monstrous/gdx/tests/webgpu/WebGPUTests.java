@@ -100,7 +100,8 @@ public class WebGPUTests {
         EnvironmentMapTest.class,
         Gamma3D.class,
         TextureArrayTest.class,
-        SkyBoxTest.class
+        SkyBoxTest.class,
+        DuckField.class
 
 		// @on
 
