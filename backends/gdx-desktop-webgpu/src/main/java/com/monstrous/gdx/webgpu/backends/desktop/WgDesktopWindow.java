@@ -23,6 +23,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.Os;
 import com.badlogic.gdx.utils.SharedLibraryLoader;
+import com.github.xpenatan.webgpu.WGPUInstance;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.*;
 import org.lwjgl.system.Configuration;
@@ -220,14 +221,14 @@ public class WgDesktopWindow implements Disposable {
 
 	}
 
-	void create (long windowHandle) {
+	void create (WGPUInstance instance, long windowHandle) {
 		this.windowHandle = windowHandle;
 		this.input = application.createInput(this);
 //		long win32handle = GLFWNativeWin32.glfwGetWin32Window(getWindowHandle());
 //
 //		this.graphics = new WgDesktopGraphics(this,  win32handle);
 
-        this.graphics = new WgDesktopGraphics(this,  windowHandle);
+        this.graphics = new WgDesktopGraphics(this,  instance, windowHandle);
 
 		GLFW.glfwSetWindowFocusCallback(windowHandle, focusCallback);
 		GLFW.glfwSetWindowIconifyCallback(windowHandle, iconifyCallback);

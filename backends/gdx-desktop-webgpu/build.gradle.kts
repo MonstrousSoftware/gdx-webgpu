@@ -23,7 +23,12 @@ dependencies {
 
 //    implementation("com.github.xpenatan.jWebGPU:webgpu-desktop:$jWebGPUVVersion")
 //    implementation("com.github.xpenatan.jWebGPU:webgpu-desktop:-SNAPSHOT:windows_64_dawn")
+    implementation("com.github.xpenatan.jWebGPU:webgpu-core:-SNAPSHOT")
+    implementation("com.github.xpenatan.jWebGPU:webgpu-desktop:-SNAPSHOT:windows_64_dawn")
     implementation("com.github.xpenatan.jWebGPU:webgpu-desktop:-SNAPSHOT:windows_64_wgpu")
+    implementation("com.github.xpenatan.jWebGPU:webgpu-desktop:-SNAPSHOT:linux_64_wgpu")
+    implementation("com.github.xpenatan.jWebGPU:webgpu-desktop:-SNAPSHOT:mac_arm64_wgpu")
+    implementation("com.github.xpenatan.jWebGPU:webgpu-desktop:-SNAPSHOT:mac_64_wgpu")
 }
 
 publishing {

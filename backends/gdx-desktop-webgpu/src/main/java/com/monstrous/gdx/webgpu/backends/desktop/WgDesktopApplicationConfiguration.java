@@ -28,6 +28,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.glutils.HdpiMode;
 import com.badlogic.gdx.graphics.glutils.HdpiUtils;
 import com.badlogic.gdx.math.GridPoint2;
+import com.github.xpenatan.webgpu.JWebGPUBackend;
 import com.github.xpenatan.webgpu.WGPUBackendType;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import org.lwjgl.BufferUtils;
@@ -42,6 +43,10 @@ import java.nio.IntBuffer;
 public class WgDesktopApplicationConfiguration extends WgDesktopWindowConfiguration {
 
 	public static PrintStream errorStream = System.err;
+
+    public WebGPUContext.Backend backend = WebGPUContext.Backend.DEFAULT;// webgpu backend, e.g. Vulkan, DX12, etc.
+    public JWebGPUBackend backendWebGPU = JWebGPUBackend.DAWN;  // WebGPU implementation
+    public boolean enableGPUtiming = false;
 
 	boolean disableAudio = false;
 
@@ -63,9 +68,6 @@ public class WgDesktopApplicationConfiguration extends WgDesktopWindowConfigurat
 
 	boolean pauseWhenMinimized = true;
 	boolean pauseWhenLostFocus = false;
-
-	public WebGPUContext.Backend backend = WebGPUContext.Backend.DEFAULT;// webgpu backend, e.g. Vulkan, DX12, etc.
-	public boolean enableGPUtiming = false;
 
 	String preferencesDirectory = ".prefs/";
 	FileType preferencesFileType = FileType.External;
@@ -100,6 +102,7 @@ public class WgDesktopApplicationConfiguration extends WgDesktopWindowConfigurat
 		preferencesDirectory = config.preferencesDirectory;
 		preferencesFileType = config.preferencesFileType;
 		hdpiMode = config.hdpiMode;
+        backendWebGPU = config.backendWebGPU;
 	}
 
 	/** @param visibility whether the window will be visible on creation. (default true) */
