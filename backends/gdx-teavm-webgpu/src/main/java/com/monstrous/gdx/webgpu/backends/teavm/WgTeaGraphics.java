@@ -79,11 +79,6 @@ public class WgTeaGraphics extends TeaGraphics implements WgGraphics {
         System.out.println("Creating context");
         this.context = new WebGPUApplication(configg, instance, surface);
 
-
-
-        // not sure what this does, but it seems important...
-        AssetInstance.getDownloaderInstance().subtractQueue();
-
         // listen to fullscreen changes
         addFullscreenChangeListener(canvas, new FullscreenChanged() {
             @Override
@@ -106,10 +101,18 @@ public class WgTeaGraphics extends TeaGraphics implements WgGraphics {
         context.renderFrame(listener);
     }
 
+
+    boolean webGPUReady = false;
+
     @Override
     public void update() {
         if(context != null) {
             context.update();
+            if(!webGPUReady && context.isReady()) {
+                webGPUReady = true;
+                // trigger rendering as soon as all assets are downloaded
+                AssetInstance.getDownloaderInstance().subtractQueue();
+            }
         }
         super.update();
     }
