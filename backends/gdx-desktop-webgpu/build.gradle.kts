@@ -21,14 +21,12 @@ dependencies {
     implementation("org.lwjgl:lwjgl-glfw:3.3.3")
     implementation("org.lwjgl:lwjgl:3.3.3")
 
-//    implementation("com.github.xpenatan.jWebGPU:webgpu-desktop:$jWebGPUVVersion")
-//    implementation("com.github.xpenatan.jWebGPU:webgpu-desktop:-SNAPSHOT:windows_64_dawn")
-    implementation("com.github.xpenatan.jWebGPU:webgpu-core:-SNAPSHOT")
-    implementation("com.github.xpenatan.jWebGPU:webgpu-desktop:-SNAPSHOT:windows_64_dawn")
-    implementation("com.github.xpenatan.jWebGPU:webgpu-desktop:-SNAPSHOT:windows_64_wgpu")
-    implementation("com.github.xpenatan.jWebGPU:webgpu-desktop:-SNAPSHOT:linux_64_wgpu")
-    implementation("com.github.xpenatan.jWebGPU:webgpu-desktop:-SNAPSHOT:mac_arm64_wgpu")
-    implementation("com.github.xpenatan.jWebGPU:webgpu-desktop:-SNAPSHOT:mac_64_wgpu")
+    implementation("com.github.xpenatan.jWebGPU:webgpu-core:$jWebGPUVVersion")
+    implementation("com.github.xpenatan.jWebGPU:webgpu-desktop:$jWebGPUVVersion:windows_64_dawn")
+    implementation("com.github.xpenatan.jWebGPU:webgpu-desktop:$jWebGPUVVersion:windows_64_wgpu")
+    implementation("com.github.xpenatan.jWebGPU:webgpu-desktop:$jWebGPUVVersion:linux_64_wgpu")
+    implementation("com.github.xpenatan.jWebGPU:webgpu-desktop:$jWebGPUVVersion:mac_arm64_wgpu")
+    implementation("com.github.xpenatan.jWebGPU:webgpu-desktop:$jWebGPUVVersion:mac_64_wgpu")
 }
 
 publishing {
