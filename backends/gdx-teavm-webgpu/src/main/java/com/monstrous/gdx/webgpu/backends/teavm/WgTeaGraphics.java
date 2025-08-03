@@ -7,9 +7,7 @@ import com.github.xpenatan.gdx.backends.teavm.TeaGraphics;
 import com.github.xpenatan.gdx.backends.teavm.assetloader.AssetInstance;
 import com.github.xpenatan.gdx.backends.teavm.dom.HTMLDocumentExt;
 import com.github.xpenatan.gdx.backends.teavm.dom.impl.TeaWindow;
-import com.github.xpenatan.webgpu.JWebGPULoader;
-import com.github.xpenatan.webgpu.WGPUAdapter;
-import com.github.xpenatan.webgpu.WGPUSurfaceCapabilities;
+import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.webgpu.application.WebGPUApplication;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
@@ -23,6 +21,7 @@ public class WgTeaGraphics extends TeaGraphics implements WgGraphics {
     private static String canvasWGPU = "#" + canvasName;
 
     public WebGPUApplication context;
+    private WGPUInstance instance;
 
     public WgTeaGraphics(TeaApplicationConfiguration config) {
         this.config = config;
@@ -66,29 +65,24 @@ public class WgTeaGraphics extends TeaGraphics implements WgGraphics {
             false,
             WebGPUContext.Backend.WEBGPU);
 
-        this.context = new WebGPUApplication(configg, new WebGPUApplication.OnInitCallback() {
-            @Override
-            public void onInit(WebGPUApplication application, WGPUAdapter adapter) {
-                AssetInstance.getDownloaderInstance().subtractQueue();
-                if(application.isReady()) {
-                    application.surface = application.instance.createWebSurface(canvasWGPU);
+        System.out.println("Creating instance");
+        instance = WGPU.createInstance();
+        if(!instance.isValid()) {
+            throw new RuntimeException("WebGPU: cannot get instance");
+        }
+        System.out.println("Creating surface");
+        WGPUSurface surface = instance.createWebSurface(canvasWGPU);
+        if(surface ==null) {
+            throw new RuntimeException("WebGPU: cannot get surface");
+        }
 
-                    if(context.surface != null) {
-                        System.out.println("surface:" + context.surface);
-                        System.out.println("Surface created");
-                        WGPUSurfaceCapabilities surfaceCapabilities = WGPUSurfaceCapabilities.obtain();
-                        application.surface.getCapabilities(adapter, surfaceCapabilities);
-                        application.surfaceFormat = surfaceCapabilities.getFormats().get(0);
-                        System.out.println("surfaceFormat: " + application.surfaceFormat);
-                    }
-                }
-                else {
-                    throw new RuntimeException("Failed to initialize WebGPU");
-                }
-            }
-        });
+        System.out.println("Creating context");
+        this.context = new WebGPUApplication(configg, instance, surface);
 
-        context.resize(getWidth(), getHeight());
+
+
+        // not sure what this does, but it seems important...
+        AssetInstance.getDownloaderInstance().subtractQueue();
 
         // listen to fullscreen changes
         addFullscreenChangeListener(canvas, new FullscreenChanged() {
@@ -101,6 +95,7 @@ public class WgTeaGraphics extends TeaGraphics implements WgGraphics {
 
     @Override
     public void resize(ApplicationListener appListener, int width, int height) {
+        System.out.println("resize");
         context.resize(width, height);
         Gdx.gl.glViewport(0, 0, width, height);
         appListener.resize(width, height);
