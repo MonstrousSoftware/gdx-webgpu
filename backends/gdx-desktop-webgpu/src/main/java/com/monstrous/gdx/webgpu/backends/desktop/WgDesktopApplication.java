@@ -80,7 +80,7 @@ public class WgDesktopApplication implements Application {
 		this(listener, new WgDesktopApplicationConfiguration());
 	}
 
-	public WgDesktopApplication(ApplicationListener listener, WgDesktopApplicationConfiguration config) {
+	public WgDesktopApplication(ApplicationListener listener, WgDesktopApplicationConfiguration config)  {
 
         JWebGPULoader.init(config.backendWebGPU, (isSuccess, e) -> {
             System.out.println("WebGPU Init Success: " + isSuccess);
@@ -131,8 +131,8 @@ public class WgDesktopApplication implements Application {
         int counter = 0;
         while(wGPUInit < 1){
             System.out.println("Tick...");
-
-            if(counter++ > 500)
+            sync.sync(100);
+            if(counter++ > 50)
                 throw new RuntimeException("WebGPU: time-out on init");
         }
 

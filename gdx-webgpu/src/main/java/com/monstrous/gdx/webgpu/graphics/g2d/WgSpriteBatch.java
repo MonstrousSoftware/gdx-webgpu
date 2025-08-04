@@ -74,7 +74,6 @@ public class WgSpriteBatch implements Batch {
     private final Map<WGPUBlendFactor, Integer> blendGLConstantMap = new HashMap<>(); // vice versa
     private final Binder binder;
     private static String defaultShader;
-    private boolean mustUpdateMatrices = true;  // to save a buffer write if the matrix is unchanged
     private int frameNumber;
 
     public WgSpriteBatch() {
@@ -353,8 +352,8 @@ public class WgSpriteBatch implements Batch {
             renderPass.setViewport(view.x, view.y, view.width, view.height, 0, 1);
 
             uniformBuffer.setDynamicOffsetIndex(0); // reset the dynamic offset to the start
-            // beware: if the same spritebatch is used multiple times per frame this will overwrite the previous pass
-            // to solve this we should reset at the start of a new frame.
+            // if the same spritebatch is used multiple times per frame this will overwrite the previous pass
+            // to solve this we reset at the start of a new frame.
             numSpritesPerFlush = 0;
             vbOffset = 0;
             vertexFloats.clear();
@@ -373,13 +372,6 @@ public class WgSpriteBatch implements Batch {
             setPipeline();
         else
             renderPass.setPipeline(currentPipeline);
-
-//        pipelineSpec.enableBlending();
-//        pipelineSpec.disableDepthTest();
-//
-//        pipelineSpec.vertexAttributes = vertexAttributes;
-//        pipelineSpec.numSamples = webgpu.getSamples();
-//        setPipeline();
 
         // don't reset the matrices because setProjectionMatrix() and setTransformMatrix()
         // may be called before begin() and need to be respected.
@@ -411,14 +403,9 @@ public class WgSpriteBatch implements Batch {
         }
         renderCalls++;
 
-        //setPipeline();
-
         // bind group
 
-        //if(mustUpdateMatrices) {
-            updateMatrices();
-        //    mustUpdateMatrices = false;
-        //}
+        updateMatrices();
         int dynamicOffset = flushCount *uniformBuffer.getUniformStride();
         WebGPUBindGroup wbg = binder.getBindGroup(0);
         WGPUBindGroup bg = wbg.getBindGroup();
@@ -510,7 +497,6 @@ public class WgSpriteBatch implements Batch {
         if(drawing)
             flush();
         projectionMatrix.set(projection);
-        mustUpdateMatrices = true;
     }
 
     @Override
@@ -518,7 +504,6 @@ public class WgSpriteBatch implements Batch {
         if(drawing)
             flush();
         transformMatrix.set(transform);
-        mustUpdateMatrices = true;
     }
 
     @Override
@@ -1064,7 +1049,6 @@ public class WgSpriteBatch implements Batch {
         layout.addBuffer(0, WGPUShaderStage.Vertex, WGPUBufferBindingType.Uniform, uniformBufferSize, true);
         layout.addTexture(1, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D, false);
         layout.addSampler(2, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering );
-
         layout.end();
         return layout;
     }
