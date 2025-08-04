@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.utils.Array;
@@ -54,7 +55,7 @@ public class HeightMapTest extends BaseG3dTest {
 		ground.meshPart.offset = 0;
 		ground.meshPart.size = field.mesh.getNumIndices();
 		ground.meshPart.update();
-		ground.material = new Material(TextureAttribute.createDiffuse(texture));
+		ground.material = new Material(TextureAttribute.createDiffuse(texture), FloatAttribute.createShininess(20f));
 	}
 
 	@Override

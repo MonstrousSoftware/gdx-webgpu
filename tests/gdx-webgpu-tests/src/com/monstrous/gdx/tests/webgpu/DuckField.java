@@ -79,7 +79,7 @@ public class DuckField extends GdxTest {
         DirectionalLight light = new DirectionalLight();
         light.set(Color.WHITE, new Vector3(.4f,-1,.2f));
         environment.add( light );
-        environment.set(ColorAttribute.createAmbient(0.4f, 04f, 0.4f, 1f));
+        environment.set(ColorAttribute.createAmbientLight(Color.DARK_GRAY));
 
         WgDefaultShader.Config config = new WgDefaultShader.Config();
         config.maxInstances = 4000;
@@ -173,7 +173,7 @@ public class DuckField extends GdxTest {
 
         WgScreenUtils.clear(Color.SKY, true);
         modelBatch.begin(camera);
-        modelBatch.render(modelInstances); //, environment);
+        modelBatch.render(modelInstances, environment);
         modelBatch.end();
 
         batch.begin(null);

@@ -175,7 +175,6 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
 #endif
 
 #ifdef LIGHTING
-    //let normal = normalize(in.normal.xyz);
 
 #ifdef NORMAL_MAP
     let normalMapStrength = 0.3;
@@ -214,9 +213,10 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
             let lightVec = -normalize(light.direction.xyz);       // L is vector towards light
             let irradiance = max(dot(lightVec, normal), 0.0);
             radiance += irradiance *  light.color.rgb;
-
+#ifdef SPECULAR
             let halfDotView = max(0.0, dot(normal, normalize(lightVec + viewVec)));
             specular += irradiance *  light.color.rgb * pow(halfDotView, shininess);
+#endif
         }
     }
     // for each point light
@@ -234,9 +234,10 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
             let irradiance : f32 =  attenuation * NdotL;
 
             radiance += irradiance *  light.color.rgb;
-
+#ifdef SPECULAR
             let halfDotView = max(0.0, dot(normal, normalize(lightVec + viewVec)));
             specular += irradiance *  light.color.rgb * pow(halfDotView, shininess);
+#endif
         }
     }
 

@@ -31,6 +31,7 @@ public class ShaderPrefix {
     /** create a shader prefix depending on the defined attributes which allows to skip some shader code via conditional compilation.
      * The prefix consists of a number of #define statements.
      * */
+    // todo add material attributes
     public static String buildPrefix(VertexAttributes vertexAttributes, Environment environment ){
         sb.setLength(0);
 
@@ -71,6 +72,9 @@ public class ShaderPrefix {
                 sb.append("#define SHADOW_MAP\n");
             }
         }
+
+
+        sb.append("#define SPECULAR\n");
 
 //        if (environment != null && !environment.depthPass && environment.renderShadows) {
 //            sb.append("#define SHADOWS\n");
