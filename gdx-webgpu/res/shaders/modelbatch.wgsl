@@ -27,6 +27,8 @@ struct FrameUniforms {
     fogColor: vec4f,
     numDirectionalLights: f32,
     numPointLights: f32,
+    shadowPcfOffset: f32,
+    shadowBias: f32,
 };
 
 struct ModelUniforms {
@@ -286,15 +288,15 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
 fn getShadowNess( shadowPos:vec3f ) -> f32 {
 
     // PCF filtering: take 9 samples and use the average value
-    let shadowDepthTextureSize = 4096.0; // should be push constant
-    let oneOverDepthTextureSize = 1.0 / shadowDepthTextureSize;
-    let bias = 0.007;
+//    let shadowDepthTextureSize = 4096.0; // should be push constant
+//    let oneOverDepthTextureSize = 1.0 / shadowDepthTextureSize;
+    //let bias = 0.007;
     var visibility = 0.0;
     for( var y = -1; y <= 1; y++){
         for( var x = -1; x <= 1; x++){
-        let offset = vec2f(vec2(x,y))*oneOverDepthTextureSize;
+        let offset = vec2f(vec2(x,y)) * uFrame.shadowPcfOffset;  //oneOverDepthTextureSize
             // returns 0 or 1
-            visibility += textureSampleCompare(shadowMap, shadowSampler, shadowPos.xy+offset, shadowPos.z - bias);
+            visibility += textureSampleCompare(shadowMap, shadowSampler, shadowPos.xy+offset, shadowPos.z - uFrame.shadowBias);
         }
     }
     visibility /= 9.0;  // divide by nr of samples
@@ -302,7 +304,6 @@ fn getShadowNess( shadowPos:vec3f ) -> f32 {
 }
 
 fn getShadowSingleSample( shadowPos:vec3f ) -> f32 {
-    let bias = 0.007;
-    return textureSampleCompare(shadowMap, shadowSampler, shadowPos.xy, shadowPos.z - bias);
+    return textureSampleCompare(shadowMap, shadowSampler, shadowPos.xy, shadowPos.z -  uFrame.shadowBias);
 }
 #endif

@@ -25,6 +25,7 @@ import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector4;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
@@ -202,6 +203,8 @@ public class WgDefaultShader extends WgShader implements Disposable {
         binder.defineUniform("fogColor", 0, 0, offset); offset += 4*4;
         binder.defineUniform("numDirectionalLights", 0, 0, offset); offset += 4;
         binder.defineUniform("numPointLights", 0, 0, offset); offset += 4;
+        binder.defineUniform("shadowPcfOffset", 0, 0, offset); offset += 4;
+        binder.defineUniform("shadowBias", 0, 0, offset); offset += 4;
 
 
 
@@ -667,6 +670,10 @@ public class WgDefaultShader extends WgShader implements Disposable {
             WgTexture shadowMap = (WgTexture)(lights.shadowMap.getDepthMap().texture);
             binder.setTexture("shadowMap", shadowMap.getTextureView());
             binder.setSampler("shadowSampler", shadowMap.getDepthSampler());
+            Rectangle rect = webgpu.getViewportRectangle();
+            float screenSize = Math.max(rect.width, rect.height);
+            binder.setUniform("shadowPcfOffset", 1f/screenSize);
+            binder.setUniform("shadowBias", 0.07f);
 
         }
 

@@ -15,7 +15,7 @@ import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 
 
 public class SpriteBatchTextures extends GdxTest {
-    public static int NUM_SPRITES = 8000;
+    public static int NUM_SPRITES = 160;
     public static int NUM_TEXTURES = 200;
 
     private WgSpriteBatch batch;

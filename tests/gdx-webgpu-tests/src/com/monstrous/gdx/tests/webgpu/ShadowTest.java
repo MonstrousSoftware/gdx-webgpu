@@ -22,6 +22,7 @@ import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
+import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
@@ -48,7 +49,7 @@ public class ShadowTest extends GdxTest {
 	WgModelBatch modelBatch;
     WgModelBatch shadowBatch;
 	PerspectiveCamera cam;
-	PerspectiveCamController controller;
+	CameraInputController controller;
 	WgSpriteBatch batch;
 	WgBitmapFont font;
     Model box;
@@ -74,7 +75,7 @@ public class ShadowTest extends GdxTest {
 		cam.near = 0.1f;
         cam.lookAt(0,0,0);
 
-		controller = new PerspectiveCamController(cam);
+		controller = new CameraInputController(cam);
 		Gdx.input.setInputProcessor(controller);
 		batch = new WgSpriteBatch();
 		font = new WgBitmapFont();
