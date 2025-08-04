@@ -294,14 +294,15 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
     public void resize(int width, int height){
         System.out.println("resize: "+width+" x "+height);
 
-        if(width * height == 0 )   // on minimize, don't create zero sized textures
-            return;
-
         // if there was already a swap chain, release it
         if(swapChainActive) {
             terminateDepthBuffer();
             exitSwapChain();
+            swapChainActive = false;
         }
+
+        if(width * height == 0 )   // on minimize, don't create zero sized textures
+            return;
 
         if(targetView != null) {
             targetView.release();
