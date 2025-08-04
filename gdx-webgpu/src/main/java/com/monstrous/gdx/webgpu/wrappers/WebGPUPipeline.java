@@ -43,7 +43,6 @@ public class WebGPUPipeline implements Disposable {
             //System.out.println("Compiling shader Source [] Prefix: ["+prefix+"]");
             shader = new WgShaderProgram(spec.name, spec.shaderSource, prefix);
             spec.shader = shader;
-            spec.recalcHash();
             ownsShader = true;
         }
         this.specification = new PipelineSpecification(spec);

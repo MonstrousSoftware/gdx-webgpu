@@ -127,9 +127,15 @@ public class WgDesktopApplication implements Application {
 
 		this.sync = new Sync();
 
-        // should perhaps wait here so that instance is valid
-        if(wGPUInit < 1)
-            throw new RuntimeException("WebGPU: time-out on init");
+        // wait here until the instance is valid (may happen on WGPU)
+        int counter = 0;
+        while(wGPUInit < 1){
+            System.out.println("Tick...");
+
+            if(counter++ > 500)
+                throw new RuntimeException("WebGPU: time-out on init");
+        }
+
 		createWindow(config, instance, listener);
 
         wGPUInit = 3; // todo should wait

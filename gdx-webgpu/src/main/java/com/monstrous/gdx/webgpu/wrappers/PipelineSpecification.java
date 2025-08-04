@@ -57,10 +57,12 @@ public class PipelineSpecification {
     public WGPUTextureFormat colorFormat;
     public WGPUTextureFormat depthFormat;
     private int hash;
+    private boolean dirty;  // does hash need to be recalculated?
 
 
     public PipelineSpecification() {
         this.name = "pipeline";
+        dirty = true;
         enableDepthTest();
         noDepthAttachment = false;
         vertexShaderEntryPoint = "vs_main";
@@ -79,21 +81,18 @@ public class PipelineSpecification {
         numSamples = 1;
         isSkyBox = false;
         afterDepthPrepass = false;
-        recalcHash();
     }
 
     public PipelineSpecification(VertexAttributes vertexAttributes, String shaderSource) {
         this();
         this.vertexAttributes = vertexAttributes;
         this.shaderSource = shaderSource;
-        recalcHash();
     }
 
     public PipelineSpecification(VertexAttributes vertexAttributes, WgShaderProgram shader) {
         this();
         this.vertexAttributes = vertexAttributes;
         this.shader = shader;
-        recalcHash();
     }
 
     public PipelineSpecification(PipelineSpecification spec) {
@@ -123,32 +122,37 @@ public class PipelineSpecification {
         this.numSamples = spec.numSamples;
         this.fragmentShaderEntryPoint = spec.fragmentShaderEntryPoint;
         this.vertexShaderEntryPoint = spec.vertexShaderEntryPoint;
-        recalcHash();
+        this.dirty = true;
+    }
+
+    /** call this whenever changing a field directly to force a recalculation of the hash code. */
+    public void invalidateHashCode(){
+        dirty = true;
     }
 
     public void enableDepthTest(){
         useDepthTest = true;
-        recalcHash();
+        dirty = true;
     }
 
     public void disableDepthTest(){
         useDepthTest = false;
-        recalcHash();
+        dirty = true;
     }
 
     public void setCullMode(WGPUCullMode cullMode){
         this.cullMode = cullMode;
-        recalcHash();
+        dirty = true;
     }
 
     public void enableBlending(){
         blendingEnabled = true;
-        recalcHash();
+        dirty = true;
     }
 
     public void disableBlending(){
         blendingEnabled = false;
-        recalcHash();
+        dirty = true;
     }
 
     public boolean isBlendingEnabled(){
@@ -165,7 +169,7 @@ public class PipelineSpecification {
         blendDstColor = dstFuncColor;
         blendSrcAlpha = srcFuncAlpha;
         blendDstAlpha = dstFuncAlpha;
-        recalcHash();
+        dirty = true;
     }
 
     public WGPUBlendFactor getBlendSrcFactor() {
@@ -194,13 +198,15 @@ public class PipelineSpecification {
 
     @Override
     public int hashCode() {
+        if(dirty)
+            recalcHash();
         return hash;
     }
 
     /** to be called whenever relevant content changes (to avoid doing this in hashCode which is called a lot).
      * Also: avoid Objects.hash() to avoid lots of little allocations.
      */
-    public void recalcHash() {
+    private void recalcHash() {
         //System.out.println("Recalc pipe spec hash "+((WgGraphics)Gdx.graphics).getFrameId());
         hash = 1;
         hash = 31 * hash + (vertexAttributes == null ? 0 : vertexAttributes.hashCode());

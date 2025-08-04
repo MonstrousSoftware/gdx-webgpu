@@ -61,7 +61,8 @@ public class WgSpriteBatch implements Batch {
     private WebGPURenderPass renderPass;
     private int vbOffset;
     private final PipelineCache pipelines;
-    private WebGPUPipeline prevPipeline;
+    private WebGPUPipeline currentPipeline;
+    private WebGPUPipeline initialPipeline;
     public int maxSpritesInBatch;    // most nr of sprites in the batch over its lifetime
     public int renderCalls;
     public int pipelineCount;
@@ -167,6 +168,10 @@ public class WgSpriteBatch implements Batch {
         // default blending values
         pipelineSpec.enableBlending();
         pipelineSpec.setBlendFactor(WGPUBlendFactor.SrcAlpha, WGPUBlendFactor.OneMinusSrcAlpha);
+        pipelineSpec.disableDepthTest();
+
+        pipelineSpec.vertexAttributes = vertexAttributes;
+        pipelineSpec.numSamples = webgpu.getSamples();
 
         // use provided (compiled) shader or else use default shader (source)
         // this can be overruled with setShader()
@@ -174,6 +179,9 @@ public class WgSpriteBatch implements Batch {
         if(specificShader == null) {
             pipelineSpec.shaderSource = getDefaultShaderSource();
         }
+
+        setPipeline();
+        initialPipeline = currentPipeline;
 
         projectionMatrix.setToOrtho2D(0, 0, Gdx.graphics.getWidth(),  Gdx.graphics.getHeight(), 0, 100);
         transformMatrix.idt();
@@ -309,12 +317,14 @@ public class WgSpriteBatch implements Batch {
             return;
         flush();
         pipelineSpec.enableBlending();
+        setPipeline();
     }
     public void disableBlending(){
         if(!pipelineSpec.isBlendingEnabled())
             return;
         flush();
         pipelineSpec.disableBlending();
+        setPipeline();
     }
 
     public boolean isBlendingEnabled(){
@@ -353,16 +363,23 @@ public class WgSpriteBatch implements Batch {
             numSprites = 0;
         }
         renderCalls = 0;
-        prevPipeline = null;
 
         // set default state
         tint.set(Color.WHITE);
 
-        pipelineSpec.enableBlending();
-        pipelineSpec.disableDepthTest();
+        // if the pipeline was never changed (no shader changes, no blending changes)
+        // continue with the one from the constructor, and we can avoid a cache lookup
+        if(currentPipeline != initialPipeline)
+            setPipeline();
+        else
+            renderPass.setPipeline(currentPipeline);
 
-        pipelineSpec.vertexAttributes = vertexAttributes;
-        pipelineSpec.numSamples = webgpu.getSamples();
+//        pipelineSpec.enableBlending();
+//        pipelineSpec.disableDepthTest();
+//
+//        pipelineSpec.vertexAttributes = vertexAttributes;
+//        pipelineSpec.numSamples = webgpu.getSamples();
+//        setPipeline();
 
         // don't reset the matrices because setProjectionMatrix() and setTransformMatrix()
         // may be called before begin() and need to be respected.
@@ -394,7 +411,7 @@ public class WgSpriteBatch implements Batch {
         }
         renderCalls++;
 
-        setPipeline();
+        //setPipeline();
 
         // bind group
 
@@ -443,9 +460,10 @@ public class WgSpriteBatch implements Batch {
     // create or reuse pipeline on demand to match the pipeline spec
     private void setPipeline() {
         WebGPUPipeline pipeline = pipelines.findPipeline( pipelineLayout, pipelineSpec);
-        if (pipeline != prevPipeline) { // avoid unneeded switches
-            renderPass.setPipeline(pipeline);
-            prevPipeline = pipeline;
+        if (pipeline != currentPipeline) { // avoid unneeded switches
+            if(renderPass != null)
+                renderPass.setPipeline(pipeline);
+            currentPipeline = pipeline;
         }
     }
 
@@ -461,13 +479,13 @@ public class WgSpriteBatch implements Batch {
             pipelineSpec.shader = specificShader;
             if (specificShader == null)
                 pipelineSpec.shaderSource = getDefaultShaderSource();
-            pipelineSpec.recalcHash();
         }
         else {
             pipelineSpec.shader = shaderProgram;
             pipelineSpec.shaderSource = "precompiled"; //shaderProgram.getName();   // todo
-            pipelineSpec.recalcHash();
         }
+        pipelineSpec.invalidateHashCode();
+        setPipeline();
     }
 
 
