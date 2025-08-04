@@ -2,6 +2,7 @@ package com.monstrous.gdx.webgpu.application;
 
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Disposable;
 import com.github.xpenatan.webgpu.WGPUAdapterType;
@@ -295,22 +296,20 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
         System.out.println("resize: "+width+" x "+height);
 
         // if there was already a swap chain, release it
+        // (there won't be one on the very first resize, or coming back from a minimize)
         if(swapChainActive) {
             terminateDepthBuffer();
             exitSwapChain();
             swapChainActive = false;
         }
 
+
         if(width * height == 0 )   // on minimize, don't create zero sized textures
             return;
 
-        if(targetView != null) {
-            targetView.release();
-        }
         initSwapChain(width, height, config.vSyncEnabled);
         initDepthBuffer(width, height, config.numSamples);
         swapChainActive = true;
-
 
         if(config.numSamples > 1 ) {
             if(multiSamplingTexture != null)

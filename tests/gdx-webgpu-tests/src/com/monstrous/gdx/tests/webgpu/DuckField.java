@@ -17,18 +17,17 @@ import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Slider;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 
-import com.monstrous.gdx.webgpu.graphics.g3d.WgModel;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLTFModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDefaultShader;
@@ -49,11 +48,10 @@ public class DuckField extends GdxTest {
     private Array<ModelInstance> modelInstances;
     private Environment environment;
     private Array<Matrix4> transforms;
-    private WgBitmapFont font;
-    private WgSpriteBatch batch;
     private WgStage stage;
     private WgSkin skin;
     private int fps;
+    private Label fpsLabel;
     private long startTime;
     private int frames;
     private final Vector3 up = new Vector3(0,1,0);
@@ -85,10 +83,9 @@ public class DuckField extends GdxTest {
         config.maxInstances = 4000;
         modelBatch = new WgModelBatch(config );
 
-        batch = new WgSpriteBatch();
-        font = new WgBitmapFont();
-
-        buildGUI();
+        stage = new WgStage(new ScreenViewport());
+        skin = new WgSkin(Gdx.files.internal("data/uiskin.json"));
+        rebuildStage();
 
         camController = new CameraInputController(camera);
         InputMultiplexer im= new InputMultiplexer();
@@ -105,9 +102,8 @@ public class DuckField extends GdxTest {
         }
     }
 
-    private void buildGUI(){
-        stage = new WgStage();
-        skin = new WgSkin(Gdx.files.internal("data/uiskin.json"));
+    private void rebuildStage(){
+        stage.clear();
 
         Table screenTable = new Table();
         screenTable.setFillParent(true);
@@ -128,10 +124,14 @@ public class DuckField extends GdxTest {
             }
         });
 
+        fpsLabel = new Label("",skin);
+
 
         sliderTable.add(slider);
         sliderTable.row();
         sliderTable.add(value);
+        sliderTable.row();
+        sliderTable.add(fpsLabel);
 
         screenTable.add(sliderTable).align(Align.topRight).expand();
         stage.addActor(screenTable);
@@ -176,16 +176,13 @@ public class DuckField extends GdxTest {
         modelBatch.render(modelInstances, environment);
         modelBatch.end();
 
-        batch.begin(null);
-        font.draw(batch, "frames per second: "+fps, 10, 50);
-        batch.end();
+        fpsLabel.setText("FPS: "+fps);
 
         stage.act();
         stage.draw();
 
         // At the end of the frame
         if (System.nanoTime() - startTime > 1000000000) {
-            System.out.println("SpriteBatch : fps: " + frames +" instances: "+ transforms.size);
             fps = frames;
             frames = 0;
             startTime = System.nanoTime();
@@ -197,8 +194,6 @@ public class DuckField extends GdxTest {
         // cleanup
         model.dispose();
         modelBatch.dispose();
-        batch.dispose();
-        font.dispose();
         stage.dispose();
         skin.dispose();
     }
@@ -208,7 +203,8 @@ public class DuckField extends GdxTest {
         camera.viewportWidth = width;
         camera.viewportHeight = height;
         camera.update();
-        stage.getViewport().update(width, height);
+        stage.getViewport().update(width, height, true);
+        rebuildStage();
     }
 
 
