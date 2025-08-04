@@ -4,7 +4,7 @@
 
 // Note this is an uber shader with conditional compilation depending on #define values from the shader prefix
 
-
+#define PBR
 
 struct DirectionalLight {
     color: vec4f,
@@ -29,6 +29,7 @@ struct FrameUniforms {
     numPointLights: f32,
     shadowPcfOffset: f32,
     shadowBias: f32,
+    normalMapStrength: f32,
 };
 
 struct ModelUniforms {
@@ -38,7 +39,8 @@ struct ModelUniforms {
 struct MaterialUniforms {
     diffuseColor: vec4f,
     shininess: f32,
-    //dummy: vec3f
+    roughnessFactor: f32,
+    metallicFactor: f32,
 };
 
 // frame bindings
@@ -56,9 +58,9 @@ struct MaterialUniforms {
 @group(1) @binding(0) var<uniform> material: MaterialUniforms;
 @group(1) @binding(1) var diffuseTexture: texture_2d<f32>;
 @group(1) @binding(2) var diffuseSampler: sampler;
-@group(1) @binding(3) var normalTexture: texture_2d<f32>;        // not used yet
+@group(1) @binding(3) var normalTexture: texture_2d<f32>;
 @group(1) @binding(4) var normalSampler: sampler;
-@group(1) @binding(5) var metallicRoughnessTexture: texture_2d<f32>;        // not used yet
+@group(1) @binding(5) var metallicRoughnessTexture: texture_2d<f32>;
 @group(1) @binding(6) var metallicRoughnessSampler: sampler;
 @group(1) @binding(7) var emissiveTexture: texture_2d<f32>;
 @group(1) @binding(8) var emissiveSampler: sampler;
@@ -103,6 +105,7 @@ struct VertexOutput {
 #endif
 };
 
+const pi : f32 = 3.14159265359;
 
 @vertex
 fn vs_main(in: VertexInput, @builtin(instance_index) instance: u32) -> VertexOutput {
@@ -163,8 +166,6 @@ fn vs_main(in: VertexInput, @builtin(instance_index) instance: u32) -> VertexOut
 @fragment
 fn fs_main(in : VertexOutput) -> @location(0) vec4f {
 #ifdef TEXTURE_COORDINATE
-   // var color = in.color * textureSample(normalTexture, normalSampler, in.uv);
-   //var color = in.color * textureSample(metallicRoughnessTexture, metallicRoughnessSampler, in.uv);
    var color = in.color * textureSample(diffuseTexture, diffuseSampler, in.uv);
 #else
    var color = in.color;
@@ -177,10 +178,9 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
 #endif
 
 #ifdef LIGHTING
+    let baseColor = color;
 
 #ifdef NORMAL_MAP
-    let normalMapStrength = 0.3;
-
     let encodedN = textureSample(normalTexture, normalSampler, in.uv).rgb;
     let localN = encodedN * 2.0 - 1.0;
     // The TBN matrix converts directions from the local space to the world space
@@ -190,16 +190,22 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
         normalize(in.normal),
     );
     let worldN = localToWorld * localN;
-    let normal = mix(in.normal.xyz, worldN, normalMapStrength);
+    let normal = mix(in.normal.xyz, worldN, uFrame.normalMapStrength);
 #else // NORMAL_MAP
     let normal = normalize(in.normal.xyz);
 #endif
 
+    // metallic is coded in the blue channel and roughness in the green channel
+    let mrSample = textureSample(metallicRoughnessTexture, metallicRoughnessSampler, in.uv).rgb;
 
+    let roughness : f32 = mrSample.g * material.roughnessFactor;
+    let metallic : f32 = mrSample.b * material.metallicFactor;
 
-    let shininess : f32 = material.shininess;
+    let shininess : f32 = material.shininess;   // superseded by roughness?
 
-    let ambient : vec3f = uFrame.ambientLight.rgb;
+    let ambientLight : vec3f = uFrame.ambientLight.rgb;
+
+    let ambient : vec3f = baseColor.rgb * uFrame.ambientLight.rgb;
 
     var radiance : vec3f = vec3f(0);
     var specular : vec3f = vec3f(0);
@@ -213,12 +219,18 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
             let light = uFrame.directionalLights[i];
 
             let lightVec = -normalize(light.direction.xyz);       // L is vector towards light
-            let irradiance = max(dot(lightVec, normal), 0.0);
+            let irradiance = max(dot(lightVec, normal), 0.0); //* light.intensity.x;?
+#ifdef PBR
+            if(irradiance > 0.0) {
+                radiance += BRDF(lightVec, viewVec, normal, roughness, metallic, baseColor.rgb) * irradiance *  light.color.rgb;
+            }
+#else
             radiance += irradiance *  light.color.rgb;
-#ifdef SPECULAR
+    #ifdef SPECULAR
             let halfDotView = max(0.0, dot(normal, normalize(lightVec + viewVec)));
             specular += irradiance *  light.color.rgb * pow(halfDotView, shininess);
-#endif
+    #endif
+#endif // PBR
         }
     }
     // for each point light
@@ -234,30 +246,38 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
             let attenuation : f32 = light.intensity/(1.0 + dist2);// attenuation (note this makes an assumption on the world scale)
             let NdotL : f32 = max(dot(lightVec, normal), 0.0);
             let irradiance : f32 =  attenuation * NdotL;
-
+#ifdef PBR
+            if(irradiance > 0.0) {
+                radiance += BRDF(lightVec, viewVec, normal, roughness, metallic, baseColor.rgb) * irradiance *  light.color.rgb;
+            }
+#else
             radiance += irradiance *  light.color.rgb;
 #ifdef SPECULAR
             let halfDotView = max(0.0, dot(normal, normalize(lightVec + viewVec)));
             specular += irradiance *  light.color.rgb * pow(halfDotView, shininess);
 #endif
+#endif // PBR
         }
     }
 
-
-    let litColor = vec4f( color.rgb * (ambient + visibility * radiance) + visibility*specular, 1.0);
+#ifdef PBR
+    let litColor = vec4f(ambient + visibility*radiance, 1.0);
+#else
+    let litColor = vec4f( color.rgb * (ambientLight + visibility * radiance) + visibility*specular, 1.0);
+#endif
 
     color = litColor;
 
 #ifdef ENVIRONMENT_MAP
     let rdir:vec3f = normalize(reflect(viewVec, normal)*vec3f(-1, -1, 1));
     var reflection = textureSample(cubeMap, cubeMapSampler, rdir);
-    color = mix(color, reflection, 0.5f);
+    color = mix(color, reflection, 0.5f);       // todo 0.5 is arbitrary
 #endif
 
 
 #endif // LIGHTING
-    let emissiveColor = textureSample(emissiveTexture, emissiveSampler, in.uv).rgb;
 
+    let emissiveColor = textureSample(emissiveTexture, emissiveSampler, in.uv).rgb;
     color = color + vec4f(emissiveColor, 0);
 
 
@@ -271,6 +291,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
     color = vec4f(linearColor, color.a);
 #endif
 
+    //return(vec4f(0.0, roughness, metallic, 1.0));
 
     //return vec4f(emissiveColor, 1.0);
     //return vec4f(normal, 1.0);
@@ -307,3 +328,58 @@ fn getShadowSingleSample( shadowPos:vec3f ) -> f32 {
     return textureSampleCompare(shadowMap, shadowSampler, shadowPos.xy, shadowPos.z -  uFrame.shadowBias);
 }
 #endif
+
+
+#ifdef PBR
+
+// Normal distribution function
+fn D_GGX(NdotH: f32, roughness: f32) -> f32 {
+    let alpha : f32 = roughness * roughness;
+    let alpha2 : f32 = alpha * alpha;
+    let denom : f32 = (NdotH * NdotH) * (alpha2 - 1.0) + 1.0;
+    return alpha2/(pi * denom * denom);
+}
+
+fn G_SchlickSmith_GGX(NdotL : f32, NdotV : f32, roughness : f32) -> f32 {
+//    let r : f32 = (roughness + 1.0);
+//    let k : f32 = (r*r)/8.0;
+
+    let alpha: f32 = roughness * roughness;
+    let k: f32 = alpha / 2.0;
+
+    let GL : f32 = NdotL / (NdotL * (1.0 - k) + k);
+    let GV : f32 = NdotV / (NdotV * (1.0 - k) + k);
+    return GL * GV;
+}
+
+
+fn F_Schlick(cosTheta : f32, metallic : f32, baseColor : vec3f ) -> vec3f {
+    let F0 : vec3f = mix(vec3(0.04), baseColor, metallic);
+    let F : vec3f = F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+    return F;
+}
+
+fn BRDF( L : vec3f, V:vec3f, N: vec3f, roughness:f32, metallic:f32, baseColor: vec3f) -> vec3f {
+    let H = normalize(V+L);
+    let NdotV : f32 = clamp(dot(N, V), 0.0, 1.0);
+    let NdotL : f32 = clamp(dot(N, L), 0.001, 1.0);
+    let LdotH : f32 = clamp(dot(L, H), 0.0, 1.0);
+    let NdotH : f32 = clamp(dot(N, H), 0.0, 1.0);
+
+    // calculate terms for microfacet shading model
+    let D :f32      = D_GGX(NdotH, roughness);
+    let G :f32      = G_SchlickSmith_GGX(NdotL, NdotV, roughness);
+    let F :vec3f    = F_Schlick(NdotV, metallic, baseColor);
+
+    let kS = F;
+    let kD = (vec3f(1.0) - kS) * (1.0 - metallic);
+
+    let specular : vec3f = D * F * G / (4.0 * max(NdotL, 0.0001) * max(NdotV, 0.0001));
+
+    let diffuse : vec3f = kD * baseColor / pi;
+
+    let Lo : vec3f = diffuse + specular;
+    return Lo;
+}
+
+#endif // PBR

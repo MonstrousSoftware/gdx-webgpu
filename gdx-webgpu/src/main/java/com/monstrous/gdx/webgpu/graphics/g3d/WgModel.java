@@ -32,9 +32,11 @@ import com.badlogic.gdx.utils.BufferUtils;
 import com.badlogic.gdx.utils.ObjectMap;
 import com.monstrous.gdx.webgpu.graphics.WgMesh;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
+import com.monstrous.gdx.webgpu.graphics.g3d.attributes.PBRFloatAttribute;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.PBRTextureAttribute;
 import com.monstrous.gdx.webgpu.graphics.g3d.model.PBRModelTexture;
 import com.monstrous.gdx.webgpu.graphics.g3d.model.WgMeshPart;
+import com.monstrous.gdx.webgpu.graphics.g3d.model.WgModelMaterial;
 import com.monstrous.gdx.webgpu.graphics.g3d.model.WgModelMeshPart;
 import com.monstrous.gdx.webgpu.graphics.utils.WgTextureProvider;
 
@@ -129,6 +131,14 @@ public class WgModel extends Model {
 		if (mtl.reflection != null) result.set(new ColorAttribute(ColorAttribute.Reflection, mtl.reflection));
 		if (mtl.shininess > 0f) result.set(new FloatAttribute(FloatAttribute.Shininess, mtl.shininess));
 		if (mtl.opacity != 1.f) result.set(new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA, mtl.opacity));
+
+        if(mtl instanceof WgModelMaterial){
+            WgModelMaterial wmtl = (WgModelMaterial)mtl;
+            if(wmtl.roughnessFactor >= 0) result.set(new PBRFloatAttribute(PBRFloatAttribute.Roughness, wmtl.roughnessFactor));
+            if(wmtl.metallicFactor >= 0) result.set(new PBRFloatAttribute(PBRFloatAttribute.Metallic, wmtl.metallicFactor));
+
+        }
+
 
 		// Note: the Textures below need to be WebGPUTextures,
 		// but we keep the more generic type to play nicely with existing code.

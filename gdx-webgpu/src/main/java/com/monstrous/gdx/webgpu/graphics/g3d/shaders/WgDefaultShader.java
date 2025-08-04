@@ -35,6 +35,7 @@ import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.Binder;
 import com.monstrous.gdx.webgpu.graphics.WgMesh;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
+import com.monstrous.gdx.webgpu.graphics.g3d.attributes.PBRFloatAttribute;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.PBRTextureAttribute;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute;
 import com.monstrous.gdx.webgpu.wrappers.*;
@@ -205,6 +206,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         binder.defineUniform("numPointLights", 0, 0, offset); offset += 4;
         binder.defineUniform("shadowPcfOffset", 0, 0, offset); offset += 4;
         binder.defineUniform("shadowBias", 0, 0, offset); offset += 4;
+        binder.defineUniform("normalMapStrength", 0, 0, offset); offset += 4;
 
 
 
@@ -219,6 +221,8 @@ public class WgDefaultShader extends WgShader implements Disposable {
         offset = 0;
         binder.defineUniform("diffuseColor", 1, 0, offset); offset += 4*4;
         binder.defineUniform("shininess", 1, 0, offset); offset += 4;
+        binder.defineUniform("roughnessFactor", 1, 0, offset); offset += 4;
+        binder.defineUniform("metallicFactor", 1, 0, offset); offset += 4;
 
         // set binding 0 to uniform buffer
         binder.setBuffer("uniforms", uniformBuffer, 0, uniformBufferSize);
@@ -471,6 +475,12 @@ public class WgDefaultShader extends WgShader implements Disposable {
         final FloatAttribute shiny = material.get(FloatAttribute.class,FloatAttribute.Shininess);
         binder.setUniform("shininess",  shiny == null ? 20f : shiny.value );
 
+        // the following are multiplication factors for the MR texture. If not provided, use 1.0.
+        final PBRFloatAttribute roughness = material.get(PBRFloatAttribute.class, PBRFloatAttribute.Roughness);
+        binder.setUniform("roughnessFactor", roughness == null ? 1f : roughness.value);
+
+        final PBRFloatAttribute metallic = material.get(PBRFloatAttribute.class, PBRFloatAttribute.Metallic);
+        binder.setUniform("metallicFactor", metallic == null ? 1f : metallic.value);
 
         // diffuse texture
         WgTexture diffuseTexture;
@@ -504,6 +514,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         }
         binder.setTexture("normalTexture", normalTexture.getTextureView());
         binder.setSampler("normalSampler", normalTexture.getSampler());
+        binder.setUniform("normalMapStrength", 0.5f);   // emphasis factor for normal map [0-1]
 
         // metallic roughness texture
         WgTexture metallicRoughnessTexture;
@@ -517,6 +528,8 @@ public class WgDefaultShader extends WgShader implements Disposable {
         }
         binder.setTexture("metallicRoughnessTexture", metallicRoughnessTexture.getTextureView());
         binder.setSampler("metallicRoughnessSampler", metallicRoughnessTexture.getSampler());
+
+
 
         // metallic roughness texture
         WgTexture emissiveTexture;

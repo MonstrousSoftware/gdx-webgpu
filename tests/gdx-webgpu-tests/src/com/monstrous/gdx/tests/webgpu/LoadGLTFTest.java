@@ -76,8 +76,8 @@ public class LoadGLTFTest extends GdxTest {
 		cam.near = 0.001f;
 		cam.far = 100f;
 
-
-		modelFileName = "data/g3d/gltf/Cube/Cube.gltf";
+        modelFileName = "data/g3d/gltf/DamagedHelmet/DamagedHelmet.gltf";
+		//modelFileName = "data/g3d/gltf/Cube/Cube.gltf";
         //modelFileName = "data/g3d/gltf/StanfordDragon/stanfordDragon.gltf";
         //modelFileName = "data/g3d/gltf/Cubes/cubes.gltf";
         //modelFileName = "data/g3d/gltf/AntiqueCamera/AntiqueCamera.gltf";
@@ -126,13 +126,13 @@ public class LoadGLTFTest extends GdxTest {
 		font = new WgBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
 
         environment = new Environment();
-        float amb = 0.4f;
+        float amb = 0.0f;
         ColorAttribute ambient =  ColorAttribute.createAmbientLight(amb, amb, amb, 1f);
         environment.set(ambient);
 
         DirectionalLight dirLight1 = new DirectionalLight();
         dirLight1.setDirection(1f, -.2f, .2f);
-        dirLight1.setColor(Color.GOLD);
+        dirLight1.setColor(Color.WHITE);
         environment.add(dirLight1);
 
 	}
@@ -141,7 +141,7 @@ public class LoadGLTFTest extends GdxTest {
 		float delta = Gdx.graphics.getDeltaTime();
 		instance.transform.rotate(Vector3.Y, 15f*delta);
 
-		WgScreenUtils.clear(Color.TEAL, true);
+		WgScreenUtils.clear(Color.DARK_GRAY, true);
 
 		cam.update();
 		modelBatch.begin(cam);
