@@ -71,11 +71,16 @@ public class ShaderPrefix {
             if(environment.shadowMap != null){
                 sb.append("#define SHADOW_MAP\n");
             }
+            if((environment.getMask() & WgCubemapAttribute.SpecularCubeMap) != 0){
+                sb.append("#define USE_IBL\n");
+            }
         }
 
         // todo select this based on material
 
         sb.append("#define PBR\n");
+
+
 
 
         sb.append("#define SPECULAR\n");

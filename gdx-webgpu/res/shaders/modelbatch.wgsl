@@ -4,7 +4,6 @@
 
 // Note this is an uber shader with conditional compilation depending on #define values from the shader prefix
 
-#define USE_IBL
 
 struct DirectionalLight {
     color: vec4f,
@@ -284,11 +283,13 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
 
     color = litColor;
 
-//#ifdef ENVIRONMENT_MAP
-//    let rdir:vec3f = normalize(reflect(viewVec, normal)*vec3f(-1, -1, 1));
-//    var reflection = textureSample(cubeMap, cubeMapSampler, rdir);
-//    color = mix(color, reflection, 0.1f);       // todo scale is arbitrary
-//#endif
+#ifndef USE_IBL
+    #ifdef ENVIRONMENT_MAP
+        let rdir:vec3f = normalize(reflect(viewVec, normal)*vec3f(-1, -1, 1));
+        var reflection = textureSample(cubeMap, cubeMapSampler, rdir);
+        color = mix(color, reflection, 0.1f);       // todo scale is arbitrary
+    #endif
+#endif
 
 
 #endif // LIGHTING
