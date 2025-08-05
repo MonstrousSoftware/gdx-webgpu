@@ -28,7 +28,10 @@ public class WgCubemapAttribute extends Attribute {
     public final static String EnvironmentMapAlias = "environmentCubemap";
     public final static long EnvironmentMap = register(EnvironmentMapAlias);
 
-    protected static long Mask = EnvironmentMap;
+    public final static String DiffuseCubeMapAlias = "diffuseCubemap";
+    public final static long DiffuseCubeMap = register(DiffuseCubeMapAlias);
+
+    protected static long Mask = EnvironmentMap | DiffuseCubeMap;
 
     public static boolean is (final long mask) {
         return (mask & Mask) != 0;

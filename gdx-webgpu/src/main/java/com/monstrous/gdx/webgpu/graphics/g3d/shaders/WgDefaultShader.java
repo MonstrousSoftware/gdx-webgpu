@@ -697,6 +697,15 @@ public class WgDefaultShader extends WgShader implements Disposable {
             binder.setTexture("cubeMap", cubeMap.getTextureView());
             binder.setSampler("cubeSampler", cubeMap.getSampler());
         }
+
+//
+//        final WgCubemapAttribute irradianceMapAttribute = lights.get(WgCubemapAttribute.class, WgCubemapAttribute.EnvironmentMap);
+//        if ( cubemapAttribute != null) {
+//            //System.out.println("Setting cube map via binder");
+//            WgTexture cubeMap = cubemapAttribute.textureDescription.texture;
+//            binder.setTexture("cubeMap", cubeMap.getTextureView());
+//            binder.setSampler("cubeSampler", cubeMap.getSampler());
+//        }
     }
 
 

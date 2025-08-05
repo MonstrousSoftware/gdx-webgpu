@@ -66,7 +66,8 @@ public class WgDefaultRenderableSorter implements RenderableSorter, Comparator<R
         if(b1){ // renderables are blended, need to be depth sorted, closest one last
             getTranslation(o1.worldTransform, o1.meshPart.center, tmpV1);
             getTranslation(o2.worldTransform, o2.meshPart.center, tmpV2);
-            final float dst = camera.position.dst2(tmpV1) - camera.position.dst2(tmpV2);
+            // changed to dst against overflow, even though dst2 is faster
+            final float dst = camera.position.dst(tmpV1) - camera.position.dst(tmpV2);
             return dst < 0 ? 1 : (dst > 0 ? -1 : 0);
         }
 

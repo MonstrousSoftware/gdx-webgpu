@@ -4,6 +4,7 @@
 
 // Note this is an uber shader with conditional compilation depending on #define values from the shader prefix
 
+#define USE_IBL
 
 struct DirectionalLight {
     color: vec4f,
@@ -51,6 +52,10 @@ struct MaterialUniforms {
 #ifdef ENVIRONMENT_MAP
     @group(0) @binding(3) var cubeMap:          texture_cube<f32>;
     @group(0) @binding(4) var cubeMapSampler:   sampler;
+#endif
+#ifdef USE_IBL
+    @group(0) @binding(5) var irradianceMap:    texture_cube<f32>;
+    @group(0) @binding(6) var iblSampler:       sampler;
 #endif
 
 // material bindings
@@ -382,3 +387,26 @@ fn BRDF( L : vec3f, V:vec3f, N: vec3f, roughness:f32, metallic:f32, baseColor: v
 }
 
 #endif // PBR
+
+#ifdef USE_IBL
+fn ambientIBL( V:vec3f, N: vec3f, roughness:f32, metallic:f32, baseColor: vec3f) -> vec3f {
+
+    let NdotV : f32 = clamp(dot(N, V), 0.0, 1.0);
+    let F :vec3f    = F_Schlick(NdotV, metallic, baseColor.rgb);
+    // kS = F, kD = 1 - kS;
+    let kD = (vec3f(1.0) - F)*(1.0 - metallic);
+    let lightSample:vec3f = N * vec3f(1, 1, -1);
+    let irradiance:vec3f = textureSample(irradianceMap, iblSampler, lightSample).rgb;
+    let diffuse:vec3f    = irradiance * baseColor.rgb;
+
+//    let maxReflectionLOD:f32 = f32(uFrame.numRoughnessLevels);
+//    let R:vec3f = reflect(-V, N)*vec3f(1, 1, -1);
+//    let prefilteredColor:vec3f = textureSampleLevel(radianceMap, iblSampler, R, roughness * maxReflectionLOD).rgb;
+//    let envBRDF = textureSample(brdfLUT, iblSampler, vec2(NdotV, roughness)).rg;
+//    let specular: vec3f = prefilteredColor * (F * envBRDF.x + envBRDF.y);
+//    let ambient:vec3f    = (kD * diffuse) + specular;
+
+    let ambient:vec3f    = (kD * diffuse);
+    return ambient;
+}
+#endif
