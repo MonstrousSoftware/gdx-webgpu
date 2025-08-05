@@ -59,7 +59,7 @@ public class WgMesh extends Mesh {
      * @param attributes the {@link VertexAttributes}. Each vertex attribute defines one property of a vertex such as position,
      *           normal or texture coordinate
      *
-     * @author Jaroslaw Wisniewski <j.wisniewski@appsisle.com> **/
+     * original author Jaroslaw Wisniewski (j.wisniewski@appsisle.com) **/
     public WgMesh(boolean staticVertices, boolean staticIndices, int maxVertices, int maxIndices, VertexAttributes attributes) {
         this(new WgVertexBuffer(staticVertices, maxVertices, attributes), new WgIndexBuffer(staticIndices, maxIndices), false);
     }

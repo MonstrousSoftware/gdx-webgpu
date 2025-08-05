@@ -43,8 +43,7 @@ import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgModelLoader;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 import com.monstrous.gdx.webgpu.wrappers.SkyBox;
 
-import static com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute.DiffuseCubeMap;
-import static com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute.EnvironmentMap;
+import static com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute.*;
 
 
 /** Test IBL */
@@ -70,6 +69,7 @@ public class ImageBasedLighting extends GdxTest {
     private SkyBox skybox;
     private WgCubemap envCubeMap;
     private WgCubemap diffuseCubeMap;
+    private WgCubemap specularCubeMap;
 
 
 
@@ -87,24 +87,25 @@ public class ImageBasedLighting extends GdxTest {
 
 
         environment = new Environment();
-        float amb = 0.0f;
+        float amb = 0.5f;
         ColorAttribute ambient =  ColorAttribute.createAmbientLight(amb, amb, amb, 1f);
         environment.set(ambient);
 
-        DirectionalLight dirLight1 = new DirectionalLight();
-        dirLight1.setDirection(1f, -.2f, .2f);
-        dirLight1.setColor(Color.WHITE);
-        environment.add(dirLight1);
+//        DirectionalLight dirLight1 = new DirectionalLight();
+//        dirLight1.setDirection(1f, -.2f, .2f);
+//        dirLight1.setColor(Color.WHITE);
+//        environment.add(dirLight1);
 
 
         // Environment map also uses as Sky Box
         //
-        String[] sides = {  "posx.png","negx.png", "posy.png","negy.png", "posz.png", "negz.png"   };
+        String[] sides = {  "posx","negx", "posy","negy", "posz", "negz"   };
         String prefix = "data/IBL/Studio/Studio-envmap_";
+        String extension = ".png";
 
         FileHandle[] fileHandles = new FileHandle[6];
         for(int i = 0; i < sides.length; i++){
-            fileHandles[i] = Gdx.files.internal(prefix + sides[i]);
+            fileHandles[i] = Gdx.files.internal(prefix + sides[i] + extension);
         }
 
         envCubeMap = new WgCubemap(fileHandles[0], fileHandles[1], fileHandles[2], fileHandles[3], fileHandles[4], fileHandles[5], false);
@@ -116,14 +117,32 @@ public class ImageBasedLighting extends GdxTest {
         //
         prefix = "data/IBL/Studio/Studio-irradiance_";
         for(int i = 0; i < sides.length; i++){
-            fileHandles[i] = Gdx.files.internal(prefix + sides[i]);
+            fileHandles[i] = Gdx.files.internal(prefix + sides[i] + extension);
         }
         diffuseCubeMap = new WgCubemap(fileHandles[0], fileHandles[1], fileHandles[2], fileHandles[3], fileHandles[4], fileHandles[5], false);
 
         environment.set(new WgCubemapAttribute(DiffuseCubeMap, diffuseCubeMap));    // irradiance map
 
+        // Specular cube map (radiance map)
+        //
+        prefix = "data/IBL/Studio/Studio-radiance_";
+        String level = "_0";
+        for(int i = 0; i < sides.length; i++){
+            fileHandles[i] = Gdx.files.internal(prefix + sides[i] + level + extension);
+        }
+        specularCubeMap = new WgCubemap(fileHandles[0], fileHandles[1], fileHandles[2], fileHandles[3], fileHandles[4], fileHandles[5], true);
+        // todo needs proper convolution of mip levels
 
+        environment.set(new WgCubemapAttribute(SpecularCubeMap, specularCubeMap));    // radiance map
+
+
+
+
+
+        // Model
+        //
         modelFileName = "data/g3d/gltf/DamagedHelmet/DamagedHelmet.gltf";
+        //modelFileName = "data/g3d/gltf/sphere.gltf";
 
 
         WgModelLoader.ModelParameters params = new WgModelLoader.ModelParameters();

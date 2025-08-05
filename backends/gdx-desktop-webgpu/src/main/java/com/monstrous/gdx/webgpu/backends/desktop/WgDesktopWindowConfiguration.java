@@ -143,7 +143,7 @@ public class WgDesktopWindowConfiguration {
 		this.windowListener = windowListener;
 	}
 
-	/** Sets the app to use fullscreen mode. Use the static methods like {@link Lwjgl3ApplicationConfiguration#getDisplayMode()} on
+	/** Sets the app to use fullscreen mode. Use the static methods like getDisplayMode() on
 	 * this class to enumerate connected monitors and their fullscreen display modes. */
 	public void setFullscreenMode (DisplayMode mode) {
 		this.fullscreenMode = (WgDesktopGraphics.WebGPUDisplayMode)mode;

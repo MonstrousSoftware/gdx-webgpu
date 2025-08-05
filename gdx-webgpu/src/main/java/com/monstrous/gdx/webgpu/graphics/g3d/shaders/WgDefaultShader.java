@@ -81,6 +81,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
     private int frameNumber;
     private int instanceIndex;
     private Color linearFogColor;
+    private final WgTexture brdfLUT;
 
 
     public static class Config {
@@ -127,6 +128,8 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
         hasShadowMap = renderable.environment != null && renderable.environment.shadowMap != null;
         hasCubeMap = renderable.environment != null && renderable.environment.has(WgCubemapAttribute.EnvironmentMap);
+        final boolean hasDiffuseCubeMap = renderable.environment != null && renderable.environment.has(WgCubemapAttribute.DiffuseCubeMap);
+        final boolean hasSpecularCubeMap = renderable.environment != null && renderable.environment.has(WgCubemapAttribute.SpecularCubeMap);
 
         // Create uniform buffer for global (per-frame) uniforms, e.g. projection matrix, camera position, etc.
         uniformBufferSize = (16 + 16 + 4 + 4 +4+4 +   +32
@@ -144,7 +147,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
         binder = new Binder();
         // define groups
-        binder.defineGroup(0, createFrameBindGroupLayout(uniformBufferSize, hasShadowMap, hasCubeMap));
+        binder.defineGroup(0, createFrameBindGroupLayout(uniformBufferSize, hasShadowMap, hasCubeMap, hasDiffuseCubeMap, hasSpecularCubeMap));
         binder.defineGroup(1, createMaterialBindGroupLayout(materialSize));
         binder.defineGroup(2, createInstancingBindGroupLayout());
 
@@ -159,6 +162,18 @@ public class WgDefaultShader extends WgShader implements Disposable {
             binder.defineBinding("cubeMap", 0, 3);
             binder.defineBinding("cubeSampler", 0, 4);
         }
+        if(hasDiffuseCubeMap) {
+            binder.defineBinding("irradianceMap", 0, 5);
+            binder.defineBinding("irradianceSampler", 0, 6);
+        }
+        if(hasSpecularCubeMap) {
+            binder.defineBinding("radianceMap", 0, 7);
+            binder.defineBinding("radianceSampler", 0, 8);
+            binder.defineBinding("brdfLUT", 0, 9);
+            binder.defineBinding("lutSampler", 0, 10);
+            brdfLUT = new WgTexture(Gdx.files.internal("brdfLUT.png"));
+        } else
+            brdfLUT = null;
 
 
         binder.defineBinding("materialUniforms", 1, 0);
@@ -207,6 +222,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         binder.defineUniform("shadowPcfOffset", 0, 0, offset); offset += 4;
         binder.defineUniform("shadowBias", 0, 0, offset); offset += 4;
         binder.defineUniform("normalMapStrength", 0, 0, offset); offset += 4;
+        binder.defineUniform("numRoughnessLevels", 0, 0, offset); offset += 4;
 
 
 
@@ -550,7 +566,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         numMaterials++;
     }
 
-    private WebGPUBindGroupLayout createFrameBindGroupLayout(int uniformBufferSize, boolean hasShadowMap, boolean hasCubeMap) {
+    private WebGPUBindGroupLayout createFrameBindGroupLayout(int uniformBufferSize, boolean hasShadowMap, boolean hasCubeMap, boolean hasDiffuseCubeMap, boolean hasSpecularCubeMap) {
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch bind group layout (frame)");
         layout.begin();
         layout.addBuffer(0, WGPUShaderStage.Vertex.or(WGPUShaderStage.Fragment), WGPUBufferBindingType.Uniform, uniformBufferSize, false);
@@ -561,6 +577,16 @@ public class WgDefaultShader extends WgShader implements Disposable {
         if(hasCubeMap) {
             layout.addTexture(3, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension.Cube, false);
             layout.addSampler(4, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering);
+        }
+        if(hasDiffuseCubeMap) {
+            layout.addTexture(5, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension.Cube, false);
+            layout.addSampler(6, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering);
+        }
+        if(hasSpecularCubeMap) {
+            layout.addTexture(7, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension.Cube, false);
+            layout.addSampler(8, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering);
+            layout.addTexture(9, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D, false);
+            layout.addSampler(10, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering );
         }
         layout.end();
         return layout;
@@ -578,6 +604,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         layout.addSampler(6, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering );
         layout.addTexture(7, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D, false);
         layout.addSampler(8, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering );
+
         layout.end();
         return layout;
     }
@@ -698,14 +725,24 @@ public class WgDefaultShader extends WgShader implements Disposable {
             binder.setSampler("cubeSampler", cubeMap.getSampler());
         }
 
-//
-//        final WgCubemapAttribute irradianceMapAttribute = lights.get(WgCubemapAttribute.class, WgCubemapAttribute.EnvironmentMap);
-//        if ( cubemapAttribute != null) {
-//            //System.out.println("Setting cube map via binder");
-//            WgTexture cubeMap = cubemapAttribute.textureDescription.texture;
-//            binder.setTexture("cubeMap", cubeMap.getTextureView());
-//            binder.setSampler("cubeSampler", cubeMap.getSampler());
-//        }
+
+        final WgCubemapAttribute diffuseCubeMapAttribute = lights.get(WgCubemapAttribute.class, WgCubemapAttribute.DiffuseCubeMap);
+        if ( diffuseCubeMapAttribute != null) {
+            //System.out.println("Setting cube map via binder");
+            WgTexture cubeMap = diffuseCubeMapAttribute.textureDescription.texture;
+            binder.setTexture("irradianceMap", cubeMap.getTextureView());
+            binder.setSampler("irradianceSampler", cubeMap.getSampler());
+        }
+        final WgCubemapAttribute specularCubeMapAttribute = lights.get(WgCubemapAttribute.class, WgCubemapAttribute.SpecularCubeMap);
+        if ( specularCubeMapAttribute != null) {
+            //System.out.println("Setting cube map via binder");
+            WgTexture cubeMap = specularCubeMapAttribute.textureDescription.texture;
+            binder.setTexture("radianceMap", cubeMap.getTextureView());
+            binder.setSampler("radianceSampler", cubeMap.getSampler());
+            binder.setTexture("brdfLUT", brdfLUT.getTextureView());
+            binder.setSampler("lutSampler", brdfLUT.getSampler());
+            binder.setUniform("numRoughnessLevels", cubeMap.getMipLevelCount());
+        }
     }
 
 

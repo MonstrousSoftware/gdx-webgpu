@@ -142,7 +142,11 @@ public class SkyBox implements Disposable {
     protected void writeUniforms( WebGPUUniformBuffer uniformBuffer, Camera camera ){
         invertedProjectionView.set(camera.combined);
         invertedProjectionView.setTranslation(Vector3.Zero);
-        invertedProjectionView.inv();
+        try {
+            invertedProjectionView.inv();
+        } catch(RuntimeException e){        // don't crash on non-invertible matrix, just skip the update
+            return;
+        }
 
         uniformBuffer.set(0, invertedProjectionView);
         uniformBuffer.flush();

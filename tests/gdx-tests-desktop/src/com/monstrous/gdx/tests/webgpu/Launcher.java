@@ -17,6 +17,7 @@ public class Launcher {
         config.backend = WebGPUContext.Backend.DEFAULT; // Vulkan, DX12, etc.
 
         config.enableGPUtiming = false;
+        //config.samples = 4;
 
         config.useVsync(false);
 
