@@ -73,6 +73,10 @@ public class ShaderPrefix {
             }
         }
 
+        // todo select this based on material
+
+        sb.append("#define PBR\n");
+
 
         sb.append("#define SPECULAR\n");
 

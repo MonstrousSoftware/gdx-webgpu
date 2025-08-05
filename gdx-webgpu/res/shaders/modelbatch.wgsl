@@ -4,7 +4,6 @@
 
 // Note this is an uber shader with conditional compilation depending on #define values from the shader prefix
 
-#define PBR
 
 struct DirectionalLight {
     color: vec4f,
@@ -201,7 +200,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
     let roughness : f32 = mrSample.g * material.roughnessFactor;
     let metallic : f32 = mrSample.b * material.metallicFactor;
 
-    let shininess : f32 = material.shininess;   // superseded by roughness?
+    let shininess : f32 = material.shininess;   // used instead of roughness for non-PBR
 
     let ambientLight : vec3f = uFrame.ambientLight.rgb;
 
@@ -219,7 +218,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
             let light = uFrame.directionalLights[i];
 
             let lightVec = -normalize(light.direction.xyz);       // L is vector towards light
-            let irradiance = max(dot(lightVec, normal), 0.0); //* light.intensity.x;?
+            let irradiance = max(dot(lightVec, normal), 0.0);
 #ifdef PBR
             if(irradiance > 0.0) {
                 radiance += BRDF(lightVec, viewVec, normal, roughness, metallic, baseColor.rgb) * irradiance *  light.color.rgb;
