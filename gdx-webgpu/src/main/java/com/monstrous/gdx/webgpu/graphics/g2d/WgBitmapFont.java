@@ -87,6 +87,10 @@ public class WgBitmapFont extends BitmapFont {
 		setOwnsTexture(pageRegions == null || pageRegions.size == 0);
 	}
 
+    public WgBitmapFont (FileHandle fontFile, TextureRegion region, boolean flip) {
+        this(new BitmapFontData(fontFile, flip), region, true);
+    }
+
 	// intercept the creation of Textures
 	private static Array<TextureRegion> buildRegions(BitmapFontData data, Array<TextureRegion> pageRegions){
 		if(pageRegions != null && pageRegions.size > 0)

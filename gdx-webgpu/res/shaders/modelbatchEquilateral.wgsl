@@ -53,5 +53,5 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
     let uv:vec2f = sampleSphericalMap(normalize(in.localPos.xyz));
     let color = textureSample(albedoTexture, textureSampler, uv).rgb;
 
-    return vec4f(1, 0, 0, 1);
+    return vec4f(color, 1);
 }

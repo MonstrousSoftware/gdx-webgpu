@@ -22,13 +22,11 @@ import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.VertexAttributes;
-import com.badlogic.gdx.graphics.g3d.Environment;
-import com.badlogic.gdx.graphics.g3d.Material;
-import com.badlogic.gdx.graphics.g3d.Model;
-import com.badlogic.gdx.graphics.g3d.ModelInstance;
+import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
+import com.badlogic.gdx.graphics.g3d.utils.BaseShaderProvider;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Vector3;
@@ -50,6 +48,7 @@ import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.PBRFloatAttribute;
 import com.monstrous.gdx.webgpu.graphics.g3d.environment.ibl.IBLGenerator;
+import com.monstrous.gdx.webgpu.graphics.g3d.environment.ibl.IBLShader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLBModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLTFModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgModelLoader;
@@ -90,8 +89,20 @@ public class IBLTest2 extends GdxTest {
 
     WgTexture equiRectangular;
     //private WgCubemap skybox;
+    IBLGenerator ibl;
 
+    public static class MyShaderProvider extends BaseShaderProvider {
+        public final IBLShader.Config config = new IBLShader.Config("");
 
+        public MyShaderProvider(String shaderSource) {
+            config.shaderSource = shaderSource;
+        }
+
+        @Override
+        protected Shader createShader (final Renderable renderable) {
+            return new IBLShader(renderable, config);
+        }
+    };
 
     // application
 	public void create () {
@@ -100,8 +111,12 @@ public class IBLTest2 extends GdxTest {
 
         batch = new WgSpriteBatch();
 
-		modelBatch = new WgModelBatch();
+        String shaderSource = Gdx.files.internal("shaders/modelbatchEquilateral.wgsl").readString();
+        modelBatch = new WgModelBatch(new IBLGenerator.MyShaderProvider(shaderSource));
+
+		//modelBatch = new WgModelBatch();
 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        //cam = new PerspectiveCamera(90, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		cam.position.set(0, 0, 3f);
 		cam.lookAt(0,0,0);
 		cam.near = 0.001f;
@@ -121,7 +136,7 @@ public class IBLTest2 extends GdxTest {
 
         equiRectangular = new WgTexture(Gdx.files.internal("data/IBL/living-room.jpg"));
 
-        IBLGenerator ibl = new IBLGenerator();
+        ibl = new IBLGenerator();
         envCubeMap = ibl.buildCubeMapFromEquirectangularTexture(equiRectangular, 128);
 
         skybox = new SkyBox(envCubeMap);
@@ -138,7 +153,7 @@ public class IBLTest2 extends GdxTest {
         }
 
         envCubeMap = new WgCubemap(fileHandles[0], fileHandles[1], fileHandles[2], fileHandles[3], fileHandles[4], fileHandles[5], false);
-        //skybox = new SkyBox(envCubeMap);
+//        skybox = new SkyBox(envCubeMap);
 
 //        environment.set(new WgCubemapAttribute(EnvironmentMap, envCubeMap));    // add cube map attribute as environment,i.e. for reflections
 //
@@ -199,7 +214,7 @@ public class IBLTest2 extends GdxTest {
 
 
         WgTexture tex = new WgTexture(Gdx.files.internal("data/badlogic.jpg"));
-        Material material = new Material(TextureAttribute.createDiffuse(tex));
+        Material material = new Material(TextureAttribute.createDiffuse(equiRectangular));
         Model cube = buildUnitCube(material);
         cubeInstance = new ModelInstance(cube);
 
@@ -294,14 +309,24 @@ public class IBLTest2 extends GdxTest {
 		float delta = Gdx.graphics.getDeltaTime();
 		instance.transform.rotate(Vector3.Y, 15f*delta);
 
+//        cam = new PerspectiveCamera(90, 1, 1);
+//        cam.position.set(0,0,0);
+//        cam.direction.set(0,0,1);
+        cam.update();
+
 		WgScreenUtils.clear(Color.DARK_GRAY, true);
 
-        batch.begin();
-        batch.draw(equiRectangular,0,0);
-        batch.end();
+//        batch.begin();
+//        batch.draw(ibl.textureSides[1],0,0, 128, 128);
+//        batch.end();
 
 		cam.update();
-		modelBatch.begin(cam);
+
+        //System.out.println("cam pos "+cam.position+" dir:"+cam.direction);
+
+        modelBatch.begin(cam);
+
+
 
 		//modelBatch.render(instance, environment);
         modelBatch.render(cubeInstance, environment);
@@ -325,8 +350,8 @@ public class IBLTest2 extends GdxTest {
 //            font.draw(batch, "GPU time (pass "+pass+" "+webgpu.getGPUTimer().getPassName(pass)+") : "+(int)webgpu.getAverageGPUtime(pass)+ " microseconds" ,0, y -= 20);
 //        batch.end();
 
-        stage.act();
-        stage.draw();
+//        stage.act();
+//        stage.draw();
 
 	}
 

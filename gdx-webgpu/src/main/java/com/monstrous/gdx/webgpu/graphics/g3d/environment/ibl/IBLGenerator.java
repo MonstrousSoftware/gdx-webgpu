@@ -27,6 +27,7 @@ import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.utils.BaseShaderProvider;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ShaderProvider;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Disposable;
 import com.github.xpenatan.webgpu.*;
@@ -46,9 +47,9 @@ public class IBLGenerator implements Disposable {
     private final PerspectiveCamera snapCam;
     private final WebGPUContext webgpu;
     private final WgModelBatch modelBatch;
+    public WgTexture[] textureSides;
 
     public static class MyShaderProvider extends BaseShaderProvider {
-
         public final IBLShader.Config config = new IBLShader.Config("");
 
         public MyShaderProvider(String shaderSource) {
@@ -65,22 +66,12 @@ public class IBLGenerator implements Disposable {
         WgGraphics gfx = (WgGraphics)Gdx.graphics;
         webgpu = gfx.getContext();
 
-        snapCam = new PerspectiveCamera(90, 1, 1);
+        snapCam = new PerspectiveCamera(90, 128, 128);
         snapCam.position.set(0,0,-1);
         snapCam.direction.set(0,0,1);
         snapCam.update();
 
-//        WgTexture equiRectangular = new WgTexture(Gdx.files.internal("data/IBL/living-room.jpg"));
-//        Material material = new Material(TextureAttribute.createDiffuse(equiRectangular));
-//        Model cube = buildUnitCube(material);
-//        ModelInstance cubeInstance = new ModelInstance(cube);
-//        Renderable renderable = new Renderable();
-//        cubeInstance.getRenderable(renderable);
-
         String shaderSource = Gdx.files.internal("shaders/modelbatchEquilateral.wgsl").readString();
-
-       // IBLShader shader = new IBLShader(renderable, shaderSource);
-
 
         modelBatch = new WgModelBatch(new MyShaderProvider(shaderSource));
     }
@@ -98,7 +89,7 @@ public class IBLGenerator implements Disposable {
         encoderDesc.setLabel("A Command Encoder");
         webgpu.device.createCommandEncoder(encoderDesc, webgpu.encoder);
 
-        WgTexture[] textureSides = new WgTexture[6];
+        textureSides = new WgTexture[6];
         constructSideTextures(cubeInstance, textureSize, textureSides);
         WgCubemap environmentMap = copyTextures(textureSize, false, textureSides);
 
@@ -200,6 +191,7 @@ public class IBLGenerator implements Disposable {
 
             // render to texture
             WebGPUContext.RenderOutputState save = webgpu.pushTargetView(textureSides[side], depthTexture);
+
             modelBatch.begin(snapCam);
             modelBatch.render(instance);
             modelBatch.end();
@@ -213,10 +205,11 @@ public class IBLGenerator implements Disposable {
     /** copy 6 textures (textureSides[]) into a new cube map */
     private WgCubemap copyTextures(int size, boolean useMipmaps, WgTexture[] textureSides) {
         Pixmap pixmap = new Pixmap(size, size, Pixmap.Format.RGBA8888);
-        pixmap.setColor(Color.YELLOW);
-        pixmap.fill();
+
         WgCubemap cube = new WgCubemap(size, useMipmaps, WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst));
         for (int side = 0; side < 6; side++) {
+            pixmap.setColor(MathUtils.random(), MathUtils.random(),MathUtils.random(), 1);
+            pixmap.fill();
             cube.load(pixmap.getPixels(), pixmap.getWidth(), pixmap.getHeight(), side);
         }
         return copyTextures(cube, size, textureSides, 0);

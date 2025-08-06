@@ -32,6 +32,7 @@ import com.badlogic.gdx.utils.Json.ReadOnlySerializer;
 import com.badlogic.gdx.utils.reflect.ClassReflection;
 import com.badlogic.gdx.utils.reflect.Method;
 import com.badlogic.gdx.utils.reflect.ReflectionException;
+import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgTextureAtlas;
 
 
@@ -549,17 +550,17 @@ public class WgSkin extends Skin {
 					BitmapFont font;
 					Array<TextureRegion> regions = skin.getRegions(regionName);
 					if (regions != null)
-						font = new BitmapFont(new BitmapFontData(fontFile, flip), regions, true);
+						font = new WgBitmapFont(new BitmapFontData(fontFile, flip), regions, true);
 					else {
 						TextureRegion region = skin.optional(regionName, TextureRegion.class);
 						if (region != null)
-							font = new BitmapFont(fontFile, region, flip);
+							font = new WgBitmapFont(fontFile, region, flip);
 						else {
 							FileHandle imageFile = fontFile.parent().child(regionName + ".png");
 							if (imageFile.exists())
-								font = new BitmapFont(fontFile, imageFile, flip);
+								font = new WgBitmapFont(fontFile, imageFile, flip);
 							else
-								font = new BitmapFont(fontFile, flip);
+								font = new WgBitmapFont(fontFile, flip);
 						}
 					}
 					font.getData().markupEnabled = markupEnabled;

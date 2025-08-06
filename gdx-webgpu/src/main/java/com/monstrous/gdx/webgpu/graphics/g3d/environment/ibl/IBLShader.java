@@ -17,6 +17,7 @@
 package com.monstrous.gdx.webgpu.graphics.g3d.environment.ibl;
 
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.*;
@@ -25,6 +26,8 @@ import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.github.xpenatan.webgpu.*;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.Binder;
 import com.monstrous.gdx.webgpu.graphics.WgMesh;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
@@ -87,9 +90,12 @@ public class IBLShader extends WgShader implements Disposable {
         PipelineSpecification pipelineSpec = new PipelineSpecification(vertexAttributes, config.shaderSource);
         pipelineSpec.name = "IBL Gen pipeline";
         pipelineSpec.disableBlending();
-        pipelineSpec.cullMode = WGPUCullMode.Back;
+        pipelineSpec.cullMode = WGPUCullMode.None;
         pipelineSpec.environment = renderable.environment;
-        pipelineSpec.colorFormat = WGPUTextureFormat.RGBA8Unorm;
+        WgGraphics gfx = (WgGraphics) Gdx.graphics;
+        WebGPUContext webgpu = gfx.getContext();
+
+        pipelineSpec.colorFormat = webgpu.surfaceFormat; //WGPUTextureFormat.BGRA8Unorm;
 
         pipeline = new WebGPUPipeline(pipelineLayout, pipelineSpec);
     }

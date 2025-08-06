@@ -25,7 +25,7 @@ public class Launcher {
         //new WgDesktopApplication(new ColorTest(), config);
         //new WgDesktopApplication(new TransparencyTest(), config);
 
-        new WgDesktopApplication(new SkinLoadTest(), config);
+        new WgDesktopApplication(new IBLTest2(), config);
         //new WgDesktopApplication(new FontTest(), config);
         //new WgDesktopApplication(new FullScreenTest(), config);
     }
