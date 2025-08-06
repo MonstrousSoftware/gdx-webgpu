@@ -75,14 +75,14 @@ public class WgTexture extends Texture {
     }
 
     // for cube map or texture array
-    public WgTexture(String label, int width, int height, int numLayers, boolean useMipMaps, boolean renderAttachment ) {
+    public WgTexture(String label, int width, int height, int numLayers, boolean useMipMaps, WGPUTextureUsage textureUsage ) {
         this.data = new WgTextureData(width, height, useMipMaps, 0, 0);
         this.label = label;
 
         this.numSamples = 1;
-        WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst);
-        if (renderAttachment)
-            textureUsage = textureUsage.or(WGPUTextureUsage.RenderAttachment);
+//        WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst);
+//        if (renderAttachment)
+//            textureUsage = textureUsage.or(WGPUTextureUsage.RenderAttachment);
 
         create( label, useMipMaps, textureUsage, WGPUTextureFormat.RGBA8UnormSrgb, numLayers, numSamples, null);
     }

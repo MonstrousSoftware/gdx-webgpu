@@ -1,0 +1,195 @@
+/*******************************************************************************
+ * Copyright 2025 Monstrous Software.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ******************************************************************************/
+
+package com.monstrous.gdx.webgpu.graphics.g3d.environment.ibl;
+
+
+import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.g3d.*;
+import com.badlogic.gdx.graphics.g3d.attributes.*;
+import com.badlogic.gdx.graphics.g3d.model.MeshPart;
+import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
+import com.badlogic.gdx.utils.Disposable;
+import com.badlogic.gdx.utils.GdxRuntimeException;
+import com.github.xpenatan.webgpu.*;
+import com.monstrous.gdx.webgpu.graphics.Binder;
+import com.monstrous.gdx.webgpu.graphics.WgMesh;
+import com.monstrous.gdx.webgpu.graphics.WgTexture;
+import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgShader;
+import com.monstrous.gdx.webgpu.wrappers.*;
+
+
+/** Simple shader for IBL generation.
+ *
+ * Supports only diffuse texture for materials and ignores environment.
+ * */
+
+public class IBLShader extends WgShader implements Disposable {
+
+    public final Binder binder;
+    private final WebGPUUniformBuffer uniformBuffer;
+    private final WebGPUPipeline pipeline;
+    private WebGPURenderPass renderPass;
+
+    public static class Config {
+        public String shaderSource;
+
+        public Config(String shaderSource) {
+            this.shaderSource = shaderSource;
+        }
+    }
+
+    public IBLShader(final Renderable renderable, Config config) {
+
+        // Create uniform buffer for global (per-frame) uniforms, i.e. projectionView matrix
+        final int uniformBufferSize = 16 * Float.BYTES;
+        uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Uniform));
+
+
+        binder = new Binder();
+        // define groups
+        binder.defineGroup(0, createFrameBindGroupLayout(uniformBufferSize));
+        binder.defineGroup(1, createMaterialBindGroupLayout());
+
+
+        // define bindings in the groups
+        // must match with shader code
+        binder.defineBinding("uniforms", 0, 0);
+        binder.defineBinding("diffuseTexture", 1, 1);
+        binder.defineBinding("diffuseSampler", 1, 2);
+
+        // set binding 0 to uniform buffer
+        binder.setBuffer("uniforms", uniformBuffer, 0, uniformBufferSize);
+
+        // define uniforms in uniform buffers with their offset
+        // frame uniforms
+        int offset = 0;
+        binder.defineUniform("projectionViewTransform", 0, 0, offset); offset += 16*4;
+
+        // get pipeline layout which aggregates all the bind group layouts
+        WGPUPipelineLayout pipelineLayout = binder.getPipelineLayout("IBL Gen pipeline layout");
+
+        // vertexAttributes will be set from the renderable
+        VertexAttributes vertexAttributes = renderable.meshPart.mesh.getVertexAttributes();
+        PipelineSpecification pipelineSpec = new PipelineSpecification(vertexAttributes, config.shaderSource);
+        pipelineSpec.name = "IBL Gen pipeline";
+        pipelineSpec.disableBlending();
+        pipelineSpec.cullMode = WGPUCullMode.Back;
+        pipelineSpec.environment = renderable.environment;
+        pipelineSpec.colorFormat = WGPUTextureFormat.RGBA8Unorm;
+
+        pipeline = new WebGPUPipeline(pipelineLayout, pipelineSpec);
+    }
+
+
+    @Override
+    public void init() {
+
+    }
+
+    @Override
+    public void begin(Camera camera, RenderContext context) {
+        throw new IllegalArgumentException("Use begin(Camera, WebGPURenderPass)");
+    }
+
+    public void begin(Camera camera, Renderable renderable, WebGPURenderPass renderPass){
+        this.renderPass = renderPass;
+
+        binder.setUniform("projectionViewTransform", camera.combined);
+        uniformBuffer.flush();
+        // bind group 0 (frame) once per frame
+        binder.bindGroup(renderPass, 0);
+
+        renderPass.setPipeline(pipeline);
+    }
+
+    @Override
+    public int compareTo(Shader other) {
+        return 0;
+    }
+
+
+    @Override
+    public boolean canRender(Renderable renderable) {
+        return true;
+    }
+
+    @Override
+    public void render (Renderable renderable) {
+        if (renderable.worldTransform.det3x3() == 0) return;
+
+        applyMaterial(renderable.material);
+        final WgMesh mesh = (WgMesh) renderable.meshPart.mesh;
+        final MeshPart meshPart = renderable.meshPart;
+        mesh.render(renderPass, meshPart.primitiveType, meshPart.offset, meshPart.size, 1, 0);
+    }
+
+    @Override
+    public void render(Renderable renderable, Attributes attributes) {
+        render(renderable);
+    }
+
+    @Override
+    public void end(){
+    }
+
+    private void applyMaterial(Material material){
+        // diffuse texture
+        WgTexture diffuseTexture;
+        if(material.has(TextureAttribute.Diffuse)) {
+            TextureAttribute ta = (TextureAttribute) material.get(TextureAttribute.Diffuse);
+            assert ta != null;
+            Texture tex = ta.textureDescription.texture;
+            diffuseTexture = (WgTexture)tex;
+            diffuseTexture.setWrap(ta.textureDescription.uWrap, ta.textureDescription.vWrap);
+            diffuseTexture.setFilter(ta.textureDescription.minFilter, ta.textureDescription.magFilter);
+
+            binder.setTexture("diffuseTexture", diffuseTexture.getTextureView());
+            binder.setSampler("diffuseSampler", diffuseTexture.getSampler());
+        } else {
+            throw new GdxRuntimeException("IBLShader: Diffuse Texture not set");
+        }
+
+        binder.bindGroup(renderPass, 1);
+    }
+
+    private WebGPUBindGroupLayout createFrameBindGroupLayout(int uniformBufferSize) {
+        WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch bind group layout (frame)");
+        layout.begin();
+        layout.addBuffer(0, WGPUShaderStage.Vertex.or(WGPUShaderStage.Fragment), WGPUBufferBindingType.Uniform, uniformBufferSize, false);
+        layout.end();
+        return layout;
+    }
+
+    private WebGPUBindGroupLayout createMaterialBindGroupLayout() {
+        WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch bind group layout (material)");
+        layout.begin();
+        layout.addTexture(1, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D, false);
+        layout.addSampler(2, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering );
+        layout.end();
+        return layout;
+    }
+
+
+    @Override
+    public void dispose() {
+        binder.dispose();
+        uniformBuffer.dispose();
+    }
+
+
+
+}

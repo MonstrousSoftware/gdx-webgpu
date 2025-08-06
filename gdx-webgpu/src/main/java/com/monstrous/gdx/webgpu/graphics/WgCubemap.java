@@ -21,6 +21,7 @@ import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.glutils.PixmapTextureData;
 import com.github.xpenatan.webgpu.WGPUTextureFormat;
+import com.github.xpenatan.webgpu.WGPUTextureUsage;
 import com.monstrous.gdx.webgpu.graphics.utils.WgFacedCubemapData;
 
 
@@ -80,9 +81,14 @@ public class WgCubemap extends WgTexture {
 
     /** Construct a Cubemap based on the given CubemapData. */
     public WgCubemap(WgCubemapData data, boolean useMipMaps) {
-        super("cubemap", data.getWidth(), data.getHeight(), 6, useMipMaps, false);
+        super("cubemap", data.getWidth(), data.getHeight(), 6, useMipMaps, WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst));
         this.cubemapData = data;
         load(data);
+    }
+
+    /** Construct an empty Cubemap texture of given size. */
+    public WgCubemap(int size,  boolean useMipMaps, WGPUTextureUsage textureUsage) {
+        super("cubemap", size, size, 6, useMipMaps, textureUsage);
     }
 
     /** Sets the sides of this cubemap to the specified {@link CubemapData}. */

@@ -192,6 +192,7 @@ public class Binder implements Disposable {
         if(mapping == null) throw new RuntimeException("Uniform name "+name+" not defined.");
         if(mapping.offset < 0) throw new RuntimeException("Uniform name "+name+" is not defined in a uniform buffer.");
         BufferInfo bufferInfo = buffers.get(combine(mapping.groupId, mapping.bindingId));
+        if(bufferInfo == null) throw new RuntimeException("Uniform buffer not defined for group "+mapping.groupId+", binding "+mapping.bindingId);
         WebGPUUniformBuffer buffer = bufferInfo.buffer;
         buffer.set(bufferInfo.offset + mapping.offset , matrix);
     }

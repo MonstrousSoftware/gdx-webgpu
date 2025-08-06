@@ -21,12 +21,16 @@ import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
+import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.Environment;
+import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
+import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
@@ -40,14 +44,17 @@ import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.WgCubemap;
+import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.PBRFloatAttribute;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute;
+import com.monstrous.gdx.webgpu.graphics.g3d.environment.ibl.IBLGenerator;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLBModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLTFModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgModelLoader;
+import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 import com.monstrous.gdx.webgpu.scene2d.WgSkin;
 import com.monstrous.gdx.webgpu.scene2d.WgStage;
@@ -82,13 +89,19 @@ public class IBLTest extends GdxTest {
     private WgCubemap specularCubeMap;
     private WgStage stage;
     private WgSkin skin;
+    ModelInstance cubeInstance;
+
+    WgTexture equiRectangular;
+    //private WgCubemap skybox;
 
 
 
-	// application
+    // application
 	public void create () {
         gfx = (WgGraphics) Gdx.graphics;
         webgpu = gfx.getContext();
+
+        batch = new WgSpriteBatch();
 
 		modelBatch = new WgModelBatch();
 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -96,6 +109,7 @@ public class IBLTest extends GdxTest {
 		cam.lookAt(0,0,0);
 		cam.near = 0.001f;
 		cam.far = 100f;
+        cam.update();
 
 
         environment = new Environment();
@@ -108,6 +122,12 @@ public class IBLTest extends GdxTest {
         dirLight1.setColor(Color.WHITE);
         environment.add(dirLight1);
 
+        equiRectangular = new WgTexture(Gdx.files.internal("data/IBL/living-room.jpg"));
+
+        IBLGenerator ibl = new IBLGenerator();
+        envCubeMap = ibl.buildCubeMapFromEquirectangularTexture(equiRectangular, 128);
+
+        skybox = new SkyBox(envCubeMap);
 
         // Environment map also uses as Sky Box
         //
@@ -121,31 +141,31 @@ public class IBLTest extends GdxTest {
         }
 
         envCubeMap = new WgCubemap(fileHandles[0], fileHandles[1], fileHandles[2], fileHandles[3], fileHandles[4], fileHandles[5], false);
-        skybox = new SkyBox(envCubeMap);
+        //skybox = new SkyBox(envCubeMap);
 
-        environment.set(new WgCubemapAttribute(EnvironmentMap, envCubeMap));    // add cube map attribute as environment,i.e. for reflections
-
-        // Diffuse cube map (irradiance map)
-        //
-        prefix = "data/IBL/Studio/Studio-irradiance_";
-        for(int i = 0; i < sides.length; i++){
-            fileHandles[i] = Gdx.files.internal(prefix + sides[i] + extension);
-        }
-        diffuseCubeMap = new WgCubemap(fileHandles[0], fileHandles[1], fileHandles[2], fileHandles[3], fileHandles[4], fileHandles[5], false);
-
-        environment.set(new WgCubemapAttribute(DiffuseCubeMap, diffuseCubeMap));    // irradiance map
-
-        // Specular cube map (radiance map)
-        //
-        prefix = "data/IBL/Studio/Studio-radiance_";
-        String level = "_0";
-        for(int i = 0; i < sides.length; i++){
-            fileHandles[i] = Gdx.files.internal(prefix + sides[i] + level + extension);
-        }
-        specularCubeMap = new WgCubemap(fileHandles[0], fileHandles[1], fileHandles[2], fileHandles[3], fileHandles[4], fileHandles[5], true);
-        // todo needs proper convolution of mip levels
-
-        environment.set(new WgCubemapAttribute(SpecularCubeMap, specularCubeMap));    // radiance map
+//        environment.set(new WgCubemapAttribute(EnvironmentMap, envCubeMap));    // add cube map attribute as environment,i.e. for reflections
+//
+//        // Diffuse cube map (irradiance map)
+//        //
+//        prefix = "data/IBL/Studio/Studio-irradiance_";
+//        for(int i = 0; i < sides.length; i++){
+//            fileHandles[i] = Gdx.files.internal(prefix + sides[i] + extension);
+//        }
+//        diffuseCubeMap = new WgCubemap(fileHandles[0], fileHandles[1], fileHandles[2], fileHandles[3], fileHandles[4], fileHandles[5], false);
+//
+//        environment.set(new WgCubemapAttribute(DiffuseCubeMap, diffuseCubeMap));    // irradiance map
+//
+//        // Specular cube map (radiance map)
+//        //
+//        prefix = "data/IBL/Studio/Studio-radiance_";
+//        String level = "_0";
+//        for(int i = 0; i < sides.length; i++){
+//            fileHandles[i] = Gdx.files.internal(prefix + sides[i] + level + extension);
+//        }
+//        specularCubeMap = new WgCubemap(fileHandles[0], fileHandles[1], fileHandles[2], fileHandles[3], fileHandles[4], fileHandles[5], true);
+//        // todo needs proper convolution of mip levels
+//
+//        environment.set(new WgCubemapAttribute(SpecularCubeMap, specularCubeMap));    // radiance map
 
 
 
@@ -180,6 +200,17 @@ public class IBLTest extends GdxTest {
         instance.materials.get(0).set(new ColorAttribute(ColorAttribute.Diffuse, Color.RED));
 
 
+
+        WgTexture tex = new WgTexture(Gdx.files.internal("data/badlogic.jpg"));
+        Material material = new Material(TextureAttribute.createDiffuse(tex));
+        Model cube = buildUnitCube(material);
+        cubeInstance = new ModelInstance(cube);
+
+
+
+
+
+
         numMeshes = instance.model.meshes.size;
         for(int i = 0; i < numMeshes; i++){
             numVerts += instance.model.meshes.get(i).getNumVertices();
@@ -204,6 +235,14 @@ public class IBLTest extends GdxTest {
         Gdx.input.setInputProcessor(im);
 
 	}
+
+
+    private Model buildUnitCube(Material material ){
+
+        ModelBuilder modelBuilder = new WgModelBuilder();
+        return modelBuilder.createBox(1f, 1f, 1f, material,
+            VertexAttributes.Usage.Position | VertexAttributes.Usage.TextureCoordinates);
+    }
 
     private void rebuildStage(){
         stage.clear();
@@ -260,29 +299,34 @@ public class IBLTest extends GdxTest {
 
 		WgScreenUtils.clear(Color.DARK_GRAY, true);
 
+        batch.begin();
+        batch.draw(equiRectangular,0,0);
+        batch.end();
+
 		cam.update();
 		modelBatch.begin(cam);
 
-		modelBatch.render(instance, environment);
+		//modelBatch.render(instance, environment);
+        modelBatch.render(cubeInstance, environment);
 
 		modelBatch.end();
-
+//
         skybox.renderPass(cam);
-
-        viewport.apply();
-        batch.setProjectionMatrix(viewport.getCamera().combined);
-		batch.begin();
-        int y = 200;
-		font.draw(batch, "Model loaded: "+modelFileName , 0, y-=20);
-        font.draw(batch, "Meshes: "+numMeshes , 0, y-=20);
-        font.draw(batch, "Vertices: "+numVerts , 0, y-=20);
-        font.draw(batch, "Indices: "+numIndices , 0, y-=20);
-        font.draw(batch, "FPS: "+Gdx.graphics.getFramesPerSecond() ,0, y -= 20);
-        font.draw(batch, "delta time: "+(int)(1000000/(Gdx.graphics.getFramesPerSecond()+0.001f))+" microseconds",0, y -= 20);
-
-        for(int pass = 0; pass < webgpu.getGPUTimer().getNumPasses(); pass++)
-            font.draw(batch, "GPU time (pass "+pass+" "+webgpu.getGPUTimer().getPassName(pass)+") : "+(int)webgpu.getAverageGPUtime(pass)+ " microseconds" ,0, y -= 20);
-        batch.end();
+//
+//        viewport.apply();
+//        batch.setProjectionMatrix(viewport.getCamera().combined);
+//		batch.begin();
+//        int y = 200;
+//		font.draw(batch, "Model loaded: "+modelFileName , 0, y-=20);
+//        font.draw(batch, "Meshes: "+numMeshes , 0, y-=20);
+//        font.draw(batch, "Vertices: "+numVerts , 0, y-=20);
+//        font.draw(batch, "Indices: "+numIndices , 0, y-=20);
+//        font.draw(batch, "FPS: "+Gdx.graphics.getFramesPerSecond() ,0, y -= 20);
+//        font.draw(batch, "delta time: "+(int)(1000000/(Gdx.graphics.getFramesPerSecond()+0.001f))+" microseconds",0, y -= 20);
+//
+//        for(int pass = 0; pass < webgpu.getGPUTimer().getNumPasses(); pass++)
+//            font.draw(batch, "GPU time (pass "+pass+" "+webgpu.getGPUTimer().getPassName(pass)+") : "+(int)webgpu.getAverageGPUtime(pass)+ " microseconds" ,0, y -= 20);
+//        batch.end();
 
         stage.act();
         stage.draw();

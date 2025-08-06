@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.github.xpenatan.webgpu.WGPUTexture;
 import com.github.xpenatan.webgpu.WGPUTextureFormat;
+import com.github.xpenatan.webgpu.WGPUTextureUsage;
 
 /** Version of TextureArray that uses WgTexture */
 public class WgTextureArray  extends WgTexture {
@@ -32,7 +33,7 @@ public class WgTextureArray  extends WgTexture {
         // at this point we don't know if we use mipmapping yet
         // should we create texture instead in consumeTextureArrayData ?
         //
-        super("texture array", data.getWidth(), data.getHeight(), data.getDepth(), data.useMipMaps(), false);
+        super("texture array", data.getWidth(), data.getHeight(), data.getDepth(), data.useMipMaps(), WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst));
         // create a texture with layers
         // let texture data consume() fill each layer
         load(data, "texture array");

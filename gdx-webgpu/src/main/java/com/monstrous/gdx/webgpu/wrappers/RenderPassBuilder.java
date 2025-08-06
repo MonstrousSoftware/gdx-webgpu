@@ -169,14 +169,17 @@ public class RenderPassBuilder {
         }
 
 
-        WebGPURenderPass pass = WebGPURenderPass.obtain();
+        //WebGPURenderPass pass = WebGPURenderPass.obtain();
+        WebGPURenderPass pass = new WebGPURenderPass();
 
-        pass.begin(webgpu.encoder, renderPassDescriptor, passType, colorFormat, depthTexture.getFormat(), sampleCount,
-            outTexture == null ? Gdx.graphics.getWidth() : outTexture.getWidth(),
-            outTexture == null ? Gdx.graphics.getHeight() : outTexture.getHeight());
+        Rectangle view = webgpu.getViewportRectangle();         // todo may change over time
+        WGPUTextureFormat format = WGPUTextureFormat.RGBA8UnormSrgb;        // TMP
+        pass.begin(webgpu.encoder, renderPassDescriptor, passType, format, depthTexture.getFormat(), sampleCount,
+            outTexture == null ? (int)view.width : outTexture.getWidth(),
+            outTexture == null ? (int)view.height : outTexture.getHeight());
 
-        // todo may change over time
-        Rectangle view = webgpu.getViewportRectangle();
+
+
         pass.setViewport(view.x, view.y, view.width, view.height, 0, 1);
 
         if(webgpu.isScissorEnabled()) {

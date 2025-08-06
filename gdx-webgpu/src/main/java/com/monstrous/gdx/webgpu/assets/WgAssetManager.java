@@ -63,7 +63,7 @@ public class WgAssetManager extends AssetManager {
 			setLoader(Sound.class, new SoundLoader(resolver));
 			setLoader(TextureAtlas.class, new TextureAtlasLoader(resolver));
 			setLoader(Texture.class, new WgTextureLoader( resolver));           // loads WgTexture
-			setLoader(Skin.class, new SkinLoader(resolver));
+			setLoader(Skin.class, new WgSkinLoader(resolver));
 			setLoader(ParticleEffect.class, new ParticleEffectLoader(resolver));
 			setLoader(com.badlogic.gdx.graphics.g3d.particles.ParticleEffect.class,
 				new com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader(resolver));
