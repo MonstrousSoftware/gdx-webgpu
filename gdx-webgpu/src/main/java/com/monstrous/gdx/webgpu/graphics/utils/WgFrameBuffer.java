@@ -53,7 +53,7 @@ public class WgFrameBuffer implements Disposable {
     }
 
     public void begin(){
-        prevState = webgpu.pushTargetView(colorTexture, depthTexture);
+        prevState = webgpu.pushTargetView(colorTexture.getTextureView(), colorTexture.getFormat(), colorTexture.getWidth(), colorTexture.getHeight(), depthTexture);
     }
 
     public void end() {

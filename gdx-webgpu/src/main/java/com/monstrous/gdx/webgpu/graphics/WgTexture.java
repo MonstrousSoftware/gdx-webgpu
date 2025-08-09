@@ -276,7 +276,7 @@ public class WgTexture extends Texture {
                 aspect = WGPUTextureAspect.All;
                 break;
         }
-        textureView = buildTextureView(texture, aspect, dimension, format, 0, mipLevelCount, 0, numLayers);
+        textureView = buildTextureView(dimension, format, 0, mipLevelCount, 0, numLayers);
     }
 
     public static WGPUTexture createTexture(String label, int width, int height, int mipLevelCount, WGPUTextureUsage textureUsage, WGPUTextureFormat format, int numLayers, int numSamples, WGPUTextureFormat viewFormat) {
@@ -308,7 +308,7 @@ public class WgTexture extends Texture {
         return texture;
     }
 
-    public WGPUTextureView buildTextureView(WGPUTexture texture, WGPUTextureAspect aspect, WGPUTextureViewDimension dimension, WGPUTextureFormat format,
+    public WGPUTextureView buildTextureView( WGPUTextureViewDimension dimension, WGPUTextureFormat format,
                              int baseMipLevel, int mipLevelCount, int baseArrayLayer, int arrayLayerCount) {
 
         // Create the view of the  texture manipulated by the rasterizer
@@ -319,7 +319,7 @@ public class WgTexture extends Texture {
         textureViewDesc.setBaseMipLevel(baseMipLevel);
         textureViewDesc.setMipLevelCount(mipLevelCount);
         textureViewDesc.setDimension(dimension);
-        textureViewDesc.setFormat(texture.getFormat());         // should this match surface format instead?
+        textureViewDesc.setFormat(format);         // should this match surface format instead?
         textureView = new WGPUTextureView();
         texture.createView(textureViewDesc, textureView);
         return textureView;

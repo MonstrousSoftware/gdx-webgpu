@@ -443,14 +443,14 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
 
     /** Push a texture view to use for output, instead of the screen. */
     @Override
-    public RenderOutputState pushTargetView(WgTexture texture, WgTexture depth) {
+    public RenderOutputState pushTargetView(WGPUTextureView textureView, WGPUTextureFormat textureFormat, int width, int height, WgTexture depthTex) {
         RenderOutputState state = new RenderOutputState(targetView, surfaceFormat, depthTexture, getViewportRectangle());
-        targetView = texture.getTextureView();
-        surfaceFormat = texture.getFormat();
-        if(depth != null){
-            depthTexture = depth;
+        targetView = textureView;
+        surfaceFormat = textureFormat;
+        if(depthTex != null){
+            depthTexture = depthTex;
         }
-        setViewportRectangle(0,0,texture.getWidth(), texture.getHeight());
+        setViewportRectangle(0,0,width, height);
         return state;
     }
 

@@ -57,8 +57,8 @@ public abstract class WebGPUContext {
      * @param depthTexture depth texture to use for output, may be null
      * @return Render output state, to restore current output state with popTargetView().
      */
-    public abstract RenderOutputState pushTargetView(WgTexture texture, WgTexture depthTexture);
-
+    //public abstract RenderOutputState pushTargetView(WgTexture texture, WgTexture depthTexture);
+    public abstract RenderOutputState pushTargetView(WGPUTextureView textureView, WGPUTextureFormat textureFormat, int width, int height, WgTexture depthTexture);
     /** Restore previous output target.
      *
      */

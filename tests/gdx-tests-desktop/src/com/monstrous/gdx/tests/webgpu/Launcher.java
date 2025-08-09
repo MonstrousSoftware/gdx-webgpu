@@ -11,7 +11,7 @@ public class Launcher {
     public static void main (String[] argv) {
 
         WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
-        config.setWindowedMode(640, 480);
+        config.setWindowedMode(800, 480);
         config.setTitle("WebGPU");
         config.backendWebGPU = JWebGPUBackend.DAWN;  // WGPU or DAWN
         config.backend = WebGPUContext.Backend.DEFAULT; // Vulkan, DX12, etc.
@@ -25,7 +25,7 @@ public class Launcher {
         //new WgDesktopApplication(new ColorTest(), config);
         //new WgDesktopApplication(new TransparencyTest(), config);
 
-        new WgDesktopApplication(new IBLTest2(), config);
+        new WgDesktopApplication(new IBLTest3(), config);
         //new WgDesktopApplication(new FontTest(), config);
         //new WgDesktopApplication(new FullScreenTest(), config);
     }

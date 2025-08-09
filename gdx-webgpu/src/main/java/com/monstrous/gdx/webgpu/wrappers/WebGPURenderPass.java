@@ -50,7 +50,7 @@ public class WebGPURenderPass implements Disposable  {
     }
 
     // don't call this directly, use RenderPassBuilder.create()
-    WebGPURenderPass() {
+    public WebGPURenderPass() {
         renderPass = new WGPURenderPassEncoder();
     }
 

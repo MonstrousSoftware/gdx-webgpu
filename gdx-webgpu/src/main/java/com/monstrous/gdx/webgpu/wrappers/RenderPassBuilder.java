@@ -78,6 +78,8 @@ public class RenderPassBuilder {
 
         if (webgpu.encoder == null)
             throw new RuntimeException("Encoder must be set before calling WebGPURenderPass.create()");
+        if (!webgpu.encoder.isValid())
+            throw new RuntimeException("Encoder not valid for call of WebGPURenderPass.create()");
 
         WGPUTextureFormat colorFormat = WGPUTextureFormat.Undefined;
 
