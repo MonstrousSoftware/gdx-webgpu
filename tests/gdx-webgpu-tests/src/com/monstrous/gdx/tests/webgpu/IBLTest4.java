@@ -94,11 +94,11 @@ public class IBLTest4 extends GdxTest {
         // Generate environment map from equirectangular texture
         WgCubemap cubemap = IBLGenerator.buildCubeMapFromEquirectangularTexture(equiRectangular, 2048);
 
-        WgCubemap irradianceMap = IBLGenerator.buildIrradianceMap(cubemap, 128);
+        WgCubemap irradianceMap = IBLGenerator.buildIrradianceMap(cubemap, 32);
         WgCubemap radianceMap = IBLGenerator.buildRadianceMap(cubemap, 128);
 
         // use cube map as a sky box
-        skyBox = new SkyBox(irradianceMap);
+        skyBox = new SkyBox(cubemap);
 
         modelBatch = new WgModelBatch();
 
