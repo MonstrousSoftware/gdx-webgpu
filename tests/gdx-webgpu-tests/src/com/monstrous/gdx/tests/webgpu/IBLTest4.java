@@ -17,6 +17,7 @@
 package com.monstrous.gdx.tests.webgpu;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
@@ -25,11 +26,21 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Slider;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.webgpu.graphics.WgCubemap;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
+import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
+import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModel;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
+import com.monstrous.gdx.webgpu.graphics.g3d.attributes.PBRFloatAttribute;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute;
 import com.monstrous.gdx.webgpu.graphics.g3d.environment.ibl.HDRLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.environment.ibl.IBLGenerator;
@@ -37,10 +48,11 @@ import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLBModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLTFModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgModelLoader;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
+import com.monstrous.gdx.webgpu.scene2d.WgSkin;
+import com.monstrous.gdx.webgpu.scene2d.WgStage;
 import com.monstrous.gdx.webgpu.wrappers.SkyBox;
 
-import static com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute.DiffuseCubeMap;
-import static com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute.EnvironmentMap;
+import static com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute.*;
 
 
 /** Test IBL
@@ -59,6 +71,8 @@ public class IBLTest4 extends GdxTest {
     ModelInstance instance;
     WgModelBatch modelBatch;
     Environment environment;
+    private WgStage stage;
+    private WgSkin skin;
 
 
 	public void create () {
@@ -73,7 +87,6 @@ public class IBLTest4 extends GdxTest {
 
         controller = new CameraInputController(cam);
         controller.scrollFactor = -0.01f;
-        Gdx.input.setInputProcessor(controller);
 
         // load equirectangular texture from HDR file format
         equiRectangular = HDRLoader.loadHDR(Gdx.files.internal("data/hdr/leadenhall_market_2k.hdr"), true);
@@ -82,6 +95,7 @@ public class IBLTest4 extends GdxTest {
         WgCubemap cubemap = IBLGenerator.buildCubeMapFromEquirectangularTexture(equiRectangular, 2048);
 
         WgCubemap irradianceMap = IBLGenerator.buildIrradianceMap(cubemap, 128);
+        WgCubemap radianceMap = IBLGenerator.buildRadianceMap(cubemap, 128);
 
         // use cube map as a sky box
         skyBox = new SkyBox(irradianceMap);
@@ -90,6 +104,7 @@ public class IBLTest4 extends GdxTest {
 
         environment = new Environment();
         environment.set(new WgCubemapAttribute(DiffuseCubeMap, irradianceMap));    // add irradiance map
+        environment.set(new WgCubemapAttribute(SpecularCubeMap, radianceMap));    // add radiance map
 
         // Model
         //
@@ -114,6 +129,21 @@ public class IBLTest4 extends GdxTest {
 
         //instance.materials.get(0).set(new ColorAttribute(ColorAttribute.Diffuse, Color.RED));
 
+
+        Gdx.input.setInputProcessor(controller);
+//        viewport = new ScreenViewport();
+//        batch = new WgSpriteBatch();
+//        font = new WgBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
+
+        stage = new WgStage(new ScreenViewport());
+        skin = new WgSkin(Gdx.files.internal("data/uiskin.json"));
+        rebuildStage();
+
+
+        InputMultiplexer im= new InputMultiplexer();
+        im.addProcessor(stage);
+        im.addProcessor(controller);
+        Gdx.input.setInputProcessor(im);
     }
 
 
@@ -126,8 +156,70 @@ public class IBLTest4 extends GdxTest {
         modelBatch.end();
 
         skyBox.renderPass(cam, false);
+
+        stage.act();
+        stage.draw();
     }
 
+    @Override
+    public void resize(int width, int height) {
+        cam.viewportWidth = width;
+        cam.viewportHeight = height;
+        cam.update();
+        //viewport.update(width, height, true);
+        stage.getViewport().update(width, height, true);
+        rebuildStage();
+
+    }
+
+    private void rebuildStage(){
+        stage.clear();
+
+        Table screenTable = new Table();
+        screenTable.setFillParent(true);
+
+        Label metallicValue = new Label("", skin);
+        Label roughnessValue = new Label("", skin);
+
+
+        Table sliderTable = new Table();
+        Slider slider = new Slider(0, 1, 0.01f, false, skin);
+        slider.setValue(0);
+        slider.addListener(new ChangeListener() {
+            public void changed (ChangeEvent event, Actor actor) {
+                float metallic = slider.getValue();
+                metallicValue.setText(String.format("metallic: %.2f", metallic ));
+                instance.materials.get(0).set(new PBRFloatAttribute(PBRFloatAttribute.Metallic, metallic));
+
+            }
+        });
+
+        Slider slider2 = new Slider(0, 1, 0.01f, false, skin);
+        slider2.setValue(0);
+        slider2.addListener(new ChangeListener() {
+            public void changed (ChangeEvent event, Actor actor) {
+                float roughness = slider2.getValue();
+                roughnessValue.setText(String.format("roughness: %.2f", roughness ));
+                instance.materials.get(0).set(new PBRFloatAttribute(PBRFloatAttribute.Roughness, roughness));
+
+            }
+        });
+
+
+
+
+        sliderTable.add(slider);
+        sliderTable.row();
+        sliderTable.add(metallicValue);
+        sliderTable.row();
+        sliderTable.add(slider2);
+        sliderTable.row();
+        sliderTable.add(roughnessValue);
+        sliderTable.row();
+
+        screenTable.add(sliderTable).align(Align.topRight).expand();
+        stage.addActor(screenTable);
+    }
 
 	@Override
 	public void dispose () {

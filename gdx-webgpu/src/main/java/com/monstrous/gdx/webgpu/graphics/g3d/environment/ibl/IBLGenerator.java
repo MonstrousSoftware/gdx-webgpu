@@ -18,6 +18,7 @@ package com.monstrous.gdx.webgpu.graphics.g3d.environment.ibl;
 
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.Pixmap;
@@ -85,13 +86,33 @@ public class IBLGenerator  {
         Environment environment = new Environment();
         environment.set(new WgCubemapAttribute(EnvironmentMap, environmentMap));    // add cube map attribute
 
-        WgCubemap irradianceMap = constructMap(cubeInstance, environment, size);
+        String shaderSource = Gdx.files.internal("shaders/modelbatchCubeMapIrradiance.wgsl").readString();
+        WgCubemap irradianceMap = constructMap(cubeInstance, shaderSource, environment, size);
 
         cube.dispose();
         System.out.println("Built irradiance map");
         return irradianceMap;
     }
 
+
+    public static WgCubemap buildRadianceMap(WgCubemap environmentMap, int size){
+        System.out.println("Building irradiance map");
+        // Convert an environment cube map to a radiance cube map
+        Model cube = buildUnitCube(new Material(ColorAttribute.createDiffuse(Color.WHITE)));
+        ModelInstance cubeInstance = new ModelInstance(cube);
+
+        Environment environment = new Environment();
+        environment.set(new WgCubemapAttribute(EnvironmentMap, environmentMap));    // add cube map attribute
+
+        String shaderSource = Gdx.files.internal("shaders/modelbatchCubeMapRadiance.wgsl").readString();
+        WgCubemap radianceMap = constructMap(cubeInstance, shaderSource, environment, size);
+
+        cube.dispose();
+        System.out.println("Built irradiance map");
+        return radianceMap;
+    }
+//
+//
 //    public CubeMap buildRadianceMap(CubeMap environmentMap, int size){
 //        CubeMap prefilterMap = new CubeMap(size, size, true);  // mipmapped cube map
 //        int mipLevels = prefilterMap.getMipLevelCount();
@@ -131,11 +152,10 @@ public class IBLGenerator  {
     };
 
 
-    private static WgCubemap constructMap(ModelInstance instance, Environment environment, int size){
+    private static WgCubemap constructMap(ModelInstance instance, String shaderSource, Environment environment, int size){
         WgGraphics gfx = (WgGraphics) Gdx.graphics;
         WebGPUContext webgpu = gfx.getContext();
 
-        String shaderSource = Gdx.files.internal("shaders/modelbatchCubeMapIrradiance.wgsl").readString();
         WgModelBatch mapBatch = new WgModelBatch(new MyShaderProvider(shaderSource));
 
         PerspectiveCamera snapCam = createCamera();

@@ -47,6 +47,7 @@ public class IBLShader extends WgShader implements Disposable {
     private final WebGPUUniformBuffer uniformBuffer;
     private final WebGPUPipeline pipeline;
     private WebGPURenderPass renderPass;
+    private int numRoughnessLevels = 5;
 
     public static class Config {
         public String shaderSource;
@@ -59,7 +60,7 @@ public class IBLShader extends WgShader implements Disposable {
     public IBLShader(final Renderable renderable, Config config) {
 
         // Create uniform buffer for global (per-frame) uniforms, i.e. projectionView matrix
-        final int uniformBufferSize = 16 * Float.BYTES;
+        final int uniformBufferSize = (16 + 4)* Float.BYTES;
         uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Uniform));
 
         boolean hasCubeMap = renderable.environment != null && renderable.environment.has(WgCubemapAttribute.EnvironmentMap);
@@ -67,24 +68,9 @@ public class IBLShader extends WgShader implements Disposable {
         binder = new Binder();
         // define groups
         binder.defineGroup(0, createFrameBindGroupLayout(uniformBufferSize, hasCubeMap));
-
-
-
-        if (hasCubeMap) {
-            binder.defineBinding("cubeMap", 0, 3);
-            binder.defineBinding("cubeSampler", 0, 4);
-        }
-
-
         // define bindings in the groups
         // must match with shader code
         binder.defineBinding("uniforms", 0, 0);
-
-        if (renderable.material.has(TextureAttribute.Diffuse)) {
-            binder.defineGroup(1, createMaterialBindGroupLayout());
-            binder.defineBinding("diffuseTexture", 1, 1);
-            binder.defineBinding("diffuseSampler", 1, 2);
-        }
 
         // set binding 0 to uniform buffer
         binder.setBuffer("uniforms", uniformBuffer, 0, uniformBufferSize);
@@ -93,6 +79,23 @@ public class IBLShader extends WgShader implements Disposable {
         // frame uniforms
         int offset = 0;
         binder.defineUniform("projectionViewTransform", 0, 0, offset); offset += 16*4;
+        binder.defineUniform("numRoughnessLevels", 0, 0, offset); offset += 4*4;
+
+
+        if (hasCubeMap) {
+            binder.defineBinding("cubeMap", 0, 3);
+            binder.defineBinding("cubeSampler", 0, 4);
+        }
+
+
+
+
+        if (renderable.material.has(TextureAttribute.Diffuse)) {
+            binder.defineGroup(1, createMaterialBindGroupLayout());
+            binder.defineBinding("diffuseTexture", 1, 1);
+            binder.defineBinding("diffuseSampler", 1, 2);
+        }
+
 
         // get pipeline layout which aggregates all the bind group layouts
         WGPUPipelineLayout pipelineLayout = binder.getPipelineLayout("IBL Gen pipeline layout");
@@ -127,6 +130,7 @@ public class IBLShader extends WgShader implements Disposable {
         this.renderPass = renderPass;
 
         binder.setUniform("projectionViewTransform", camera.combined);
+        binder.setUniform("numRoughnessLevels", numRoughnessLevels);
         uniformBuffer.flush();
 
         if(renderable.environment != null) {

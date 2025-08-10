@@ -3,22 +3,13 @@
 
 
 struct FrameUniforms {
-    projectionMatrix: mat4x4f,
-    viewMatrix : mat4x4f,
     combinedMatrix : mat4x4f,
-    cameraPosition : vec4f,
-    ambientLightLevel : f32,
+    ambientLightLevel : f32,    // actually used as roughnessLevel
 };
 
-struct MaterialUniforms {
-    metallicFactor: f32,
-    roughnessFactor: f32,
-    baseColorFactor: vec4f,
-};
+
 
 // Group 0 - Frame
-// Group 1 - Material
-// Group 2 - Instance
 
 // Frame
 @group(0) @binding(0) var<uniform> uFrame: FrameUniforms;
@@ -26,12 +17,6 @@ struct MaterialUniforms {
 @group(0) @binding(3) var cubeMap:          texture_cube<f32>;
 @group(0) @binding(4) var cubeMapSampler:   sampler;
 
-
-
-// Material
-@group(1) @binding(0) var<uniform> material: MaterialUniforms;
-@group(1) @binding(1) var albedoTexture: texture_2d<f32>;
-@group(1) @binding(2) var textureSampler: sampler;
 
 
 struct VertexInput {
