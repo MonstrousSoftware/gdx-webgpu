@@ -73,47 +73,37 @@ public class IBLTest3 extends GdxTest {
     IBLGenerator ibl;
     WgTexture equiRectangular;
 
-    // application
+
 	public void create () {
-        ibl = new IBLGenerator();
 
         cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        cam.position.set(0, 0, -0.1f);
+        cam.position.set(0, 0, 0f);
         cam.direction.set(0,0,1);
         cam.near = 1f;
         cam.far = 100f;
+        cam.update();
 
 
         controller = new CameraInputController(cam);
         controller.scrollFactor = -0.01f;
         Gdx.input.setInputProcessor(controller);
 
-        HDRLoader loader = new HDRLoader();
-        try {
-            loader.loadHDR(Gdx.files.internal("data/hdr/leadenhall_market_2k.hdr"));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        equiRectangular = loader.getHDRTexture(true);
+        // load equirectangular texture from HDR file format
+        equiRectangular = HDRLoader.loadHDR(Gdx.files.internal("data/hdr/leadenhall_market_2k.hdr"), true);
 
-        WgCubemap cubemap = ibl.buildCubeMapFromEquirectangularTexture(equiRectangular, 1024);
+        // Generate environment map from equirectangular texture
+        ibl = new IBLGenerator();
+        WgCubemap cubemap = ibl.buildCubeMapFromEquirectangularTexture(equiRectangular, 2048);
 
+        // use cube map as a sky box
         skyBox = new SkyBox(cubemap);
 	}
 
 
     public void render () {
         controller.update();
-
-        WgScreenUtils.clear(Color.GREEN, true);
-
-        skyBox.renderPass(cam);
+        skyBox.renderPass(cam, true);
     }
-
-
-
-
-
 
 
 	@Override

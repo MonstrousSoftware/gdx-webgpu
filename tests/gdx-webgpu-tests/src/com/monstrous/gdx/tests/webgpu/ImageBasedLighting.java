@@ -194,7 +194,7 @@ public class ImageBasedLighting extends GdxTest {
 
 		modelBatch.end();
 
-        skybox.renderPass(cam);
+        skybox.renderPass(cam, false);
 
         viewport.apply();
         batch.setProjectionMatrix(viewport.getCamera().combined);

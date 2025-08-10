@@ -6,6 +6,7 @@ package com.monstrous.gdx.webgpu.graphics.g3d.environment.ibl;
 
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.utils.BufferUtils;
+import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.github.xpenatan.webgpu.WGPUTextureFormat;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 
@@ -24,59 +25,59 @@ import java.nio.ByteBuffer;
 
 public class HDRLoader {
 
-	public RGBE.Header hdrHeader;
-	private byte[] hdrData;
-	private WgTexture textureRaw;
+//	public RGBE.Header hdrHeader;
+//	private byte[] hdrData;
+//	private WgTexture textureRaw;
 
-
-	public void loadHDR(FileHandle file) throws IOException{
+    public static WgTexture loadHDR(FileHandle file, boolean asLDR){
+        RGBE.Header hdrHeader;
+        byte[] hdrData;
 		DataInputStream in = null;
-		try{
-			in = new DataInputStream(new BufferedInputStream(file.read()));
-			hdrHeader = RGBE.readHeader(in);
-			hdrData = new byte[hdrHeader.getWidth() * hdrHeader.getHeight() * 4];
-			RGBE.readPixelsRawRLE(in, hdrData, 0, hdrHeader.getWidth(), hdrHeader.getHeight());
-		}finally{
-			if(in != null) in.close();
+		try {
+            in = new DataInputStream(new BufferedInputStream(file.read()));
+            hdrHeader = RGBE.readHeader(in);
+            hdrData = new byte[hdrHeader.getWidth() * hdrHeader.getHeight() * 4];
+            RGBE.readPixelsRawRLE(in, hdrData, 0, hdrHeader.getWidth(), hdrHeader.getHeight());
+        } catch(Exception e){
+            throw new GdxRuntimeException("Couldn't load image from .hdr file", e);
 		}
-	}
 
-	public WgTexture getHDRTexture(boolean asLDR) {
-		if(textureRaw == null){
-			// convert to pixmap applying optional exposure
-	        float [] pixel = new float[3];
-	        int imageWidth = hdrHeader.getWidth();
-	        int imageHeight = hdrHeader.getHeight();
-			int numComponents = 4;
+        // convert to pixmap applying optional exposure
+        float [] pixel = new float[3];
+        int imageWidth = hdrHeader.getWidth();
+        int imageHeight = hdrHeader.getHeight();
+        int numComponents = 4;
 
-	        if(asLDR){
+        WgTexture texture;
 
-                ByteBuffer pixels = BufferUtils.newUnsafeByteBuffer(imageHeight*imageWidth*4);
-				int index = 0;
+        if(asLDR){
 
-	        	for(int y=0 ; y<imageHeight ; y++){
-	        		for(int x=0 ; x<imageWidth ; x++){
-	        			int idx = (y*imageWidth+x)*4;
-	        			RGBE.rgbe2float(pixel, hdrData, idx); // TODO exposure should be done in this call for best precision.
+            ByteBuffer pixels = BufferUtils.newUnsafeByteBuffer(imageHeight*imageWidth*numComponents);
+            int index = 0;
 
-						for(int i=0 ; i<3 ; i++){
-	        				pixel[i] = (float)Math.pow(pixel[i], 0.45f);
-                            pixel[i] = Math.min(pixel[i], 1.0f);			// clamp to be LDR
-	        			}
+            for(int y=0 ; y<imageHeight ; y++){
+                for(int x=0 ; x<imageWidth ; x++){
+                    int idx = (y*imageWidth+x)*4;
+                    RGBE.rgbe2float(pixel, hdrData, idx); // TODO exposure should be done in this call for best precision.
 
-                        pixels.put((byte)(pixel[0] * 255));
-                        pixels.put((byte)(pixel[1] * 255));
-                        pixels.put((byte)(pixel[2] * 255));
-                        pixels.put((byte)255);
-	        		}
-	        	}
-                textureRaw = new WgTexture("", imageWidth, imageHeight,false, false, WGPUTextureFormat.RGBA8Unorm,1);
-                pixels.flip();
-                textureRaw.load(pixels);
-                BufferUtils.disposeUnsafeByteBuffer(pixels);
-	        }
-	        else{
-                throw new RuntimeException("getHDRTexture: only LDR supported for now");
+                    for(int i=0 ; i<3 ; i++){
+                        pixel[i] = (float)Math.pow(pixel[i], 0.45f);
+                        pixel[i] = Math.min(pixel[i], 1.0f);			// clamp to be LDR
+                    }
+
+                    pixels.put((byte)(pixel[0] * 255));
+                    pixels.put((byte)(pixel[1] * 255));
+                    pixels.put((byte)(pixel[2] * 255));
+                    pixels.put((byte)255);
+                }
+            }
+            texture = new WgTexture("", imageWidth, imageHeight,false, false, WGPUTextureFormat.RGBA8Unorm,1);
+            pixels.flip();
+            texture.load(pixels);
+            BufferUtils.disposeUnsafeByteBuffer(pixels);
+        }
+        else{
+            throw new RuntimeException("getHDRTexture: only LDR supported for now");
 //				short[] pixels = new short[imageWidth * imageHeight * numComponents];	// 16 bit "short" to store 16-bit floats
 //				int index = 0;
 //				for(int y=0 ; y<imageHeight ; y++){
@@ -96,9 +97,9 @@ public class HDRLoader {
 //				textureRaw = new WgTexture(imageWidth, imageHeight, false, false, WGPUTextureFormat.RGBA16Float, 1);
 //				textureRaw.fill(pixels);
 
-	        }
-		}
-		return textureRaw;
+        }
+
+		return texture;
 	}
 
 	// map a float to a short corresponding to a half-precision float (16 bits)

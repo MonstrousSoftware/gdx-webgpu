@@ -277,7 +277,7 @@ public class IBLTest extends GdxTest {
 		modelBatch.render(instance, environment);
 		modelBatch.end();
 
-        skybox.renderPass(cam);
+        skybox.renderPass(cam, false);
 
         viewport.apply();
         batch.setProjectionMatrix(viewport.getCamera().combined);

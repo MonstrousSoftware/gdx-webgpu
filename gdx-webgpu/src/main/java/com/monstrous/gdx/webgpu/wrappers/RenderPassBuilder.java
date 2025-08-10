@@ -44,6 +44,11 @@ public class RenderPassBuilder {
         return create(name,clearColor, false, null, gfx.getContext().getDepthTexture(), sampleCount);
     }
 
+    public static WebGPURenderPass create(String name, Color clearColor, boolean clearDepth) {
+        WgGraphics gfx = (WgGraphics)Gdx.graphics;
+        return create(name,clearColor, clearDepth,null,  gfx.getContext().getDepthTexture(), 1);
+    }
+
     public static WebGPURenderPass create(String name, Color clearColor, boolean clearDepth, int sampleCount) {
         WgGraphics gfx = (WgGraphics)Gdx.graphics;
         return create(name,clearColor, clearDepth,null,  gfx.getContext().getDepthTexture(), sampleCount);

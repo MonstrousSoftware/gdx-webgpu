@@ -27,6 +27,8 @@ import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.WgCubemap;
 
+import static com.badlogic.gdx.math.Matrix4.M33;
+
 /**
  * SkyBox
  * Following the approach from https://webgpufundamentals.org/webgpu/lessons/webgpu-skybox.html
@@ -86,7 +88,16 @@ public class SkyBox implements Disposable {
      * @param cam camera
      */
     public void renderPass(Camera cam) {
-        WebGPURenderPass pass = RenderPassBuilder.create("skybox", null);
+        renderPass(cam, false);
+    }
+
+    /** execute a render pass to show the sky box.
+     *
+     * @param cam camera
+     * @param clearDepth true to clear the depth buffer
+     */
+    public void renderPass(Camera cam, boolean clearDepth) {
+        WebGPURenderPass pass = RenderPassBuilder.create("skybox", null, clearDepth);
         render(cam,pass);
         pass.end();
     }
@@ -142,9 +153,12 @@ public class SkyBox implements Disposable {
     protected void writeUniforms( WebGPUUniformBuffer uniformBuffer, Camera camera ){
         invertedProjectionView.set(camera.combined);
         invertedProjectionView.setTranslation(Vector3.Zero);
+        invertedProjectionView.val[M33] = 1.0f;
+
         try {
             invertedProjectionView.inv();
         } catch(RuntimeException e){        // don't crash on non-invertible matrix, just skip the update
+            Gdx.app.error("Skybox", "camera matrix not invertible");
             return;
         }
 
