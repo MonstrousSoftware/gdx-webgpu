@@ -3,9 +3,7 @@
 
 
 struct FrameUniforms {
-    projectionMatrix: mat4x4f,
-    viewMatrix : mat4x4f,
-    combinedMatrix : mat4x4f,
+    projectionViewMatrix : mat4x4f,
 };
 
 
@@ -23,8 +21,8 @@ struct FrameUniforms {
 
 
 // Material
-@group(1) @binding(1) var albedoTexture: texture_2d<f32>;
-@group(1) @binding(2) var textureSampler: sampler;
+//@group(1) @binding(1) var albedoTexture: texture_2d<f32>;
+//@group(1) @binding(2) var textureSampler: sampler;
 
 
 struct VertexInput {
@@ -44,7 +42,7 @@ fn vs_main(in: VertexInput, @builtin(instance_index) instance: u32) -> VertexOut
    var out: VertexOutput;
 
    out.localPos = vec4f(in.position, 1.0);
-   out.position =  uFrame.combinedMatrix * vec4f(in.position, 1.0);
+   out.position =  uFrame.projectionViewMatrix * vec4f(in.position, 1.0);
    return out;
 }
 

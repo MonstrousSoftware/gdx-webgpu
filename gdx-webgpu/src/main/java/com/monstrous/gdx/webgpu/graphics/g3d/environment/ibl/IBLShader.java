@@ -31,6 +31,7 @@ import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.Binder;
 import com.monstrous.gdx.webgpu.graphics.WgMesh;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
+import com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgShader;
 import com.monstrous.gdx.webgpu.wrappers.*;
 
@@ -61,18 +62,29 @@ public class IBLShader extends WgShader implements Disposable {
         final int uniformBufferSize = 16 * Float.BYTES;
         uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Uniform));
 
+        boolean hasCubeMap = renderable.environment != null && renderable.environment.has(WgCubemapAttribute.EnvironmentMap);
 
         binder = new Binder();
         // define groups
-        binder.defineGroup(0, createFrameBindGroupLayout(uniformBufferSize));
-        binder.defineGroup(1, createMaterialBindGroupLayout());
+        binder.defineGroup(0, createFrameBindGroupLayout(uniformBufferSize, hasCubeMap));
+
+
+
+        if (hasCubeMap) {
+            binder.defineBinding("cubeMap", 0, 3);
+            binder.defineBinding("cubeSampler", 0, 4);
+        }
 
 
         // define bindings in the groups
         // must match with shader code
         binder.defineBinding("uniforms", 0, 0);
-        binder.defineBinding("diffuseTexture", 1, 1);
-        binder.defineBinding("diffuseSampler", 1, 2);
+
+        if (renderable.material.has(TextureAttribute.Diffuse)) {
+            binder.defineGroup(1, createMaterialBindGroupLayout());
+            binder.defineBinding("diffuseTexture", 1, 1);
+            binder.defineBinding("diffuseSampler", 1, 2);
+        }
 
         // set binding 0 to uniform buffer
         binder.setBuffer("uniforms", uniformBuffer, 0, uniformBufferSize);
@@ -116,9 +128,20 @@ public class IBLShader extends WgShader implements Disposable {
 
         binder.setUniform("projectionViewTransform", camera.combined);
         uniformBuffer.flush();
+
+        if(renderable.environment != null) {
+            final WgCubemapAttribute cubemapAttribute = renderable.environment.get(WgCubemapAttribute.class, WgCubemapAttribute.EnvironmentMap);
+            if (cubemapAttribute != null) {
+                //System.out.println("Setting cube map via binder");
+                WgTexture cubeMap = cubemapAttribute.textureDescription.texture;
+                binder.setTexture("cubeMap", cubeMap.getTextureView());
+                binder.setSampler("cubeSampler", cubeMap.getSampler());
+            }
+        }
+
+
         // bind group 0 (frame) once per frame
         binder.bindGroup(renderPass, 0);
-
         renderPass.setPipeline(pipeline);
     }
 
@@ -165,17 +188,20 @@ public class IBLShader extends WgShader implements Disposable {
 
             binder.setTexture("diffuseTexture", diffuseTexture.getTextureView());
             binder.setSampler("diffuseSampler", diffuseTexture.getSampler());
-        } else {
-            throw new GdxRuntimeException("IBLShader: Diffuse Texture not set");
+            binder.bindGroup(renderPass, 1);
         }
 
-        binder.bindGroup(renderPass, 1);
+
     }
 
-    private WebGPUBindGroupLayout createFrameBindGroupLayout(int uniformBufferSize) {
+    private WebGPUBindGroupLayout createFrameBindGroupLayout(int uniformBufferSize, boolean hasCubeMap) {
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch bind group layout (frame)");
         layout.begin();
         layout.addBuffer(0, WGPUShaderStage.Vertex.or(WGPUShaderStage.Fragment), WGPUBufferBindingType.Uniform, uniformBufferSize, false);
+        if(hasCubeMap) {
+            layout.addTexture(3, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension.Cube, false);
+            layout.addSampler(4, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering);
+        }
         layout.end();
         return layout;
     }

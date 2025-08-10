@@ -71,7 +71,7 @@ public class ShaderPrefix {
             if(environment.shadowMap != null){
                 sb.append("#define SHADOW_MAP\n");
             }
-            if((environment.getMask() & WgCubemapAttribute.SpecularCubeMap) != 0){
+            if((environment.getMask() & WgCubemapAttribute.DiffuseCubeMap) != 0){
                 sb.append("#define USE_IBL\n");
             }
         }

@@ -20,44 +20,27 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
-import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.VertexAttributes;
-import com.badlogic.gdx.graphics.g3d.*;
-import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
-import com.badlogic.gdx.graphics.g3d.utils.BaseShaderProvider;
+import com.badlogic.gdx.graphics.g3d.Environment;
+import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.ModelInstance;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
-import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
-import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.Slider;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
-import com.badlogic.gdx.utils.Align;
-import com.badlogic.gdx.utils.viewport.Viewport;
-import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
-import com.monstrous.gdx.webgpu.application.WebGPUContext;
-import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.WgCubemap;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
-import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
-import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
+import com.monstrous.gdx.webgpu.graphics.g3d.WgModel;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
-import com.monstrous.gdx.webgpu.graphics.g3d.attributes.PBRFloatAttribute;
+import com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute;
 import com.monstrous.gdx.webgpu.graphics.g3d.environment.ibl.HDRLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.environment.ibl.IBLGenerator;
-import com.monstrous.gdx.webgpu.graphics.g3d.environment.ibl.IBLShader;
-import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
-import com.monstrous.gdx.webgpu.graphics.utils.WgFrameBuffer;
+import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLBModelLoader;
+import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLTFModelLoader;
+import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgModelLoader;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
-import com.monstrous.gdx.webgpu.scene2d.WgSkin;
-import com.monstrous.gdx.webgpu.scene2d.WgStage;
-import com.monstrous.gdx.webgpu.wrappers.*;
+import com.monstrous.gdx.webgpu.wrappers.SkyBox;
 
-import java.io.IOException;
+import static com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute.DiffuseCubeMap;
+import static com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute.EnvironmentMap;
 
 
 /** Test IBL
@@ -66,20 +49,24 @@ import java.io.IOException;
  * */
 
 
-public class IBLTest3 extends GdxTest {
+public class IBLTest4 extends GdxTest {
     CameraInputController controller;
     PerspectiveCamera cam;
     SkyBox skyBox;
-    IBLGenerator ibl;
+
     WgTexture equiRectangular;
+    Model model;
+    ModelInstance instance;
+    WgModelBatch modelBatch;
+    Environment environment;
 
 
 	public void create () {
 
         cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        cam.position.set(0, 0, 0f);
+        cam.position.set(0, 0, -3f);
         cam.direction.set(0,0,1);
-        cam.near = 1f;
+        cam.near = 0.01f;       // avoid zero
         cam.far = 100f;
         cam.update();
 
@@ -94,14 +81,51 @@ public class IBLTest3 extends GdxTest {
         // Generate environment map from equirectangular texture
         WgCubemap cubemap = IBLGenerator.buildCubeMapFromEquirectangularTexture(equiRectangular, 2048);
 
+        WgCubemap irradianceMap = IBLGenerator.buildIrradianceMap(cubemap, 128);
+
         // use cube map as a sky box
-        skyBox = new SkyBox(cubemap);
-	}
+        skyBox = new SkyBox(irradianceMap);
+
+        modelBatch = new WgModelBatch();
+
+        environment = new Environment();
+        environment.set(new WgCubemapAttribute(DiffuseCubeMap, irradianceMap));    // add irradiance map
+
+        // Model
+        //
+
+        String modelFileName = "data/g3d/gltf/sphere.gltf";
+
+        WgModelLoader.ModelParameters params = new WgModelLoader.ModelParameters();
+        params.textureParameter.genMipMaps = true;
+
+        System.out.println("Start loading");
+        FileHandle file = Gdx.files.internal(modelFileName);
+        if(file.extension().contentEquals("gltf"))
+            model = new WgGLTFModelLoader().loadModel(file, params);
+        else if(file.extension().contentEquals("glb"))
+            model = new WgGLBModelLoader().loadModel(file, params);
+        else
+            System.out.println("File extension not supported: "+modelFileName);
+
+
+
+        instance = new ModelInstance(model);
+
+        //instance.materials.get(0).set(new ColorAttribute(ColorAttribute.Diffuse, Color.RED));
+
+    }
 
 
     public void render () {
         controller.update();
-        skyBox.renderPass(cam, true);
+
+
+        modelBatch.begin(cam, Color.BLACK, true);
+        modelBatch.render(instance, environment);
+        modelBatch.end();
+
+        skyBox.renderPass(cam, false);
     }
 
 
@@ -109,6 +133,7 @@ public class IBLTest3 extends GdxTest {
 	public void dispose () {
         skyBox.dispose();
         equiRectangular.dispose();
+        model.dispose();
 	}
 
 }

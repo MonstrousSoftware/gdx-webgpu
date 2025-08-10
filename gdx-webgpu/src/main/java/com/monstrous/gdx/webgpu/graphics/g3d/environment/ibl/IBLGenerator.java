@@ -23,6 +23,7 @@ import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.*;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.utils.BaseShaderProvider;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
@@ -35,8 +36,11 @@ import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.WgCubemap;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
+import com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
+import com.monstrous.gdx.webgpu.wrappers.RenderPassType;
 
+import static com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute.EnvironmentMap;
 
 
 /** Utility methods to create IBL textures */
@@ -56,53 +60,38 @@ public class IBLGenerator  {
         }
     }
 
-
-    public static WgCubemap buildCubeMapFromEquirectangularTexture(WgTexture equiRectangular, int textureSize) {
+    /** Create a cube map from an equirectangular texture */
+    public static WgCubemap buildCubeMapFromEquirectangularTexture(WgTexture equiRectangular, int outputTextureSize) {
         // Convert an equirectangular image to a cube map
         Material material = new Material(TextureAttribute.createDiffuse(equiRectangular));
         Model cube = buildUnitCube(material);
         ModelInstance cubeInstance = new ModelInstance(cube);
 
-        WgCubemap environmentMap = constructSideTextures(cubeInstance, textureSize);
+        WgCubemap environmentMap = constructSideTextures(cubeInstance, outputTextureSize);
 
         cube.dispose();
-
 
         return environmentMap;
     }
 
-    /** Create a camera to snap the inside of a unit cube.  View is 90 degrees.
-     */
-    private static PerspectiveCamera createCamera() {
-        PerspectiveCamera snapCam =new PerspectiveCamera(90,1,1);
-        snapCam.position.set(0,0,0);
-        snapCam.direction.set(0,0,1);
-        snapCam.near =0; // important because default is 1
-        snapCam.update();
-        return snapCam;
+
+
+    public static WgCubemap buildIrradianceMap(WgCubemap environmentMap, int size){
+        System.out.println("Building irradiance map");
+        // Convert an environment cube map to an irradiance cube map
+        Model cube = buildUnitCube(new Material(ColorAttribute.createDiffuse(Color.WHITE)));
+        ModelInstance cubeInstance = new ModelInstance(cube);
+
+        Environment environment = new Environment();
+        environment.set(new WgCubemapAttribute(EnvironmentMap, environmentMap));    // add cube map attribute
+
+        WgCubemap irradianceMap = constructMap(cubeInstance, environment, size);
+
+        cube.dispose();
+        System.out.println("Built irradiance map");
+        return irradianceMap;
     }
-//
-//    public WgCubemap buildIrradianceMap(WgCubemap environmentMap, int size){
-//        // Convert an environment cube map to an irradiance cube map
-//        Model cube = buildUnitCube(new Material(ColorAttribute.createDiffuse(Color.WHITE)));
-//        ModelInstance instance = new ModelInstance(cube);
-//        environment.shaderSourcePath = "shaders/modelbatchCubeMapIrradiance.wgsl";
-//
-//        environment.set(new WgCubemapAttribute(EnvironmentMap, environmentMap));
-//
-//        CommandEncoder encoder = new CommandEncoder(LibGPU.device);
-//        LibGPU.commandEncoder = encoder.getHandle(); //LibGPU.app.prepareEncoder();
-//        LibGPU.graphics.passNumber = 0;
-//
-//        constructSideTextures(instance, size);
-//        CubeMap irradianceMap = copyTextures(size);
-//        LibGPU.app.finishEncoder(encoder);
-//        encoder.dispose();
-//        environment.shaderSourcePath = null;
-//        cube.dispose();
-//        return irradianceMap;
-//    }
-//
+
 //    public CubeMap buildRadianceMap(CubeMap environmentMap, int size){
 //        CubeMap prefilterMap = new CubeMap(size, size, true);  // mipmapped cube map
 //        int mipLevels = prefilterMap.getMipLevelCount();
@@ -142,6 +131,75 @@ public class IBLGenerator  {
     };
 
 
+    private static WgCubemap constructMap(ModelInstance instance, Environment environment, int size){
+        WgGraphics gfx = (WgGraphics) Gdx.graphics;
+        WebGPUContext webgpu = gfx.getContext();
+
+        String shaderSource = Gdx.files.internal("shaders/modelbatchCubeMapIrradiance.wgsl").readString();
+        WgModelBatch mapBatch = new WgModelBatch(new MyShaderProvider(shaderSource));
+
+        PerspectiveCamera snapCam = createCamera();
+        WgCubemap cube = new WgCubemap(size, false, WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst));
+
+        final WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or( WGPUTextureUsage.CopyDst).or(WGPUTextureUsage.RenderAttachment).or( WGPUTextureUsage.CopySrc);
+        WGPUTextureFormat format = WGPUTextureFormat.RGBA8UnormSrgb;
+        WgTexture colorTexture = new WgTexture("fbo color", size, size, false, textureUsage, format, 1, format);
+        WgTexture depthTexture = new WgTexture("fbo depth", size, size, false, textureUsage, WGPUTextureFormat.Depth24Plus, 1, WGPUTextureFormat.Depth24Plus);
+
+        webgpu.setViewportRectangle(0,0, size,size);
+
+
+        for (int side = 0; side < 6; side++) {
+            // point the camera at one of the cube sides
+            snapCam.direction.set(directions[side]);
+            snapCam.position.set(Vector3.Zero);
+            if(side == 3)
+                snapCam.up.set(0,0,1);
+            else if (side == 2)
+                snapCam.up.set(0,0,-1);
+            else
+                snapCam.up.set(0,1,0);
+            snapCam.update();
+
+
+            WGPUCommandEncoderDescriptor encoderDesc = WGPUCommandEncoderDescriptor.obtain();
+            encoderDesc.setLabel("encoder");
+            webgpu.device.createCommandEncoder(encoderDesc, webgpu.encoder);
+
+            WebGPUContext.RenderOutputState prevState = webgpu.pushTargetView(colorTexture.getTextureView(), format, size, size, depthTexture);
+
+            mapBatch.begin(snapCam, Color.BLACK, true);
+            mapBatch.render(instance, environment);
+            mapBatch.end();
+
+            WGPUCommandBufferDescriptor cmdBufferDescriptor = WGPUCommandBufferDescriptor.obtain();
+            cmdBufferDescriptor.setNextInChain(null);
+            cmdBufferDescriptor.setLabel("Command buffer");
+            WGPUCommandBuffer command = new WGPUCommandBuffer();
+
+            webgpu.encoder.finish(cmdBufferDescriptor, command);
+            webgpu.encoder.release();
+            webgpu.queue.submit(1, command);
+            command.release();
+
+            webgpu.popTargetView(prevState);
+
+            webgpu.device.createCommandEncoder(encoderDesc, webgpu.encoder);
+            copyTexture( webgpu.encoder, cube, side, 0, colorTexture, size);
+
+            webgpu.encoder.finish(cmdBufferDescriptor, command);
+            webgpu.encoder.release();
+
+            webgpu.queue.submit(1, command);
+            command.release();
+            command.dispose();
+
+        }
+        webgpu.setViewportRectangle(0,0,Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        mapBatch.dispose();
+        return cube;
+    }
+
 
     private static WgCubemap constructSideTextures(ModelInstance instance, int size){
         WgGraphics gfx = (WgGraphics) Gdx.graphics;
@@ -158,10 +216,11 @@ public class IBLGenerator  {
         WgTexture colorTexture = new WgTexture("fbo color", size, size, false, textureUsage, format, 1, format);
         WgTexture depthTexture = new WgTexture("fbo depth", size, size, false, textureUsage, WGPUTextureFormat.Depth24Plus, 1, WGPUTextureFormat.Depth24Plus);
 
+        webgpu.setViewportRectangle(0,0, size,size);
 
 
         for (int side = 0; side < 6; side++) {
-
+            // point the camera at one of the cube sides
             snapCam.direction.set(directions[side]);
             snapCam.position.set(Vector3.Zero);
             if(side == 3)
@@ -171,8 +230,6 @@ public class IBLGenerator  {
             else
                 snapCam.up.set(0,1,0);
             snapCam.update();
-
-            webgpu.setViewportRectangle(0,0, size,size);
 
 
             WGPUCommandEncoderDescriptor encoderDesc = WGPUCommandEncoderDescriptor.obtain();
@@ -200,19 +257,20 @@ public class IBLGenerator  {
             webgpu.device.createCommandEncoder(encoderDesc, webgpu.encoder);
             copyTexture( webgpu.encoder, cube, side, 0, colorTexture, size);
 
-            //copyTexture(cube, side, size, (WgTexture)textureSides[side].getColorBufferTexture(), 0);
-
             webgpu.encoder.finish(cmdBufferDescriptor, command);
             webgpu.encoder.release();
 
             webgpu.queue.submit(1, command);
             command.release();
+            command.dispose();
 
         }
         webgpu.setViewportRectangle(0,0,Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         mapBatch.dispose();
         return cube;
     }
+
+
 
 
 
@@ -248,6 +306,17 @@ public class IBLGenerator  {
 
             source.dispose();
             destination.dispose();
+    }
+
+    /** Create a camera to snap the inside of a unit cube.  View is 90 degrees.
+     */
+    private static PerspectiveCamera createCamera() {
+        PerspectiveCamera snapCam =new PerspectiveCamera(90,1,1);
+        snapCam.position.set(0,0,0);
+        snapCam.direction.set(0,0,1);
+        snapCam.near =0; // important because default is 1
+        snapCam.update();
+        return snapCam;
     }
 
     public static Model buildUnitCube(Material material){
