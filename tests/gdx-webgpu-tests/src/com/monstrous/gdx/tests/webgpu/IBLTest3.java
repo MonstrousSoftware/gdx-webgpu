@@ -92,8 +92,7 @@ public class IBLTest3 extends GdxTest {
         equiRectangular = HDRLoader.loadHDR(Gdx.files.internal("data/hdr/leadenhall_market_2k.hdr"), true);
 
         // Generate environment map from equirectangular texture
-        ibl = new IBLGenerator();
-        WgCubemap cubemap = ibl.buildCubeMapFromEquirectangularTexture(equiRectangular, 2048);
+        WgCubemap cubemap = IBLGenerator.buildCubeMapFromEquirectangularTexture(equiRectangular, 2048);
 
         // use cube map as a sky box
         skyBox = new SkyBox(cubemap);
@@ -109,7 +108,6 @@ public class IBLTest3 extends GdxTest {
 	@Override
 	public void dispose () {
         skyBox.dispose();
-        ibl.dispose();
         equiRectangular.dispose();
 	}
 

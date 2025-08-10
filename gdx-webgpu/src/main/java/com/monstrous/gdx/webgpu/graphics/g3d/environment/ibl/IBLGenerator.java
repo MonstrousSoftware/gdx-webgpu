@@ -36,16 +36,12 @@ import com.monstrous.gdx.webgpu.graphics.WgCubemap;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
-import com.monstrous.gdx.webgpu.graphics.utils.WgFrameBuffer;
+
 
 
 /** Utility methods to create IBL textures */
-public class IBLGenerator implements Disposable {
+public class IBLGenerator  {
 
-    private final PerspectiveCamera snapCam;
-    private final WebGPUContext webgpu;
-    private final WgModelBatch mapBatch;
-    public WgTexture[] textureSides;
 
     public static class MyShaderProvider extends BaseShaderProvider {
         public final IBLShader.Config config = new IBLShader.Config("");
@@ -55,27 +51,13 @@ public class IBLGenerator implements Disposable {
         }
 
         @Override
-        protected Shader createShader (final Renderable renderable) {
+        protected Shader createShader(final Renderable renderable) {
             return new IBLShader(renderable, config);
         }
-    };
-
-    public IBLGenerator() {
-        WgGraphics gfx = (WgGraphics)Gdx.graphics;
-        webgpu = gfx.getContext();
-
-        snapCam = new PerspectiveCamera(90, 1, 1);
-        snapCam.position.set(0,0,0);
-        snapCam.direction.set(0,0,1);
-        snapCam.near = 0; // important because default is 1
-        snapCam.update();
-
-        String shaderSource = Gdx.files.internal("shaders/modelbatchEquilateral.wgsl").readString();
-
-        mapBatch = new WgModelBatch(new MyShaderProvider(shaderSource));
     }
 
-    public WgCubemap buildCubeMapFromEquirectangularTexture(WgTexture equiRectangular, int textureSize){
+
+    public static WgCubemap buildCubeMapFromEquirectangularTexture(WgTexture equiRectangular, int textureSize) {
         // Convert an equirectangular image to a cube map
         Material material = new Material(TextureAttribute.createDiffuse(equiRectangular));
         Model cube = buildUnitCube(material);
@@ -87,6 +69,17 @@ public class IBLGenerator implements Disposable {
 
 
         return environmentMap;
+    }
+
+    /** Create a camera to snap the inside of a unit cube.  View is 90 degrees.
+     */
+    private static PerspectiveCamera createCamera() {
+        PerspectiveCamera snapCam =new PerspectiveCamera(90,1,1);
+        snapCam.position.set(0,0,0);
+        snapCam.direction.set(0,0,1);
+        snapCam.near =0; // important because default is 1
+        snapCam.update();
+        return snapCam;
     }
 //
 //    public WgCubemap buildIrradianceMap(WgCubemap environmentMap, int size){
@@ -142,10 +135,7 @@ public class IBLGenerator implements Disposable {
 
 
     // the order of the layers is +X, -X, +Y, -Y, +Z, -Z
-    private final Vector3[] directions = {
-//        new Vector3(1, 0, 0), new Vector3(-1, 0, 0),
-//        new Vector3(0, -1, 0), new Vector3(0, 1, 0),
-//        new Vector3(0,0,1), new Vector3(0, 0, -1)
+    private static final Vector3[] directions = {
         new Vector3(-1, 0, 0), new Vector3(1, 0, 0),
         new Vector3(0, 1, 0), new Vector3(0, -1, 0),
         new Vector3(0,0,1), new Vector3(0, 0, -1)
@@ -153,9 +143,14 @@ public class IBLGenerator implements Disposable {
 
 
 
-    private WgCubemap constructSideTextures(ModelInstance instance, int size){
+    private static WgCubemap constructSideTextures(ModelInstance instance, int size){
+        WgGraphics gfx = (WgGraphics) Gdx.graphics;
+        WebGPUContext webgpu = gfx.getContext();
 
+        String shaderSource = Gdx.files.internal("shaders/modelbatchEquilateral.wgsl").readString();
+        WgModelBatch mapBatch = new WgModelBatch(new MyShaderProvider(shaderSource));
 
+        PerspectiveCamera snapCam = createCamera();
         WgCubemap cube = new WgCubemap(size, false, WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst));
 
         final WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or( WGPUTextureUsage.CopyDst).or(WGPUTextureUsage.RenderAttachment).or( WGPUTextureUsage.CopySrc);
@@ -203,7 +198,7 @@ public class IBLGenerator implements Disposable {
             webgpu.popTargetView(prevState);
 
             webgpu.device.createCommandEncoder(encoderDesc, webgpu.encoder);
-            copyTexture(cube, side, 0, colorTexture, size);
+            copyTexture( webgpu.encoder, cube, side, 0, colorTexture, size);
 
             //copyTexture(cube, side, size, (WgTexture)textureSides[side].getColorBufferTexture(), 0);
 
@@ -215,33 +210,20 @@ public class IBLGenerator implements Disposable {
 
         }
         webgpu.setViewportRectangle(0,0,Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        mapBatch.dispose();
         return cube;
     }
 
 
 
-    /** copy 6 textures (textureSides[]) into a new cube map */
-    private WgCubemap copyTextures(int size, boolean useMipmaps, WgTexture[] textureSides) {
-        Pixmap pixmap = new Pixmap(size, size, Pixmap.Format.RGBA8888);
-
-        // create a cube map texture
-        WgCubemap cube = new WgCubemap(size, useMipmaps, WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst));
-        for (int side = 0; side < 6; side++) {
-            pixmap.setColor(MathUtils.random(), MathUtils.random(),MathUtils.random(), 1);
-            pixmap.fill();
-            cube.load(pixmap.getPixels(), pixmap.getWidth(), pixmap.getHeight(), side);
-        }
-        return cube; //copyTextures(cube, size, textureSides, 0);
-    }
-
-    // beware not to use .obtain() for 2 structures we need at the same time, because the memory is reused.
-    public final WGPUTexelCopyTextureInfo source = new WGPUTexelCopyTextureInfo();
-    public final WGPUTexelCopyTextureInfo destination = new WGPUTexelCopyTextureInfo();
-
     /** Copy a texture to one side (and one mip level) of a cube map
      * Note: there need to be an active encoder.
      * */
-    public void copyTexture(WgCubemap cube, int side, int mipLevel, WgTexture sideTexture, int size){
+    public static void copyTexture(WGPUCommandEncoder encoder, WgCubemap cube, int side, int mipLevel, WgTexture sideTexture, int size){
+
+        // beware not to use .obtain() for 2 structures we need at the same time, because the memory is reused.
+        final WGPUTexelCopyTextureInfo source = new WGPUTexelCopyTextureInfo();
+        final WGPUTexelCopyTextureInfo destination = new WGPUTexelCopyTextureInfo();
 
             source.setTexture(sideTexture.getHandle());
             source.setMipLevel(0);
@@ -262,20 +244,17 @@ public class IBLGenerator implements Disposable {
             ext.setHeight(size);
             ext.setDepthOrArrayLayers(1);
 
-            webgpu.encoder.copyTextureToTexture(source, destination, ext);
+            encoder.copyTextureToTexture(source, destination, ext);
+
+            source.dispose();
+            destination.dispose();
     }
 
-    public Model buildUnitCube(Material material){
+    public static Model buildUnitCube(Material material){
 
         ModelBuilder modelBuilder = new WgModelBuilder();
         return modelBuilder.createBox(1f, 1f, 1f, material,
             VertexAttributes.Usage.Position | VertexAttributes.Usage.TextureCoordinates);
     }
 
-
-    @Override
-    public void dispose() {
-        source.dispose();
-        destination.dispose();
-    }
 }
