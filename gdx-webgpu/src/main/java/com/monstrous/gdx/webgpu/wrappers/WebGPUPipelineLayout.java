@@ -18,6 +18,7 @@ package com.monstrous.gdx.webgpu.wrappers;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Disposable;
+import com.github.xpenatan.webgpu.WGPUChainedStruct;
 import com.github.xpenatan.webgpu.WGPUPipelineLayout;
 import com.github.xpenatan.webgpu.WGPUPipelineLayoutDescriptor;
 import com.github.xpenatan.webgpu.WGPUVectorBindGroupLayout;
@@ -34,7 +35,7 @@ public class WebGPUPipelineLayout implements Disposable {
             layouts.push_back( bindGroupLayouts[i].getLayout());
 
         WGPUPipelineLayoutDescriptor pipelineLayoutDesc = WGPUPipelineLayoutDescriptor.obtain();
-        pipelineLayoutDesc.setNextInChain(null);
+        pipelineLayoutDesc.setNextInChain(WGPUChainedStruct.NULL);
         pipelineLayoutDesc.setLabel(label);
         pipelineLayoutDesc.setBindGroupLayouts(layouts);
         layout = new WGPUPipelineLayout();

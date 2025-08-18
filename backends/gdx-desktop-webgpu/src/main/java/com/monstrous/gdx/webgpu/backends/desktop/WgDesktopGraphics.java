@@ -24,19 +24,16 @@ import com.badlogic.gdx.graphics.glutils.HdpiMode;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.utils.Disposable;
 
-import com.github.xpenatan.webgpu.WGPUAdapter;
 import com.github.xpenatan.webgpu.WGPUInstance;
 import com.github.xpenatan.webgpu.WGPUSurface;
-import com.github.xpenatan.webgpu.WGPUSurfaceCapabilities;
+import com.github.xpenatan.webgpu.idl.IDLBase;
 import com.monstrous.gdx.webgpu.application.WebGPUApplication;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.utils.WgGL20;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.GLFW;
-import org.lwjgl.glfw.GLFWFramebufferSizeCallback;
 import org.lwjgl.glfw.GLFWNativeWin32;
-import org.lwjgl.system.Configuration;
 
 import java.nio.IntBuffer;
 import static org.lwjgl.glfw.GLFW.GLFW_PLATFORM_WAYLAND;
@@ -144,7 +141,7 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
         System.out.println("os.name: "+osName);
         if(osName.contains("win")) {
             long display = GLFWNativeWin32.glfwGetWin32Window(windowHandle);
-            surface = instance.createWindowsSurface(display);
+            surface = instance.createWindowsSurface(IDLBase.createInstance().native_setVoid(display));
         }
         else if(osName.contains("linux")) {
             System.out.println("Platform: "+glfwGetPlatform());
@@ -152,17 +149,22 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
                 System.out.println("Wayland");
                 long display = glfwGetWaylandDisplay();
                 long surf = glfwGetWaylandWindow(windowHandle);
-                surface = instance.createLinuxSurface(true, surf, display);
+                IDLBase idlwindow = IDLBase.createInstance().native_setVoid(surf);
+                IDLBase idlDisplay = IDLBase.createInstance().native_setVoid(display);
+                surface = instance.createLinuxSurface(true, idlwindow, idlDisplay);
             }
             else {
                 System.out.println("X11");
                 long display = glfwGetX11Display();
                 long surf = glfwGetX11Window(windowHandle);
-                surface = instance.createLinuxSurface(false, surf, display);
+                IDLBase idlwindow = IDLBase.createInstance().native_setVoid(surf);
+                IDLBase idlDisplay = IDLBase.createInstance().native_setVoid(display);
+                surface = instance.createLinuxSurface(false, idlwindow, idlDisplay);
             }
         }
         else if(osName.contains("mac")) {
-            surface = instance.createMacSurface(windowHandle);
+            IDLBase idlHandle = IDLBase.createInstance().native_setVoid(windowHandle);
+            surface = instance.createMacSurface(idlHandle);
         }
         return surface;
     }

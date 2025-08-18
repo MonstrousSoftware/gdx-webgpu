@@ -33,7 +33,7 @@ public class TestMeshBuilder extends GdxTest {
 
 			PipelineSpecification pipelineSpec = new PipelineSpecification(vattr, getShaderSource());
 			pipelineSpec.name = "pipeline";
-			pipeline = new WebGPUPipeline((WGPUPipelineLayout) null, pipelineSpec);
+			pipeline = new WebGPUPipeline(WGPUPipelineLayout.NULL, pipelineSpec);
 
 			// create a circular mesh part with the mesh builder
             WgMeshBuilder mb = new WgMeshBuilder();

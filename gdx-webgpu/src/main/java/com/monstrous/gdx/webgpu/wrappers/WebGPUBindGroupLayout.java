@@ -101,7 +101,7 @@ public class WebGPUBindGroupLayout implements Disposable {
      */
     private WGPUBindGroupLayoutEntry addBinding(int bindingId, WGPUShaderStage visibility ){
         WGPUBindGroupLayoutEntry bindingLayout =  new WGPUBindGroupLayoutEntry();
-        bindingLayout.setNextInChain(null);
+        bindingLayout.setNextInChain(WGPUChainedStruct.NULL);
         setDefaultLayout(bindingLayout);
         bindingLayout.setBinding(bindingId);
         bindingLayout.setVisibility(visibility);
@@ -111,7 +111,7 @@ public class WebGPUBindGroupLayout implements Disposable {
     public void end(){
         // Create a bind group layout
         WGPUBindGroupLayoutDescriptor bindGroupLayoutDesc = WGPUBindGroupLayoutDescriptor.obtain();
-        bindGroupLayoutDesc.setNextInChain(null);
+        bindGroupLayoutDesc.setNextInChain(WGPUChainedStruct.NULL);
         bindGroupLayoutDesc.setLabel(label);
         WGPUVectorBindGroupLayoutEntry entryVector = WGPUVectorBindGroupLayoutEntry.obtain();
         for(WGPUBindGroupLayoutEntry entry : entries.values())
@@ -137,23 +137,23 @@ public class WebGPUBindGroupLayout implements Disposable {
 
 
     private void setDefaultLayout(WGPUBindGroupLayoutEntry bindingLayout) {
-        bindingLayout.setNextInChain(null);
+        bindingLayout.setNextInChain(WGPUChainedStruct.NULL);
 
 
 
-//        bindingLayout.getBuffer().setNextInChain(null);
+//        bindingLayout.getBuffer().setNextInChain(WGPUChainedStruct.NULL);
 //        bindingLayout.getBuffer().setType(WGPUBufferBindingType.Undefined);
 //        bindingLayout.getBuffer().setHasDynamicOffset(0);
 //
-//        bindingLayout.getSampler().setNextInChain(null);
+//        bindingLayout.getSampler().setNextInChain(WGPUChainedStruct.NULL);
 //        bindingLayout.getSampler().setType(WGPUSamplerBindingType.Undefined);
 //
-//        bindingLayout.getStorageTexture().setNextInChain(null);
+//        bindingLayout.getStorageTexture().setNextInChain(WGPUChainedStruct.NULL);
 //        bindingLayout.getStorageTexture().setAccess(WGPUStorageTextureAccess.Undefined);
 //        bindingLayout.getStorageTexture().setFormat(WGPUTextureFormat.Undefined);
 //        bindingLayout.getStorageTexture().setViewDimension(WGPUTextureViewDimension.Undefined);
 //
-//        bindingLayout.getTexture().setNextInChain(null);
+//        bindingLayout.getTexture().setNextInChain(WGPUChainedStruct.NULL);
 //        bindingLayout.getTexture().setMultisampled(0);
 //        bindingLayout.getTexture().setSampleType(WGPUTextureSampleType.Undefined);
 //        bindingLayout.getTexture().setViewDimension(WGPUTextureViewDimension.Undefined);

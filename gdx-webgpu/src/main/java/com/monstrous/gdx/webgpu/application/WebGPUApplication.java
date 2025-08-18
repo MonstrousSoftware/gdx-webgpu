@@ -220,7 +220,7 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
         gpuTimer.resolveTimeStamps(encoder);
 
         WGPUCommandBufferDescriptor cmdBufferDescriptor = WGPUCommandBufferDescriptor.obtain();
-        cmdBufferDescriptor.setNextInChain(null);
+        cmdBufferDescriptor.setNextInChain(WGPUChainedStruct.NULL);
         cmdBufferDescriptor.setLabel("Command buffer");
         encoder.finish(cmdBufferDescriptor, command);
         encoder.release();
@@ -372,7 +372,7 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
         config.setWidth(width);
         config.setHeight(height);
         config.setFormat(surfaceFormat);
-        config.setViewFormats(null);
+        config.setViewFormats(WGPUVectorTextureFormat.NULL);
         config.setUsage(WGPUTextureUsage.RenderAttachment);
         config.setDevice(device);
         config.setPresentMode(vsyncEnabled ? WGPUPresentMode.Fifo : WGPUPresentMode.Immediate);

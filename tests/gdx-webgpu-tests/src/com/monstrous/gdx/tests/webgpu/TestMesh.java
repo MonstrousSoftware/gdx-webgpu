@@ -28,7 +28,7 @@ public class TestMesh extends GdxTest {
             // create a render pipeline with the given shader code
 			PipelineSpecification pipelineSpec = new PipelineSpecification(vattr, getShaderSource());
 			pipelineSpec.name = "pipeline";
-			pipeline = new WebGPUPipeline((WGPUPipelineLayout) null, pipelineSpec);
+			pipeline = new WebGPUPipeline(WGPUPipelineLayout.NULL, pipelineSpec);
 
             // create a mesh for a square: 4 vertices and 6 indices (to make two triangles)
 			mesh = new WgMesh(true, 4, 6, vattr);

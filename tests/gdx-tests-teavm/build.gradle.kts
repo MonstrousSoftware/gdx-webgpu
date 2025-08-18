@@ -14,6 +14,7 @@ dependencies {
 
     implementation("com.badlogicgames.gdx:gdx:$gdxVersion")
     implementation("com.github.xpenatan.gdx-teavm:backend-teavm:$gdxTeaVMVersion")
+    implementation("com.github.xpenatan.gdx-teavm:backend-teavm:$gdxTeaVMVersion:sources")
 
     //implementation(project(":tests:gdx-tests-webgpu2")) // module deleted
     implementation(project(":gdx-webgpu"))

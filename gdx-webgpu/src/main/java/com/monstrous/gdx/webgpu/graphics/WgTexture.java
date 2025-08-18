@@ -282,7 +282,7 @@ public class WgTexture extends Texture {
     public static WGPUTexture createTexture(String label, int width, int height, int mipLevelCount, WGPUTextureUsage textureUsage, WGPUTextureFormat format, int numLayers, int numSamples, WGPUTextureFormat viewFormat) {
         // Create the texture
         WGPUTextureDescriptor textureDesc = WGPUTextureDescriptor.obtain();
-        textureDesc.setNextInChain(null);
+        textureDesc.setNextInChain(WGPUChainedStruct.NULL);
         textureDesc.setLabel(label);
         textureDesc.setDimension(WGPUTextureDimension._2D);
 

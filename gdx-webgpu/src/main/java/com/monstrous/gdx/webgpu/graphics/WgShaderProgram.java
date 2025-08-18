@@ -19,6 +19,7 @@ package com.monstrous.gdx.webgpu.graphics;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.utils.Disposable;
+import com.github.xpenatan.webgpu.WGPUChainedStruct;
 import com.github.xpenatan.webgpu.WGPUSType;
 import com.github.xpenatan.webgpu.WGPUShaderModule;
 import com.github.xpenatan.webgpu.WGPUShaderModuleDescriptor;
@@ -56,7 +57,7 @@ public class WgShaderProgram implements Disposable {
         shaderDesc.setLabel(name);
 
         WGPUShaderSourceWGSL shaderCodeDesc = WGPUShaderSourceWGSL.obtain();
-        shaderCodeDesc.getChain().setNext(null);
+        shaderCodeDesc.getChain().setNext(WGPUChainedStruct.NULL);
         shaderCodeDesc.getChain().setSType(WGPUSType.ShaderSourceWGSL);
         shaderCodeDesc.setCode(processedSource);
 

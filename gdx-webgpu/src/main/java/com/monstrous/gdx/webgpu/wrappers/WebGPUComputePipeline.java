@@ -41,7 +41,7 @@ public class WebGPUComputePipeline implements Disposable {
 
         WGPUComputePipelineDescriptor pipelineDesc = WGPUComputePipelineDescriptor.obtain();
 
-        pipelineDesc.setNextInChain(null);
+        pipelineDesc.setNextInChain(WGPUChainedStruct.NULL);
 
         pipelineDesc.getCompute().setModule(shader.getShaderModule());
         pipelineDesc.getCompute().setEntryPoint(entryPoint);
