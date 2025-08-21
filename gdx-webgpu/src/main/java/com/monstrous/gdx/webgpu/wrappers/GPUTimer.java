@@ -51,7 +51,7 @@ public class GPUTimer implements Disposable {
 
         // Create timestamp queries
         WGPUQuerySetDescriptor querySetDescriptor =  WGPUQuerySetDescriptor.obtain();
-        querySetDescriptor.setNextInChain(null);
+        querySetDescriptor.setNextInChain(WGPUChainedStruct.NULL);
         querySetDescriptor.setLabel("Timestamp Query Set");
         querySetDescriptor.setType(WGPUQueryType.Timestamp);
         querySetDescriptor.setCount(2*MAX_PASSES); // start and end time

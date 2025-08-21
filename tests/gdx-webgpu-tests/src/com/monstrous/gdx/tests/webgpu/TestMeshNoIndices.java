@@ -31,7 +31,7 @@ public class TestMeshNoIndices extends GdxTest {
             // create a render pipeline with the given shader code
 			PipelineSpecification pipelineSpec = new PipelineSpecification(vattr, getShaderSource());
 			pipelineSpec.name = "pipeline";
-			pipeline = new WebGPUPipeline((WGPUPipelineLayout) null, pipelineSpec);
+			pipeline = new WebGPUPipeline(WGPUPipelineLayout.NULL, pipelineSpec);
 
             // create a mesh for a square: 6 verts (to make two triangles)
 			mesh = new WgMesh(true, 6, 0, vattr);

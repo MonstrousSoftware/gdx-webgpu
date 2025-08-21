@@ -241,7 +241,7 @@ public class Binder implements Disposable {
                 layouts.push_back(layout.getLayout());
 
             WGPUPipelineLayoutDescriptor pipelineLayoutDesc = WGPUPipelineLayoutDescriptor.obtain();
-            pipelineLayoutDesc.setNextInChain(null);
+            pipelineLayoutDesc.setNextInChain(WGPUChainedStruct.NULL);
             pipelineLayoutDesc.setLabel(label);
             pipelineLayoutDesc.setBindGroupLayouts(layouts);
 

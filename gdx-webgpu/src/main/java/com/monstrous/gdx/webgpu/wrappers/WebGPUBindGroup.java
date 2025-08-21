@@ -69,7 +69,7 @@ public class WebGPUBindGroup implements Disposable {
         // Create a reusable bind group descriptor
         //
         bindGroupDescriptor = new WGPUBindGroupDescriptor();
-        bindGroupDescriptor.setNextInChain(null);
+        bindGroupDescriptor.setNextInChain(WGPUChainedStruct.NULL);
         bindGroupDescriptor.setLayout(layout.getLayout());
 
 
@@ -132,9 +132,9 @@ public class WebGPUBindGroup implements Disposable {
     }
 
     private void setDefault(WGPUBindGroupEntry entry){
-        entry.setBuffer(null);
-        entry.setSampler(null);
-        entry.setTextureView(null);
+        entry.setBuffer(WGPUBuffer.NULL);
+        entry.setSampler(WGPUSampler.NULL);
+        entry.setTextureView(WGPUTextureView.NULL);
     }
 
 

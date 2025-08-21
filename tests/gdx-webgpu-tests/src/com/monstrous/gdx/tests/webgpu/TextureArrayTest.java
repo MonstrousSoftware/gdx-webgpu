@@ -207,7 +207,7 @@ public class TextureArrayTest extends GdxTest {
 	}
 
     private String getShaderSource() {
-        return Gdx.files.classpath("data/wgsl/texture-array.wgsl").readString();
+        return Gdx.files.internal("data/wgsl/texture-array.wgsl").readString();
     }
 
 }

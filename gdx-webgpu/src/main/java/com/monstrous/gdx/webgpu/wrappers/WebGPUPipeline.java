@@ -50,7 +50,7 @@ public class WebGPUPipeline implements Disposable {
         WGPUVertexBufferLayout vertexBufferLayout = spec.vertexAttributes == null ? null : WebGPUVertexLayout.buildVertexBufferLayout(spec.vertexAttributes);
 
         WGPURenderPipelineDescriptor pipelineDesc = WGPURenderPipelineDescriptor.obtain();
-        pipelineDesc.setNextInChain(null);
+        pipelineDesc.setNextInChain(WGPUChainedStruct.NULL);
         pipelineDesc.setLabel(spec.name);
 
         WGPUVectorVertexBufferLayout bufferLayout = WGPUVectorVertexBufferLayout.obtain();
@@ -70,13 +70,13 @@ public class WebGPUPipeline implements Disposable {
 
         if (spec.colorFormat != WGPUTextureFormat.Undefined) {   // if there is a color attachment
             WGPUFragmentState fragmentState = WGPUFragmentState.obtain();
-            fragmentState.setNextInChain(null);
+            fragmentState.setNextInChain(WGPUChainedStruct.NULL);
             fragmentState.setModule(shader.getShaderModule());
             fragmentState.setEntryPoint(spec.fragmentShaderEntryPoint);
-            fragmentState.setConstants(null);
+            fragmentState.setConstants(WGPUVectorConstantEntry.NULL);
 
             // blending
-            WGPUBlendState blendState = null;
+            WGPUBlendState blendState = WGPUBlendState.NULL;
             if (spec.blendingEnabled) {
                 blendState = WGPUBlendState.obtain();
                 blendState.getColor().setSrcFactor(spec.blendSrcColor);
@@ -132,7 +132,7 @@ public class WebGPUPipeline implements Disposable {
 
             pipelineDesc.setDepthStencil(depthStencilState);
         } else {
-            pipelineDesc.setDepthStencil(null); // no depth or stencil buffer
+            pipelineDesc.setDepthStencil(WGPUDepthStencilState.NULL); // no depth or stencil buffer
         }
         pipelineDesc.getMultisample().setCount(spec.numSamples);
         pipelineDesc.getMultisample().setMask(-1);

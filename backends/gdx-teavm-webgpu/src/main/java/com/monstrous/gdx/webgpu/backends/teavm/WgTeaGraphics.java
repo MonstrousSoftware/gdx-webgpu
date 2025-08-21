@@ -66,7 +66,7 @@ public class WgTeaGraphics extends TeaGraphics implements WgGraphics {
             WebGPUContext.Backend.WEBGPU);
 
         System.out.println("Creating instance");
-        instance = WGPU.createInstance();
+        instance = WGPU.setupInstance();
         if(!instance.isValid()) {
             throw new RuntimeException("WebGPU: cannot get instance");
         }

@@ -197,15 +197,15 @@ public class ComputeMoldSlime extends GdxTest {
         webgpu.device.createCommandEncoder(encoderDesc, encoder);
 
         WGPUComputePassDescriptor passDescriptor = WGPUComputePassDescriptor.obtain();
-        passDescriptor.setNextInChain(null);
-        passDescriptor.setTimestampWrites(null);
+        passDescriptor.setNextInChain(WGPUChainedStruct.NULL);
+        passDescriptor.setTimestampWrites(WGPUComputePassTimestampWrites.NULL);
 
 
         // Step 1. move agents
         encoder.beginComputePass(passDescriptor, pass);
         // set pipeline & bind group 0
         pass.setPipeline(pipeline1.getPipeline());
-        pass.setBindGroup(0, bindGroupMove.getBindGroup(), null);
+        pass.setBindGroup(0, bindGroupMove.getBindGroup(), WGPUVectorInt.NULL);
 
         int invocationCountX = config.numAgents;    // nr of input values
 
@@ -220,7 +220,7 @@ public class ComputeMoldSlime extends GdxTest {
         encoder.beginComputePass(passDescriptor, pass);
         // set pipeline & bind group 0
         pass.setPipeline(pipeline2.getPipeline());
-        pass.setBindGroup(0, bindGroupEvap.getBindGroup(), null);
+        pass.setBindGroup(0, bindGroupEvap.getBindGroup(), WGPUVectorInt.NULL);
 
         invocationCountX = width;
         int invocationCountY = height;
@@ -239,7 +239,7 @@ public class ComputeMoldSlime extends GdxTest {
         encoder.beginComputePass(passDescriptor, pass);
         // set pipeline & bind group 0
         pass.setPipeline(pipeline3.getPipeline());
-        pass.setBindGroup(0, bindGroupBlur.getBindGroup(), null);
+        pass.setBindGroup(0, bindGroupBlur.getBindGroup(), WGPUVectorInt.NULL);
 
         invocationCountX = width;
         invocationCountY = height;

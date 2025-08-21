@@ -111,14 +111,14 @@ public class TestCompute extends GdxTest {
         // Create a compute pass
         WGPUComputePassEncoder pass = new WGPUComputePassEncoder();
         WGPUComputePassDescriptor passDescriptor = WGPUComputePassDescriptor.obtain();
-        passDescriptor.setNextInChain(null);
-        passDescriptor.setTimestampWrites(null);
+        passDescriptor.setNextInChain(WGPUChainedStruct.NULL);
+        passDescriptor.setTimestampWrites(WGPUComputePassTimestampWrites.NULL);
         encoder.beginComputePass(passDescriptor, pass);
 
 
             // set pipeline & bind group 0
             pass.setPipeline(pipeline.getPipeline());
-            pass.setBindGroup(0, bindGroup.getBindGroup(), null);
+            pass.setBindGroup(0, bindGroup.getBindGroup(), WGPUVectorInt.NULL);
 
             int workGroupSize = 32;
             int invocationCount = BUFFER_SIZE / Float.BYTES;    // nr of input values

@@ -343,7 +343,7 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 
     private WGPUPipelineLayout createPipelineLayout(String label, WebGPUBindGroupLayout... bindGroupLayouts ) {
         WGPUPipelineLayoutDescriptor pipelineLayoutDesc = WGPUPipelineLayoutDescriptor.obtain();
-        pipelineLayoutDesc.setNextInChain(null);
+        pipelineLayoutDesc.setNextInChain(WGPUChainedStruct.NULL);
         pipelineLayoutDesc.setLabel(label);
         WGPUVectorBindGroupLayout layouts = WGPUVectorBindGroupLayout.obtain();
         for (int i = 0; i < bindGroupLayouts.length; i++)

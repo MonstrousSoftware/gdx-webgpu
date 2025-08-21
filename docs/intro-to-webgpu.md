@@ -201,7 +201,7 @@ Note: step 3 to 5 are performed by the user's code in ApplicationListener.render
 
 	// create a color attachment
 	renderPassColorAttachment = WGPURenderPassColorAttachment.obtain();
-	renderPassColorAttachment.setNextInChain(null);
+	renderPassColorAttachment.setNextInChain(WGPUChainedStruct.NULL);
 
 	// clear to a grey background color
 	renderPassColorAttachment.setLoadOp(WGPULoadOp.Clear);
@@ -210,7 +210,7 @@ Note: step 3 to 5 are performed by the user's code in ApplicationListener.render
 
 	// attach to the targetView obtained earlier
 	renderPassColorAttachment.setView(targetView);
-	renderPassColorAttachment.setResolveTarget(null);
+	renderPassColorAttachment.setResolveTarget(WGPUTextureView.NULL);
 
 	// add the color attachment to the render pass descriptor
 	WGPUVectorRenderPassColorAttachment colorAttachments = WGPUVectorRenderPassColorAttachment.obtain();

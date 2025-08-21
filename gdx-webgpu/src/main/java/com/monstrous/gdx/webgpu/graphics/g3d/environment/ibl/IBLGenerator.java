@@ -172,7 +172,7 @@ public class IBLGenerator  {
                 mapBatch.end();
 
                 WGPUCommandBufferDescriptor cmdBufferDescriptor = WGPUCommandBufferDescriptor.obtain();
-                cmdBufferDescriptor.setNextInChain(null);
+                cmdBufferDescriptor.setNextInChain(WGPUChainedStruct.NULL);
                 cmdBufferDescriptor.setLabel("Command buffer");
                 WGPUCommandBuffer command = new WGPUCommandBuffer();
 
@@ -248,7 +248,7 @@ public class IBLGenerator  {
             mapBatch.end();
 
             WGPUCommandBufferDescriptor cmdBufferDescriptor = WGPUCommandBufferDescriptor.obtain();
-            cmdBufferDescriptor.setNextInChain(null);
+            cmdBufferDescriptor.setNextInChain(WGPUChainedStruct.NULL);
             cmdBufferDescriptor.setLabel("Command buffer");
             WGPUCommandBuffer command = new WGPUCommandBuffer();
 

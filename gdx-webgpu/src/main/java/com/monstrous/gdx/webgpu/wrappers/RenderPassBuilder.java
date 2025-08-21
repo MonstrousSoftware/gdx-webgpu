@@ -89,8 +89,8 @@ public class RenderPassBuilder {
         WGPUTextureFormat colorFormat = WGPUTextureFormat.Undefined;
 
         WGPURenderPassDescriptor renderPassDescriptor = WGPURenderPassDescriptor.obtain();
-        renderPassDescriptor.setNextInChain(null);
-        renderPassDescriptor.setOcclusionQuerySet(null);
+        renderPassDescriptor.setNextInChain(WGPUChainedStruct.NULL);
+        renderPassDescriptor.setOcclusionQuerySet(WGPUQuerySet.NULL);
         renderPassDescriptor.setLabel(name);
 
 
@@ -103,7 +103,7 @@ public class RenderPassBuilder {
             passType == RenderPassType.NO_DEPTH) {
 
             WGPURenderPassColorAttachment renderPassColorAttachment = WGPURenderPassColorAttachment.obtain();
-            renderPassColorAttachment.setNextInChain(null);
+            renderPassColorAttachment.setNextInChain(WGPUChainedStruct.NULL);
             renderPassColorAttachment.setStoreOp(WGPUStoreOp.Store);
 
             renderPassColorAttachment.setDepthSlice(-1);
@@ -128,13 +128,13 @@ public class RenderPassBuilder {
                     renderPassColorAttachment.setResolveTarget(webgpu.getTargetView());
                 } else {
                     renderPassColorAttachment.setView(webgpu.getTargetView());
-                    renderPassColorAttachment.setResolveTarget(null);
+                    renderPassColorAttachment.setResolveTarget(WGPUTextureView.NULL);
                 }
                 colorFormat = webgpu.getSurfaceFormat();
 
             } else {
                 renderPassColorAttachment.setView(outTexture.getTextureView());
-                renderPassColorAttachment.setResolveTarget(null);
+                renderPassColorAttachment.setResolveTarget(WGPUTextureView.NULL);
                 colorFormat = outTexture.getFormat();
                 sampleCount = 1;
             }
