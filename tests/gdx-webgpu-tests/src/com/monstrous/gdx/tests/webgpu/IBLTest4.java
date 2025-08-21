@@ -98,7 +98,7 @@ public class IBLTest4 extends GdxTest {
         WgCubemap radianceMap = IBLGenerator.buildRadianceMap(cubemap, 128);
 
         // use cube map as a sky box
-        skyBox = new SkyBox(cubemap);
+        skyBox = new SkyBox(irradianceMap);
 
         modelBatch = new WgModelBatch();
 

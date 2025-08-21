@@ -400,11 +400,11 @@ fn BRDF( L : vec3f, V:vec3f, N: vec3f, roughness:f32, metallic:f32, baseColor: v
 #ifdef USE_IBL
 fn ambientIBL( V:vec3f, N: vec3f, roughness:f32, metallic:f32, baseColor: vec3f) -> vec3f {
 
-    let NdotV : f32 = clamp(dot(N, V), 0.0, 1.0);
+    let NdotV : f32 = max(dot(N,V), 0.0); //clamp(dot(N, V), 0.0, 1.0);
     let F :vec3f    = F_Schlick(NdotV, metallic, baseColor);
     // kS = F, kD = 1 - kS;
     let kD = (vec3f(1.0) - F)*(1.0 - metallic);
-    let lightSample:vec3f = N * vec3f(1, 1, -1);   // check flipping
+    let lightSample:vec3f = normalize(N * vec3f(1, 1, -1));   // check flipping
     let irradiance:vec3f = textureSample(irradianceMap, irradianceSampler, lightSample).rgb;
     let diffuse:vec3f    = irradiance * baseColor.rgb;
 

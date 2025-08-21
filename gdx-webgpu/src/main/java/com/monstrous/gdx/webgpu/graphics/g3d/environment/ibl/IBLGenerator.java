@@ -19,10 +19,7 @@ package com.monstrous.gdx.webgpu.graphics.g3d.environment.ibl;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.PerspectiveCamera;
-import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.VertexAttributes;
+import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
@@ -101,6 +98,8 @@ public class IBLGenerator  {
         Model cube = buildUnitCube(new Material(ColorAttribute.createDiffuse(Color.WHITE)));
         ModelInstance cubeInstance = new ModelInstance(cube);
 
+
+
         Environment environment = new Environment();
         environment.set(new WgCubemapAttribute(EnvironmentMap, environmentMap));    // add cube map attribute
 
@@ -135,6 +134,8 @@ public class IBLGenerator  {
         PerspectiveCamera snapCam = createCamera();
 
         WgCubemap cube = new WgCubemap(size, levels > 0, WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst));
+        cube.setWrap(Texture.TextureWrap.MirroredRepeat, Texture.TextureWrap.MirroredRepeat);
+        cube.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
 
         for(int mipLevel = 0; mipLevel < levels; mipLevel++) {
 
@@ -166,7 +167,7 @@ public class IBLGenerator  {
 
                 WebGPUContext.RenderOutputState prevState = webgpu.pushTargetView(colorTexture.getTextureView(), format, size, size, depthTexture);
 
-                mapBatch.begin(snapCam, Color.BLACK, true);
+                mapBatch.begin(snapCam, Color.GREEN, true);
                 mapBatch.render(instance, environment);
                 mapBatch.end();
 
@@ -212,6 +213,8 @@ public class IBLGenerator  {
 
         PerspectiveCamera snapCam = createCamera();
         WgCubemap cube = new WgCubemap(size, false, WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst));
+        cube.setWrap(Texture.TextureWrap.MirroredRepeat, Texture.TextureWrap.MirroredRepeat);
+        cube.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
 
         final WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or( WGPUTextureUsage.CopyDst).or(WGPUTextureUsage.RenderAttachment).or( WGPUTextureUsage.CopySrc);
         WGPUTextureFormat format = WGPUTextureFormat.RGBA8UnormSrgb;

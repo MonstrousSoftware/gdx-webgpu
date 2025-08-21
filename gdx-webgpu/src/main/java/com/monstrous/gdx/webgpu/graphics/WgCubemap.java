@@ -97,7 +97,8 @@ public class WgCubemap extends WgTexture {
 		if (!data.isPrepared()) data.prepare();
 
         setFilter(TextureFilter.Linear, TextureFilter.Linear);
-        setWrap(TextureWrap.ClampToEdge, TextureWrap.ClampToEdge);
+        //setWrap(TextureWrap.ClampToEdge, TextureWrap.ClampToEdge);
+        setWrap(TextureWrap.MirroredRepeat, TextureWrap.MirroredRepeat);
 
 		data.consumeCubemapDataCreate(this);
 	}
