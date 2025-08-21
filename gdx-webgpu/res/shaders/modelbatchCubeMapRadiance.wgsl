@@ -103,7 +103,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
 
         let NdotL:f32 = max(dot(N, L), 0.0);
         prefilteredColor += select(vec3f(0), textureSample(cubeMap, cubeMapSampler, L*vec3(1,1,-1)).rgb * NdotL, NdotL > 0.0);
-        totalWeight      += select(0, NdotL, NdotL > 0.0);
+        totalWeight      += select(0.0, NdotL, NdotL > 0.0);
     }
     prefilteredColor = prefilteredColor / totalWeight;
 
