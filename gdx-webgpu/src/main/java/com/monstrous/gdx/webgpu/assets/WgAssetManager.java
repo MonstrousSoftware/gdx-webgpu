@@ -21,6 +21,7 @@ import com.badlogic.gdx.assets.loaders.*;
 import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Cubemap;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
@@ -31,6 +32,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.utils.I18NBundle;
 import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.UBJsonReader;
+import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgG3dModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLBModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLTFModelLoader;
@@ -57,7 +59,8 @@ public class WgAssetManager extends AssetManager {
 	public WgAssetManager(FileHandleResolver resolver, boolean defaultLoaders) {
 		super(resolver, false);
 		if (defaultLoaders) {
-			setLoader(BitmapFont.class, new BitmapFontLoader(resolver));
+			setLoader(FileHandle.class, new WgWebFileLoader(resolver));
+			setLoader(WgBitmapFont.class, new WgBitmapFontLoader(resolver));
 			setLoader(Music.class, new MusicLoader(resolver));
 			setLoader(Pixmap.class, new PixmapLoader(resolver));
 			setLoader(Sound.class, new SoundLoader(resolver));

@@ -45,26 +45,27 @@ import java.util.List;
  *
  * @author badlogicgames@gmail.com */
 public class WebGPUTests {
-	public static final List<Class<? extends GdxTest>> tests = new ArrayList<Class<? extends GdxTest>>(Arrays.<Class<? extends GdxTest>>asList(
-	// @off
-		ClearScreen.class,
-		SpriteBatchTest.class,
-		StageTest.class,
-		ColorTest.class,
-		FontTest.class,
-		Scene2dTest.class,
-		ImmediateModeRendererTest.class,
-		ShapeRendererTest.class,
+    public static final List<Class<? extends GdxTest>> tests = new ArrayList<Class<? extends GdxTest>>(Arrays.<Class<? extends GdxTest>>asList(
+        // @off
+        AssetManagerTest.class,
+        ClearScreen.class,
+        SpriteBatchTest.class,
+        StageTest.class,
+        ColorTest.class,
+        FontTest.class,
+        Scene2dTest.class,
+        ImmediateModeRendererTest.class,
+        ShapeRendererTest.class,
         ShapeRenderer2DTest.class,
-		NinePatchTest.class,
-		ModelBatchTest.class,
-		WrapAndFilterTest.class,
-		LoadObjTest.class,
-		LoadG3DJTest.class,
-		LoadModelTest.class,
+        NinePatchTest.class,
+        ModelBatchTest.class,
+        WrapAndFilterTest.class,
+        LoadObjTest.class,
+        LoadG3DJTest.class,
+        LoadModelTest.class,
         LoadGLTFTest.class,
-		LightingTest.class,
-		InstancingTest.class,
+        LightingTest.class,
+        InstancingTest.class,
         ViewportTest.class,
         ScissorTest.class,
         ASimpleGame.class,
@@ -105,62 +106,63 @@ public class WebGPUTests {
         ImageBasedLighting.class,
         IBLTest.class
 
-		// @on
+        // @on
 
-	));
+    ));
 
-	static final ObjectMap<String, String> obfuscatedToOriginal = new ObjectMap();
-	static final ObjectMap<String, String> originalToObfuscated = new ObjectMap();
-	static {
-		InputStream mappingInput = WebGPUTests.class.getResourceAsStream("/mapping.txt");
-		if (mappingInput != null) {
-			BufferedReader reader = null;
-			try {
-				reader = new BufferedReader(new InputStreamReader(mappingInput), 512);
-				while (true) {
-					String line = reader.readLine();
-					if (line == null) break;
-					if (line.startsWith("    ")) continue;
-					String[] split = line.replace(":", "").split(" -> ");
-					String original = split[0];
-					if (original.indexOf('.') != -1) original = original.substring(original.lastIndexOf('.') + 1);
-					originalToObfuscated.put(original, split[1]);
-					obfuscatedToOriginal.put(split[1], original);
-				}
-				reader.close();
-			} catch (Exception ex) {
-				System.out.println("GdxTests: Error reading mapping file: mapping.txt");
-				ex.printStackTrace();
-			} finally {
-				StreamUtils.closeQuietly(reader);
-			}
-		}
-	}
+    static final ObjectMap<String, String> obfuscatedToOriginal = new ObjectMap();
+    static final ObjectMap<String, String> originalToObfuscated = new ObjectMap();
 
-	public static List<String> getNames () {
-		List<String> names = new ArrayList<String>(tests.size());
-		for (Class clazz : tests)
-			names.add(obfuscatedToOriginal.get(clazz.getSimpleName(), clazz.getSimpleName()));
-		Collections.sort(names);
-		return names;
-	}
+    static {
+        InputStream mappingInput = WebGPUTests.class.getResourceAsStream("/mapping.txt");
+        if(mappingInput != null) {
+            BufferedReader reader = null;
+            try {
+                reader = new BufferedReader(new InputStreamReader(mappingInput), 512);
+                while(true) {
+                    String line = reader.readLine();
+                    if(line == null) break;
+                    if(line.startsWith("    ")) continue;
+                    String[] split = line.replace(":", "").split(" -> ");
+                    String original = split[0];
+                    if(original.indexOf('.') != -1) original = original.substring(original.lastIndexOf('.') + 1);
+                    originalToObfuscated.put(original, split[1]);
+                    obfuscatedToOriginal.put(split[1], original);
+                }
+                reader.close();
+            } catch(Exception ex) {
+                System.out.println("GdxTests: Error reading mapping file: mapping.txt");
+                ex.printStackTrace();
+            } finally {
+                StreamUtils.closeQuietly(reader);
+            }
+        }
+    }
 
-	public static Class<? extends GdxTest> forName (String name) {
-		name = originalToObfuscated.get(name, name);
-		for (Class clazz : tests)
-			if (clazz.getSimpleName().equals(name)) return clazz;
-		return null;
-	}
+    public static List<String> getNames() {
+        List<String> names = new ArrayList<String>(tests.size());
+        for(Class clazz : tests)
+            names.add(obfuscatedToOriginal.get(clazz.getSimpleName(), clazz.getSimpleName()));
+        Collections.sort(names);
+        return names;
+    }
 
-	public static GdxTest newTest (String testName) {
-		testName = originalToObfuscated.get(testName, testName);
-		try {
-			return forName(testName).newInstance();
-		} catch (InstantiationException e) {
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
+    public static Class<? extends GdxTest> forName(String name) {
+        name = originalToObfuscated.get(name, name);
+        for(Class clazz : tests)
+            if(clazz.getSimpleName().equals(name)) return clazz;
+        return null;
+    }
+
+    public static GdxTest newTest(String testName) {
+        testName = originalToObfuscated.get(testName, testName);
+        try {
+            return forName(testName).newInstance();
+        } catch(InstantiationException e) {
+            e.printStackTrace();
+        } catch(IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

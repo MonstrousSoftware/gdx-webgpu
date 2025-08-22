@@ -16,7 +16,9 @@
 
 package com.monstrous.gdx.webgpu.graphics.g3d.loaders;
 
-import com.badlogic.gdx.assets.AssetLoaderParameters;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.assets.AssetDescriptor;
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.FileHandleResolver;
 import com.badlogic.gdx.assets.loaders.TextureLoader;
 import com.badlogic.gdx.files.FileHandle;
@@ -28,7 +30,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.Vector4;
 import com.badlogic.gdx.utils.Array;
-import com.monstrous.gdx.webgpu.graphics.WgTexture;
+import com.badlogic.gdx.utils.ObjectMap;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.gltf.*;
 import com.monstrous.gdx.webgpu.graphics.g3d.model.PBRModelTexture;
 import com.monstrous.gdx.webgpu.graphics.g3d.model.WgModelMeshPart;
@@ -44,7 +46,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
     private final Map<GLTFPrimitive, String> meshMap = new HashMap<>();
     private int fallbackMaterialId;
 
-
+    private GLTF glModel;
 
 	public WgGLTFModelLoader() {
 		this(null);
@@ -54,7 +56,51 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
 		super(resolver);
 	}
 
-	@Override
+    @Override
+    public Model loadSync(AssetManager manager, String fileName, FileHandle file, ModelParameters parameters) {
+        glModel.rawBuffer = new GLTFRawBuffer(glModel.buffers.get(0).uri);
+        ModelData modelData = load(glModel);
+        ObjectMap.Entry<String, ModelData> item = new ObjectMap.Entry<String, ModelData>();
+        item.key = fileName;
+        item.value = modelData;
+        synchronized (items) {
+            items.add(item);
+        }
+        return super.loadSync(manager, fileName, file, parameters);
+    }
+
+    @Override
+    public Array<AssetDescriptor> getDependencies(String fileName, FileHandle file, ModelParameters parameters) {
+        Array<AssetDescriptor> deps = new Array<AssetDescriptor>();
+
+        int lastSlashPos = file.path().lastIndexOf('/');
+        String path = file.path().substring(0, lastSlashPos + 1);
+        String json = file.readString();
+
+        /* Read file into a GLTF class hierarchy. */
+        glModel = ParserGLTF.parseJSON( json, path);
+
+        TextureLoader.TextureParameter textureParameter = (parameters != null) ? parameters.textureParameter
+            : defaultParameters.textureParameter;
+
+        for(GLTFTexture glTexture : glModel.textures) {
+            GLTFImage glImage = glModel.images.get(glTexture.source);
+            if(glImage.uri != null && !glImage.uri.startsWith("data:")) {
+                FileHandle child = Gdx.files.getFileHandle(glImage.uri, file.type());
+                deps.add(new AssetDescriptor(child, Texture.class, textureParameter));
+            }
+        }
+        for(int i = 0; i < glModel.buffers.size(); i++) {
+            GLTFBuffer glBuffer = glModel.buffers.get(i);
+            if(!glBuffer.uri.startsWith("data:")) {
+                FileHandle child = Gdx.files.getFileHandle(glBuffer.uri, file.type());
+                deps.add(new AssetDescriptor(child, FileHandle.class));
+            }
+        }
+        return deps;
+    }
+
+    @Override
 	public ModelData loadModelData (FileHandle fileHandle, ModelParameters parameters) {
         // create path to find additional resources
         int lastSlashPos = fileHandle.path().lastIndexOf('/');
