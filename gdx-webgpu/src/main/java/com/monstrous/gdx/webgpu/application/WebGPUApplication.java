@@ -386,7 +386,7 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
     }
 
     private void initDepthBuffer(int width, int height, int samples){
-        //System.out.println("initDepthBuffer: "+width+" x "+height);
+        System.out.println("initDepthBuffer: "+width+" x "+height);
         depthTexture = new WgTexture("depth texture", width, height, false, WGPUTextureUsage.RenderAttachment,
                 WGPUTextureFormat.Depth24Plus, samples, WGPUTextureFormat.Depth24Plus );
     }
@@ -444,13 +444,14 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
     /** Push a texture view to use for output, instead of the screen. */
     @Override
     public RenderOutputState pushTargetView(WGPUTextureView textureView, WGPUTextureFormat textureFormat, int width, int height, WgTexture depthTex) {
-        RenderOutputState state = new RenderOutputState(targetView, surfaceFormat, depthTexture, getViewportRectangle());
+        RenderOutputState state = new RenderOutputState(targetView, surfaceFormat, depthTexture, getViewportRectangle(), getSamples());
         targetView = textureView;
         surfaceFormat = textureFormat;
+        config.numSamples = 1;      // no antialiasing to texture output
         if(depthTex != null){
             depthTexture = depthTex;
         }
-        setViewportRectangle(0,0,width, height);
+        setViewportRectangle(0,0,width, height);    // scissors too?
         return state;
     }
 
@@ -460,6 +461,7 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
         targetView = prevState.targetView;
         surfaceFormat = prevState.surfaceFormat;
         depthTexture = prevState.depthTexture;
+        config.numSamples = prevState.numSamples;
     }
 
     @Override

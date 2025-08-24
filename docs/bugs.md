@@ -19,3 +19,8 @@ THis happens when the file list contains the following:
     "data/g3d/teapot.g3db",
 Deleting one of the names makes the error disappear. Presumably somewhere
 a WGPUTexture is dropped and garbage collected, without having been disposed.
+
+5. Using numSamples == 4 in combination with frame buffers causes an exception.
+
+6. When using a generated irradianceMap using IBL, black visual artifacts appear on the object aligned with cubemap edges.  The effect is worse if the
+map is larger, e.g. 64x64.

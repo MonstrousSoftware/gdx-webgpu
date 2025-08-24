@@ -23,12 +23,14 @@ public abstract class WebGPUContext {
         WGPUTextureFormat surfaceFormat;
         WgTexture depthTexture;
         Rectangle viewport;
+        int numSamples;
 
-        public RenderOutputState(WGPUTextureView targetView, WGPUTextureFormat surfaceFormat, WgTexture depthTexture, Rectangle viewport) {
+        public RenderOutputState(WGPUTextureView targetView, WGPUTextureFormat surfaceFormat, WgTexture depthTexture, Rectangle viewport, int numSamples) {
             this.targetView = targetView;
             this.surfaceFormat = surfaceFormat;
             this.depthTexture = depthTexture;
             this.viewport = new Rectangle(viewport);
+            this.numSamples = numSamples;
         }
     }
 

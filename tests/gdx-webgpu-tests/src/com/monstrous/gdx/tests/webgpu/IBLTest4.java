@@ -25,6 +25,7 @@ import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
@@ -57,6 +58,7 @@ import static com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribut
 
 /** Test IBL
  * Generates environment cube map from equirectangular texture.
+ * WORK IN PROGRESS
  *
  * */
 
@@ -73,13 +75,15 @@ public class IBLTest4 extends GdxTest {
     Environment environment;
     private WgStage stage;
     private WgSkin skin;
+    private float metallic = 0.0f;
+    private float roughness = 0.0f;
 
 
-	public void create () {
+    public void create() {
 
         cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         cam.position.set(0, 0, -3f);
-        cam.direction.set(0,0,1);
+        cam.direction.set(0, 0, 1);
         cam.near = 0.01f;       // avoid zero
         cam.far = 100f;
         cam.update();
@@ -92,9 +96,9 @@ public class IBLTest4 extends GdxTest {
         equiRectangular = HDRLoader.loadHDR(Gdx.files.internal("data/hdr/leadenhall_market_2k.hdr"), true);
 
         // Generate environment map from equirectangular texture
-        WgCubemap cubemap = IBLGenerator.buildCubeMapFromEquirectangularTexture(equiRectangular, 2048);
+        WgCubemap cubemap = IBLGenerator.buildCubeMapFromEquirectangularTexture(equiRectangular, 1024);
 
-        WgCubemap irradianceMap = IBLGenerator.buildIrradianceMap(cubemap, 32);
+        WgCubemap irradianceMap = IBLGenerator.buildIrradianceMap(cubemap, 128);  // higher values e.g. >32 cause artifacts
         WgCubemap radianceMap = IBLGenerator.buildRadianceMap(cubemap, 128);
 
         // use cube map as a sky box
@@ -103,8 +107,9 @@ public class IBLTest4 extends GdxTest {
         modelBatch = new WgModelBatch();
 
         environment = new Environment();
-        environment.set(new WgCubemapAttribute(DiffuseCubeMap, irradianceMap));    // add irradiance map
+        environment.set(new WgCubemapAttribute(DiffuseCubeMap, irradianceMap));   // add irradiance map
         environment.set(new WgCubemapAttribute(SpecularCubeMap, radianceMap));    // add radiance map
+        environment.set(new WgCubemapAttribute(EnvironmentMap, irradianceMap));    // add cube map attribute
 
         // Model
         //
@@ -116,18 +121,17 @@ public class IBLTest4 extends GdxTest {
 
         System.out.println("Start loading");
         FileHandle file = Gdx.files.internal(modelFileName);
-        if(file.extension().contentEquals("gltf"))
+        if (file.extension().contentEquals("gltf"))
             model = new WgGLTFModelLoader().loadModel(file, params);
-        else if(file.extension().contentEquals("glb"))
+        else if (file.extension().contentEquals("glb"))
             model = new WgGLBModelLoader().loadModel(file, params);
         else
-            System.out.println("File extension not supported: "+modelFileName);
-
+            System.out.println("File extension not supported: " + modelFileName);
 
 
         instance = new ModelInstance(model);
 
-        //instance.materials.get(0).set(new ColorAttribute(ColorAttribute.Diffuse, Color.RED));
+        instance.materials.get(0).set(new ColorAttribute(ColorAttribute.Diffuse, Color.RED));
 
 
         Gdx.input.setInputProcessor(controller);
@@ -140,14 +144,14 @@ public class IBLTest4 extends GdxTest {
         rebuildStage();
 
 
-        InputMultiplexer im= new InputMultiplexer();
+        InputMultiplexer im = new InputMultiplexer();
         im.addProcessor(stage);
         im.addProcessor(controller);
         Gdx.input.setInputProcessor(im);
     }
 
 
-    public void render () {
+    public void render() {
         controller.update();
 
 
@@ -172,40 +176,40 @@ public class IBLTest4 extends GdxTest {
 
     }
 
-    private void rebuildStage(){
+    private void rebuildStage() {
         stage.clear();
 
         Table screenTable = new Table();
         screenTable.setFillParent(true);
 
         Label metallicValue = new Label("", skin);
+        metallicValue.setText(String.format("metallic: %.2f", metallic));
+        instance.materials.get(0).set(new PBRFloatAttribute(PBRFloatAttribute.Metallic, metallic));
         Label roughnessValue = new Label("", skin);
+        roughnessValue.setText(String.format("roughness: %.2f", roughness));
+        instance.materials.get(0).set(new PBRFloatAttribute(PBRFloatAttribute.Roughness, roughness));
 
 
         Table sliderTable = new Table();
         Slider slider = new Slider(0, 1, 0.01f, false, skin);
-        slider.setValue(0);
+        slider.setValue(metallic);
         slider.addListener(new ChangeListener() {
-            public void changed (ChangeEvent event, Actor actor) {
-                float metallic = slider.getValue();
-                metallicValue.setText(String.format("metallic: %.2f", metallic ));
+            public void changed(ChangeEvent event, Actor actor) {
+                metallic = slider.getValue();
+                metallicValue.setText(String.format("metallic: %.2f", metallic));
                 instance.materials.get(0).set(new PBRFloatAttribute(PBRFloatAttribute.Metallic, metallic));
-
             }
         });
 
         Slider slider2 = new Slider(0, 1, 0.01f, false, skin);
-        slider2.setValue(0);
+        slider2.setValue(roughness);
         slider2.addListener(new ChangeListener() {
-            public void changed (ChangeEvent event, Actor actor) {
-                float roughness = slider2.getValue();
-                roughnessValue.setText(String.format("roughness: %.2f", roughness ));
+            public void changed(ChangeEvent event, Actor actor) {
+                roughness = slider2.getValue();
+                roughnessValue.setText(String.format("roughness: %.2f", roughness));
                 instance.materials.get(0).set(new PBRFloatAttribute(PBRFloatAttribute.Roughness, roughness));
-
             }
         });
-
-
 
 
         sliderTable.add(slider);
@@ -220,6 +224,7 @@ public class IBLTest4 extends GdxTest {
         screenTable.add(sliderTable).align(Align.topRight).expand();
         stage.addActor(screenTable);
     }
+
 
 	@Override
 	public void dispose () {
