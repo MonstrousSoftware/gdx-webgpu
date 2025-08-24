@@ -63,6 +63,18 @@ public class WgBitmapFont extends BitmapFont {
 		this(new BitmapFontData(fontFile, flip), (TextureRegion)null, true);
 	}
 
+    /** Creates a BitmapFont with the glyphs relative to the specified region. If the region is null, the glyph textures are loaded
+     * from the image file given in the font file. The {@link #dispose()} method will not dispose the region's texture in this
+     * case!
+     * <p>
+     * The font data is not flipped.
+     * @param fontFile the font definition file
+     * @param region The texture region containing the glyphs. The glyphs must be relative to the lower left corner (ie, the region
+     *           should not be flipped). If the region is null the glyph images are loaded from the image path in the font file. */
+    public WgBitmapFont(FileHandle fontFile, TextureRegion region) {
+        this(fontFile, region, false);
+    }
+
 	/** Creates a BitmapFont from a BMFont file, using the specified image for glyphs. Any image specified in the BMFont file is
 	 * ignored.
 	 * @param flip If true, the glyphs will be flipped for use with a perspective where 0,0 is the upper left corner. */

@@ -2,9 +2,9 @@ package com.monstrous.gdx.webgpu.backends.teavm;
 
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
+import com.github.xpenatan.gdx.backends.teavm.TeaApplication;
 import com.github.xpenatan.gdx.backends.teavm.TeaApplicationConfiguration;
 import com.github.xpenatan.gdx.backends.teavm.TeaGraphics;
-import com.github.xpenatan.gdx.backends.teavm.assetloader.AssetInstance;
 import com.github.xpenatan.gdx.backends.teavm.dom.HTMLDocumentExt;
 import com.github.xpenatan.gdx.backends.teavm.dom.impl.TeaWindow;
 import com.github.xpenatan.webgpu.*;
@@ -22,6 +22,7 @@ public class WgTeaGraphics extends TeaGraphics implements WgGraphics {
 
     public WebGPUApplication context;
     private WGPUInstance instance;
+    private boolean webGPUReady = false;
 
     public WgTeaGraphics(TeaApplicationConfiguration config) {
         this.config = config;
@@ -30,22 +31,12 @@ public class WgTeaGraphics extends TeaGraphics implements WgGraphics {
         HTMLElement elementID = document.getElementById(config.canvasID);
         this.canvas = (HTMLCanvasElement)elementID;
         canvas.setId(canvasName);
-
         this.gl20 = new WgGL20();
-
-        JWebGPULoader.init((isSuccess, e) -> {
-            System.out.println("WebGPU Init Success: " + isSuccess);
-            if(isSuccess) {
-                init(config);
-            }
-            else {
-                e.printStackTrace();
-            }
-        });
     }
 
-    private void init(TeaApplicationConfiguration config) {
-        AssetInstance.getDownloaderInstance().addQueue();
+    void init(TeaApplicationConfiguration config) {
+        TeaApplication teaApplication = WgTeaApplication.get();
+        teaApplication.addInitQueue();
 
         if(config.width >= 0 || config.height >= 0) {
             if(config.isFixedSizeApplication()) {
@@ -101,17 +92,14 @@ public class WgTeaGraphics extends TeaGraphics implements WgGraphics {
         context.renderFrame(listener);
     }
 
-
-    boolean webGPUReady = false;
-
     @Override
     public void update() {
         if(context != null) {
             context.update();
             if(!webGPUReady && context.isReady()) {
+                TeaApplication teaApplication = WgTeaApplication.get();
+                teaApplication.subtractInitQueue();;
                 webGPUReady = true;
-                // trigger rendering as soon as all assets are downloaded
-                AssetInstance.getDownloaderInstance().subtractQueue();
             }
         }
         super.update();

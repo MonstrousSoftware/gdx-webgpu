@@ -41,3 +41,19 @@ tasks.register("core-run-teavm") {
 
     tasks.findByName("jettyRun")?.mustRunAfter("core-build")
 }
+
+tasks.register<JavaExec>("asset-manager-build") {
+    group = "example-teavm"
+    description = "Build AssetManager test"
+    mainClass.set("com.monstrous.gdx.tests.webgpu.assetmanager.BuildAssetManagerTest")
+    classpath = sourceSets["main"].runtimeClasspath
+}
+
+tasks.register("asset-manager-teavm") {
+    group = "example-teavm"
+    description = "Run AssetManager test"
+    val list = listOf("asset-manager-build", "jettyRun")
+    dependsOn(list)
+
+    tasks.findByName("jettyRun")?.mustRunAfter("asset-manager-build")
+}
