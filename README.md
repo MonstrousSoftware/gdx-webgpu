@@ -1,5 +1,10 @@
-# Gdx-webgpu
+# gdx-webgpu
 by Monstrous Software
+
+![Build](https://github.com/monstroussoftware/gdx-webgpu/actions/workflows/snapshot.yml/badge.svg)
+
+[![Maven Central Version](https://img.shields.io/maven-central/v/io.github.monstroussoftware.gdx-webgpu/gdx-webgpu)](https://central.sonatype.com/artifact/io.github.monstroussoftware.gdx-webgpu/gdx-webgpu)
+[![Static Badge](https://img.shields.io/badge/snapshot---SNAPSHOT-red)](https://central.sonatype.com/service/rest/repository/browse/maven-snapshots/io/github/monstroussoftware/gdx-webgpu/)
 
 ## What is it?
 This is an extension for LibGDX which allows you to use the WebGPU graphics API instead of OpenGL.
