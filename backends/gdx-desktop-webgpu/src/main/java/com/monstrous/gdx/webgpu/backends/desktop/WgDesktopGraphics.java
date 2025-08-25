@@ -573,10 +573,14 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
 		GLFW.glfwSetWindowAttrib(window.getWindowHandle(), GLFW.GLFW_RESIZABLE, resizable ? GLFW.GLFW_TRUE : GLFW.GLFW_FALSE);
 	}
 
+    /** Set vertical synchronisation for the current window. Note that if there are multiple windows, the frame rate of all windows will be limited
+     * if any one of them has vsync set to true.
+     * @param vsync vsync enabled or not.
+     */
 	@Override
 	public void setVSync (boolean vsync) {
 		getWindow().getConfig().vSyncEnabled = vsync;
-//		GLFW.glfwSwapInterval(vsync ? 1 : 0);
+        getContext().setVSync(vsync);
 	}
 
 	/** Sets the target framerate for the application, when using continuous rendering. Must be positive. The cpu sleeps as needed.

@@ -288,6 +288,14 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
         return textureViewOut;
     }
 
+    /** Set Vertical Sync of swap chain */
+    public void setVSync(boolean vsync){
+        if(swapChainActive) {
+            exitSwapChain();
+            initSwapChain(width, height, vsync);
+        }
+    }
+
 
     // Should not be called during a renderFrame() as the swap chain is then being used.
     // E.g. WgDesktopWindow calls this via postRunnable() after having received an async resize event from GLFW.
