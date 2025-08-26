@@ -80,9 +80,6 @@ public class WgTexture extends Texture {
         this.label = label;
 
         this.numSamples = 1;
-//        WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst);
-//        if (renderAttachment)
-//            textureUsage = textureUsage.or(WGPUTextureUsage.RenderAttachment);
 
         create( label, useMipMaps, textureUsage, WGPUTextureFormat.RGBA8UnormSrgb, numLayers, numSamples, null);
     }
@@ -241,6 +238,11 @@ public class WgTexture extends Texture {
                 ++w;
             return w;
         }
+    }
+
+    /** determine a preferred number of mip levels based on texture dimensions */
+    public static int calculateMipLevelCount(int width, int height){
+        return Math.max(1, bitWidth(Math.min(width, height)));
     }
 
     // renderAttachment - will this texture be used for render output
@@ -493,7 +495,7 @@ public class WgTexture extends Texture {
             }
 //            if(mipLevel == mipLevelCount-1)
 //                break;
-            // todo we should be able to avoid once malloc/free
+            // todo we should be able to avoid one malloc/free
             prev = next;
             next = BufferUtils.newUnsafeByteBuffer( mipLevelWidth * mipLevelHeight * 4);
         }

@@ -53,7 +53,6 @@ public class HDRLoader {
         if(asLDR){
 
             ByteBuffer pixels = BufferUtils.newUnsafeByteBuffer(imageHeight*imageWidth*numComponents);
-            int index = 0;
 
             for(int y=0 ; y<imageHeight ; y++){
                 for(int x=0 ; x<imageWidth ; x++){
@@ -61,7 +60,7 @@ public class HDRLoader {
                     RGBE.rgbe2float(pixel, hdrData, idx); // TODO exposure should be done in this call for best precision.
 
                     for(int i=0 ; i<3 ; i++){
-                        pixel[i] = (float)Math.pow(pixel[i], 0.45f);
+                        //pixel[i] = (float)Math.pow(pixel[i], 0.45f);
                         pixel[i] = Math.min(pixel[i], 1.0f);			// clamp to be LDR
                     }
 
@@ -71,7 +70,7 @@ public class HDRLoader {
                     pixels.put((byte)255);
                 }
             }
-            texture = new WgTexture("", imageWidth, imageHeight,false, false, WGPUTextureFormat.RGBA8Unorm,1);
+            texture = new WgTexture(file.name(), imageWidth, imageHeight,false, false, WGPUTextureFormat.RGBA8UnormSrgb,1);
             pixels.flip();
             texture.load(pixels);
             BufferUtils.disposeUnsafeByteBuffer(pixels);

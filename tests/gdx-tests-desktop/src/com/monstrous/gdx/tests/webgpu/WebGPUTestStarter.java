@@ -25,6 +25,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.github.xpenatan.webgpu.JWebGPUBackend;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTestWrapper;
@@ -51,7 +52,6 @@ public class WebGPUTestStarter {
         config.enableGPUtiming = true;
         config.backend = WebGPUContext.Backend.DEFAULT;
         config.backendWebGPU = JWebGPUBackend.WGPU;  // WGPU or DAWN
-        config.useVsync(false);
 
 		new WgDesktopApplication(new TestChooser(), config);
 	}
@@ -62,7 +62,6 @@ public class WebGPUTestStarter {
 		TextButton lastClickedTestButton;
 
 		public void create () {
-
 
 			final Preferences prefs = Gdx.app.getPreferences("webgpu-tests");
 

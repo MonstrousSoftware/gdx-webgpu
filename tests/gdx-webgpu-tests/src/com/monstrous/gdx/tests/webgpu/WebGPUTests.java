@@ -103,8 +103,8 @@ public class WebGPUTests {
         TextureArrayTest.class,
         SkyBoxTest.class,
         DuckField.class,
-        ImageBasedLighting.class,
-        IBLTest.class
+        IBL_Sliders.class,
+        IBL_Spheres.class
 
         // @on
 

@@ -218,12 +218,10 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
     let viewVec : vec3f = normalize(uFrame.cameraPosition.xyz - in.worldPos.xyz);
 
 #ifdef USE_IBL
-    let ambientLight : vec3f = ambientIBL( viewVec, normal, roughness, metallic, baseColor.rgb);
+    let ambient : vec3f = ambientIBL( viewVec, normal, roughness, metallic, baseColor.rgb);
 #else
-    let ambientLight : vec3f = uFrame.ambientLight.rgb;
+    let ambient : vec3f = uFrame.ambientLight.rgb * baseColor.rgb;
 #endif
-
-    let ambient : vec3f = baseColor.rgb * ambientLight;
 
     // for each directional light
     // could go to vertex shader but esp. specular lighting will be lower quality
@@ -277,7 +275,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
 #ifdef PBR
     let litColor = vec4f(ambient + visibility*radiance, 1.0);
 #else
-    let litColor = vec4f( color.rgb * (ambientLight + visibility * radiance) + visibility*specular, 1.0);
+    let litColor = vec4f( ambient + color.rgb * (visibility * radiance) + visibility*specular, 1.0);
 #endif
 
     color = litColor;
@@ -316,7 +314,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
     //return vec4f(uFrame.ambientLight.rgb, 1.0);
     //return material.diffuseColor;
     //return vec4f(in.fogDepth, 0, 0, 1);
-
+    //return vec4f(ambient, 1.0);
     return color;
 };
 
@@ -400,22 +398,24 @@ fn BRDF( L : vec3f, V:vec3f, N: vec3f, roughness:f32, metallic:f32, baseColor: v
 #ifdef USE_IBL
 fn ambientIBL( V:vec3f, N: vec3f, roughness:f32, metallic:f32, baseColor: vec3f) -> vec3f {
 
-    let NdotV : f32 = max(dot(N,V), 0.0); //clamp(dot(N, V), 0.0, 1.0);
-    let F :vec3f    = F_Schlick(NdotV, metallic, baseColor);
+    let NdotV : f32 = clamp(dot(N, V), 0.0, 1.0);
+    let F :vec3f    =  F_Schlick(NdotV, metallic, baseColor);
+
     // kS = F, kD = 1 - kS;
     let kD = (vec3f(1.0) - F)*(1.0 - metallic);
     let lightSample:vec3f = normalize(N * vec3f(1, 1, -1));   // check flipping
     let irradiance:vec3f = textureSample(irradianceMap, irradianceSampler, lightSample).rgb;
     let diffuse:vec3f    = irradiance * baseColor.rgb;
 
+
     let maxReflectionLOD:f32 = f32(uFrame.numRoughnessLevels);
     let R:vec3f = reflect(-V, N)*vec3f(1, 1, -1);
     let prefilteredColor:vec3f = textureSampleLevel(radianceMap, radianceSampler, R, roughness * maxReflectionLOD).rgb;
     let envBRDF = textureSample(brdfLUT, lutSampler, vec2(NdotV, roughness)).rg;
     let specular: vec3f = prefilteredColor * (F * envBRDF.x + envBRDF.y);
-    let ambient:vec3f    = (kD * diffuse) + specular;
+    //let ambient:vec3f    = (kD * diffuse) + specular;
 
-    //let ambient:vec3f    = (kD * diffuse);
+    let ambient:vec3f    = specular;
     return vec3f(ambient);
 }
 #endif

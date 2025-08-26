@@ -44,6 +44,8 @@ import static com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribut
 /** Utility methods to create IBL textures */
 public class IBLGenerator  {
 
+    public static WgTexture[] debugTextures;
+
 
     public static class MyShaderProvider extends BaseShaderProvider {
         public final IBLShader.Config config = new IBLShader.Config("");
@@ -75,7 +77,7 @@ public class IBLGenerator  {
 
 
     public static WgCubemap buildIrradianceMap(WgCubemap environmentMap, int size){
-        System.out.println("Building irradiance map");
+        System.out.println("Building irradiance map, size "+size);
         // Convert an environment cube map to an irradiance cube map
         Model cube = buildUnitCube(new Material(ColorAttribute.createDiffuse(Color.WHITE)));
         ModelInstance cubeInstance = new ModelInstance(cube);
@@ -104,7 +106,7 @@ public class IBLGenerator  {
         environment.set(new WgCubemapAttribute(EnvironmentMap, environmentMap));    // add cube map attribute
 
         String shaderSource = Gdx.files.internal("shaders/modelbatchCubeMapRadiance.wgsl").readString();
-        WgCubemap radianceMap = constructMap(cubeInstance, shaderSource, environment, size, 5); // todo derive levels from size
+        WgCubemap radianceMap = constructMap(cubeInstance, shaderSource, environment, size, WgTexture.calculateMipLevelCount(size, size));
 
         cube.dispose();
         System.out.println("Built irradiance map");
@@ -125,7 +127,7 @@ public class IBLGenerator  {
     };
 
 
-    private static WgCubemap constructMap(ModelInstance instance, String shaderSource, Environment environment, int size, int levels){
+    private static WgCubemap constructMap(ModelInstance instance, String shaderSource, Environment environment, int size, int numLevels){
         WgGraphics gfx = (WgGraphics) Gdx.graphics;
         WebGPUContext webgpu = gfx.getContext();
 
@@ -133,15 +135,21 @@ public class IBLGenerator  {
 
         PerspectiveCamera snapCam = createCamera();
 
-        WgCubemap cube = new WgCubemap(size, levels > 0, WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst));
-        cube.setWrap(Texture.TextureWrap.MirroredRepeat, Texture.TextureWrap.MirroredRepeat);
+        WgCubemap cube = new WgCubemap(size, numLevels > 1, WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst));
+        cube.setWrap(Texture.TextureWrap.ClampToEdge, Texture.TextureWrap.ClampToEdge);
         cube.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
 
-        for(int mipLevel = 0; mipLevel < levels; mipLevel++) {
+        if(numLevels == 1){
+            debugTextures = new WgTexture[6];
+            for(int i = 0; i < 6; i++)
+                debugTextures[i] = new WgTexture("debug", size, size, false, true, WGPUTextureFormat.RGBA8UnormSrgb, 1);
+        }
+
+        for(int mipLevel = 0; mipLevel < numLevels; mipLevel++) {
 
 
             final WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst).or(WGPUTextureUsage.RenderAttachment).or(WGPUTextureUsage.CopySrc);
-            WGPUTextureFormat format = WGPUTextureFormat.RGBA8UnormSrgb;
+            WGPUTextureFormat format = WGPUTextureFormat.RGBA8Unorm;    //?
             WgTexture colorTexture = new WgTexture("fbo color", size, size, false, textureUsage, format, 1, format);
             WgTexture depthTexture = new WgTexture("fbo depth", size, size, false, textureUsage, WGPUTextureFormat.Depth24Plus, 1, WGPUTextureFormat.Depth24Plus);
 
@@ -184,7 +192,11 @@ public class IBLGenerator  {
                 webgpu.popTargetView(prevState);
 
                 webgpu.device.createCommandEncoder(encoderDesc, webgpu.encoder);
-                copyTexture(webgpu.encoder, cube, side, mipLevel, colorTexture, size);
+                copyTextureToCubeMap(webgpu.encoder, cube, side, mipLevel, colorTexture, size);
+
+                if(numLevels == 1 ){
+                    copyTextureToTexture(webgpu.encoder, debugTextures[side], colorTexture, size);
+                }
 
                 webgpu.encoder.finish(cmdBufferDescriptor, command);
                 webgpu.encoder.release();
@@ -260,7 +272,7 @@ public class IBLGenerator  {
             webgpu.popTargetView(prevState);
 
             webgpu.device.createCommandEncoder(encoderDesc, webgpu.encoder);
-            copyTexture( webgpu.encoder, cube, side, 0, colorTexture, size);
+            copyTextureToCubeMap( webgpu.encoder, cube, side, 0, colorTexture, size);
 
             webgpu.encoder.finish(cmdBufferDescriptor, command);
             webgpu.encoder.release();
@@ -282,20 +294,20 @@ public class IBLGenerator  {
     /** Copy a texture to one side (and one mip level) of a cube map
      * Note: there need to be an active encoder.
      * */
-    public static void copyTexture(WGPUCommandEncoder encoder, WgCubemap cube, int side, int mipLevel, WgTexture sideTexture, int size){
+    public static void copyTextureToCubeMap(WGPUCommandEncoder encoder, WgCubemap destCubeMap, int side, int mipLevel, WgTexture sourceTexture, int size){
 
         // beware not to use .obtain() for 2 structures we need at the same time, because the memory is reused.
         final WGPUTexelCopyTextureInfo source = new WGPUTexelCopyTextureInfo();
         final WGPUTexelCopyTextureInfo destination = new WGPUTexelCopyTextureInfo();
 
-            source.setTexture(sideTexture.getHandle());
+            source.setTexture(sourceTexture.getHandle());
             source.setMipLevel(0);
             source.setAspect(WGPUTextureAspect.All);
             source.getOrigin().setX(0);
             source.getOrigin().setY(0);
             source.getOrigin().setZ(0);
 
-            destination.setTexture(cube.getHandle());
+            destination.setTexture(destCubeMap.getHandle());
             destination.setMipLevel(mipLevel);                // put in specific mip level
             destination.setAspect(WGPUTextureAspect.All);
             destination.getOrigin().setX(0);
@@ -313,6 +325,37 @@ public class IBLGenerator  {
             destination.dispose();
     }
 
+    public static void copyTextureToTexture(WGPUCommandEncoder encoder, WgTexture destTexture, WgTexture sourceTexture, int size){
+
+        // beware not to use .obtain() for 2 structures we need at the same time, because the memory is reused.
+        final WGPUTexelCopyTextureInfo source = new WGPUTexelCopyTextureInfo();
+        final WGPUTexelCopyTextureInfo destination = new WGPUTexelCopyTextureInfo();
+
+        source.setTexture(sourceTexture.getHandle());
+        source.setMipLevel(0);
+        source.setAspect(WGPUTextureAspect.All);
+        source.getOrigin().setX(0);
+        source.getOrigin().setY(0);
+        source.getOrigin().setZ(0);
+
+        destination.setTexture(destTexture.getHandle());
+        destination.setMipLevel(0);
+        destination.setAspect(WGPUTextureAspect.All);
+        destination.getOrigin().setX(0);
+        destination.getOrigin().setY(0);
+        destination.getOrigin().setZ(0);
+
+        WGPUExtent3D ext = WGPUExtent3D.obtain();
+        ext.setWidth(size);
+        ext.setHeight(size);
+        ext.setDepthOrArrayLayers(1);
+
+        encoder.copyTextureToTexture(source, destination, ext);
+
+        source.dispose();
+        destination.dispose();
+    }
+
     /** Create a camera to snap the inside of a unit cube.  View is 90 degrees.
      */
     private static PerspectiveCamera createCamera() {
@@ -320,6 +363,7 @@ public class IBLGenerator  {
         snapCam.position.set(0,0,0);
         snapCam.direction.set(0,0,1);
         snapCam.near =0; // important because default is 1
+        snapCam.far = 10;
         snapCam.update();
         return snapCam;
     }

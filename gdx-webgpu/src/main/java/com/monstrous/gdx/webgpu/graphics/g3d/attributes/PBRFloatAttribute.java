@@ -10,7 +10,7 @@ public class PBRFloatAttribute extends FloatAttribute {
         return new FloatAttribute(Roughness, value);
     }
 
-    public static final String MetallicAlias = "metallic";
+    public static final String MetallicAlias = "metallicFactor";
     public static final long Metallic = register(MetallicAlias);
 
     public static FloatAttribute createMetallic (float value) {

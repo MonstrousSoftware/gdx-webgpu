@@ -37,7 +37,7 @@ import com.monstrous.gdx.webgpu.wrappers.*;
 
 
 /** Simple shader for IBL generation.
- *
+ * Is used to generate textures for a cube map, such as an environment map, an irradiance map or a radiance map.
  * Supports only diffuse texture for materials and ignores environment.
  * */
 
@@ -59,11 +59,22 @@ public class IBLShader extends WgShader implements Disposable {
 
     public IBLShader(final Renderable renderable, Config config) {
 
-        // Create uniform buffer for global (per-frame) uniforms, i.e. projectionView matrix
+
+        boolean hasCubeMap = renderable.environment != null && renderable.environment.has(WgCubemapAttribute.EnvironmentMap);
+
+        // Group 0
+        // binding 0 : uniform buffer (projectionView matrix and numRoughnessLevels)
+        // binding 3 : cube map
+        // binding 4 : cube map sampler
+        //
+        // Group 1
+        // binding 1 : texture view
+        // binding 2 : texture sampler
+
+        // Create uniform buffer for global (per-frame) uniforms, i.e. projectionView matrix and numRoughnessLevels
         final int uniformBufferSize = (16 + 4)* Float.BYTES;
         uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Uniform));
 
-        boolean hasCubeMap = renderable.environment != null && renderable.environment.has(WgCubemapAttribute.EnvironmentMap);
 
         binder = new Binder();
         // define groups
@@ -81,14 +92,10 @@ public class IBLShader extends WgShader implements Disposable {
         binder.defineUniform("projectionViewTransform", 0, 0, offset); offset += 16*4;
         binder.defineUniform("numRoughnessLevels", 0, 0, offset); offset += 4*4;
 
-
         if (hasCubeMap) {
             binder.defineBinding("cubeMap", 0, 3);
             binder.defineBinding("cubeSampler", 0, 4);
         }
-
-
-
 
         if (renderable.material.has(TextureAttribute.Diffuse)) {
             binder.defineGroup(1, createMaterialBindGroupLayout());
@@ -153,7 +160,6 @@ public class IBLShader extends WgShader implements Disposable {
     public int compareTo(Shader other) {
         return 0;
     }
-
 
     @Override
     public boolean canRender(Renderable renderable) {
@@ -225,7 +231,5 @@ public class IBLShader extends WgShader implements Disposable {
         binder.dispose();
         uniformBuffer.dispose();
     }
-
-
 
 }

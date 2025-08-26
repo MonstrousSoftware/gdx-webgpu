@@ -36,5 +36,11 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
 
     let t = uniforms.inverseProjectionViewMatrix * in.pos;
     var color:vec3f = textureSample(cubeMap, cubeMapSampler, normalize(t.xyz / t.w) * vec3f(1, 1, -1)).rgb;
+
+#ifdef GAMMA_CORRECTION
+    let linearColor: vec3f = pow(color.rgb, vec3f(1/2.2));
+    color = linearColor;
+#endif
+
     return vec4f(color, 1f);
 }

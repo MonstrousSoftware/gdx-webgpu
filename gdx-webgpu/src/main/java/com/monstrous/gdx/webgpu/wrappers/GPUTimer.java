@@ -32,7 +32,7 @@ import java.nio.ByteOrder;
  */
 
 public class GPUTimer implements Disposable {
-    public final static int MAX_PASSES = 20;   // max number of passes that we can support
+    public final static int MAX_PASSES = 50;   // max number of passes that we can support
 
     private final boolean enabled;
     private WGPUQuerySet timestampQuerySet;
@@ -90,7 +90,7 @@ public class GPUTimer implements Disposable {
     }
 
     public int addPass(String name){
-        if(passNumber == MAX_PASSES) {
+        if(passNumber >= MAX_PASSES-1) {
             Gdx.app.error("GPUTimer", "Timing too many passes: "+passNumber);
             names[passNumber] = name;
             return passNumber;  // overwrite last slot instead of overflowing

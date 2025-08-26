@@ -3,7 +3,7 @@
 
 
 struct FrameUniforms {
-    projectionViewMatrix : mat4x4f,
+    combinedMatrix : mat4x4f,
 };
 
 
@@ -18,10 +18,7 @@ struct FrameUniforms {
 
 
 struct VertexInput {
-    @location(0) position: vec3f,
-#ifdef TEXTURE_COORDINATE
-    @location(1) uv: vec2f,
-#endif
+    @location(0)        position: vec3f,
 };
 
 struct VertexOutput {
@@ -34,7 +31,7 @@ fn vs_main(in: VertexInput, @builtin(instance_index) instance: u32) -> VertexOut
    var out: VertexOutput;
 
    out.localPos = vec4f(in.position, 1.0);
-   out.position =  uFrame.projectionViewMatrix * vec4f(in.position, 1.0);
+   out.position =  uFrame.combinedMatrix * vec4f(in.position, 1.0);
    return out;
 }
 
@@ -47,7 +44,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
 
 
     // the sample direction equals the hemisphere's orientation
-    let normal:vec3f = normalize(in.localPos).xyz;
+    let normal:vec3f = normalize(in.localPos.xyz);
 
 	var irradiance:vec3f = vec3f(0.0);
 

@@ -492,10 +492,10 @@ public class WgDefaultShader extends WgShader implements Disposable {
         binder.setUniform("shininess",  shiny == null ? 20f : shiny.value );
 
         // the following are multiplication factors for the MR texture. If not provided, use 1.0.
-        final PBRFloatAttribute roughness = material.get(PBRFloatAttribute.class, PBRFloatAttribute.Roughness);
+        final FloatAttribute roughness = material.get(PBRFloatAttribute.class, PBRFloatAttribute.Roughness);
         binder.setUniform("roughnessFactor", roughness == null ? 1f : roughness.value);
 
-        final PBRFloatAttribute metallic = material.get(PBRFloatAttribute.class, PBRFloatAttribute.Metallic);
+        final FloatAttribute metallic = material.get(PBRFloatAttribute.class, PBRFloatAttribute.Metallic);
         binder.setUniform("metallicFactor", metallic == null ? 1f : metallic.value);
 
         // diffuse texture
