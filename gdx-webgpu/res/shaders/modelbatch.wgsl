@@ -413,9 +413,8 @@ fn ambientIBL( V:vec3f, N: vec3f, roughness:f32, metallic:f32, baseColor: vec3f)
     let prefilteredColor:vec3f = textureSampleLevel(radianceMap, radianceSampler, R, roughness * maxReflectionLOD).rgb;
     let envBRDF = textureSample(brdfLUT, lutSampler, vec2(NdotV, roughness)).rg;
     let specular: vec3f = prefilteredColor * (F * envBRDF.x + envBRDF.y);
-    //let ambient:vec3f    = (kD * diffuse) + specular;
+    let ambient:vec3f    = (kD * diffuse) + specular;
 
-    let ambient:vec3f    = specular;
     return vec3f(ambient);
 }
 #endif
