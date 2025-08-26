@@ -225,7 +225,7 @@ public class IBLGenerator  {
 
         PerspectiveCamera snapCam = createCamera();
         WgCubemap cube = new WgCubemap(size, false, WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst));
-        cube.setWrap(Texture.TextureWrap.MirroredRepeat, Texture.TextureWrap.MirroredRepeat);
+        cube.setWrap(Texture.TextureWrap.ClampToEdge, Texture.TextureWrap.ClampToEdge);
         cube.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
 
         final WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or( WGPUTextureUsage.CopyDst).or(WGPUTextureUsage.RenderAttachment).or( WGPUTextureUsage.CopySrc);

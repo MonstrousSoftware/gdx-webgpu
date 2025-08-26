@@ -15,13 +15,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-/** Usage:
- * HDRLoader loader = new HDRLoader();
- * loader.loadHDR(Gdx.files.internal("filename.hdr"));
- * WgTexture tex = loader.getHDRTexture(true);
- *
- * todo rethink this interface? E.g. as one static method?
- */
+
 
 public class HDRLoader {
 
@@ -60,7 +54,7 @@ public class HDRLoader {
                     RGBE.rgbe2float(pixel, hdrData, idx); // TODO exposure should be done in this call for best precision.
 
                     for(int i=0 ; i<3 ; i++){
-                        //pixel[i] = (float)Math.pow(pixel[i], 0.45f);
+                        pixel[i] = (float)Math.pow(pixel[i], 0.45f);    // gamma correction
                         pixel[i] = Math.min(pixel[i], 1.0f);			// clamp to be LDR
                     }
 
