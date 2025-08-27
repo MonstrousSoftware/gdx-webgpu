@@ -28,6 +28,7 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Slider;
@@ -165,6 +166,8 @@ public class IBL_Sliders extends GdxTest {
 
     public void render() {
         controller.update();
+        float delta = Gdx.graphics.getDeltaTime();
+        instance.transform.rotate(Vector3.Y, 15f*delta);
 
 
         modelBatch.begin(cam, Color.BLACK, true);

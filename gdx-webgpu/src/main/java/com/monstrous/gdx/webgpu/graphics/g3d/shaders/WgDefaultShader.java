@@ -245,7 +245,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
         binder.setBuffer("materialUniforms", materialBuffer, 0,  materialSize);
 
-        int instanceSize = 16*Float.BYTES;      // data size per instance
+        int instanceSize = 2*16*Float.BYTES;      // data size per instance
 
         // for now we use a uniform buffer, but we organize data as an array of modelMatrix
         // we are not using dynamic offsets, but we will index the array in teh shader code using the instance_index
@@ -351,7 +351,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         // idem for group 2 (instances), we will fill in the buffer as we go
         binder.bindGroup(renderPass, 2);
 
-        if(webgpu.frameNumber != this.frameNumber ){
+        if(webgpu.frameNumber != this.frameNumber ){    // reset at the start of a frame
             instanceIndex = 0;
             numMaterials = 0;
             this.frameNumber = webgpu.frameNumber;
@@ -420,21 +420,23 @@ public class WgDefaultShader extends WgShader implements Disposable {
     private int prevMaterialHash;
     private int firstInstance;
     private int instanceCount;
+    private final Matrix4 tmpM = new Matrix4();
 
     // note: the combinedAttributes are not used. The signature is maintained to remain compatible with WgShader.
     public void render (Renderable renderable, Attributes attributes) {
         if(instanceIndex > config.maxInstances) {
-            Gdx.app.error("WebGPUModelBatch", "Too many instances, max is " + config.maxInstances);
+            Gdx.app.error("WebGPUModelBatch", "Too many instances, max is configured as " + config.maxInstances);
             return;
         }
 
         // renderable-specific data
 
         // add instance data to instance buffer (instance transform)
-        int offset = instanceIndex * 16 * Float.BYTES;
+        int offset = instanceIndex * 2 * 16 * Float.BYTES;
+        // set world transform for this instance
         instanceBuffer.set(offset,  renderable.worldTransform);
-        // todo normal matrix per instance
-
+        // normal matrix is transpose of inverse of world transform
+        instanceBuffer.set(offset+16*Float.BYTES,  tmpM.set(renderable.worldTransform).inv().tra());
 
         int materialHash = renderable.material.hashCode();
 
@@ -609,10 +611,11 @@ public class WgDefaultShader extends WgShader implements Disposable {
         return layout;
     }
 
+    // 2 mat4 per instance: worldTransform and normalTransform
     private WebGPUBindGroupLayout createInstancingBindGroupLayout(){
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch Binding Group Layout (instance)");
         layout.begin();
-        layout.addBuffer(0, WGPUShaderStage.Vertex , WGPUBufferBindingType.ReadOnlyStorage, 16 *Float.BYTES*config.maxInstances, false);
+        layout.addBuffer(0, WGPUShaderStage.Vertex , WGPUBufferBindingType.ReadOnlyStorage, 2 * 16 *Float.BYTES*config.maxInstances, false);
         layout.end();
         return layout;
     }
