@@ -38,6 +38,7 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.webgpu.graphics.WgCubemap;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
+import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.PBRFloatAttribute;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute;
@@ -72,6 +73,7 @@ public class IBL_Sliders extends GdxTest {
     private WgSkin skin;
     private float metallic = 0.0f;
     private float roughness = 0.0f;
+    private WgSpriteBatch batch;
 
 
     public void create() {
@@ -96,7 +98,7 @@ public class IBL_Sliders extends GdxTest {
 
         // Diffuse cube map (irradiance map)
         //
-        WgCubemap irradianceMap = IBLGenerator.buildIrradianceMap(envMap, 16);
+        WgCubemap irradianceMap = IBLGenerator.buildIrradianceMap(envMap, 128);
 
 
         // Specular cube map (radiance map)
@@ -156,6 +158,8 @@ public class IBL_Sliders extends GdxTest {
         im.addProcessor(controller);
         Gdx.input.setInputProcessor(im);
 
+        batch = new WgSpriteBatch();
+
     }
 
 
@@ -171,6 +175,12 @@ public class IBL_Sliders extends GdxTest {
 
         stage.act();
         stage.draw();
+
+        batch.begin();
+        for(int i = 0; i < 6; i++){
+            batch.draw(IBLGenerator.debugTextures[i], 128*i, 0);
+        }
+        batch.end();
     }
 
     @Override

@@ -138,6 +138,7 @@ fn vs_main(in: VertexInput, @builtin(instance_index) instance: u32) -> VertexOut
 
 #ifdef NORMAL
    // transform model normal to world space
+   // should we use the transposed inverse ?
    let normal = normalize((instances[instance].modelMatrix * vec4f(in.normal, 0.0)).xyz);
 #else
     let normal = vec3f(0,1,0);
@@ -415,6 +416,6 @@ fn ambientIBL( V:vec3f, N: vec3f, roughness:f32, metallic:f32, baseColor: vec3f)
     let specular: vec3f = prefilteredColor * (F * envBRDF.x + envBRDF.y);
     let ambient:vec3f    = (kD * diffuse) + specular;
 
-    return vec3f(ambient);
+    return vec3f(F);
 }
 #endif
