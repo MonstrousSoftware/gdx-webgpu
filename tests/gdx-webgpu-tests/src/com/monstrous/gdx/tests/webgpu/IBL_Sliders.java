@@ -18,6 +18,7 @@ package com.monstrous.gdx.tests.webgpu;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.VertexAttributes;
@@ -99,8 +100,7 @@ public class IBL_Sliders extends GdxTest {
 
         // Diffuse cube map (irradiance map)
         //
-        WgCubemap irradianceMap = IBLGenerator.buildIrradianceMap(envMap, 128);
-
+        WgCubemap irradianceMap = IBLGenerator.buildIrradianceMap(envMap, 16);
 
         // Specular cube map (radiance map)
         //
@@ -114,10 +114,9 @@ public class IBL_Sliders extends GdxTest {
         environment = new Environment();
         environment.set(new WgCubemapAttribute(DiffuseCubeMap, irradianceMap));   // add irradiance map
         environment.set(new WgCubemapAttribute(SpecularCubeMap, radianceMap));    // add radiance map
-        environment.set(new WgCubemapAttribute(EnvironmentMap, irradianceMap));    // add cube map attribute
 
         // Add lighting
-        float intensity = 250f;
+        float intensity = 25f;
         environment.add( new PointLight().setColor(Color.WHITE).setPosition(-10f,10f,10).setIntensity(intensity));
         environment.add( new PointLight().setColor(Color.WHITE).setPosition(10f,10f,10).setIntensity(intensity));
         environment.add( new PointLight().setColor(Color.WHITE).setPosition(10f,-10f,10).setIntensity(intensity));

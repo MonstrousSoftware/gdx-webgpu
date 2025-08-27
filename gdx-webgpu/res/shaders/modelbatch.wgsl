@@ -404,10 +404,9 @@ fn ambientIBL( V:vec3f, N: vec3f, roughness:f32, metallic:f32, baseColor: vec3f)
 
     // kS = F, kD = 1 - kS;
     let kD = (vec3f(1.0) - F)*(1.0 - metallic);
-    let lightSample:vec3f = normalize(N * vec3f(1, 1, -1));   // check flipping
+    let lightSample:vec3f = normalize(N * vec3f(1, 1, -1));   // flip Z
     let irradiance:vec3f = textureSample(irradianceMap, irradianceSampler, lightSample).rgb;
     let diffuse:vec3f    = irradiance * baseColor.rgb;
-
 
     let maxReflectionLOD:f32 = f32(uFrame.numRoughnessLevels);
     let R:vec3f = reflect(-V, N)* vec3f(-1, 1, 1); // flip X

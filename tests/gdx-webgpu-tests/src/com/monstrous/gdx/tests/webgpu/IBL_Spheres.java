@@ -84,7 +84,7 @@ public class IBL_Spheres extends GdxTest {
 
         // Diffuse cube map (irradiance map)
         //
-        WgCubemap irradianceMap = IBLGenerator.buildIrradianceMap(envMap, 64);  // higher values e.g. >=32 cause artifacts
+        WgCubemap irradianceMap = IBLGenerator.buildIrradianceMap(envMap, 64);
 
 
         // Specular cube map (radiance map)
@@ -92,7 +92,7 @@ public class IBL_Spheres extends GdxTest {
         WgCubemap radianceMap = IBLGenerator.buildRadianceMap(envMap, 128);
 
         // use cube map as a sky box
-        skyBox = new SkyBox(envMap);
+        skyBox = new SkyBox(irradianceMap);
 
         modelBatch = new WgModelBatch();
 
@@ -102,7 +102,7 @@ public class IBL_Spheres extends GdxTest {
         environment.set(new WgCubemapAttribute(EnvironmentMap, irradianceMap));    // add cube map attribute
 
         // Add lighting (a few point lights)
-        float intensity = 250f;
+        float intensity = 25f;
         environment.add( new PointLight().setColor(Color.WHITE).setPosition(-10f,10f,10).setIntensity(intensity));
         environment.add( new PointLight().setColor(Color.WHITE).setPosition(10f,10f,10).setIntensity(intensity));
         environment.add( new PointLight().setColor(Color.WHITE).setPosition(10f,-10f,10).setIntensity(intensity));

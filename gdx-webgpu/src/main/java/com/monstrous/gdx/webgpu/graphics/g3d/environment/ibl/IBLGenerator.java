@@ -75,7 +75,7 @@ public class IBLGenerator  {
     public static WgCubemap buildIrradianceMap(WgCubemap environmentMap, int size){
         System.out.println("Building irradiance map, size "+size);
         // Convert an environment cube map to an irradiance cube map
-        Model cube = buildUnitCube(new Material(ColorAttribute.createDiffuse(Color.WHITE)));
+        Model cube = buildUnitCube(new Material());
         ModelInstance cubeInstance = new ModelInstance(cube);
 
         Environment environment = new Environment();
@@ -91,9 +91,9 @@ public class IBLGenerator  {
 
 
     public static WgCubemap buildRadianceMap(WgCubemap environmentMap, int size){
-        System.out.println("Building irradiance map");
+        System.out.println("Building radiance map");
         // Convert an environment cube map to a radiance cube map
-        Model cube = buildUnitCube(new Material(ColorAttribute.createDiffuse(Color.WHITE)));
+        Model cube = buildUnitCube(new Material());
         ModelInstance cubeInstance = new ModelInstance(cube);
 
 
@@ -105,7 +105,7 @@ public class IBLGenerator  {
         WgCubemap radianceMap = constructMap(cubeInstance, shaderSource, environment, size, WgTexture.calculateMipLevelCount(size, size));
 
         cube.dispose();
-        System.out.println("Built irradiance map");
+        System.out.println("Built radiance map");
         return radianceMap;
     }
 
@@ -141,11 +141,14 @@ public class IBLGenerator  {
                 debugTextures[i] = new WgTexture("debug", size, size, false, true, WGPUTextureFormat.RGBA8UnormSrgb, 1);
         }
 
+        // disable gpu timing before we do lots of passes to avoid overflow
+        boolean timerEnabled = webgpu.getGPUTimer().setEnabled(false);
+
         for(int mipLevel = 0; mipLevel < numLevels; mipLevel++) {
 
 
             final WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst).or(WGPUTextureUsage.RenderAttachment).or(WGPUTextureUsage.CopySrc);
-            WGPUTextureFormat format = WGPUTextureFormat.RGBA8Unorm;    //?
+            WGPUTextureFormat format = WGPUTextureFormat.RGBA8Unorm;    // or -Srgb?
             WgTexture colorTexture = new WgTexture("fbo color", size, size, false, textureUsage, format, 1, format);
             WgTexture depthTexture = new WgTexture("fbo depth", size, size, false, textureUsage, WGPUTextureFormat.Depth24Plus, 1, WGPUTextureFormat.Depth24Plus);
 
@@ -153,15 +156,16 @@ public class IBLGenerator  {
 
 
             for (int side = 0; side < 6; side++) {
+
                 // point the camera at one of the cube sides
                 snapCam.direction.set(directions[side]);
                 snapCam.position.set(Vector3.Zero);
                 if (side == 3)
-                    snapCam.up.set(0, 0, 1);
+                    snapCam.up.set(Vector3.Z);
                 else if (side == 2)
-                    snapCam.up.set(0, 0, -1);
+                    snapCam.up.set(Vector3.Z).scl(-1);
                 else
-                    snapCam.up.set(0, 1, 0);
+                    snapCam.up.set(Vector3.Y);
                 snapCam.update();
 
 
@@ -202,12 +206,12 @@ public class IBLGenerator  {
                 command.dispose();
 
 
-
             } // next side
             size /= 2;
         } // next mip level
         webgpu.setViewportRectangle(0,0,Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         mapBatch.dispose();
+        webgpu.getGPUTimer().setEnabled(timerEnabled);
         return cube;
     }
 
@@ -231,7 +235,7 @@ public class IBLGenerator  {
 
         webgpu.setViewportRectangle(0,0, size,size);
 
-
+        boolean timerEnabled = webgpu.getGPUTimer().setEnabled(false);
         for (int side = 0; side < 6; side++) {
             // point the camera at one of the cube sides
             snapCam.direction.set(directions[side]);
@@ -276,10 +280,10 @@ public class IBLGenerator  {
             webgpu.queue.submit(1, command);
             command.release();
             command.dispose();
-
         }
         webgpu.setViewportRectangle(0,0,Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         mapBatch.dispose();
+        webgpu.getGPUTimer().setEnabled(timerEnabled);
         return cube;
     }
 
@@ -367,7 +371,7 @@ public class IBLGenerator  {
     public static Model buildUnitCube(Material material){
 
         ModelBuilder modelBuilder = new WgModelBuilder();
-        return modelBuilder.createBox(1f, 1f, 1f, material,
+        return modelBuilder.createBox(1f, 1f, 1f,material,
             VertexAttributes.Usage.Position | VertexAttributes.Usage.TextureCoordinates);
     }
 

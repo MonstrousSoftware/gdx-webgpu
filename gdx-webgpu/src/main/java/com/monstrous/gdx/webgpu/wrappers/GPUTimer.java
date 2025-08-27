@@ -32,9 +32,9 @@ import java.nio.ByteOrder;
  */
 
 public class GPUTimer implements Disposable {
-    public final static int MAX_PASSES = 50;   // max number of passes that we can support
+    public final static int MAX_PASSES = 20;   // max number of passes that we can support
 
-    private final boolean enabled;
+    private boolean enabled;
     private WGPUQuerySet timestampQuerySet;
     private WGPUBuffer timeStampResolveBuffer;
     private WGPUBuffer timeStampMapBuffer;
@@ -83,6 +83,12 @@ public class GPUTimer implements Disposable {
         return enabled;
     }
 
+    public boolean setEnabled(boolean enabled){
+        boolean old = this.enabled;
+        this.enabled = enabled;
+        return old;
+    }
+
     /** get a query set that can be made into a query for renderPassDescriptor.setTimestampWrites(query);
      *  Will be null if timing is not enabled. */
     public WGPUQuerySet getQuerySet(){
@@ -90,6 +96,8 @@ public class GPUTimer implements Disposable {
     }
 
     public int addPass(String name){
+        if(!enabled)
+            return 0;
         if(passNumber >= MAX_PASSES-1) {
             Gdx.app.error("GPUTimer", "Timing too many passes: "+passNumber);
             names[passNumber] = name;

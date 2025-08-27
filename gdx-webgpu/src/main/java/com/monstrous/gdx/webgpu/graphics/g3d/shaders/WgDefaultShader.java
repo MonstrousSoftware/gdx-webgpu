@@ -172,6 +172,8 @@ public class WgDefaultShader extends WgShader implements Disposable {
             binder.defineBinding("brdfLUT", 0, 9);
             binder.defineBinding("lutSampler", 0, 10);
             brdfLUT = new WgTexture(Gdx.files.internal("brdfLUT.png"));
+            brdfLUT.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+            brdfLUT.setWrap(Texture.TextureWrap.ClampToEdge, Texture.TextureWrap.ClampToEdge);
         } else
             brdfLUT = null;
 
