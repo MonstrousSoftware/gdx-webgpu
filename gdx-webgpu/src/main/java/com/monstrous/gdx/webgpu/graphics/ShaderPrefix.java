@@ -82,15 +82,13 @@ public class ShaderPrefix {
 
 
 
-
-        sb.append("#define SPECULAR\n");
+        // SPECULAR is ignored if PBR is active
+       // sb.append("#define SPECULAR\n");
 
 //        if (environment != null && !environment.depthPass && environment.renderShadows) {
 //            sb.append("#define SHADOWS\n");
 //        }
-//        if (environment != null && environment.useImageBasedLighting) {
-//            sb.append("#define USE_IBL\n");
-//        }
+
 
         // Add gamma correction if surface format is not Srgb
 
@@ -99,19 +97,6 @@ public class ShaderPrefix {
         if(!webgpu.hasLinearOutput()){
             sb.append("#define GAMMA_CORRECTION\n");
         }
-
-
-//        switch(webgpu.surfaceFormat) {
-//            case RGBA8Unorm:
-//            case BGRA8Unorm:
-//            case BC2RGBAUnorm:
-//            case BC3RGBAUnorm:
-//            case BC7RGBAUnorm:
-//            case ETC2RGBA8Unorm:
-//                // some more exotic formats to add...
-//                sb.append("#define GAMMA_CORRECTION\n");
-//                break;
-//        }
 
         System.out.println("Prefix: "+sb.toString());
         return sb.toString();

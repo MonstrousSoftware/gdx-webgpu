@@ -46,6 +46,9 @@ import com.monstrous.gdx.webgpu.graphics.g3d.attributes.PBRFloatAttribute;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute;
 import com.monstrous.gdx.webgpu.graphics.g3d.environment.ibl.HDRLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.environment.ibl.IBLGenerator;
+import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLBModelLoader;
+import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLTFModelLoader;
+import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
 import com.monstrous.gdx.webgpu.scene2d.WgSkin;
 import com.monstrous.gdx.webgpu.scene2d.WgStage;
@@ -112,8 +115,8 @@ public class IBL_Sliders extends GdxTest {
         modelBatch = new WgModelBatch();
 
         environment = new Environment();
-        environment.set(new WgCubemapAttribute(DiffuseCubeMap, irradianceMap));   // add irradiance map
-        environment.set(new WgCubemapAttribute(SpecularCubeMap, radianceMap));    // add radiance map
+        environment.set( WgCubemapAttribute.createDiffuseCubeMap(irradianceMap));   // add irradiance map
+        environment.set( WgCubemapAttribute.createSpecularCubeMap(radianceMap));    // add radiance map
 
         // Add lighting
         float intensity = 25f;
@@ -125,7 +128,7 @@ public class IBL_Sliders extends GdxTest {
         // Model
         //
 
-//        String modelFileName = "data/g3d/gltf/sphere.gltf";
+//        String modelFileName = "data/g3d/gltf/DamagedHelmet/DamagedHelmet.gltf";
 //
 //        WgModelLoader.ModelParameters params = new WgModelLoader.ModelParameters();
 //        params.textureParameter.genMipMaps = true;
@@ -249,7 +252,7 @@ public class IBL_Sliders extends GdxTest {
         Material mat = new Material(ColorAttribute.createDiffuse(albedo), PBRFloatAttribute.createMetallic(metallic), PBRFloatAttribute.createRoughness(roughness) );
 
         WgModelBuilder modelBuilder = new WgModelBuilder();
-        return modelBuilder.createSphere(2f, 2f, 2f, 16, 16, mat, usage);
+        return modelBuilder.createSphere(2f, 2f, 2f, 32, 32, mat, usage);
     }
 
 	@Override

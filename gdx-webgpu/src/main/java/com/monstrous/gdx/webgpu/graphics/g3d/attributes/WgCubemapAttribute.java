@@ -17,7 +17,9 @@
 package com.monstrous.gdx.webgpu.graphics.g3d.attributes;
 
 
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g3d.Attribute;
+import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.monstrous.gdx.webgpu.graphics.WgCubemap;
@@ -61,6 +63,14 @@ public class WgCubemapAttribute extends Attribute {
 	public WgCubemapAttribute(final WgCubemapAttribute copyFrom) {
 		this(copyFrom.type, copyFrom.textureDescription);
 	}
+
+    public static WgCubemapAttribute createDiffuseCubeMap (final WgCubemap cubeMap) {
+        return new WgCubemapAttribute(DiffuseCubeMap, cubeMap);
+    }
+
+    public static WgCubemapAttribute createSpecularCubeMap (final WgCubemap cubeMap) {
+        return new WgCubemapAttribute(SpecularCubeMap, cubeMap);
+    }
 
 	@Override
 	public Attribute copy () {

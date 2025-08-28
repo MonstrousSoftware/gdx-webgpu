@@ -99,7 +99,6 @@ public class IBL_Spheres extends GdxTest {
         environment = new Environment();
         environment.set(new WgCubemapAttribute(DiffuseCubeMap, irradianceMap));   // add irradiance map
         environment.set(new WgCubemapAttribute(SpecularCubeMap, radianceMap));    // add radiance map
-        environment.set(new WgCubemapAttribute(EnvironmentMap, irradianceMap));    // add cube map attribute
 
         // Add lighting (a few point lights)
         float intensity = 25f;
