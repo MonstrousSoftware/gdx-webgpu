@@ -32,7 +32,7 @@ public class ShaderPrefix {
      * The prefix consists of a number of #define statements.
      * */
     // todo add material attributes
-    public static String buildPrefix(VertexAttributes vertexAttributes, Environment environment ){
+    public static String buildPrefix(VertexAttributes vertexAttributes, Environment environment, int maxDirLights, int maxPointLights ){
         sb.setLength(0);
 
         if(vertexAttributes != null) {
@@ -80,7 +80,10 @@ public class ShaderPrefix {
 
         sb.append("#define PBR\n");
 
-
+        if(maxDirLights > 0)
+            sb.append("#define MAX_DIR_LIGHTS ").append(maxDirLights).append('\n');
+        if(maxPointLights > 0)
+            sb.append("#define MAX_POINT_LIGHTS ").append(maxPointLights).append('\n');
 
         // SPECULAR is ignored if PBR is active
        // sb.append("#define SPECULAR\n");

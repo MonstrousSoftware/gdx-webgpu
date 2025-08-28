@@ -4,7 +4,6 @@
 
 // Note this is an uber shader with conditional compilation depending on #define values from the shader prefix
 
-
 struct DirectionalLight {
     color: vec4f,
     direction: vec4f
@@ -19,8 +18,12 @@ struct PointLight {
 struct FrameUniforms {
     projectionViewTransform: mat4x4f,
     shadowProjViewTransform: mat4x4f,
-    directionalLights : array<DirectionalLight, 3>,     // todo don't use hard coded constant for array size
-    pointLights : array<PointLight, 3>,     // todo don't use hard coded constant for array size
+#ifdef MAX_DIR_LIGHTS
+    directionalLights : array<DirectionalLight, MAX_DIR_LIGHTS>,
+#endif
+#ifdef MAX_POINT_LIGHTS
+    pointLights : array<PointLight, MAX_POINT_LIGHTS>,
+#endif
     ambientLight: vec4f,
     cameraPosition: vec4f,
     fogColor: vec4f,
@@ -224,9 +227,10 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
     let ambient : vec3f = uFrame.ambientLight.rgb * baseColor.rgb;
 #endif
 
+#ifdef MAX_DIR_LIGHTS
     // for each directional light
     // could go to vertex shader but esp. specular lighting will be lower quality
-    let numDirectionalLights = uFrame.numDirectionalLights; //min(uFrame.numDirectionalLights, 3);     // fail-safe
+    let numDirectionalLights = min(uFrame.numDirectionalLights, MAX_DIR_LIGHTS);     // fail-safe
     if(numDirectionalLights > 0) {
         for (var i: u32 = 0; i < u32(numDirectionalLights); i++) {
             let light = uFrame.directionalLights[i];
@@ -246,9 +250,12 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
 #endif // PBR
         }
     }
+#endif //MAX_DIR_LIGHTS
+
+#ifdef MAX_POINT_LIGHTS
     // for each point light
     // note: default libgdx seems to ignore intensity of point lights
-    let numPointLights = min(uFrame.numPointLights, 3); // fail-safe
+    let numPointLights = min(uFrame.numPointLights, MAX_POINT_LIGHTS); // fail-safe
     if(numPointLights > 0) {
         for (var i: u32 = 0; i < u32(numPointLights); i++) {
             let light = uFrame.pointLights[i];
@@ -272,6 +279,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
 #endif // PBR
         }
     }
+#endif // MAX_POINT_LIGHTS
 
 #ifdef PBR
     let litColor = vec4f(ambient + visibility*radiance, 1.0);

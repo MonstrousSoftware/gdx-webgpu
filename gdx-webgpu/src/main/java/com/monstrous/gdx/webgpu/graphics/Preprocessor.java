@@ -32,6 +32,7 @@ import java.util.Map;
 public class Preprocessor {
 
     private static final Map<String,String> defineMap = new HashMap<>();
+    private static final Map<String,String> defineSubstitutions = new HashMap<>();
 
     public static String process(String input){
         defineMap.clear();
@@ -77,8 +78,7 @@ public class Preprocessor {
                         define(words[1], words[2]);
                 }
                 else
-                    output.append(line).append('\n');
-
+                    process(output, line);
             }
             //output.append(nestDepth).append(':').append(branchTaken).append(line).append('\n');
 
@@ -86,12 +86,21 @@ public class Preprocessor {
         return output.toString();
     }
 
+    // substitute #defined keys by their value, e.g. if you used #define ABC 123 every instance of ABC will be substituted with 123.
+    private static void process(StringBuilder output, String line){
+        for(String key : defineSubstitutions.keySet()){
+            String value = defineSubstitutions.get(key);
+            line = line.replace(key, value);
+        }
+        output.append(line).append('\n');
+    }
+
     // b may be null, e.g. #define DEBUG
+    // note: b is a simple string, not an expression.
     private static void define(String a, String b){
         defineMap.put(a, b);
-        //System.out.print("#define "+a);
         if(b != null)
-            System.out.print(" := "+b);
+            defineSubstitutions.put(a, b);
     }
 
     private static boolean defined(String name){

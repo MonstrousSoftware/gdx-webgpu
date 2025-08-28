@@ -93,8 +93,8 @@ public class WgDefaultShader extends WgShader implements Disposable {
         public Config() {
             this.maxInstances = 1024;
             this.maxMaterials = 512;
-            this.maxDirectionalLights = 3;  // todo hard coded in shader, don't change
-            this.maxPointLights = 3;  // todo hard coded in shader, don't change
+            this.maxDirectionalLights = 3;
+            this.maxPointLights = 3;
         }
     }
 
@@ -286,6 +286,9 @@ public class WgDefaultShader extends WgShader implements Disposable {
         primitiveType = renderable.meshPart.primitiveType;
         if(primitiveType == GL20.GL_LINES)  // todo all cases
             pipelineSpec.topology = WGPUPrimitiveTopology.LineList;
+
+        pipelineSpec.maxDirLights = config.maxDirectionalLights;
+        pipelineSpec.maxPointLights = config.maxPointLights;
 
         //System.out.println("pipeline spec: "+pipelineSpec.hashCode()+pipelineSpec.vertexAttributes);
 
@@ -659,7 +662,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
         if(dirs != null){
             if( dirs.size > config.maxDirectionalLights)
-                throw new RuntimeException("Too many directional lights");
+                throw new RuntimeException("Too many directional lights. Increase the configured maximum.");
 
             for(int i = 0; i < dirs.size; i++) {
                 directionalLights[i].color.set(dirs.get(i).color);
@@ -678,7 +681,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
         if(points != null){
             if( points.size > config.maxPointLights)
-                throw new RuntimeException("Too many point lights");
+                throw new RuntimeException("Too many point lights. Increase the configured maximum.");
             // is it useful to copy from attributes to a local array?
             for(int i = 0; i < points.size; i++) {
                 pointLights[i].color.set(points.get(i).color);

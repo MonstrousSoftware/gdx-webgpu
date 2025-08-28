@@ -28,6 +28,7 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
+import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -49,6 +50,7 @@ import com.monstrous.gdx.webgpu.graphics.g3d.environment.ibl.IBLGenerator;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLBModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLTFModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgModelLoader;
+import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDefaultShader;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
 import com.monstrous.gdx.webgpu.scene2d.WgSkin;
 import com.monstrous.gdx.webgpu.scene2d.WgStage;
@@ -112,7 +114,10 @@ public class IBL_Sliders extends GdxTest {
         // use cube map as a sky box
         skyBox = new SkyBox(envMap);
 
-        modelBatch = new WgModelBatch();
+        WgDefaultShader.Config config = new WgDefaultShader.Config();
+        config.maxPointLights = 4;
+        config.maxDirectionalLights = 0;
+        modelBatch = new WgModelBatch(config);
 
         environment = new Environment();
         environment.set( WgCubemapAttribute.createDiffuseCubeMap(irradianceMap));   // add irradiance map
@@ -123,7 +128,7 @@ public class IBL_Sliders extends GdxTest {
         environment.add( new PointLight().setColor(Color.WHITE).setPosition(-10f,10f,10).setIntensity(intensity));
         environment.add( new PointLight().setColor(Color.WHITE).setPosition(10f,10f,10).setIntensity(intensity));
         environment.add( new PointLight().setColor(Color.WHITE).setPosition(10f,-10f,10).setIntensity(intensity));
-        //environment.add( new PointLight().setColor(Color.WHITE).setPosition(-10f,-10f,10).setIntensity(intensity));
+        environment.add( new PointLight().setColor(Color.WHITE).setPosition(-10f,-10f,10).setIntensity(intensity));
 
         // Model
         //
