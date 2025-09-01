@@ -20,7 +20,6 @@ package com.monstrous.gdx.webgpu.graphics.g3d.environment.ibl;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.*;
-import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.utils.BaseShaderProvider;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
@@ -109,6 +108,22 @@ public class IBLGenerator  {
         return radianceMap;
     }
 
+    public static WgCubemap createOutdoor(int size){
+        System.out.println("Building indoor environment");
+        // Convert an environment cube map to a radiance cube map
+        Model cube = buildUnitCube(new Material());
+        ModelInstance cubeInstance = new ModelInstance(cube);
+
+        Environment environment = new Environment();
+
+        String shaderSource = Gdx.files.internal("shaders/genIBL.wgsl").readString();
+        WgCubemap envMap = constructMap(cubeInstance, shaderSource, environment, size, 1);
+
+        cube.dispose();
+        System.out.println("Built indoor environment");
+        return envMap;
+    }
+
 
     public WgTexture getBRDFLookUpTable(){
         return new WgTexture(Gdx.files.internal("brdfLUT.png"), false);
@@ -135,7 +150,7 @@ public class IBLGenerator  {
         cube.setWrap(Texture.TextureWrap.ClampToEdge, Texture.TextureWrap.ClampToEdge);
         cube.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
 
-        if(numLevels == 1){
+        if(size == 256){
             debugTextures = new WgTexture[6];
             for(int i = 0; i < 6; i++)
                 debugTextures[i] = new WgTexture("debug", size, size, false, true, WGPUTextureFormat.RGBA8UnormSrgb, 1);
@@ -194,7 +209,7 @@ public class IBLGenerator  {
                 webgpu.device.createCommandEncoder(encoderDesc, webgpu.encoder);
                 copyTextureToCubeMap(webgpu.encoder, cube, side, mipLevel, colorTexture, size);
 
-                if(numLevels == 1 ){
+                if(size == 256){
                     copyTextureToTexture(webgpu.encoder, debugTextures[side], colorTexture, size);
                 }
 

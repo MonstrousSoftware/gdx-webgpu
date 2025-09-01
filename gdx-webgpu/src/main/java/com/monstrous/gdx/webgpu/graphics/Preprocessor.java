@@ -22,7 +22,8 @@ import java.util.Map;
 /**
  * Very basic preprocessor for shader code.
  * Supports:
- *      #define NAME  (not #define name value!)
+ *      #define NAME
+ *      #define NAME VALUE
  *      #ifdef / #ifndef
  *      #else
  *      #endif
@@ -87,6 +88,7 @@ public class Preprocessor {
     }
 
     // substitute #defined keys by their value, e.g. if you used #define ABC 123 every instance of ABC will be substituted with 123.
+    // note that the input is not tokenized and key will also be substituted if it is a substring, e.g. FLABCORE will become FL123ORE
     private static void process(StringBuilder output, String line){
         for(String key : defineSubstitutions.keySet()){
             String value = defineSubstitutions.get(key);

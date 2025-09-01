@@ -18,7 +18,6 @@ package com.monstrous.gdx.tests.webgpu;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
-import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.VertexAttributes;
@@ -28,7 +27,6 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
-import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -47,16 +45,11 @@ import com.monstrous.gdx.webgpu.graphics.g3d.attributes.PBRFloatAttribute;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute;
 import com.monstrous.gdx.webgpu.graphics.g3d.environment.ibl.HDRLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.environment.ibl.IBLGenerator;
-import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLBModelLoader;
-import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLTFModelLoader;
-import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDefaultShader;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
 import com.monstrous.gdx.webgpu.scene2d.WgSkin;
 import com.monstrous.gdx.webgpu.scene2d.WgStage;
 import com.monstrous.gdx.webgpu.wrappers.SkyBox;
-
-import static com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute.*;
 
 
 /** Test IBL
@@ -103,16 +96,19 @@ public class IBL_Sliders extends GdxTest {
         // Generate environment map from equirectangular texture
         WgCubemap envMap = IBLGenerator.buildCubeMapFromEquirectangularTexture(equiRectangular, 1024);
 
+
+        WgCubemap envMap2 = IBLGenerator.createOutdoor(256);
+
         // Diffuse cube map (irradiance map)
         //
-        WgCubemap irradianceMap = IBLGenerator.buildIrradianceMap(envMap, 16);
+        WgCubemap irradianceMap = IBLGenerator.buildIrradianceMap(envMap2, 16);
 
         // Specular cube map (radiance map)
         //
-        WgCubemap radianceMap = IBLGenerator.buildRadianceMap(envMap, 128);
+        WgCubemap radianceMap = IBLGenerator.buildRadianceMap(envMap2, 128);
 
         // use cube map as a sky box
-        skyBox = new SkyBox(envMap);
+        skyBox = new SkyBox(envMap2);
 
         WgDefaultShader.Config config = new WgDefaultShader.Config();
         config.maxPointLights = 4;
@@ -170,6 +166,7 @@ public class IBL_Sliders extends GdxTest {
 
     }
 
+    private int[] face = { 0, 5, 1, 4, 2, 3 };
 
     public void render() {
         controller.update();
@@ -188,10 +185,12 @@ public class IBL_Sliders extends GdxTest {
 
         batch.begin();
         for(int i = 0; i < 6; i++){
-            batch.draw(IBLGenerator.debugTextures[i], 128*i, 0);
+            batch.draw(IBLGenerator.debugTextures[face[i]], 128*i, 0, 128, 128);
         }
         batch.end();
     }
+
+
 
     @Override
     public void resize(int width, int height) {
