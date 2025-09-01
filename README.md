@@ -116,19 +116,28 @@ Apart from the graphics platform, gdx-webgpu offers some new features with regar
 
 ## How to get it
 
-The library is available via Maven Central. 
+The library is available via Maven Central. Make sure the following section is included under `subprojects` in `build.gradle`:
 
-
-To include it in your project add the following lines to your `build.gradle` file in the `core` module:
-
-    dependencies {
-        implementation 'io.github.monstroussoftware.gdx-webgpu:gdx-webgpu:-SNAPSHOT'
+    repositories {
+        maven { url = uri("https://central.sonatype.com/repository/maven-snapshots/") }
     }
 
-Assuming we want to use only the LWJGL3 platform, add the following to `build.gradle` in the `lwjgl3` module:
+Define the version you want to use in the `gradle.properties` file, e.g. 
+
+    gdxWebGPUVersion=0.2
+
+You can refer to the latest stable release number, e.g. `0.2` or use `-SNAPSHOT` to follow the very latest developments.
+
+To include the library in your project add the following lines to your `build.gradle` file in the `core` module:
 
     dependencies {
-        implementation 'io.github.monstroussoftware:gdx-desktop-webgpu:-SNAPSHOT'
+        implementation "io.github.monstroussoftware.gdx-webgpu:gdx-webgpu:$gdxWebGPUVersion"
+    }
+
+Assuming we want to use the LWJGL3 (=Desktop) platform, add the following to `build.gradle` in the `lwjgl3` module:
+
+    dependencies {
+        implementation "io.github.monstroussoftware.gdx-webgpu:gdx-desktop-webgpu:$gdxWebGPUVersion"
     }
 
 In the `lwjgl3` module add a starter class called `Launcher.java` with a content as follows:
@@ -162,8 +171,12 @@ In the `lwjgl3` module find the line in `build.gradle` which defines `mainClassN
     // new line:
     mainClassName = 'com.monstrous.test.lwjgl3.Launcher'
 
+Assuming we want to use the Web teaVM platform, add the following to `build.gradle` in the `teaVM` module:
 
+    dependencies {
+        implementation "io.github.monstroussoftware.gdx-webgpu:gdx-teavm-webgpu:$gdxWebGPUVersion"
+    }
 
-
+Also here, you will need to modify the launcher class (to be described...)
 
 

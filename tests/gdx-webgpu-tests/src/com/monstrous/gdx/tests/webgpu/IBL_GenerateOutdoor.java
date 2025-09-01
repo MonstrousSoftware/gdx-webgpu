@@ -89,18 +89,12 @@ public class IBL_GenerateOutdoor extends GdxTest {
         controller = new CameraInputController(cam);
         controller.scrollFactor = -0.01f;
 
-        // load equirectangular texture from HDR file format
-        //equiRectangular = HDRLoader.loadHDR(Gdx.files.internal("data/hdr/leadenhall_market_2k.hdr"), true);
-        equiRectangular = HDRLoader.loadHDR(Gdx.files.internal("data/hdr/brown_photostudio_02_1k.hdr"), true);
-
-        // Generate environment map from equirectangular texture
-       // WgCubemap envMap = IBLGenerator.buildCubeMapFromEquirectangularTexture(equiRectangular, 1024);
-
         DirectionalLight sun = new DirectionalLight();
-        sun.setColor(Color.YELLOW);
+        sun.setColor(Color.WHITE);
         sun.setDirection( -.5f, -.5f, -.0f);
 
-        WgCubemap envMap = IBLGenerator.createOutdoor(sun, 256);
+        // Create an outdoor environment map
+        WgCubemap envMap = IBLGenerator.createOutdoor(sun, 128);
 
         // Diffuse cube map (irradiance map)
         //
