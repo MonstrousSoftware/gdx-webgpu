@@ -4,7 +4,9 @@
 
 struct FrameUniforms {
     combinedMatrix : mat4x4f,
-    ambientLightLevel : f32,    // actually used as roughnessLevel
+    sunColor: vec4f,        // ignored
+    sunDirection: vec4f,    // ignored
+    roughness : f32,    // roughnessLevel
 };
 
 
@@ -86,7 +88,7 @@ fn ImportanceSampleGGX( Xi:vec2f,  N:vec3f,  roughness:f32) -> vec3f
 @fragment
 fn fs_main(in : VertexOutput) -> @location(0) vec4f {
 
-    let roughness = uFrame.ambientLightLevel;
+    let roughness = uFrame.roughness;
 
     let N:vec3f = normalize(in.localPos).xyz;
     let R = N;

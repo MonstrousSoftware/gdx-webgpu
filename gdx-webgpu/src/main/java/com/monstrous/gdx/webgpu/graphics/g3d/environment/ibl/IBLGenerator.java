@@ -21,6 +21,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
+import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.BaseShaderProvider;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Vector3;
@@ -32,7 +33,6 @@ import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
-import com.monstrous.gdx.webgpu.wrappers.RenderPassType;
 
 import static com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute.EnvironmentMap;
 
@@ -41,12 +41,11 @@ import static com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribut
 public class IBLGenerator  {
 
     public static WgTexture[] debugTextures;        // for debugging: textures from irradiance map
-    public static WgTexture brdfLUT;
 
-    public static class MyShaderProvider extends BaseShaderProvider {
+    public static class IBLShaderProvider extends BaseShaderProvider {
         public final IBLShader.Config config = new IBLShader.Config("");
 
-        public MyShaderProvider(String shaderSource) {
+        public IBLShaderProvider(String shaderSource) {
             config.shaderSource = shaderSource;
         }
 
@@ -109,13 +108,16 @@ public class IBLGenerator  {
         return radianceMap;
     }
 
-    public static WgCubemap createOutdoor(int size){
+    /** Generate an outdoor environment map of given size (width & height). Sun position and color are based on directional light.
+     */
+    public static WgCubemap createOutdoor(DirectionalLight sun, int size){
         System.out.println("Building indoor environment");
         // Convert an environment cube map to a radiance cube map
         Model cube = buildUnitCube(new Material());
         ModelInstance cubeInstance = new ModelInstance(cube);
 
         Environment environment = new Environment();
+        environment.add(sun);
 
         String shaderSource = Gdx.files.internal("shaders/genIBL.wgsl").readString();
         WgCubemap envMap = constructMap(cubeInstance, shaderSource, environment, size, 1);
@@ -138,7 +140,7 @@ public class IBLGenerator  {
         WgGraphics gfx = (WgGraphics) Gdx.graphics;
         WebGPUContext webgpu = gfx.getContext();
 
-        WgModelBatch mapBatch = new WgModelBatch(new MyShaderProvider(shaderSource));
+        WgModelBatch mapBatch = new WgModelBatch(new IBLShaderProvider(shaderSource));
 
         PerspectiveCamera snapCam = createCamera();
 
@@ -233,7 +235,7 @@ public class IBLGenerator  {
         WebGPUContext webgpu = gfx.getContext();
 
         String shaderSource = Gdx.files.internal("shaders/modelbatchEquilateral.wgsl").readString();
-        WgModelBatch mapBatch = new WgModelBatch(new MyShaderProvider(shaderSource));
+        WgModelBatch mapBatch = new WgModelBatch(new IBLShaderProvider(shaderSource));
 
         PerspectiveCamera snapCam = createCamera();
         WgCubemap cube = new WgCubemap(size, false, WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst));

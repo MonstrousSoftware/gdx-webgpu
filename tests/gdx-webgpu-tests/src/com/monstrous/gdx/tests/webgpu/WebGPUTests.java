@@ -104,7 +104,8 @@ public class WebGPUTests {
         SkyBoxTest.class,
         DuckField.class,
         IBL_Sliders.class,
-        IBL_Spheres.class
+        IBL_Spheres.class,
+        IBL_GenerateOutdoor.class
 
         // @on
 

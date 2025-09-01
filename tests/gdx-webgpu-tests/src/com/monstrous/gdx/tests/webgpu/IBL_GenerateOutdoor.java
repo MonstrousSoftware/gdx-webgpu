@@ -27,7 +27,6 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
-import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -60,7 +59,7 @@ import com.monstrous.gdx.webgpu.wrappers.SkyBox;
  * */
 
 
-public class IBL_Sliders extends GdxTest {
+public class IBL_GenerateOutdoor extends GdxTest {
     CameraInputController controller;
     PerspectiveCamera cam;
     SkyBox skyBox;
@@ -95,13 +94,13 @@ public class IBL_Sliders extends GdxTest {
         equiRectangular = HDRLoader.loadHDR(Gdx.files.internal("data/hdr/brown_photostudio_02_1k.hdr"), true);
 
         // Generate environment map from equirectangular texture
-        WgCubemap envMap = IBLGenerator.buildCubeMapFromEquirectangularTexture(equiRectangular, 1024);
+       // WgCubemap envMap = IBLGenerator.buildCubeMapFromEquirectangularTexture(equiRectangular, 1024);
 
         DirectionalLight sun = new DirectionalLight();
         sun.setColor(Color.YELLOW);
-        sun.setDirection( .9f, .3f, .2f);
+        sun.setDirection( -.5f, -.5f, -.0f);
 
-        //WgCubemap envMap = IBLGenerator.createOutdoor(sun, 256);
+        WgCubemap envMap = IBLGenerator.createOutdoor(sun, 256);
 
         // Diffuse cube map (irradiance map)
         //

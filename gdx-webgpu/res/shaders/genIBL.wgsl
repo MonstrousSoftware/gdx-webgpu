@@ -3,7 +3,9 @@
 
 struct FrameUniforms {
     combinedMatrix : mat4x4f,
-    //ambientLightLevel : f32,    // actually used as roughnessLevel
+    sunColor: vec4f,
+    sunDirection: vec4f,        // vector towards the sun
+
 };
 
 
@@ -33,14 +35,11 @@ fn vs_main(in: VertexInput, @builtin(instance_index) instance: u32) -> VertexOut
 }
 
 
-const nearGroundColor : vec3f = vec3f(.5f, .45f, .4f);
-const farGroundColor : vec3f = vec3f(.3f, .25f, .2f);
+const nearGroundColor : vec3f = vec3f(.4f, .35f, .3f);
+const farGroundColor : vec3f = vec3f(.2f, .15f, .2f);
 const nearSkyColor : vec3f = vec3f(.0, .0, 1);
-//const farSkyColor : vec3f = vec3f(.9f, .95f, 1);
 const farSkyColor : vec3f = vec3f(.4f, .45f, 1);
-const sunDir : vec3f = vec3f(.5, .6, 0);
-const sunColor : vec3f = vec3f(1);
-const sunExponent = 30;
+const sunExponent = 60;
 const UP : vec3f = vec3f(0,1,0);
 
 @fragment
@@ -52,13 +51,13 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
 
     var col: vec3f;
     if(ht > 0){
-       col = mix( farSkyColor, nearSkyColor,  ht);
+       col = mix( farSkyColor, nearSkyColor,  pow(ht, 0.25));
 
        // add sunlight
-       let sunDirection : vec3f = normalize(sunDir);
-       var rate: f32 = max(dot(N, sunDirection), 0);
+       let sunDirection : vec3f = normalize(uFrame.sunDirection.xyz );
+       var rate: f32 = max(dot(N,sunDirection), 0);
        rate = pow(rate, sunExponent);
-       col += rate * sunColor;
+       col += rate * uFrame.sunColor.rgb;
 
     } else {
        col = mix(nearGroundColor, farGroundColor,  -ht);

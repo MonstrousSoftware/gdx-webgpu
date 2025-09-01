@@ -21,8 +21,11 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.*;
+import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.github.xpenatan.webgpu.*;
@@ -48,6 +51,7 @@ public class IBLShader extends WgShader implements Disposable {
     private final WebGPUPipeline pipeline;
     private WebGPURenderPass renderPass;
     private int numRoughnessLevels = 5;
+    private Vector3 tmpVec = new Vector3();
 
     public static class Config {
         public String shaderSource;
@@ -63,7 +67,7 @@ public class IBLShader extends WgShader implements Disposable {
         boolean hasCubeMap = renderable.environment != null && renderable.environment.has(WgCubemapAttribute.EnvironmentMap);
 
         // Group 0
-        // binding 0 : uniform buffer (projectionView matrix and numRoughnessLevels)
+        // binding 0 : uniform buffer (projectionView matrix, sunColor, sunDirection and numRoughnessLevels)
         // binding 3 : cube map
         // binding 4 : cube map sampler
         //
@@ -72,7 +76,7 @@ public class IBLShader extends WgShader implements Disposable {
         // binding 2 : texture sampler
 
         // Create uniform buffer for global (per-frame) uniforms, i.e. projectionView matrix and numRoughnessLevels
-        final int uniformBufferSize = (16 + 4)* Float.BYTES;
+        final int uniformBufferSize = (16 + 4 + 4 + 4)* Float.BYTES;
         uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Uniform));
 
 
@@ -90,7 +94,10 @@ public class IBLShader extends WgShader implements Disposable {
         // frame uniforms
         int offset = 0;
         binder.defineUniform("projectionViewTransform", 0, 0, offset); offset += 16*4;
-        binder.defineUniform("numRoughnessLevels", 0, 0, offset); offset += 4*4;
+        binder.defineUniform("sunColor", 0, 0, offset); offset += 4*4;
+        binder.defineUniform("sunDirection", 0, 0, offset); offset += 4*4;
+        binder.defineUniform("numRoughnessLevels", 0, 0, offset); offset += 4;
+
 
         if (hasCubeMap) {
             binder.defineBinding("cubeMap", 0, 3);
@@ -147,6 +154,16 @@ public class IBLShader extends WgShader implements Disposable {
                 WgTexture cubeMap = cubemapAttribute.textureDescription.texture;
                 binder.setTexture("cubeMap", cubeMap.getTextureView());
                 binder.setSampler("cubeSampler", cubeMap.getSampler());
+            }
+
+            final DirectionalLightsAttribute dla = renderable.environment.get(DirectionalLightsAttribute.class, DirectionalLightsAttribute.Type);
+            final Array<DirectionalLight> dirs = dla == null ? null : dla.lights;
+            int numDirectionalLights = dirs == null ? 0 : dirs.size;
+            if(numDirectionalLights > 0) {  // we actually only look at the first directional light
+                binder.setUniform("sunColor",  dirs.get(0).color);
+                // change from light direction to sun vector
+                tmpVec.set(dirs.get(0).direction).scl(-1);
+                binder.setUniform("sunDirection",  tmpVec);
             }
         }
 
