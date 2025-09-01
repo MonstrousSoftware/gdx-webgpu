@@ -32,6 +32,7 @@ import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
+import com.monstrous.gdx.webgpu.wrappers.RenderPassType;
 
 import static com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute.EnvironmentMap;
 
@@ -40,7 +41,7 @@ import static com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribut
 public class IBLGenerator  {
 
     public static WgTexture[] debugTextures;        // for debugging: textures from irradiance map
-
+    public static WgTexture brdfLUT;
 
     public static class MyShaderProvider extends BaseShaderProvider {
         public final IBLShader.Config config = new IBLShader.Config("");
@@ -125,11 +126,6 @@ public class IBLGenerator  {
     }
 
 
-    public WgTexture getBRDFLookUpTable(){
-        return new WgTexture(Gdx.files.internal("brdfLUT.png"), false);
-    }
-
-
     // the order of the layers is +X, -X, +Y, -Y, +Z, -Z
     private static final Vector3[] directions = {
         new Vector3(-1, 0, 0), new Vector3(1, 0, 0),
@@ -163,7 +159,8 @@ public class IBLGenerator  {
 
 
             final WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst).or(WGPUTextureUsage.RenderAttachment).or(WGPUTextureUsage.CopySrc);
-            WGPUTextureFormat format = WGPUTextureFormat.RGBA8Unorm;    // or -Srgb?
+            WGPUTextureFormat format = WGPUTextureFormat.RGBA8UnormSrgb;
+            // note: we shouldn't need a depth texture
             WgTexture colorTexture = new WgTexture("fbo color", size, size, false, textureUsage, format, 1, format);
             WgTexture depthTexture = new WgTexture("fbo depth", size, size, false, textureUsage, WGPUTextureFormat.Depth24Plus, 1, WGPUTextureFormat.Depth24Plus);
 
@@ -190,7 +187,7 @@ public class IBLGenerator  {
 
                 WebGPUContext.RenderOutputState prevState = webgpu.pushTargetView(colorTexture.getTextureView(), format, size, size, depthTexture);
 
-                mapBatch.begin(snapCam, Color.GREEN, true);
+                mapBatch.begin(snapCam, Color.GREEN, true); //, RenderPassType.NO_DEPTH);
                 mapBatch.render(instance, environment);
                 mapBatch.end();
 

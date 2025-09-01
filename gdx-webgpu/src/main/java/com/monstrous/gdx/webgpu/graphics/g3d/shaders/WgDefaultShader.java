@@ -38,6 +38,7 @@ import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.PBRFloatAttribute;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.PBRTextureAttribute;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute;
+import com.monstrous.gdx.webgpu.graphics.g3d.environment.ibl.IBLGenerator;
 import com.monstrous.gdx.webgpu.wrappers.*;
 
 import static com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888;
@@ -171,9 +172,12 @@ public class WgDefaultShader extends WgShader implements Disposable {
             binder.defineBinding("radianceSampler", 0, 8);
             binder.defineBinding("brdfLUT", 0, 9);
             binder.defineBinding("lutSampler", 0, 10);
-            brdfLUT = new WgTexture(Gdx.files.internal("brdfLUT.png"));
+
+            // set 'isColor' to false in order to avoid gamma correction on this data texture
+            brdfLUT = new WgTexture(Gdx.files.internal("brdfLUT.png"), false, false);
             brdfLUT.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
             brdfLUT.setWrap(Texture.TextureWrap.ClampToEdge, Texture.TextureWrap.ClampToEdge);
+
         } else
             brdfLUT = null;
 
@@ -646,6 +650,8 @@ public class WgDefaultShader extends WgShader implements Disposable {
         defaultBlackTexture.dispose();
         instanceBuffer.dispose();
         uniformBuffer.dispose();
+        if(brdfLUT != null)
+            brdfLUT.dispose();
     }
 
     /** place lighting information in frame uniform buffer:

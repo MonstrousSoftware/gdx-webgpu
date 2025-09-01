@@ -38,9 +38,9 @@ const farGroundColor : vec3f = vec3f(.3f, .25f, .2f);
 const nearSkyColor : vec3f = vec3f(.0, .0, 1);
 //const farSkyColor : vec3f = vec3f(.9f, .95f, 1);
 const farSkyColor : vec3f = vec3f(.4f, .45f, 1);
-const sunDirection : vec3f = normalize(vec3f(.5, .6, 0));
+const sunDir : vec3f = vec3f(.5, .6, 0);
 const sunColor : vec3f = vec3f(1);
-const exponent = 30;
+const sunExponent = 30;
 const UP : vec3f = vec3f(0,1,0);
 
 @fragment
@@ -54,14 +54,15 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
     if(ht > 0){
        col = mix( farSkyColor, nearSkyColor,  ht);
 
+       // add sunlight
+       let sunDirection : vec3f = normalize(sunDir);
        var rate: f32 = max(dot(N, sunDirection), 0);
-       rate = pow(rate, exponent);
-
-       //col = mix(col, vec3f(1, 0, 0), rate);
+       rate = pow(rate, sunExponent);
        col += rate * sunColor;
 
     } else {
        col = mix(nearGroundColor, farGroundColor,  -ht);
     }
+//    return vec4f(pow(col.rgb, vec3(1/2.2)),  1.0);
     return vec4f(col,  1.0);
 }

@@ -94,21 +94,21 @@ public class IBL_Sliders extends GdxTest {
         equiRectangular = HDRLoader.loadHDR(Gdx.files.internal("data/hdr/brown_photostudio_02_1k.hdr"), true);
 
         // Generate environment map from equirectangular texture
-        WgCubemap envMap = IBLGenerator.buildCubeMapFromEquirectangularTexture(equiRectangular, 1024);
+        //WgCubemap envMap = IBLGenerator.buildCubeMapFromEquirectangularTexture(equiRectangular, 1024);
 
 
-        WgCubemap envMap2 = IBLGenerator.createOutdoor(256);
+        WgCubemap envMap = IBLGenerator.createOutdoor(256);
 
         // Diffuse cube map (irradiance map)
         //
-        WgCubemap irradianceMap = IBLGenerator.buildIrradianceMap(envMap2, 16);
+        WgCubemap irradianceMap = IBLGenerator.buildIrradianceMap(envMap, 16);
 
         // Specular cube map (radiance map)
         //
-        WgCubemap radianceMap = IBLGenerator.buildRadianceMap(envMap2, 128);
+        WgCubemap radianceMap = IBLGenerator.buildRadianceMap(envMap, 128);
 
         // use cube map as a sky box
-        skyBox = new SkyBox(envMap2);
+        skyBox = new SkyBox(envMap);
 
         WgDefaultShader.Config config = new WgDefaultShader.Config();
         config.maxPointLights = 4;
@@ -121,10 +121,10 @@ public class IBL_Sliders extends GdxTest {
 
         // Add lighting
         float intensity = 25f;
-        environment.add( new PointLight().setColor(Color.WHITE).setPosition(-10f,10f,10).setIntensity(intensity));
-        environment.add( new PointLight().setColor(Color.WHITE).setPosition(10f,10f,10).setIntensity(intensity));
-        environment.add( new PointLight().setColor(Color.WHITE).setPosition(10f,-10f,10).setIntensity(intensity));
-        environment.add( new PointLight().setColor(Color.WHITE).setPosition(-10f,-10f,10).setIntensity(intensity));
+//        environment.add( new PointLight().setColor(Color.WHITE).setPosition(-10f,10f,10).setIntensity(intensity));
+//        environment.add( new PointLight().setColor(Color.WHITE).setPosition(10f,10f,10).setIntensity(intensity));
+//        environment.add( new PointLight().setColor(Color.WHITE).setPosition(10f,-10f,10).setIntensity(intensity));
+//        environment.add( new PointLight().setColor(Color.WHITE).setPosition(-10f,-10f,10).setIntensity(intensity));
 
         // Model
         //
@@ -143,11 +143,11 @@ public class IBL_Sliders extends GdxTest {
 //        else
 //            System.out.println("File extension not supported: " + modelFileName);
 
-        model = buildSphere(Color.RED, 0.5f, 0.5f);
+        model = buildSphere(Color.WHITE, 0.5f, 0.5f);
 
         instance = new ModelInstance(model);
 
-        instance.materials.get(0).set(new ColorAttribute(ColorAttribute.Diffuse, Color.RED));
+        //instance.materials.get(0).set(new ColorAttribute(ColorAttribute.Diffuse, Color.WHITE));
 
 
         Gdx.input.setInputProcessor(controller);
@@ -183,11 +183,13 @@ public class IBL_Sliders extends GdxTest {
         stage.act();
         stage.draw();
 
-        batch.begin();
-        for(int i = 0; i < 6; i++){
-            batch.draw(IBLGenerator.debugTextures[face[i]], 128*i, 0, 128, 128);
+        if(IBLGenerator.debugTextures != null) {
+            batch.begin();
+            for (int i = 0; i < 6; i++) {
+                batch.draw(IBLGenerator.debugTextures[face[i]], 128 * i, 0, 128, 128);
+            }
+            batch.end();
         }
-        batch.end();
     }
 
 

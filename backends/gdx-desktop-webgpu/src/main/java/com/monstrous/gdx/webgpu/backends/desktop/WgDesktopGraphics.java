@@ -96,7 +96,6 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
             app.getConfiguration().enableGPUtiming,
             app.getConfiguration().backend );
 
-        System.out.println("Creating surface for window handle: "+windowHandle);
         WGPUSurface surface = createSurface(instance, windowHandle);
 
         this.context = new WebGPUApplication(config, instance, surface);

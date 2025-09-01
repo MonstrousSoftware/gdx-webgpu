@@ -33,7 +33,7 @@ public class WebGPUPipeline implements Disposable {
 
 
     public WebGPUPipeline(WGPUPipelineLayout pipelineLayout, PipelineSpecification spec) {
-        System.out.println("Creating pipeline");
+        System.out.println("Creating pipeline "+spec.name);
         // if the specification does not already have a shader, create one from the source file, customized to the vertex attributes.
         if (spec.shader != null) {
             shader = spec.shader;   // make use of the shader in the spec
