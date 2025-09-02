@@ -35,10 +35,10 @@ fn vs_main(in: VertexInput, @builtin(instance_index) instance: u32) -> VertexOut
 }
 
 
-const nearGroundColor : vec3f = vec3f(.4f, .35f, .3f);
-const farGroundColor : vec3f = vec3f(.2f, .15f, .2f);
-const nearSkyColor : vec3f = vec3f(.0, .0, 1);
-const farSkyColor : vec3f = vec3f(.4f, .45f, 1);
+const nearGroundColor : vec3f = vec3f(.2f, .15f, .1f);
+const farGroundColor : vec3f = vec3f(.1f, .05f, .0f);
+const nearSkyColor : vec3f = vec3f(.4, .5, 1);
+const farSkyColor : vec3f = vec3f(.8f, .85f, 1);
 const sunExponent = 60;
 const UP : vec3f = vec3f(0,1,0);
 
