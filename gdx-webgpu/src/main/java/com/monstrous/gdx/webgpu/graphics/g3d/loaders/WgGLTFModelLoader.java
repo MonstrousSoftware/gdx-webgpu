@@ -24,17 +24,17 @@ import com.badlogic.gdx.assets.loaders.TextureLoader;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.model.Animation;
+import com.badlogic.gdx.graphics.g3d.model.NodeAnimation;
 import com.badlogic.gdx.graphics.g3d.model.data.*;
-import com.badlogic.gdx.math.Quaternion;
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.math.Vector4;
+import com.badlogic.gdx.math.*;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ObjectMap;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.gltf.*;
 import com.monstrous.gdx.webgpu.graphics.g3d.model.PBRModelTexture;
 import com.monstrous.gdx.webgpu.graphics.g3d.model.WgModelMeshPart;
 
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -45,6 +45,9 @@ import java.util.Map;
 public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParameters> {
     private final Map<GLTFPrimitive, String> meshMap = new HashMap<>();
     private int fallbackMaterialId;
+    private Array<ModelNode> nodes; // this contains all nodes, not just root nodes like in ModelData
+    private int numNodes;   // used to create unique id
+    private int numAnimations;  // used to create unique id
 
     private GLTF glModel;
 
@@ -124,6 +127,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
         loadMeshes(modelData, gltf);
         loadNodes(modelData, gltf);
         loadScenes(modelData, gltf);
+        loadAnimations(modelData, gltf);
 
         // todo give priority to the default scene
         GLTFScene scene = gltf.scenes.get(gltf.scene);
@@ -155,66 +159,11 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
 //            }
 //        }
 //
-//        for(GLTFAnimation gltfAnim : gltf.animations ){
-//            Animation animation = new Animation();
-//            animation.name = gltfAnim.name;
-//            float maxDuration = 0f;
-//            for(GLTFAnimationChannel gltfChannel : gltfAnim.channels){
-//                NodeAnimation nodeAnimation = new NodeAnimation();
-//                nodeAnimation.node = nodes.get(gltfChannel.node);
-//
-//                int numComponents = 3;
-//                if(gltfChannel.path.contentEquals("rotation"))
-//                    numComponents = 4; // 4 floats per quaternion
-//
-//                GLTFAnimationSampler sampler = gltfAnim.samplers.get(gltfChannel.sampler);
-//                GLTFAccessor inAccessor = gltf.accessors.get(sampler.input);
-//                GLTFAccessor outAccessor = gltf.accessors.get(sampler.output);
-//                // ignore interpolation, we only do linear
-//
-//                GLTFBufferView inView = gltf.bufferViews.get(inAccessor.bufferView);
-//                if(inView.buffer != 0)
-//                    throw new RuntimeException("GLTF can only support buffer 0");
-//                gltf.rawBuffer.byteBuffer.position(inView.byteOffset+ inAccessor.byteOffset);  // does this carry over to floatbuf?
-//                FloatBuffer timeBuf = gltf.rawBuffer.byteBuffer.asFloatBuffer();
-//                float[] times = new float[inAccessor.count];
-//                timeBuf.get(times, 0, inAccessor.count);
-//
-//                GLTFBufferView outView = gltf.bufferViews.get(outAccessor.bufferView);
-//                if(outView.buffer != 0)
-//                    throw new RuntimeException("GLTF can only support buffer 0");
-//                gltf.rawBuffer.byteBuffer.position(outView.byteOffset+outAccessor.byteOffset);  // does this carry over to floatbuf?
-//                FloatBuffer floatBuf = gltf.rawBuffer.byteBuffer.asFloatBuffer();
-//                float[] floats = new float[numComponents * outAccessor.count];
-//                floatBuf.get(floats, 0, numComponents * outAccessor.count);
-//
-//
-//                for(int key = 0; key < inAccessor.count; key++){
-//                    float time = times[key];
-//                    if(gltfChannel.path.contentEquals("translation")) {
-//                        Vector3 tr = new Vector3(floats[3 * key], floats[3*key + 1], floats[3*key + 2]);
-//                        NodeKeyframe<Vector3> keyFrame = new NodeKeyframe<Vector3>(time, tr);
-//                        nodeAnimation.addTranslation(keyFrame);
-//                    } else  if(gltfChannel.path.contentEquals("rotation")) {
-//                        Quaternion q = new Quaternion(floats[4 * key], floats[key * 4 + 1], floats[key * 4 + 2], floats[key * 4 + 3]);
-//                        q.nor();
-//                        NodeKeyframe<Quaternion> keyFrame = new NodeKeyframe<Quaternion>(time, q);
-//                        nodeAnimation.addRotation(keyFrame);
-//                    } else if(gltfChannel.path.contentEquals("scale")) {
-//                        Vector3 tr = new Vector3(floats[3 * key], floats[3*key + 1], floats[3*key + 2]);
-//                        NodeKeyframe<Vector3> keyFrame = new NodeKeyframe<Vector3>(time, tr);
-//                        nodeAnimation.addScaling(keyFrame);
-//                    }
-//                }
-//                maxDuration = Math.max(maxDuration,times[inAccessor.count-1]);
-//                animation.addNodeAnimation(nodeAnimation);
-//            }
-//            animation.duration = maxDuration;
-//
-//            model.addAnimation(animation);
-//        }
+
+
         return modelData;
     }
+
 
     private void loadMaterials(ModelData modelData, GLTF gltf) {
         long startLoad = System.currentTimeMillis();
@@ -308,10 +257,12 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
 
     /** convert all nodes, but does not yet create a node hierarchy */
     private void loadNodes(ModelData modelData, GLTF gltf){
-        modelData.nodes.clear();
+        numNodes = 0;
+        nodes = new Array<>();
+        //modelData.nodes.clear();
         for( GLTFNode gltfNode : gltf.nodes ) {
             ModelNode node = addNode(modelData, gltf, gltfNode);
-            modelData.nodes.add(node);
+            nodes.add(node);
         }
     }
 
@@ -321,12 +272,93 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
 
             for (int nodeId : scene.nodes) {
                 GLTFNode gltfNode = gltf.nodes.get(nodeId);
-                ModelNode rootNode = modelData.nodes.get(nodeId);
+                ModelNode rootNode = nodes.get(nodeId);
 
                 addNodeHierarchy(modelData, gltf, gltfNode, rootNode);     // recursively add the node hierarchy
                 //rootNode.updateMatrices(true);
-                //model.addNode(rootNode);
+                modelData.nodes.add(rootNode);
             }
+        }
+    }
+
+
+    private void loadAnimations(ModelData modelData, GLTF gltf) {
+        for(GLTFAnimation gltfAnim : gltf.animations ){
+            ModelAnimation animation = new ModelAnimation();
+            animation.id = gltfAnim.name != null ? gltfAnim.name : "anim"+numAnimations;
+            numAnimations++;
+            for(GLTFAnimationChannel gltfChannel : gltfAnim.channels){
+                ModelNodeAnimation nodeAnimation = new ModelNodeAnimation();
+                nodeAnimation.nodeId = nodes.get(gltfChannel.node).id;
+
+                int numComponents = 3;
+                if(gltfChannel.path.contentEquals("rotation"))
+                    numComponents = 4; // 4 floats per quaternion
+
+                GLTFAnimationSampler sampler = gltfAnim.samplers.get(gltfChannel.sampler);
+                GLTFAccessor inAccessor = gltf.accessors.get(sampler.input);
+                GLTFAccessor outAccessor = gltf.accessors.get(sampler.output);
+                // ignore interpolation, we only do linear
+
+                GLTFBufferView inView = gltf.bufferViews.get(inAccessor.bufferView);
+                if(inView.buffer != 0)
+                    throw new RuntimeException("GLTF can only support buffer 0");
+                gltf.rawBuffer.byteBuffer.position(inView.byteOffset+ inAccessor.byteOffset);  // does this carry over to floatbuf?
+                FloatBuffer timeBuf = gltf.rawBuffer.byteBuffer.asFloatBuffer();
+                float[] times = new float[inAccessor.count];
+                timeBuf.get(times, 0, inAccessor.count);
+
+                GLTFBufferView outView = gltf.bufferViews.get(outAccessor.bufferView);
+                if(outView.buffer != 0)
+                    throw new RuntimeException("GLTF can only support buffer 0");
+                gltf.rawBuffer.byteBuffer.position(outView.byteOffset+outAccessor.byteOffset);  // does this carry over to floatbuf?
+                FloatBuffer floatBuf = gltf.rawBuffer.byteBuffer.asFloatBuffer();
+                float[] floats = new float[numComponents * outAccessor.count];
+                floatBuf.get(floats, 0, numComponents * outAccessor.count);
+
+
+                for(int key = 0; key < inAccessor.count; key++){
+                    float time = times[key];
+                    if(gltfChannel.path.contentEquals("translation")) {
+                        Vector3 tr = new Vector3(floats[3*key], floats[3*key + 1], floats[3*key + 2]);
+                        ModelNodeKeyframe<Vector3> keyFrame = new ModelNodeKeyframe<Vector3>();
+                        keyFrame.keytime = time;
+                        keyFrame.value = tr;
+                        if(nodeAnimation.translation == null) {
+                            nodeAnimation.translation = new Array<>();
+                            // add a key frame for t=0 if not defined
+                            if(!MathUtils.isZero(time))
+                                nodeAnimation.translation.add(new ModelNodeKeyframe<Vector3>());
+                        }
+                        nodeAnimation.translation.add(keyFrame);
+                    } else  if(gltfChannel.path.contentEquals("rotation")) {
+                        Quaternion q = new Quaternion(floats[4*key], floats[4*key + 1], floats[4*key + 2], floats[4*key + 3]);
+                        q.nor();
+                        ModelNodeKeyframe<Quaternion> keyFrame = new ModelNodeKeyframe<Quaternion>();
+                        keyFrame.keytime = time;
+                        keyFrame.value = q;
+                        if(nodeAnimation.rotation == null) {
+                            nodeAnimation.rotation = new Array<>();
+                            if(!MathUtils.isZero(time))
+                                nodeAnimation.rotation.add(new ModelNodeKeyframe<Quaternion>());
+                        }
+                        nodeAnimation.rotation.add(keyFrame);
+                    } else if(gltfChannel.path.contentEquals("scale")) {
+                        Vector3 sc = new Vector3(floats[3*key], floats[3*key + 1], floats[3*key + 2]);
+                        ModelNodeKeyframe<Vector3> keyFrame = new ModelNodeKeyframe<Vector3>();
+                        keyFrame.keytime = time;
+                        keyFrame.value = sc;
+                        if(nodeAnimation.scaling == null) {
+                            nodeAnimation.scaling = new Array<>();
+                            if(!MathUtils.isZero(time))
+                                nodeAnimation.scaling.add(new ModelNodeKeyframe<Vector3>());
+                        }
+                        nodeAnimation.scaling.add(keyFrame);
+                    }
+                }
+                animation.nodeAnimations.add(nodeAnimation);
+            }
+            modelData.animations.add(animation);
         }
     }
 
@@ -403,7 +435,9 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
 
     private ModelNode addNode(ModelData modelData, GLTF gltf, GLTFNode gltfNode){
         ModelNode node = new ModelNode();
-        node.id = gltfNode.name;
+        // make sure every node has an id, it is needed for example for node references in animations
+        node.id = gltfNode.name != null ? gltfNode.name : "node_"+numNodes;
+        numNodes++;
 
         // optional transforms
         if(gltfNode.matrix != null){
@@ -454,7 +488,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
         int i = 0;
         for(int j : gltfNode.children ){
             GLTFNode gltfChild = gltf.nodes.get(j);
-            ModelNode child = model.nodes.get(j);
+            ModelNode child = nodes.get(j);
             root.children[i++] = child;
             addNodeHierarchy(model, gltf, gltfChild, child);
         }

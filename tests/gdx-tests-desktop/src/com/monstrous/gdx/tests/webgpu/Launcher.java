@@ -21,13 +21,8 @@ public class Launcher {
 
         config.useVsync(false);
 
-        //new WgDesktopApplication(new ImmediateModeRendererTest(), config);
-        //new WgDesktopApplication(new ColorTest(), config);
-        //new WgDesktopApplication(new TransparencyTest(), config);
+        new WgDesktopApplication(new GLTFAnimation(), config);
 
-        new WgDesktopApplication(new IBL_GenerateOutdoor(), config);
-        //new WgDesktopApplication(new FontTest(), config);
-        //new WgDesktopApplication(new FullScreenTest(), config);
     }
 
 }

@@ -29,6 +29,9 @@ import com.badlogic.gdx.utils.JsonValue;
 
 public class ParserGLTF {
 
+    /** Creates a GLTF object from a JSON file. Uses path to find additional resources.
+     *
+     */
     public static GLTF parseJSON(String json, String path) {
         GLTF gltf = new GLTF();
 
@@ -323,48 +326,53 @@ public class ParserGLTF {
 //            }
 //        }
 //
-//        JSONArray animations = (JSONArray)file.get("animations");
-//        if(animations != null) {
-//            System.out.println("animations: " + animations.size());
-//            for (int i = 0; i < animations.size(); i++) {
-//                GLTFAnimation animation = new GLTFAnimation();
-//
-//                JSONObject an = (JSONObject) animations.get(i);
-//                animation.name = (String) an.get("name");
-//                System.out.println("animations: " + animation.name);
-//
-//                JSONArray chs = (JSONArray) an.get("channels");
-//                for (int j = 0; j < chs.size(); j++) {
-//                    GLTFAnimationChannel channel = new GLTFAnimationChannel();
-//                    JSONObject ch = (JSONObject) chs.get(j);
-//                    Long sam = (Long) ch.get("sampler");
-//                    channel.sampler = sam.intValue();
-//                    System.out.println("sampler: " + channel.sampler);
-//
-//
-//                    JSONObject tgt = (JSONObject) ch.get("target");
-//                    Long node = (Long) tgt.get("node");
-//                    channel.node = node.intValue();
-//                    channel.path = (String) tgt.get("path");
-//
-//                    animation.channels.add(channel);
-//                }
-//                JSONArray smplrs = (JSONArray) an.get("samplers");
-//                for (int j = 0; j < smplrs.size(); j++) {
-//                    GLTFAnimationSampler sampler = new GLTFAnimationSampler();
-//                    JSONObject sm = (JSONObject) smplrs.get(j);
-//                    Long in = (Long) sm.get("input");
-//                    sampler.input = in.intValue();
-//                    Long out = (Long) sm.get("output");
-//                    sampler.output = out.intValue();
-//                    sampler.interpolation = (String) sm.get("interpolation");
-//
-//                    animation.samplers.add(sampler);
-//                }
-//                gltf.animations.add(animation);
-//            }
-//        }
-//
+
+        JsonValue.JsonIterator animations = fromJson.iterator("animations");
+        if(animations != null) {
+            while (animations.hasNext()) {
+                GLTFAnimation animation = new GLTFAnimation();
+                JsonValue an = animations.next();
+                if (an.has("name")) {
+                    animation.name = an.get("name").asString();
+                    System.out.println("animation name: " + animation.name);
+                }
+                JsonValue.JsonIterator channels = an.iterator("channels");
+                if(channels != null) {
+                    while (channels.hasNext()) {
+                        GLTFAnimationChannel channel = new GLTFAnimationChannel();
+                        JsonValue ch = channels.next();
+
+                        channel.sampler = ch.get("sampler").asInt();
+                        System.out.println("sampler: " + channel.sampler);
+
+                        JsonValue tgt = ch.get("target");
+                        channel.node = tgt.get("node").asInt();
+                        channel.path = tgt.get("path").asString();
+                        System.out.println("target: " + channel.node+" "+channel.path);
+
+                        animation.channels.add(channel);
+                    }
+                }
+
+                JsonValue.JsonIterator samplers = an.iterator("samplers");
+                if(samplers != null) {
+                    while (samplers.hasNext()) {
+                        GLTFAnimationSampler sampler = new GLTFAnimationSampler();
+                        JsonValue sam = samplers.next();
+
+                        sampler.input = sam.get("input").asInt();
+                        sampler.output = sam.get("output").asInt();
+                        sampler.interpolation = sam.get("interpolation").asString();
+
+                        System.out.println("sampler: " + sampler.input+" "+sampler.interpolation+" "+sampler.output);
+
+                        animation.samplers.add(sampler);
+                    }
+                }
+
+                gltf.animations.add(animation);
+            }
+        }
 
         return gltf;
     }

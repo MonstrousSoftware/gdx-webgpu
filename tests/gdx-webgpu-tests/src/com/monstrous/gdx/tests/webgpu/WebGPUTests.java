@@ -105,7 +105,8 @@ public class WebGPUTests {
         DuckField.class,
         IBL_Sliders.class,
         IBL_Spheres.class,
-        IBL_GenerateOutdoor.class
+        IBL_GenerateOutdoor.class,
+        GLTFAnimation.class
 
         // @on
 
