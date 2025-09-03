@@ -117,7 +117,7 @@ public class WgGLBModelLoader extends WgModelLoader<WgModelLoader.ModelParameter
         chunkBinaryData.limit(chunkLength);
 
         GLTF gltf = ParserGLTF.parseJSON(json, path);
-        gltf.rawBuffer = new GLTFRawBuffer(chunkBinaryData);
+        gltf.rawBuffers.add( new GLTFRawBuffer(chunkBinaryData));
         return gltf;
     }
 

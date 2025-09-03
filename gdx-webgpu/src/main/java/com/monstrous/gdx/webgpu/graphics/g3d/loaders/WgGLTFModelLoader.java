@@ -24,8 +24,6 @@ import com.badlogic.gdx.assets.loaders.TextureLoader;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.Model;
-import com.badlogic.gdx.graphics.g3d.model.Animation;
-import com.badlogic.gdx.graphics.g3d.model.NodeAnimation;
 import com.badlogic.gdx.graphics.g3d.model.data.*;
 import com.badlogic.gdx.math.*;
 import com.badlogic.gdx.utils.Array;
@@ -49,7 +47,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
     private int numNodes;   // used to create unique id
     private int numAnimations;  // used to create unique id
 
-    private GLTF glModel;
+    private GLTF gltfModel;
 
 	public WgGLTFModelLoader() {
 		this(null);
@@ -61,8 +59,8 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
 
     @Override
     public Model loadSync(AssetManager manager, String fileName, FileHandle file, ModelParameters parameters) {
-        glModel.rawBuffer = new GLTFRawBuffer(glModel.buffers.get(0).uri);
-        ModelData modelData = load(glModel);
+        gltfModel.rawBuffers.add( new GLTFRawBuffer(gltfModel.buffers.get(0).uri) );
+        ModelData modelData = load(gltfModel);
         ObjectMap.Entry<String, ModelData> item = new ObjectMap.Entry<String, ModelData>();
         item.key = fileName;
         item.value = modelData;
@@ -81,20 +79,20 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
         String json = file.readString();
 
         /* Read file into a GLTF class hierarchy. */
-        glModel = ParserGLTF.parseJSON( json, path);
+        gltfModel = ParserGLTF.parseJSON( json, path);
 
         TextureLoader.TextureParameter textureParameter = (parameters != null) ? parameters.textureParameter
             : defaultParameters.textureParameter;
 
-        for(GLTFTexture glTexture : glModel.textures) {
-            GLTFImage glImage = glModel.images.get(glTexture.source);
+        for(GLTFTexture glTexture : gltfModel.textures) {
+            GLTFImage glImage = gltfModel.images.get(glTexture.source);
             if(glImage.uri != null && !glImage.uri.startsWith("data:")) {
                 FileHandle child = Gdx.files.getFileHandle(glImage.uri, file.type());
                 deps.add(new AssetDescriptor(child, Texture.class, textureParameter));
             }
         }
-        for(int i = 0; i < glModel.buffers.size(); i++) {
-            GLTFBuffer glBuffer = glModel.buffers.get(i);
+        for(int i = 0; i < gltfModel.buffers.size(); i++) {
+            GLTFBuffer glBuffer = gltfModel.buffers.get(i);
             if(!glBuffer.uri.startsWith("data:")) {
                 FileHandle child = Gdx.files.getFileHandle(glBuffer.uri, file.type());
                 deps.add(new AssetDescriptor(child, FileHandle.class));
@@ -112,11 +110,20 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
 
         /* Read file into a GLTF class hierarchy. */
         GLTF gltf = ParserGLTF.parseJSON( json, path);
-        gltf.rawBuffer = new GLTFRawBuffer(gltf.buffers.get(0).uri);           // read .bin file, assume 1 buffer
+        /* load .bin files */
+        loadBuffers(gltf);
 
         /* Then convert it to ModelData. */
 		return load(gltf);
 	}
+
+    private void loadBuffers(GLTF gltf){
+        for(GLTFBuffer buffer : gltf.buffers) {
+            // read .bin file
+            gltf.rawBuffers.add( new GLTFRawBuffer(buffer.uri));
+        }
+
+    }
 
     /** load GLTF contents into a ModelData object */
     public ModelData load( GLTF gltf ){
@@ -248,7 +255,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
             // in GLTF a "mesh" is a set of primitives, not a shared vertex/index buffer.
             // we will create one ModelMesh and one ModelMeshPart per primitive
 
-            buildMesh(modelData, gltf,  gltf.rawBuffer, gltfMesh );
+            buildMesh(modelData, gltf,  gltfMesh );
         }
 
         long endLoad = System.currentTimeMillis();
@@ -296,23 +303,25 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                     numComponents = 4; // 4 floats per quaternion
 
                 GLTFAnimationSampler sampler = gltfAnim.samplers.get(gltfChannel.sampler);
-                GLTFAccessor inAccessor = gltf.accessors.get(sampler.input);
-                GLTFAccessor outAccessor = gltf.accessors.get(sampler.output);
+                GLTFAccessor inAccessor = gltf.accessors.get(sampler.input);        // key frame time stamps
+                GLTFAccessor outAccessor = gltf.accessors.get(sampler.output);      // key frame values (translation, rotation or scale)
                 // ignore interpolation, we only do linear
 
                 GLTFBufferView inView = gltf.bufferViews.get(inAccessor.bufferView);
-                if(inView.buffer != 0)
-                    throw new RuntimeException("GLTF can only support buffer 0");
-                gltf.rawBuffer.byteBuffer.position(inView.byteOffset+ inAccessor.byteOffset);  // does this carry over to floatbuf?
-                FloatBuffer timeBuf = gltf.rawBuffer.byteBuffer.asFloatBuffer();
+//                if(inView.buffer != 0)
+//                    throw new RuntimeException("GLTF can only support buffer 0");
+                GLTFRawBuffer rawBuffer = gltf.rawBuffers.get(inView.buffer);
+                rawBuffer.byteBuffer.position(inView.byteOffset+ inAccessor.byteOffset);  // does this carry over to floatbuf?
+                FloatBuffer timeBuf = rawBuffer.byteBuffer.asFloatBuffer();
                 float[] times = new float[inAccessor.count];
                 timeBuf.get(times, 0, inAccessor.count);
 
                 GLTFBufferView outView = gltf.bufferViews.get(outAccessor.bufferView);
-                if(outView.buffer != 0)
-                    throw new RuntimeException("GLTF can only support buffer 0");
-                gltf.rawBuffer.byteBuffer.position(outView.byteOffset+outAccessor.byteOffset);  // does this carry over to floatbuf?
-                FloatBuffer floatBuf = gltf.rawBuffer.byteBuffer.asFloatBuffer();
+//                if(outView.buffer != 0)
+//                    throw new RuntimeException("GLTF can only support buffer 0");
+                rawBuffer = gltf.rawBuffers.get(outView.buffer);
+                rawBuffer.byteBuffer.position(outView.byteOffset+outAccessor.byteOffset);  // does this carry over to floatbuf?
+                FloatBuffer floatBuf = rawBuffer.byteBuffer.asFloatBuffer();
                 float[] floats = new float[numComponents * outAccessor.count];
                 floatBuf.get(floats, 0, numComponents * outAccessor.count);
 
@@ -372,12 +381,13 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
             }
         } else {
             GLTFBufferView view = gltf.bufferViews.get(image.bufferView);
-            if(view.buffer != 0)
-                throw new RuntimeException("GLTF can only support buffer 0");
+//            if(view.buffer != 0)
+//                throw new RuntimeException("GLTF can only support buffer 0");
             byte[] bytes = new byte[view.byteLength];
+            GLTFRawBuffer rawBuffer = gltf.rawBuffers.get(view.buffer);
 
-            gltf.rawBuffer.byteBuffer.position(view.byteOffset);
-            gltf.rawBuffer.byteBuffer.get(bytes);
+            rawBuffer.byteBuffer.position(view.byteOffset);
+            rawBuffer.byteBuffer.get(bytes);
 
             tex.fileName = "bufferView."+image.bufferView;  // create a unique 'filename' that can be used as key for caching
 
@@ -495,7 +505,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
     }
 
 
-    private void buildMesh(ModelData modelData, GLTF gltf, GLTFRawBuffer rawBuffer, GLTFMesh gltfMesh){
+    private void buildMesh(ModelData modelData, GLTF gltf, GLTFMesh gltfMesh){
 
 
         int primitiveIndex = 0;
@@ -555,9 +565,10 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
             meshMap.put(primitive,  modelMeshPart.id);
 
             GLTFBufferView view = gltf.bufferViews.get(indexAccessor.bufferView);
-            if(view.buffer != 0)
-                throw new RuntimeException("GLTF: Can only support buffer 0");
+//            if(view.buffer != 0)
+//                throw new RuntimeException("GLTF: Can only support buffer 0");
             int offset = view.byteOffset + indexAccessor.byteOffset;
+            GLTFRawBuffer rawBuffer = gltf.rawBuffers.get(view.buffer);
             rawBuffer.byteBuffer.position(offset);
 
             if(indexAccessor.componentType == GLTF.UBYTE8) {
@@ -612,8 +623,9 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                 throw new RuntimeException("GLTF: need POSITION attribute");
             GLTFAccessor positionAccessor = gltf.accessors.get(positionAccessorId);
             view = gltf.bufferViews.get(positionAccessor.bufferView);
-            if (view.buffer != 0)
-                throw new RuntimeException("GLTF: Can only support buffer 0");
+//            if (view.buffer != 0)
+//                throw new RuntimeException("GLTF: Can only support buffer 0");
+            rawBuffer = gltf.rawBuffers.get(view.buffer);
             offset = view.byteOffset;
             offset += positionAccessor.byteOffset;
 
@@ -638,8 +650,9 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
             if (normalAccessorId >= 0) {
                 GLTFAccessor normalAccessor = gltf.accessors.get(normalAccessorId);
                 view = gltf.bufferViews.get(normalAccessor.bufferView);
-                if (view.buffer != 0)
-                    throw new RuntimeException("GLTF: Can only support buffer 0");
+//                if (view.buffer != 0)
+//                    throw new RuntimeException("GLTF: Can only support buffer 0");
+                rawBuffer = gltf.rawBuffers.get(view.buffer);
                 offset = view.byteOffset;
                 offset += normalAccessor.byteOffset;
 
@@ -662,8 +675,9 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
             if (tangentAccessorId >= 0) {
                 GLTFAccessor tangentAccessor = gltf.accessors.get(tangentAccessorId);
                 view = gltf.bufferViews.get(tangentAccessor.bufferView);
-                if (view.buffer != 0)
-                    throw new RuntimeException("GLTF: Can only support buffer 0");
+//                if (view.buffer != 0)
+//                    throw new RuntimeException("GLTF: Can only support buffer 0");
+                rawBuffer = gltf.rawBuffers.get(view.buffer);
                 offset = view.byteOffset;
                 offset += tangentAccessor.byteOffset;
 
@@ -686,8 +700,9 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
 
                 GLTFAccessor uvAccessor = gltf.accessors.get(uvAccessorId);
                 view = gltf.bufferViews.get(uvAccessor.bufferView);
-                if (view.buffer != 0)
-                    throw new RuntimeException("GLTF: Can only support buffer 0");
+//                if (view.buffer != 0)
+//                    throw new RuntimeException("GLTF: Can only support buffer 0");
+                rawBuffer = gltf.rawBuffers.get(view.buffer);
                 offset = view.byteOffset;
                 offset += uvAccessor.byteOffset;
 
@@ -715,8 +730,9 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                 if (!jointsAccessor.type.contentEquals("VEC4"))
                     throw new RuntimeException("GLTF: Can only support joints as vec4, type = " + jointsAccessor.type);
                 view = gltf.bufferViews.get(jointsAccessor.bufferView);
-                if (view.buffer != 0)
-                    throw new RuntimeException("GLTF: Can only support buffer 0");
+//                if (view.buffer != 0)
+//                    throw new RuntimeException("GLTF: Can only support buffer 0");
+                rawBuffer = gltf.rawBuffers.get(view.buffer);
                 offset = view.byteOffset;
                 offset += jointsAccessor.byteOffset;
                 rawBuffer.byteBuffer.position(offset);
@@ -751,8 +767,9 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                 if (accessor.componentType != GLTF.FLOAT32 || !accessor.type.contentEquals("VEC4"))
                     throw new RuntimeException("GLTF: Can only support vec4(FLOAT32) for joints, type = " + accessor.componentType);
                 view = gltf.bufferViews.get(accessor.bufferView);
-                if (view.buffer != 0)
-                    throw new RuntimeException("GLTF: Can only support buffer 0");
+//                if (view.buffer != 0)
+//                    throw new RuntimeException("GLTF: Can only support buffer 0");
+                rawBuffer = gltf.rawBuffers.get(view.buffer);
                 offset = view.byteOffset;
                 offset += accessor.byteOffset;
                 rawBuffer.byteBuffer.position(offset);
