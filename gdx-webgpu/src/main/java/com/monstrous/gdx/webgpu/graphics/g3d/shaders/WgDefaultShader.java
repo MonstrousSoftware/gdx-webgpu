@@ -100,7 +100,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
             this.maxMaterials = 512;
             this.maxDirectionalLights = 3;
             this.maxPointLights = 3;
-            this.numBones = 16; // todo
+            this.numBones = 32; // todo
         }
     }
 

@@ -106,7 +106,8 @@ public class WebGPUTests {
         IBL_Sliders.class,
         IBL_Spheres.class,
         IBL_GenerateOutdoor.class,
-        GLTFAnimation.class
+        GLTFAnimation.class,
+        GLTFSkinning.class
 
         // @on
 

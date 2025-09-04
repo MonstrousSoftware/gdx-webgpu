@@ -77,6 +77,8 @@ public class GLTFSkinning extends GdxTest {
 		cam.far = 100f;
 
         modelFileName = "data/g3d/gltf/SimpleSkin/SimpleSkin.gltf";
+        //modelFileName = "data/g3d/gltf/RiggedFigure/RiggedFigure.gltf";
+        //modelFileName = "data/g3d/gltf/RiggedSimple/RiggedSimple.gltf";
 
         WgModelLoader.ModelParameters params = new WgModelLoader.ModelParameters();
         params.textureParameter.genMipMaps = true;
