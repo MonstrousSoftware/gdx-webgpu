@@ -27,6 +27,7 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.model.data.*;
 import com.badlogic.gdx.math.*;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.ArrayMap;
 import com.badlogic.gdx.utils.ObjectMap;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.gltf.*;
 import com.monstrous.gdx.webgpu.graphics.g3d.model.PBRModelTexture;
@@ -135,40 +136,53 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
         loadNodes(modelData, gltf);
         loadScenes(modelData, gltf);
         loadAnimations(modelData, gltf);
+        loadSkins(modelData, gltf);
 
         // todo give priority to the default scene
         GLTFScene scene = gltf.scenes.get(gltf.scene);
 
-//        for(GLTFSkin skin : gltf.skins) {
-//            // skin.inverseBindMatrices points to an accessor to get mat4 data
-//            GLTFAccessor ibmAccessor = gltf.accessors.get(skin.inverseBindMatrices);
-//            if(ibmAccessor.componentType != GLTF.FLOAT32 || !ibmAccessor.type.contentEquals("MAT4"))
-//                throw new RuntimeException("GLTF: Expected inverseBindMatrices of MAT4(float32)");
-//            GLTFBufferView ibmView = gltf.bufferViews.get(ibmAccessor.bufferView);
-//
-//            if(ibmView.buffer != 0)
-//                throw new RuntimeException("GLTF can only support buffer 0");
-//            gltf.rawBuffer.byteBuffer.position(ibmAccessor.byteOffset+ ibmView.byteOffset);
-//            FloatBuffer matBuf = gltf.rawBuffer.byteBuffer.asFloatBuffer();
-//
-//            float[] floats = new float[16];
-//            for(int i = 0; i < ibmAccessor.count; i++) {    // read each matrix
-//                matBuf.get(floats, 0,  16); // get next 16 floats from the float buffer
-//                Matrix4 mat = new Matrix4();
-//                mat.set(floats);
-//                model.inverseBoneTransforms.add(mat);
-//            }
-//
-//            //skin.joints
-//            for(int i = 0; i < skin.joints.size(); i++){
-//                Node jointNode = nodes.get(skin.joints.get(i));
-//                model.joints.add(jointNode);
-//            }
-//        }
-//
 
 
         return modelData;
+    }
+
+    // libgdx has inverse bind matrices defined per nodePart
+    private void loadSkins(ModelData modelData, GLTF gltf) {
+
+        for (GLTFSkin skin : gltf.skins) {
+            // skin.inverseBindMatrices points to an accessor to get mat4 data
+            GLTFAccessor ibmAccessor = gltf.accessors.get(skin.inverseBindMatrices);
+            if (ibmAccessor.componentType != GLTF.FLOAT32 || !ibmAccessor.type.contentEquals("MAT4"))
+                throw new RuntimeException("GLTF: Expected inverseBindMatrices of MAT4(float32)");
+            GLTFBufferView ibmView = gltf.bufferViews.get(ibmAccessor.bufferView);
+            GLTFRawBuffer rawBuffer = gltf.rawBuffers.get(ibmView.buffer);
+
+            rawBuffer.byteBuffer.position(ibmAccessor.byteOffset + ibmView.byteOffset);
+            FloatBuffer matBuf = rawBuffer.byteBuffer.asFloatBuffer();
+
+            Matrix4[] transforms = new Matrix4[ibmAccessor.count];
+            float[] floats = new float[16];
+            for (int i = 0; i < ibmAccessor.count; i++) {    // read each matrix
+                matBuf.get(floats, 0, 16); // get next 16 floats from the float buffer
+                Matrix4 mat = new Matrix4();
+                mat.set(floats);
+                transforms[i] = mat;
+                //modelData.inverseBoneTransforms.add(mat);
+            }
+
+            //skin.joints
+            for (int i = 0; i < nodes.size; i++) {      // all nodes, not just joints or root nodes
+                ModelNode node = nodes.get(i);
+                if(node.parts == null)
+                    continue;
+                for(ModelNodePart nodePart : node.parts){
+                    nodePart.bones = new ArrayMap<>(true, ibmAccessor.count);
+                    for (int j = 0; j < skin.joints.size(); j++) {
+                        nodePart.bones.put(nodes.get(skin.joints.get(j)).id, new Matrix4(transforms[j]).inv());
+                    }
+                }
+            }
+        }
     }
 
 
@@ -540,13 +554,17 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                 va.add(VertexAttribute.Binormal());
             }
             for (GLTFAttribute attrib : primitive.attributes) {
-                // todo not supported?
-//            if(attrib.name.contentEquals("JOINTS_0")){  // todo only supports _0
-//                vaFlags |= VertexAttributes.Usage.JOINTS;
-//            }
-                if (attrib.name.contentEquals("WEIGHTS_0")) {
+                // weight factor and joint id are combined in the BoneWeight attribute which is a vec2
+                if(attrib.name.contentEquals("JOINTS_0")){  // todo only supports _0
+                    // assume 4 bones per joint.
                     va.add(VertexAttribute.BoneWeight(0));
+                    va.add(VertexAttribute.BoneWeight(1));
+                    va.add(VertexAttribute.BoneWeight(2));
+                    va.add(VertexAttribute.BoneWeight(3));
                 }
+//                if (attrib.name.contentEquals("WEIGHTS_0")) {
+//                    va.add(VertexAttribute.BoneWeight(0));
+//                }
             }
 
             modelMesh.attributes = new VertexAttribute[va.size];
@@ -642,7 +660,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                 float f1 = rawBuffer.byteBuffer.getFloat();
                 float f2 = rawBuffer.byteBuffer.getFloat();
                 float f3 = rawBuffer.byteBuffer.getFloat();
-                //System.out.println("float  "+f1 + " "+ f2 + " "+f3);
+                System.out.println("position "+i+" :  "+f1 + " "+ f2 + " "+f3);
                 positions.add(new Vector3(f1, f2, f3));
             }
 
@@ -650,8 +668,6 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
             if (normalAccessorId >= 0) {
                 GLTFAccessor normalAccessor = gltf.accessors.get(normalAccessorId);
                 view = gltf.bufferViews.get(normalAccessor.bufferView);
-//                if (view.buffer != 0)
-//                    throw new RuntimeException("GLTF: Can only support buffer 0");
                 rawBuffer = gltf.rawBuffers.get(view.buffer);
                 offset = view.byteOffset;
                 offset += normalAccessor.byteOffset;
@@ -730,15 +746,20 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                 if (!jointsAccessor.type.contentEquals("VEC4"))
                     throw new RuntimeException("GLTF: Can only support joints as vec4, type = " + jointsAccessor.type);
                 view = gltf.bufferViews.get(jointsAccessor.bufferView);
-//                if (view.buffer != 0)
-//                    throw new RuntimeException("GLTF: Can only support buffer 0");
                 rawBuffer = gltf.rawBuffers.get(view.buffer);
                 offset = view.byteOffset;
                 offset += jointsAccessor.byteOffset;
                 rawBuffer.byteBuffer.position(offset);
+                for(int i = 0; i < 40; i++){
+                    int u1 = rawBuffer.byteBuffer.getShort();
+                    System.out.println(i+" : "+u1);
+                }
+
                 boolean isByte = (jointsAccessor.componentType == GLTF.UBYTE8);
                 short u1, u2, u3, u4;
                 for (int i = 0; i < jointsAccessor.count; i++) {
+                    // note we use byte stride per joint
+                    rawBuffer.byteBuffer.position(offset + i * view.byteStride);
                     // assuming ubyte8 or ushort16 (handled as (signed) short here)
                     if (isByte) {
                         u1 = rawBuffer.byteBuffer.get();
@@ -752,12 +773,11 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                         u4 = rawBuffer.byteBuffer.getShort();
                     }
 
+                    // treat 4 indices as a vec4f (could potentially be packed in one float)
                     Vector4 jj = new Vector4(u1, u2, u3, u4);
                     joints.add(jj);
 
-//                int jointInt = (u1&0xFF) << 24 | (u2 &0xFF) << 16 | (u3&0xFF) << 8 | (u4&0xFF);
-//                System.out.println("joints  "+u1 + " "+ u2 + " "+u3+" "+u4+": "+Integer.toHexString(jointInt));
-//                joints.add(jointInt);
+                    System.out.println("joints  "+u1 + " "+ u2 + " "+u3+" "+u4);
                 }
             }
 
@@ -840,8 +860,6 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                 }
 
                 if(!joints.isEmpty()) {
-//                float jointF = Float.intBitsToFloat(joints.get(i));
-//                meshData.vertFloats.add(jointF);        // masquerade integer value as float
                     Vector4 jnt = joints.get(i);
                     verts[ix++] = jnt.x;
                     verts[ix++] = jnt.y;

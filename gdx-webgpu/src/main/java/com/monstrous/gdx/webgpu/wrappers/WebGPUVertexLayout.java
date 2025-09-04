@@ -30,11 +30,36 @@ public class WebGPUVertexLayout {
 
         WGPUVectorVertexAttribute attribs = WGPUVectorVertexAttribute.obtain();
 
+        boolean hasBones = false;
         int offset = 0;
         for(VertexAttribute attrib : attributes ){
+            // if there is a BoneWeight attribute defined add a vec4f on location 6 and 7 for joint ids and bone weights
+            // but do this only once. (libgdx attributes instead treat each BoneWeight unit as a pair of joint id and bne weight
+            // and treats this as 4 vec2f).
+            if(attrib.usage == VertexAttributes.Usage.BoneWeight){
+                if(!hasBones) {
+                    WGPUVertexFormat format = WGPUVertexFormat.Float32x4;
+
+                    WGPUVertexAttribute attribute = new WGPUVertexAttribute();  // to dispose....or is it safe to use obtain?
+                    attribute.setFormat(format);
+                    attribute.setOffset(offset);
+                    attribute.setShaderLocation(6);
+                    attribs.push_back(attribute);
+                    offset += getSize(format);
+                    attribute = new WGPUVertexAttribute();
+                    attribute.setFormat(format);
+                    attribute.setOffset(offset);
+                    attribute.setShaderLocation(7);
+                    attribs.push_back(attribute);
+                    offset += getSize(format);
+                    hasBones = true;
+                }
+                continue;
+            }
+
             WGPUVertexFormat format = convertFormat(attrib);
 
-            WGPUVertexAttribute attribute = WGPUVertexAttribute.obtain();
+            WGPUVertexAttribute attribute = new WGPUVertexAttribute();
             attribute.setFormat(format);
             attribute.setOffset(offset);
             attribute.setShaderLocation(getLocation(attrib.usage));
@@ -139,7 +164,7 @@ public class WebGPUVertexLayout {
             case VertexAttributes.Usage.Normal:  loc = 2; break;
             case VertexAttributes.Usage.TextureCoordinates:  loc = 1; break;
             case VertexAttributes.Usage.Generic:  loc = 0; break;
-            case VertexAttributes.Usage.BoneWeight:  loc = 7; break;
+            case VertexAttributes.Usage.BoneWeight:  loc = 7; break;    // we use 6 for joints and 7 for weights
             case VertexAttributes.Usage.Tangent:  loc = 3; break;
             case VertexAttributes.Usage.BiNormal:  loc = 4; break;
             default:

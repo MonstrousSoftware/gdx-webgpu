@@ -29,6 +29,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector4;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
+import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
@@ -57,6 +58,8 @@ public class WgDefaultShader extends WgShader implements Disposable {
     private final WebGPUUniformBuffer uniformBuffer;
     private final int uniformBufferSize;
     private final WebGPUUniformBuffer instanceBuffer;
+    private final WebGPUUniformBuffer jointMatricesBuffer;
+    private final WebGPUUniformBuffer inverseBindMatricesBuffer;
     private final WebGPUUniformBuffer materialBuffer;
     private final int materialSize;
     private final WebGPUPipeline pipeline;            // a shader has one pipeline
@@ -90,12 +93,14 @@ public class WgDefaultShader extends WgShader implements Disposable {
         public int maxMaterials;
         public int maxDirectionalLights;
         public int maxPointLights;
+        public int numBones;
 
         public Config() {
             this.maxInstances = 1024;
             this.maxMaterials = 512;
             this.maxDirectionalLights = 3;
             this.maxPointLights = 3;
+            this.numBones = 16; // todo
         }
     }
 
@@ -151,6 +156,8 @@ public class WgDefaultShader extends WgShader implements Disposable {
         binder.defineGroup(0, createFrameBindGroupLayout(uniformBufferSize, hasShadowMap, hasCubeMap, hasDiffuseCubeMap, hasSpecularCubeMap));
         binder.defineGroup(1, createMaterialBindGroupLayout(materialSize));
         binder.defineGroup(2, createInstancingBindGroupLayout());
+        if(renderable.bones != null)
+            binder.defineGroup(3, createSkinningBindGroupLayout());
 
         // define bindings in the groups
         // must match with shader code
@@ -193,6 +200,10 @@ public class WgDefaultShader extends WgShader implements Disposable {
         binder.defineBinding("emissiveSampler", 1, 8);
 
         binder.defineBinding("instanceUniforms", 2, 0);
+
+        binder.defineBinding("jointMatrices", 3, 0);
+        binder.defineBinding("inverseBindMatrices", 3, 1);
+
         // define uniforms in uniform buffers with their offset
         // frame uniforms
         int offset = 0;
@@ -258,6 +269,22 @@ public class WgDefaultShader extends WgShader implements Disposable {
         instanceBuffer = new WebGPUUniformBuffer(instanceSize*config.maxInstances, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Storage));
 
         binder.setBuffer("instanceUniforms", instanceBuffer, 0,  instanceSize *config.maxInstances);
+
+        if(renderable.bones != null) {
+            int numJoints = config.numBones;  // todo fixed number or renderable dependent?
+            if(renderable.bones.length > config.numBones)
+                throw new GdxRuntimeException("Too many bones in model. NumBones is configured as "+config.numBones);
+            jointMatricesBuffer = new WebGPUUniformBuffer(16 * Float.BYTES * numJoints, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Storage));
+            binder.setBuffer("jointMatrices", jointMatricesBuffer, 0, 16 * Float.BYTES * numJoints);
+            inverseBindMatricesBuffer = new WebGPUUniformBuffer(16 * Float.BYTES * numJoints, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Storage));
+            binder.setBuffer("inverseBindMatrices", inverseBindMatricesBuffer, 0, 16 * Float.BYTES * numJoints);
+            // todo ibm is never set
+            // todo handle multiple renderables with rigging
+        } else {
+            jointMatricesBuffer = null;
+            inverseBindMatricesBuffer = null;
+        }
+
 
         vertexAttributesHash = renderable.meshPart.mesh.getVertexAttributes().hashCode();
         materialAttributesMask = renderable.material.getMask();
@@ -447,6 +474,12 @@ public class WgDefaultShader extends WgShader implements Disposable {
         // normal matrix is transpose of inverse of world transform
         instanceBuffer.set(offset+16*Float.BYTES,  tmpM.set(renderable.worldTransform).inv().tra());
 
+        if(renderable.bones != null){
+            setBones(renderable.bones);
+            // bind group 3 (joints)
+            binder.bindGroup(renderPass, 3);
+        }
+
         int materialHash = renderable.material.hashCode();
 
         if( prevRenderable != null && materialHash == prevMaterialHash && renderable.meshPart.equals(prevRenderable.meshPart)){
@@ -577,6 +610,23 @@ public class WgDefaultShader extends WgShader implements Disposable {
         numMaterials++;
     }
 
+    private Matrix4 idt = new Matrix4();
+
+    // fill the skinning buffers (group 3)
+    private void setBones( Matrix4[] bones ){
+        int matrixSize = 16*Float.BYTES;
+
+        for(int i = 0; i < bones.length; i++){
+            Matrix4 mat = bones[i];
+            if(mat == null)
+                mat = idt;
+            jointMatricesBuffer.set(i * matrixSize, mat);
+            inverseBindMatricesBuffer.set(i * matrixSize, idt); // todo
+        }
+        jointMatricesBuffer.flush();
+        inverseBindMatricesBuffer.flush();
+    }
+
     private WebGPUBindGroupLayout createFrameBindGroupLayout(int uniformBufferSize, boolean hasShadowMap, boolean hasCubeMap, boolean hasDiffuseCubeMap, boolean hasSpecularCubeMap) {
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch bind group layout (frame)");
         layout.begin();
@@ -625,6 +675,17 @@ public class WgDefaultShader extends WgShader implements Disposable {
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch Binding Group Layout (instance)");
         layout.begin();
         layout.addBuffer(0, WGPUShaderStage.Vertex , WGPUBufferBindingType.ReadOnlyStorage, 2 * 16 *Float.BYTES*config.maxInstances, false);
+        layout.end();
+        return layout;
+    }
+
+    private WebGPUBindGroupLayout createSkinningBindGroupLayout(){
+        // binding 0: joint matrices
+        // binding 1: inverseBoneTransforms matrices
+        WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch Binding Group Layout (Skinning)");
+        layout.begin();
+        layout.addBuffer(0, WGPUShaderStage.Vertex , WGPUBufferBindingType.ReadOnlyStorage, 0, false);
+        layout.addBuffer(1, WGPUShaderStage.Vertex , WGPUBufferBindingType.ReadOnlyStorage, 0, false);
         layout.end();
         return layout;
     }

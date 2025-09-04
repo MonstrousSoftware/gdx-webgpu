@@ -295,37 +295,29 @@ public class ParserGLTF {
         }
         gltf.scene = fromJson.getInt("scene", 0);
 
+        JsonValue.JsonIterator skins = fromJson.iterator("skins");
+        if(skins != null) {
+            while (skins.hasNext()) {
+                GLTFSkin skin = new GLTFSkin();
+                JsonValue sk = skins.next();
+                if (sk.has("name"))
+                    skin.name = sk.get("name").asString();
 
-// todo
+                if (sk.has("inverseBindMatrices"))
+                    skin.inverseBindMatrices = sk.get("inverseBindMatrices").asInt();
 
+                if (sk.has("skeleton"))
+                    skin.skeleton = sk.get("skeleton").asInt();
 
-//        JSONArray skins = (JSONArray)file.get("skins");
-//        if(skins != null) {
-//            System.out.println("skins: " + skins.size());
-//            for (int i = 0; i < skins.size(); i++) {
-//                GLTFSkin skin = new GLTFSkin();
-//
-//                JSONObject sk = (JSONObject) skins.get(i);
-//                skin.name = (String) sk.get("name");
-//                System.out.println("skin: " + skin.name);
-//
-//                Number ibm = (Number)sk.get("inverseBindMatrices");
-//                skin.inverseBindMatrices = ibm.intValue();
-//
-//                Number skel = (Number)sk.get("skeleton");
-//                skin.skeleton = skel != null ? skel.intValue() : -1;
-//
-//
-//                JSONArray joints = (JSONArray) sk.get("joints");
-//                for (int j = 0; j < joints.size(); j++) {
-//                    Number nr = (Number) joints.get(j);
-//                    skin.joints.add(nr.intValue());
-//                }
-//
-//                gltf.skins.add(skin);
-//            }
-//        }
-//
+                if(sk.has("joints")){
+                    int[] jnt = sk.get("joints").asIntArray();
+                    for(int i = 0; i < jnt.length; i++)
+                        skin.joints.add(jnt[i]);
+                }
+
+                gltf.skins.add(skin);
+            }
+        }
 
         JsonValue.JsonIterator animations = fromJson.iterator("animations");
         if(animations != null) {
