@@ -263,7 +263,7 @@ public class ComputeMoldSlime extends GdxTest {
         encoder.dispose();
 
         // feed the command buffer to the queue
-        queue.submit(1, commandBuffer);
+        queue.submit(commandBuffer);
         commandBuffer.release();
         commandBuffer.dispose();
         encoder.release();

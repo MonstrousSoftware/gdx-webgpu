@@ -138,7 +138,7 @@ public class TestCompute extends GdxTest {
         encoder.dispose();
 
         // feed the command buffer to the queue
-        queue.submit(1, commandBuffer);
+        queue.submit(commandBuffer);
 
         WGPUBuffer map = mapBuffer.getBuffer();
         WGPUFuture webGPUFuture = map.mapAsync(WGPUMapMode.Read, 0, BUFFER_SIZE, WGPUCallbackMode.AllowProcessEvents, new BufferMapCallback() {
