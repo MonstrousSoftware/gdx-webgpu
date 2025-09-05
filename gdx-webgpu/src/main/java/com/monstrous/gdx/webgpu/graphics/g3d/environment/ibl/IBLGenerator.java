@@ -200,7 +200,8 @@ public class IBLGenerator  {
 
                 webgpu.encoder.finish(cmdBufferDescriptor, command);
                 webgpu.encoder.release();
-                webgpu.queue.submit(1, command);
+
+                webgpu.queue.submit(command);
                 command.release();
 
                 webgpu.popTargetView(prevState);
@@ -215,7 +216,7 @@ public class IBLGenerator  {
                 webgpu.encoder.finish(cmdBufferDescriptor, command);
                 webgpu.encoder.release();
 
-                webgpu.queue.submit(1, command);
+                webgpu.queue.submit(command);
                 command.release();
                 command.dispose();
 
@@ -280,7 +281,7 @@ public class IBLGenerator  {
 
             webgpu.encoder.finish(cmdBufferDescriptor, command);
             webgpu.encoder.release();
-            webgpu.queue.submit(1, command);
+            webgpu.queue.submit(command);
             command.release();
 
             webgpu.popTargetView(prevState);
@@ -291,7 +292,7 @@ public class IBLGenerator  {
             webgpu.encoder.finish(cmdBufferDescriptor, command);
             webgpu.encoder.release();
 
-            webgpu.queue.submit(1, command);
+            webgpu.queue.submit(command);
             command.release();
             command.dispose();
         }

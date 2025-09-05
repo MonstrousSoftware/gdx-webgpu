@@ -225,8 +225,7 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
         encoder.finish(cmdBufferDescriptor, command);
         encoder.release();
 
-
-        queue.submit(1, command);
+        queue.submit(command);
         command.release();
 
         // fetch time stamps after submitting the command buffer

@@ -140,7 +140,7 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
         System.out.println("os.name: "+osName);
         if(osName.contains("win")) {
             long display = GLFWNativeWin32.glfwGetWin32Window(windowHandle);
-            surface = instance.createWindowsSurface(IDLBase.createInstance().native_setVoid(display));
+            surface = instance.createWindowsSurface(IDLBase.native_new().native_setVoid(display));
         }
         else if(osName.contains("linux")) {
             System.out.println("Platform: "+glfwGetPlatform());
@@ -148,21 +148,21 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
                 System.out.println("Wayland");
                 long display = glfwGetWaylandDisplay();
                 long surf = glfwGetWaylandWindow(windowHandle);
-                IDLBase idlwindow = IDLBase.createInstance().native_setVoid(surf);
-                IDLBase idlDisplay = IDLBase.createInstance().native_setVoid(display);
+                IDLBase idlwindow = IDLBase.native_new().native_setVoid(surf);
+                IDLBase idlDisplay = IDLBase.native_new().native_setVoid(display);
                 surface = instance.createLinuxSurface(true, idlwindow, idlDisplay);
             }
             else {
                 System.out.println("X11");
                 long display = glfwGetX11Display();
                 long surf = glfwGetX11Window(windowHandle);
-                IDLBase idlwindow = IDLBase.createInstance().native_setVoid(surf);
-                IDLBase idlDisplay = IDLBase.createInstance().native_setVoid(display);
+                IDLBase idlwindow = IDLBase.native_new().native_setVoid(surf);
+                IDLBase idlDisplay = IDLBase.native_new().native_setVoid(display);
                 surface = instance.createLinuxSurface(false, idlwindow, idlDisplay);
             }
         }
         else if(osName.contains("mac")) {
-            IDLBase idlHandle = IDLBase.createInstance().native_setVoid(windowHandle);
+            IDLBase idlHandle = IDLBase.native_new().native_setVoid(windowHandle);
             surface = instance.createMacSurface(idlHandle);
         }
         return surface;
