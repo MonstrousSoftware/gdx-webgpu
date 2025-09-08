@@ -95,6 +95,7 @@ public class GLTFSkinning extends GdxTest {
         modelFileName = "data/g3d/gltf/RiggedFigure/RiggedFigure.gltf";
         //modelFileName = "data/g3d/gltf/Fox/Fox.gltf";
         //modelFileName = "data/g3d/gltf/RiggedSimple/RiggedSimple.gltf";
+        //modelFileName = "data/g3d/gltf/SillyDancing/SillyDancing.gltf";
 
         WgModelLoader.ModelParameters params = new WgModelLoader.ModelParameters();
         params.textureParameter.genMipMaps = true;
