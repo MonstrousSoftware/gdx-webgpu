@@ -354,7 +354,10 @@ public class ParserGLTF {
 
                         sampler.input = sam.get("input").asInt();
                         sampler.output = sam.get("output").asInt();
-                        sampler.interpolation = sam.get("interpolation").asString();
+                        if(sam.has("interpolation"))
+                            sampler.interpolation = sam.get("interpolation").asString();
+                        else
+                            sampler.interpolation = "LINEAR";
 
                         System.out.println("sampler: " + sampler.input+" "+sampler.interpolation+" "+sampler.output);
 

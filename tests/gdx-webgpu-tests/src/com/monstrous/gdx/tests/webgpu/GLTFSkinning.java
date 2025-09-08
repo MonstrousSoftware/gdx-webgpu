@@ -20,13 +20,20 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
+import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.Environment;
+import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
+import com.badlogic.gdx.graphics.g3d.model.Node;
+import com.badlogic.gdx.graphics.g3d.model.NodePart;
 import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
+import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
@@ -38,6 +45,7 @@ import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLBModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLTFModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgModelLoader;
+import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 
 
@@ -51,7 +59,10 @@ public class GLTFSkinning extends GdxTest {
 	WgSpriteBatch batch;
 	WgBitmapFont font;
 	Model model;
-	ModelInstance instance;
+	Array<ModelInstance> jointBoxes;
+    Array<Node> jointNodes;
+    ModelInstance instance;
+    Array<Disposable> disposables;
     String modelFileName;
     Environment environment;
     int numMeshes;
@@ -74,10 +85,15 @@ public class GLTFSkinning extends GdxTest {
 		cam.position.set(2, 2, 3f);
 		cam.lookAt(0,1,0);
 		cam.near = 0.001f;
-		cam.far = 100f;
+		cam.far = 1000f;
 
-        modelFileName = "data/g3d/gltf/SimpleSkin/SimpleSkin.gltf";
-        //modelFileName = "data/g3d/gltf/RiggedFigure/RiggedFigure.gltf";
+        jointBoxes = new Array<>();
+        jointNodes = new Array<>();
+        disposables = new Array<>();
+
+        //modelFileName = "data/g3d/gltf/SimpleSkin/SimpleSkin.gltf";
+        modelFileName = "data/g3d/gltf/RiggedFigure/RiggedFigure.gltf";
+        //modelFileName = "data/g3d/gltf/Fox/Fox.gltf";
         //modelFileName = "data/g3d/gltf/RiggedSimple/RiggedSimple.gltf";
 
         WgModelLoader.ModelParameters params = new WgModelLoader.ModelParameters();
@@ -95,10 +111,16 @@ public class GLTFSkinning extends GdxTest {
         long endLoad = System.currentTimeMillis();
         System.out.println("Model loading time (ms): "+(endLoad - startLoad));
 
-		instance = new ModelInstance(model);
+        instance = new ModelInstance(model);
 
-        animationController = new AnimationController(instance);
-        animationController.setAnimation("anim0", -1);
+        makeBones(instance);
+
+        if(instance.animations != null) {
+            animationController = new AnimationController(instance);
+            String animationName = instance.animations.get(0).id;   // play first animation
+            System.out.println("Animation: " + animationName);
+            animationController.setAnimation(animationName, -1);
+        }
 
         numMeshes = instance.model.meshes.size;
         for(int i = 0; i < numMeshes; i++){
@@ -125,16 +147,68 @@ public class GLTFSkinning extends GdxTest {
 
 	}
 
+    /** create boxes to visualize the skeleton joints */
+    private void makeBones(ModelInstance instance){
+        ModelBuilder modelBuilder = new WgModelBuilder();
+
+        for(Node node : instance.nodes) {
+            System.out.println("instance.node: "+node.id);
+            makeBones(node, modelBuilder);
+//            model = modelBuilder.createBox(5f, 5f, 5f, new Material(ColorAttribute.createDiffuse(Color.GREEN)),
+//                VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+//            instance = new ModelInstance(model);
+        }
+    }
+
+    private void makeBones(Node node, ModelBuilder modelBuilder){
+        System.out.println("checking node "+node.id);
+        for(NodePart part : node.parts){
+            if(part.invBoneBindTransforms != null){
+                for(Node joint : part.invBoneBindTransforms.keys()){
+                    System.out.println("joint: "+joint.id);
+                    float size = .1f;
+                    model = modelBuilder.createBox(size, size, size, new Material(ColorAttribute.createDiffuse(Color.BLUE)),
+                    VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+                    ModelInstance boneInstance = new ModelInstance(model);
+                    boneInstance.transform.set(joint.globalTransform);
+                    disposables.add(model);
+                    jointBoxes.add(boneInstance);
+                    jointNodes.add(joint);
+                }
+            }
+        }
+        for(Node child : node.getChildren())
+            makeBones(child, modelBuilder);
+    }
+
+    private void updateBones(){
+        for(int i = 0; i < jointBoxes.size; i++){
+            // if(jointNodes.get(i).isAnimated
+            jointBoxes.get(i).transform.set(jointNodes.get(i).globalTransform);
+
+        }
+        //System.out.println("transform: "+jointNodes.get(1).localTransform);
+    }
+
 	public void render () {
-		float delta = Gdx.graphics.getDeltaTime();
-        animationController.update(delta);
+		float delta =Gdx.graphics.getDeltaTime();
+        if(animationController != null) {
+            animationController.update(delta);
+            updateBones();
+        }
 
 		WgScreenUtils.clear(Color.DARK_GRAY, true);
 
 		cam.update();
 		modelBatch.begin(cam);
 		modelBatch.render(instance, environment);
+        //odelBatch.render(jointBoxes);
 		modelBatch.end();
+
+        modelBatch.begin(cam, null, true);
+        //modelBatch.render(instance, environment);
+        modelBatch.render(jointBoxes);
+        modelBatch.end();
 
 //        viewport.apply();
 //        batch.setProjectionMatrix(viewport.getCamera().combined);

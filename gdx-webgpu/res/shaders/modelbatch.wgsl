@@ -83,7 +83,7 @@ struct MaterialUniforms {
 // Skinning
 #ifdef SKIN
     @group(3) @binding(0) var<storage, read> jointMatrices: array<mat4x4f>;
-    @group(3) @binding(1) var<storage, read> inverseBindMatrices: array<mat4x4f>;
+    @group(3) @binding(1) var<storage, read> inverseBindMatrices: array<mat4x4f>;   // not used
 #endif
 
 struct VertexInput {
@@ -135,10 +135,11 @@ fn vs_main(in: VertexInput, @builtin(instance_index) instance: u32) -> VertexOut
 
 #ifdef SKIN
      // Get relevant 4 bone matrices
-     let joint0 = jointMatrices[u32(in.joints[0])] * inverseBindMatrices[u32(in.joints[0])];
-     let joint1 = jointMatrices[u32(in.joints[1])] * inverseBindMatrices[u32(in.joints[1])];
-     let joint2 = jointMatrices[u32(in.joints[2])] * inverseBindMatrices[u32(in.joints[2])];
-     let joint3 = jointMatrices[u32(in.joints[3])] * inverseBindMatrices[u32(in.joints[3])];
+     // joint matrix is already multiplied by inv bind matrix in Node.calculateBoneTransform
+     let joint0 = jointMatrices[u32(in.joints[0])];// * inverseBindMatrices[u32(in.joints[0])];
+     let joint1 = jointMatrices[u32(in.joints[1])];// * inverseBindMatrices[u32(in.joints[1])];
+     let joint2 = jointMatrices[u32(in.joints[2])];// * inverseBindMatrices[u32(in.joints[2])];
+     let joint3 = jointMatrices[u32(in.joints[3])];// * inverseBindMatrices[u32(in.joints[3])];
 
      // Compute influence of joint based on weight
      let skinMatrix =

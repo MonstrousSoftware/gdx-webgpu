@@ -350,8 +350,12 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                         if(nodeAnimation.translation == null) {
                             nodeAnimation.translation = new Array<>();
                             // add a key frame for t=0 if not defined
-                            if(!MathUtils.isZero(time))
-                                nodeAnimation.translation.add(new ModelNodeKeyframe<Vector3>());
+                            if(!MathUtils.isZero(time)) {
+                                ModelNodeKeyframe<Vector3> startKey = new ModelNodeKeyframe<Vector3>();
+                                startKey.keytime = 0;
+                                startKey.value = tr;
+                                nodeAnimation.translation.add(startKey);
+                            }
                         }
                         nodeAnimation.translation.add(keyFrame);
                     } else  if(gltfChannel.path.contentEquals("rotation")) {
@@ -362,21 +366,30 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                         keyFrame.value = q;
                         if(nodeAnimation.rotation == null) {
                             nodeAnimation.rotation = new Array<>();
-                            if(!MathUtils.isZero(time))
-                                nodeAnimation.rotation.add(new ModelNodeKeyframe<Quaternion>());
+                            if(!MathUtils.isZero(time)) {
+                                ModelNodeKeyframe<Quaternion> startKey = new ModelNodeKeyframe<Quaternion>();
+                                startKey.keytime = 0;
+                                startKey.value = q;
+                                nodeAnimation.rotation.add( startKey );
+                            }
                         }
                         nodeAnimation.rotation.add(keyFrame);
                     } else if(gltfChannel.path.contentEquals("scale")) {
+                        // todo scaling breaks the animation even if all values are Vector3(1,1,1)
                         Vector3 sc = new Vector3(floats[3*key], floats[3*key + 1], floats[3*key + 2]);
                         ModelNodeKeyframe<Vector3> keyFrame = new ModelNodeKeyframe<Vector3>();
                         keyFrame.keytime = time;
-                        keyFrame.value = sc;
+                        keyFrame.value = new Vector3(1,1,1); //sc;
                         if(nodeAnimation.scaling == null) {
                             nodeAnimation.scaling = new Array<>();
-                            if(!MathUtils.isZero(time))
-                                nodeAnimation.scaling.add(new ModelNodeKeyframe<Vector3>());
+                            if(!MathUtils.isZero(time)) {
+                                ModelNodeKeyframe<Vector3> startKey = new ModelNodeKeyframe<Vector3>();
+                                startKey.keytime = 0;
+                                startKey.value = new Vector3(1,1,1);
+                                //nodeAnimation.scaling.add(startKey);
+                            }
                         }
-                        nodeAnimation.scaling.add(keyFrame);
+                        //nodeAnimation.scaling.add(keyFrame);
                     }
                 }
                 animation.nodeAnimations.add(nodeAnimation);
@@ -571,10 +584,6 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
             for (int i = 0; i < va.size; i++)
                 modelMesh.attributes[i] = va.get(i);
 
-            // primitive indices
-            int indexAccessorId = primitive.indices;        // todo indices are optional
-            GLTFAccessor indexAccessor = gltf.accessors.get(indexAccessorId);
-
 
             WgModelMeshPart modelMeshPart = new WgModelMeshPart();
             modelMeshPart.id = modelMesh.id; // must be unique as it is used in modelNodePart as a reference
@@ -582,31 +591,43 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
 
             meshMap.put(primitive,  modelMeshPart.id);
 
-            GLTFBufferView view = gltf.bufferViews.get(indexAccessor.bufferView);
+
+            GLTFBufferView view;
+            GLTFRawBuffer rawBuffer;
+            int offset;
+
+            // primitive indices
+            int indexAccessorId = primitive.indices;
+            if(indexAccessorId >= 0) { //  indices are optional
+                GLTFAccessor indexAccessor = gltf.accessors.get(indexAccessorId);
+
+
+                view = gltf.bufferViews.get(indexAccessor.bufferView);
 //            if(view.buffer != 0)
 //                throw new RuntimeException("GLTF: Can only support buffer 0");
-            int offset = view.byteOffset + indexAccessor.byteOffset;
-            GLTFRawBuffer rawBuffer = gltf.rawBuffers.get(view.buffer);
-            rawBuffer.byteBuffer.position(offset);
+                offset = view.byteOffset + indexAccessor.byteOffset;
+                rawBuffer = gltf.rawBuffers.get(view.buffer);
+                rawBuffer.byteBuffer.position(offset);
 
-            if(indexAccessor.componentType == GLTF.UBYTE8) {
-                modelMeshPart.indices = new short[indexAccessor.count];
+                if (indexAccessor.componentType == GLTF.UBYTE8) {
+                    modelMeshPart.indices = new short[indexAccessor.count];
 
-                for (int i = 0; i < indexAccessor.count; i++) {
-                    modelMeshPart.indices[i] = rawBuffer.byteBuffer.get();
-                }
-            } else if(indexAccessor.componentType == GLTF.USHORT16) {
-                modelMeshPart.indices = new short[indexAccessor.count];
+                    for (int i = 0; i < indexAccessor.count; i++) {
+                        modelMeshPart.indices[i] = rawBuffer.byteBuffer.get();
+                    }
+                } else if (indexAccessor.componentType == GLTF.USHORT16) {
+                    modelMeshPart.indices = new short[indexAccessor.count];
 
-                for (int i = 0; i < indexAccessor.count; i++) {
-                    modelMeshPart.indices[i] = rawBuffer.byteBuffer.getShort();
+                    for (int i = 0; i < indexAccessor.count; i++) {
+                        modelMeshPart.indices[i] = rawBuffer.byteBuffer.getShort();
+                    }
+                } else {
+                    modelMeshPart.indices32 = new int[indexAccessor.count];
+                    for (int i = 0; i < indexAccessor.count; i++) {
+                        modelMeshPart.indices32[i] = rawBuffer.byteBuffer.getInt();
+                    }
+                    System.out.println("Using 32 bit indices:  " + indexAccessor.count);
                 }
-            } else {
-                modelMeshPart.indices32 = new int[indexAccessor.count];
-                for(int i = 0; i < indexAccessor.count; i++){
-                    modelMeshPart.indices32[i] = rawBuffer.byteBuffer.getInt();
-                }
-                System.out.println("Using 32 bit indices:  "+indexAccessor.count);
             }
 
             modelMesh.parts[0] = modelMeshPart;
@@ -654,8 +675,9 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                 throw new RuntimeException("GLTF: Can only support float positions as VEC3");
 
 
-            rawBuffer.byteBuffer.position(offset);
+            //rawBuffer.byteBuffer.position(offset);
             for (int i = 0; i < positionAccessor.count; i++) {
+                rawBuffer.byteBuffer.position(offset + i*view.byteStride);
                 // assuming float32
                 float f1 = rawBuffer.byteBuffer.getFloat();
                 float f2 = rawBuffer.byteBuffer.getFloat();
@@ -676,8 +698,9 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                 if (normalAccessor.componentType != GLTF.FLOAT32 || !positionAccessor.type.contentEquals("VEC3"))
                     throw new RuntimeException("GLTF: Can only support float normals as VEC3");
 
-                rawBuffer.byteBuffer.position(offset);
+                //rawBuffer.byteBuffer.position(offset);
                 for (int i = 0; i < normalAccessor.count; i++) {
+                    rawBuffer.byteBuffer.position(offset + i*view.byteStride);
                     // assuming float32
                     float f1 = rawBuffer.byteBuffer.getFloat();
                     float f2 = rawBuffer.byteBuffer.getFloat();
@@ -700,8 +723,9 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                 if (tangentAccessor.componentType != GLTF.FLOAT32 || !positionAccessor.type.contentEquals("VEC3"))
                     throw new RuntimeException("GLTF: Can only support float tangents as VEC3");
 
-                rawBuffer.byteBuffer.position(offset);
+                //rawBuffer.byteBuffer.position(offset);
                 for (int i = 0; i < tangentAccessor.count; i++) {
+                    rawBuffer.byteBuffer.position(offset + i*view.byteStride);
                     // assuming float32
                     float f1 = rawBuffer.byteBuffer.getFloat();
                     float f2 = rawBuffer.byteBuffer.getFloat();
@@ -728,8 +752,9 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                     throw new RuntimeException("GLTF: Can only support float positions as VEC2");
 
 
-                rawBuffer.byteBuffer.position(offset);
+
                 for (int i = 0; i < uvAccessor.count; i++) {
+                    rawBuffer.byteBuffer.position(offset + i*view.byteStride);
                     // assuming float32
                     float f1 = rawBuffer.byteBuffer.getFloat();
                     float f2 = rawBuffer.byteBuffer.getFloat();
@@ -792,9 +817,10 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                 rawBuffer = gltf.rawBuffers.get(view.buffer);
                 offset = view.byteOffset;
                 offset += accessor.byteOffset;
-                rawBuffer.byteBuffer.position(offset);
+                //rawBuffer.byteBuffer.position(offset);
 
                 for (int i = 0; i < accessor.count; i++) {
+                    rawBuffer.byteBuffer.position(offset + i * view.byteStride);
                     float f1 = rawBuffer.byteBuffer.getFloat();
                     float f2 = rawBuffer.byteBuffer.getFloat();
                     float f3 = rawBuffer.byteBuffer.getFloat();
