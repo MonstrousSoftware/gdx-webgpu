@@ -389,7 +389,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                                 //nodeAnimation.scaling.add(startKey);
                             }
                         }
-                        //nodeAnimation.scaling.add(keyFrame);
+                       // nodeAnimation.scaling.add(keyFrame);
                     }
                 }
                 animation.nodeAnimations.add(nodeAnimation);
@@ -674,10 +674,9 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
             if (positionAccessor.componentType != GLTF.FLOAT32 || !positionAccessor.type.contentEquals("VEC3"))
                 throw new RuntimeException("GLTF: Can only support float positions as VEC3");
 
-
-            //rawBuffer.byteBuffer.position(offset);
+            int byteStride = (view.byteStride != 0) ? view.byteStride : 3 * Float.BYTES;
             for (int i = 0; i < positionAccessor.count; i++) {
-                rawBuffer.byteBuffer.position(offset + i*view.byteStride);
+                rawBuffer.byteBuffer.position(offset + i*byteStride);
                 // assuming float32
                 float f1 = rawBuffer.byteBuffer.getFloat();
                 float f2 = rawBuffer.byteBuffer.getFloat();
@@ -699,13 +698,14 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                     throw new RuntimeException("GLTF: Can only support float normals as VEC3");
 
                 //rawBuffer.byteBuffer.position(offset);
+                byteStride = (view.byteStride != 0) ? view.byteStride : 3 * Float.BYTES;
                 for (int i = 0; i < normalAccessor.count; i++) {
-                    rawBuffer.byteBuffer.position(offset + i*view.byteStride);
+                    rawBuffer.byteBuffer.position(offset + i*byteStride);
                     // assuming float32
                     float f1 = rawBuffer.byteBuffer.getFloat();
                     float f2 = rawBuffer.byteBuffer.getFloat();
                     float f3 = rawBuffer.byteBuffer.getFloat();
-                    //System.out.println("float  "+f1 + " "+ f2 + " "+f3);
+                    System.out.println("normal:  "+f1 + " "+ f2 + " "+f3);
                     normals.add(new Vector3(f1, f2, f3));
                 }
             }
@@ -724,8 +724,10 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                     throw new RuntimeException("GLTF: Can only support float tangents as VEC3");
 
                 //rawBuffer.byteBuffer.position(offset);
+                //rawBuffer.byteBuffer.position(offset);
+                byteStride = (view.byteStride != 0) ? view.byteStride : 3 * Float.BYTES;
                 for (int i = 0; i < tangentAccessor.count; i++) {
-                    rawBuffer.byteBuffer.position(offset + i*view.byteStride);
+                    rawBuffer.byteBuffer.position(offset + i*byteStride);
                     // assuming float32
                     float f1 = rawBuffer.byteBuffer.getFloat();
                     float f2 = rawBuffer.byteBuffer.getFloat();
@@ -752,9 +754,9 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                     throw new RuntimeException("GLTF: Can only support float positions as VEC2");
 
 
-
+                byteStride = (view.byteStride != 0) ? view.byteStride : 2 * Float.BYTES;
                 for (int i = 0; i < uvAccessor.count; i++) {
-                    rawBuffer.byteBuffer.position(offset + i*view.byteStride);
+                    rawBuffer.byteBuffer.position(offset + i*byteStride);
                     // assuming float32
                     float f1 = rawBuffer.byteBuffer.getFloat();
                     float f2 = rawBuffer.byteBuffer.getFloat();
@@ -774,17 +776,18 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                 rawBuffer = gltf.rawBuffers.get(view.buffer);
                 offset = view.byteOffset;
                 offset += jointsAccessor.byteOffset;
-                rawBuffer.byteBuffer.position(offset);
-                for(int i = 0; i < 40; i++){
-                    int u1 = rawBuffer.byteBuffer.getShort();
-                    System.out.println(i+" : "+u1);
-                }
+//                rawBuffer.byteBuffer.position(offset);
+//                for(int i = 0; i < 40; i++){
+//                    int u1 = rawBuffer.byteBuffer.getShort();
+//                    System.out.println(i+" : "+u1);
+//                }
 
                 boolean isByte = (jointsAccessor.componentType == GLTF.UBYTE8);
                 short u1, u2, u3, u4;
+                byteStride = (view.byteStride != 0) ? view.byteStride : (isByte ?  4 : 4 * Short.BYTES);
                 for (int i = 0; i < jointsAccessor.count; i++) {
                     // note we use byte stride per joint
-                    rawBuffer.byteBuffer.position(offset + i * view.byteStride);
+                    rawBuffer.byteBuffer.position(offset + i * byteStride);
                     // assuming ubyte8 or ushort16 (handled as (signed) short here)
                     if (isByte) {
                         u1 = rawBuffer.byteBuffer.get();
@@ -802,7 +805,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                     Vector4 jj = new Vector4(u1, u2, u3, u4);
                     joints.add(jj);
 
-                    System.out.println("joints  "+u1 + " "+ u2 + " "+u3+" "+u4);
+                    //System.out.println("joints  "+u1 + " "+ u2 + " "+u3+" "+u4);
                 }
             }
 
@@ -818,15 +821,15 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                 offset = view.byteOffset;
                 offset += accessor.byteOffset;
                 //rawBuffer.byteBuffer.position(offset);
-
+                byteStride = (view.byteStride != 0) ? view.byteStride :  4 * Float.BYTES;
                 for (int i = 0; i < accessor.count; i++) {
-                    rawBuffer.byteBuffer.position(offset + i * view.byteStride);
+                    rawBuffer.byteBuffer.position(offset + i * byteStride);
                     float f1 = rawBuffer.byteBuffer.getFloat();
                     float f2 = rawBuffer.byteBuffer.getFloat();
                     float f3 = rawBuffer.byteBuffer.getFloat();
                     float f4 = rawBuffer.byteBuffer.getFloat();
                     Vector4 w = new Vector4(f1, f2, f3, f4);
-                    System.out.println("weights  " + w.toString());
+                    //System.out.println("weights  " + w.toString());
                     weights.add(w);
                 }
 

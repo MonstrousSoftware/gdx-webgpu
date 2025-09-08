@@ -92,10 +92,11 @@ public class GLTFSkinning extends GdxTest {
         disposables = new Array<>();
 
         //modelFileName = "data/g3d/gltf/SimpleSkin/SimpleSkin.gltf";
-        modelFileName = "data/g3d/gltf/RiggedFigure/RiggedFigure.gltf";
+        //modelFileName = "data/g3d/gltf/RiggedFigure/RiggedFigure.gltf";
         //modelFileName = "data/g3d/gltf/Fox/Fox.gltf";
         //modelFileName = "data/g3d/gltf/RiggedSimple/RiggedSimple.gltf";
         //modelFileName = "data/g3d/gltf/SillyDancing/SillyDancing.gltf";
+        modelFileName = "data/g3d/gltf/BendyBox/BendyBox.gltf";
 
         WgModelLoader.ModelParameters params = new WgModelLoader.ModelParameters();
         params.textureParameter.genMipMaps = true;
@@ -116,10 +117,12 @@ public class GLTFSkinning extends GdxTest {
 
         makeBones(instance);
 
-        if(instance.animations != null) {
+        System.out.println("Animation count: "+instance.animations.size);
+
+        if(instance.animations != null && instance.animations.size > 0) {
             animationController = new AnimationController(instance);
             String animationName = instance.animations.get(0).id;   // play first animation
-            System.out.println("Animation: " + animationName);
+            System.out.println("Animation[0]: " + animationName);
             animationController.setAnimation(animationName, -1);
         }
 
@@ -155,18 +158,15 @@ public class GLTFSkinning extends GdxTest {
         for(Node node : instance.nodes) {
             System.out.println("instance.node: "+node.id);
             makeBones(node, modelBuilder);
-//            model = modelBuilder.createBox(5f, 5f, 5f, new Material(ColorAttribute.createDiffuse(Color.GREEN)),
-//                VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-//            instance = new ModelInstance(model);
         }
     }
 
     private void makeBones(Node node, ModelBuilder modelBuilder){
-        System.out.println("checking node "+node.id);
+        //System.out.println("checking node "+node.id);
         for(NodePart part : node.parts){
             if(part.invBoneBindTransforms != null){
                 for(Node joint : part.invBoneBindTransforms.keys()){
-                    System.out.println("joint: "+joint.id);
+                    //System.out.println("joint: "+joint.id);
                     float size = .1f;
                     model = modelBuilder.createBox(size, size, size, new Material(ColorAttribute.createDiffuse(Color.BLUE)),
                     VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);

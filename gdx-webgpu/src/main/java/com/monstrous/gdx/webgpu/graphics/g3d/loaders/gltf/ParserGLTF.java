@@ -335,12 +335,12 @@ public class ParserGLTF {
                         JsonValue ch = channels.next();
 
                         channel.sampler = ch.get("sampler").asInt();
-                        System.out.println("sampler: " + channel.sampler);
+                        //System.out.println("sampler: " + channel.sampler);
 
                         JsonValue tgt = ch.get("target");
                         channel.node = tgt.get("node").asInt();
                         channel.path = tgt.get("path").asString();
-                        System.out.println("target: " + channel.node+" "+channel.path);
+                        //System.out.println("target: " + channel.node+" "+channel.path);
 
                         animation.channels.add(channel);
                     }
@@ -359,7 +359,7 @@ public class ParserGLTF {
                         else
                             sampler.interpolation = "LINEAR";
 
-                        System.out.println("sampler: " + sampler.input+" "+sampler.interpolation+" "+sampler.output);
+                        //System.out.println("sampler: " + sampler.input+" "+sampler.interpolation+" "+sampler.output);
 
                         animation.samplers.add(sampler);
                     }
