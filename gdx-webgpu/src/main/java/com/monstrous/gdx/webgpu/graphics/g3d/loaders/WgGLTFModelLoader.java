@@ -24,6 +24,7 @@ import com.badlogic.gdx.assets.loaders.TextureLoader;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.model.NodeAnimation;
 import com.badlogic.gdx.graphics.g3d.model.data.*;
 import com.badlogic.gdx.math.*;
 import com.badlogic.gdx.utils.Array;
@@ -309,8 +310,21 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
             animation.id = gltfAnim.name != null ? gltfAnim.name : "anim"+numAnimations;
             numAnimations++;
             for(GLTFAnimationChannel gltfChannel : gltfAnim.channels){
-                ModelNodeAnimation nodeAnimation = new ModelNodeAnimation();
-                nodeAnimation.nodeId = nodes.get(gltfChannel.node).id;
+                // Note: all channels for the same node need to be captured in the same ModelNodeAnimation
+                //
+                String nodeId = nodes.get(gltfChannel.node).id;
+                // see if we already have a ModelNodeAnimation for this node
+                ModelNodeAnimation nodeAnimation = null;
+                for(ModelNodeAnimation na : animation.nodeAnimations ){
+                    if(na.nodeId.contentEquals(nodeId)) {
+                        nodeAnimation = na;
+                        break;
+                    }
+                }
+                // othwerwise create one
+                if(nodeAnimation == null)
+                    nodeAnimation = new ModelNodeAnimation();
+                nodeAnimation.nodeId = nodeId;
 
                 int numComponents = 3;
                 if(gltfChannel.path.contentEquals("rotation"))
@@ -322,8 +336,6 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                 // ignore interpolation, we only do linear
 
                 GLTFBufferView inView = gltf.bufferViews.get(inAccessor.bufferView);
-//                if(inView.buffer != 0)
-//                    throw new RuntimeException("GLTF can only support buffer 0");
                 GLTFRawBuffer rawBuffer = gltf.rawBuffers.get(inView.buffer);
                 rawBuffer.byteBuffer.position(inView.byteOffset+ inAccessor.byteOffset);  // does this carry over to floatbuf?
                 FloatBuffer timeBuf = rawBuffer.byteBuffer.asFloatBuffer();
@@ -331,8 +343,6 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                 timeBuf.get(times, 0, inAccessor.count);
 
                 GLTFBufferView outView = gltf.bufferViews.get(outAccessor.bufferView);
-//                if(outView.buffer != 0)
-//                    throw new RuntimeException("GLTF can only support buffer 0");
                 rawBuffer = gltf.rawBuffers.get(outView.buffer);
                 rawBuffer.byteBuffer.position(outView.byteOffset+outAccessor.byteOffset);  // does this carry over to floatbuf?
                 FloatBuffer floatBuf = rawBuffer.byteBuffer.asFloatBuffer();
@@ -350,7 +360,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                         if(nodeAnimation.translation == null) {
                             nodeAnimation.translation = new Array<>();
                             // add a key frame for t=0 if not defined
-                            if(!MathUtils.isZero(time)) {
+                            if(time > 0) {// insert key frame for t = 0
                                 ModelNodeKeyframe<Vector3> startKey = new ModelNodeKeyframe<Vector3>();
                                 startKey.keytime = 0;
                                 startKey.value = tr;
@@ -366,7 +376,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                         keyFrame.value = q;
                         if(nodeAnimation.rotation == null) {
                             nodeAnimation.rotation = new Array<>();
-                            if(!MathUtils.isZero(time)) {
+                            if(time > 0) {// insert key frame for t = 0
                                 ModelNodeKeyframe<Quaternion> startKey = new ModelNodeKeyframe<Quaternion>();
                                 startKey.keytime = 0;
                                 startKey.value = q;
@@ -382,14 +392,14 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                         keyFrame.value = new Vector3(1,1,1); //sc;
                         if(nodeAnimation.scaling == null) {
                             nodeAnimation.scaling = new Array<>();
-                            if(!MathUtils.isZero(time)) {
+                            if(time > 0) {  // insert key frame for t = 0
                                 ModelNodeKeyframe<Vector3> startKey = new ModelNodeKeyframe<Vector3>();
                                 startKey.keytime = 0;
-                                startKey.value = new Vector3(1,1,1);
-                                //nodeAnimation.scaling.add(startKey);
+                                startKey.value = new Vector3(1,1,1);//sc
+                                nodeAnimation.scaling.add(startKey);
                             }
                         }
-                       // nodeAnimation.scaling.add(keyFrame);
+                        nodeAnimation.scaling.add(keyFrame);
                     }
                 }
                 animation.nodeAnimations.add(nodeAnimation);
@@ -681,7 +691,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                 float f1 = rawBuffer.byteBuffer.getFloat();
                 float f2 = rawBuffer.byteBuffer.getFloat();
                 float f3 = rawBuffer.byteBuffer.getFloat();
-                System.out.println("position "+i+" :  "+f1 + " "+ f2 + " "+f3);
+                //System.out.println("position "+i+" :  "+f1 + " "+ f2 + " "+f3);
                 positions.add(new Vector3(f1, f2, f3));
             }
 
@@ -705,7 +715,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                     float f1 = rawBuffer.byteBuffer.getFloat();
                     float f2 = rawBuffer.byteBuffer.getFloat();
                     float f3 = rawBuffer.byteBuffer.getFloat();
-                    System.out.println("normal:  "+f1 + " "+ f2 + " "+f3);
+                    //System.out.println("normal:  "+f1 + " "+ f2 + " "+f3);
                     normals.add(new Vector3(f1, f2, f3));
                 }
             }

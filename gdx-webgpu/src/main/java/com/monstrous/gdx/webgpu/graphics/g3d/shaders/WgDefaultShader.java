@@ -273,7 +273,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         if(renderable.bones != null) {
             int numJoints = config.numBones;  // todo fixed number or renderable dependent?
             if(renderable.bones.length > config.numBones)
-                throw new GdxRuntimeException("Too many bones in model. NumBones is configured as "+config.numBones);
+                throw new GdxRuntimeException("Too many bones in model. NumBones is configured as "+config.numBones+". Renderable has "+renderable.bones.length);
             jointMatricesBuffer = new WebGPUUniformBuffer(16 * Float.BYTES * numJoints, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Storage));
             binder.setBuffer("jointMatrices", jointMatricesBuffer, 0, 16 * Float.BYTES * numJoints);
             inverseBindMatricesBuffer = new WebGPUUniformBuffer(16 * Float.BYTES * numJoints, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Storage));

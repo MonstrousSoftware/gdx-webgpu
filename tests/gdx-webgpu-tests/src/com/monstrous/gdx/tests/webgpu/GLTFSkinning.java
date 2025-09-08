@@ -27,7 +27,9 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
+import com.badlogic.gdx.graphics.g3d.model.Animation;
 import com.badlogic.gdx.graphics.g3d.model.Node;
+import com.badlogic.gdx.graphics.g3d.model.NodeAnimation;
 import com.badlogic.gdx.graphics.g3d.model.NodePart;
 import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
@@ -45,6 +47,7 @@ import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLBModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLTFModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgModelLoader;
+import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDefaultShader;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 
@@ -80,7 +83,9 @@ public class GLTFSkinning extends GdxTest {
         gfx = (WgGraphics) Gdx.graphics;
         webgpu = gfx.getContext();
 
-		modelBatch = new WgModelBatch();
+        WgDefaultShader.Config config = new WgDefaultShader.Config();
+        config.numBones = 80;
+		modelBatch = new WgModelBatch(config);
 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		cam.position.set(2, 2, 3f);
 		cam.lookAt(0,1,0);
@@ -95,8 +100,8 @@ public class GLTFSkinning extends GdxTest {
         //modelFileName = "data/g3d/gltf/RiggedFigure/RiggedFigure.gltf";
         //modelFileName = "data/g3d/gltf/Fox/Fox.gltf";
         //modelFileName = "data/g3d/gltf/RiggedSimple/RiggedSimple.gltf";
-        //modelFileName = "data/g3d/gltf/SillyDancing/SillyDancing.gltf";
-        modelFileName = "data/g3d/gltf/BendyBox/BendyBox.gltf";
+        modelFileName = "data/g3d/gltf/SillyDancing/SillyDancing.gltf";
+
 
         WgModelLoader.ModelParameters params = new WgModelLoader.ModelParameters();
         params.textureParameter.genMipMaps = true;
@@ -122,6 +127,7 @@ public class GLTFSkinning extends GdxTest {
         if(instance.animations != null && instance.animations.size > 0) {
             animationController = new AnimationController(instance);
             String animationName = instance.animations.get(0).id;   // play first animation
+            Animation anim = instance.animations.get(0);
             System.out.println("Animation[0]: " + animationName);
             animationController.setAnimation(animationName, -1);
         }
