@@ -20,12 +20,14 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.model.Animation;
 import com.badlogic.gdx.graphics.g3d.model.Node;
@@ -34,6 +36,7 @@ import com.badlogic.gdx.graphics.g3d.model.NodePart;
 import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
@@ -41,6 +44,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
+import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
@@ -48,8 +52,10 @@ import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLBModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLTFModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDefaultShader;
+import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDepthShaderProvider;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
+import com.monstrous.gdx.webgpu.wrappers.RenderPassType;
 
 
 /** Test GLTF skinning */
@@ -57,14 +63,18 @@ import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 public class GLTFSkinning extends GdxTest {
 
 	WgModelBatch modelBatch;
+    WgModelBatch shadowBatch;
 	PerspectiveCamera cam;
     CameraInputController controller;
 	WgSpriteBatch batch;
 	WgBitmapFont font;
 	Model model;
+    Model floorModel;
+    ModelInstance floor;
 	Array<ModelInstance> jointBoxes;
     Array<Node> jointNodes;
     ModelInstance instance;
+    Array<ModelInstance> instances;
     Array<Disposable> disposables;
     String modelFileName;
     Environment environment;
@@ -72,6 +82,7 @@ public class GLTFSkinning extends GdxTest {
     int numVerts;
     int numIndices;
     WgGraphics gfx;
+    com.monstrous.gdx.webgpu.graphics.g3d.attributes.environment.WgDirectionalShadowLight shadowLight;
     WebGPUContext webgpu;
     private Viewport viewport;
     private AnimationController animationController;
@@ -84,8 +95,10 @@ public class GLTFSkinning extends GdxTest {
         webgpu = gfx.getContext();
 
         WgDefaultShader.Config config = new WgDefaultShader.Config();
-        config.numBones = 80;
+        config.numBones = 80;   // set number of bones as needed for the model
 		modelBatch = new WgModelBatch(config);
+        shadowBatch = new WgModelBatch(new WgDepthShaderProvider(), config);
+
 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		cam.position.set(2, 2, 3f);
 		cam.lookAt(0,1,0);
@@ -118,7 +131,10 @@ public class GLTFSkinning extends GdxTest {
         long endLoad = System.currentTimeMillis();
         System.out.println("Model loading time (ms): "+(endLoad - startLoad));
 
+        instances = new Array<>();
+
         instance = new ModelInstance(model);
+        instances.add(instance);
 
         makeBones(instance);
 
@@ -138,6 +154,18 @@ public class GLTFSkinning extends GdxTest {
             numIndices += instance.model.meshes.get(i).getNumIndices();
         }
 
+
+        ModelBuilder modelBuilder = new WgModelBuilder();
+        WgTexture texture2 = new WgTexture(Gdx.files.internal("data/badlogic.jpg"), true);
+        texture2.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear);
+        Material mat = new Material(TextureAttribute.createDiffuse(texture2));
+        long attribs = VertexAttributes.Usage.Position | VertexAttributes.Usage.TextureCoordinates | VertexAttributes.Usage.Normal ;
+        Model boxModel = modelBuilder.createBox(1, 1, 1, mat, attribs);
+        instances.add(new ModelInstance(boxModel, 0, -0.5f, 0));
+
+        floorModel = makeFloorModel();
+        instances.add(new ModelInstance(floorModel, 0, -1.5f, 0));
+
 		controller = new CameraInputController(cam);
 
 		Gdx.input.setInputProcessor(controller);
@@ -146,16 +174,33 @@ public class GLTFSkinning extends GdxTest {
 		font = new WgBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
 
         environment = new Environment();
-        float amb = 0.5f;
+        float amb = 0.2f;
         ColorAttribute ambient =  ColorAttribute.createAmbientLight(amb, amb, amb, 1f);
         environment.set(ambient);
 
         DirectionalLight dirLight1 = new DirectionalLight();
-        dirLight1.setDirection(1f, -.2f, .2f);
-        dirLight1.setColor(Color.WHITE);
+        dirLight1.setDirection(.5f, -.5f, .2f);
+        dirLight1.setColor(10f,10f,10f, 1f);
         environment.add(dirLight1);
 
+
+        final int MAP = 1024;   // resolution of shadow map texture (may affect frame rate)
+        final int VIEWPORT = 8; // depth and width of shadow volume in world units
+        final float DEPTH = 100f; // length of shadow volume in world units along light direction
+        shadowLight = new com.monstrous.gdx.webgpu.graphics.g3d.attributes.environment.WgDirectionalShadowLight(MAP, MAP, VIEWPORT, VIEWPORT, 0f, DEPTH);
+        shadowLight.setDirection(dirLight1.direction);
+        shadowLight.set(dirLight1);
+        environment.shadowMap = shadowLight;
+
 	}
+
+    private Model makeFloorModel(){
+        ModelBuilder modelBuilder = new WgModelBuilder();
+        float size = 20f;
+        model = modelBuilder.createBox(size, 1, size, new Material(ColorAttribute.createDiffuse(Color.LIGHT_GRAY)),
+            VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+        return model;
+    }
 
     /** create boxes to visualize the skeleton joints */
     private void makeBones(ModelInstance instance){
@@ -167,13 +212,15 @@ public class GLTFSkinning extends GdxTest {
         }
     }
 
+
+
     private void makeBones(Node node, ModelBuilder modelBuilder){
         //System.out.println("checking node "+node.id);
         for(NodePart part : node.parts){
             if(part.invBoneBindTransforms != null){
                 for(Node joint : part.invBoneBindTransforms.keys()){
                     //System.out.println("joint: "+joint.id);
-                    float size = .1f;
+                    float size = .5f;
                     model = modelBuilder.createBox(size, size, size, new Material(ColorAttribute.createDiffuse(Color.BLUE)),
                     VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
                     ModelInstance boneInstance = new ModelInstance(model);
@@ -194,7 +241,6 @@ public class GLTFSkinning extends GdxTest {
             jointBoxes.get(i).transform.set(jointNodes.get(i).globalTransform);
 
         }
-        //System.out.println("transform: "+jointNodes.get(1).localTransform);
     }
 
 	public void render () {
@@ -204,16 +250,23 @@ public class GLTFSkinning extends GdxTest {
             updateBones();
         }
 
-		WgScreenUtils.clear(Color.DARK_GRAY, true);
-
 		cam.update();
-		modelBatch.begin(cam);
-		modelBatch.render(instance, environment);
-        //odelBatch.render(jointBoxes);
+
+        Vector3 focalPoint = new Vector3(0, 2, 0);  // central position for shadow volume
+
+        shadowLight.begin(focalPoint, Vector3.Zero);
+        shadowBatch.begin(shadowLight.getCamera(), Color.BLUE, true, RenderPassType.DEPTH_ONLY);
+        modelBatch.render(instances, environment);
+        shadowBatch.end();
+        shadowLight.end();
+
+        WgScreenUtils.clear(Color.DARK_GRAY, true);
+
+        modelBatch.begin(cam);
+		modelBatch.render(instances, environment);
 		modelBatch.end();
 
         modelBatch.begin(cam, null, true);
-        //modelBatch.render(instance, environment);
         modelBatch.render(jointBoxes);
         modelBatch.end();
 
@@ -249,6 +302,8 @@ public class GLTFSkinning extends GdxTest {
 		font.dispose();
 		modelBatch.dispose();
 		model.dispose();
+        floorModel.dispose();
+
 	}
 
 
