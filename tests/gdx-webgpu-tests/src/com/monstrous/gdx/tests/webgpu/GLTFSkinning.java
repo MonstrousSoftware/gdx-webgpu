@@ -58,12 +58,11 @@ import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 import com.monstrous.gdx.webgpu.wrappers.RenderPassType;
 
 
-/** Test GLTF skinning */
+/** Test GLTF skinning i.e. skeletal animation */
 
 public class GLTFSkinning extends GdxTest {
 
 	WgModelBatch modelBatch;
-    WgModelBatch shadowBatch;
 	PerspectiveCamera cam;
     CameraInputController controller;
 	WgSpriteBatch batch;
@@ -78,11 +77,7 @@ public class GLTFSkinning extends GdxTest {
     Array<Disposable> disposables;
     String modelFileName;
     Environment environment;
-    int numMeshes;
-    int numVerts;
-    int numIndices;
     WgGraphics gfx;
-    com.monstrous.gdx.webgpu.graphics.g3d.attributes.environment.WgDirectionalShadowLight shadowLight;
     WebGPUContext webgpu;
     private Viewport viewport;
     private AnimationController animationController;
@@ -97,7 +92,6 @@ public class GLTFSkinning extends GdxTest {
         WgDefaultShader.Config config = new WgDefaultShader.Config();
         config.numBones = 80;   // set number of bones as needed for the model
 		modelBatch = new WgModelBatch(config);
-        shadowBatch = new WgModelBatch(new WgDepthShaderProvider(), config);
 
 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		cam.position.set(2, 2, 3f);
@@ -133,7 +127,7 @@ public class GLTFSkinning extends GdxTest {
 
         instances = new Array<>();
 
-        instance = new ModelInstance(model);
+        instance = new ModelInstance(model, 0, 1, 0);
         instances.add(instance);
 
         makeBones(instance);
@@ -148,23 +142,19 @@ public class GLTFSkinning extends GdxTest {
             animationController.setAnimation(animationName, -1);
         }
 
-        numMeshes = instance.model.meshes.size;
-        for(int i = 0; i < numMeshes; i++){
-            numVerts += instance.model.meshes.get(i).getNumVertices();
-            numIndices += instance.model.meshes.get(i).getNumIndices();
-        }
-
-
         ModelBuilder modelBuilder = new WgModelBuilder();
-        WgTexture texture2 = new WgTexture(Gdx.files.internal("data/badlogic.jpg"), true);
-        texture2.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear);
-        Material mat = new Material(TextureAttribute.createDiffuse(texture2));
+        Texture texture = new WgTexture(Gdx.files.internal("data/badlogic.jpg"), true);
+        disposables.add( texture );
+        texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear);
+        Material mat = new Material(TextureAttribute.createDiffuse(texture));
         long attribs = VertexAttributes.Usage.Position | VertexAttributes.Usage.TextureCoordinates | VertexAttributes.Usage.Normal ;
-        Model boxModel = modelBuilder.createBox(1, 1, 1, mat, attribs);
-        instances.add(new ModelInstance(boxModel, 0, -0.5f, 0));
+        Model box = modelBuilder.createBox(1, 1, 1, mat, attribs);
+        disposables.add( box );
+
+        instances.add(new ModelInstance(box, 0, .5f, 0));
 
         floorModel = makeFloorModel();
-        instances.add(new ModelInstance(floorModel, 0, -1.5f, 0));
+        instances.add(new ModelInstance(floorModel, 0, -.5f, 0));
 
 		controller = new CameraInputController(cam);
 
@@ -178,26 +168,18 @@ public class GLTFSkinning extends GdxTest {
         ColorAttribute ambient =  ColorAttribute.createAmbientLight(amb, amb, amb, 1f);
         environment.set(ambient);
 
+        Vector3 lightPos = new Vector3(-.75f, 2f, -0.25f);
         DirectionalLight dirLight1 = new DirectionalLight();
-        dirLight1.setDirection(.5f, -.5f, .2f);
-        dirLight1.setColor(10f,10f,10f, 1f);
+        dirLight1.setDirection(-lightPos.x, -lightPos.y, -lightPos.z);
+        dirLight1.setColor(24f, 2f, 2f, 1f);// color * intensity
+
         environment.add(dirLight1);
-
-
-        final int MAP = 1024;   // resolution of shadow map texture (may affect frame rate)
-        final int VIEWPORT = 8; // depth and width of shadow volume in world units
-        final float DEPTH = 100f; // length of shadow volume in world units along light direction
-        shadowLight = new com.monstrous.gdx.webgpu.graphics.g3d.attributes.environment.WgDirectionalShadowLight(MAP, MAP, VIEWPORT, VIEWPORT, 0f, DEPTH);
-        shadowLight.setDirection(dirLight1.direction);
-        shadowLight.set(dirLight1);
-        environment.shadowMap = shadowLight;
-
 	}
 
     private Model makeFloorModel(){
         ModelBuilder modelBuilder = new WgModelBuilder();
         float size = 20f;
-        model = modelBuilder.createBox(size, 1, size, new Material(ColorAttribute.createDiffuse(Color.LIGHT_GRAY)),
+        model = modelBuilder.createBox(size, 1, size, new Material(ColorAttribute.createDiffuse(Color.OLIVE)),
             VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
         return model;
     }
@@ -208,19 +190,20 @@ public class GLTFSkinning extends GdxTest {
 
         for(Node node : instance.nodes) {
             System.out.println("instance.node: "+node.id);
-            makeBones(node, modelBuilder);
+            makeBones(node, instance, modelBuilder);
         }
     }
 
 
-
-    private void makeBones(Node node, ModelBuilder modelBuilder){
+    // todo : this assumes instance is at origin
+    private void makeBones(Node node, ModelInstance instance, ModelBuilder modelBuilder){
         //System.out.println("checking node "+node.id);
+        instance.calculateTransforms();
         for(NodePart part : node.parts){
             if(part.invBoneBindTransforms != null){
                 for(Node joint : part.invBoneBindTransforms.keys()){
                     //System.out.println("joint: "+joint.id);
-                    float size = .5f;
+                    float size = 2.5f;
                     model = modelBuilder.createBox(size, size, size, new Material(ColorAttribute.createDiffuse(Color.BLUE)),
                     VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
                     ModelInstance boneInstance = new ModelInstance(model);
@@ -232,14 +215,13 @@ public class GLTFSkinning extends GdxTest {
             }
         }
         for(Node child : node.getChildren())
-            makeBones(child, modelBuilder);
+            makeBones(child, instance, modelBuilder);
     }
 
-    private void updateBones(){
+    private void updateBones(ModelInstance instance){
         for(int i = 0; i < jointBoxes.size; i++){
-            // if(jointNodes.get(i).isAnimated
-            jointBoxes.get(i).transform.set(jointNodes.get(i).globalTransform);
-
+            if(jointNodes.get(i).isAnimated)
+                jointBoxes.get(i).transform.set(instance.transform).mul(jointNodes.get(i).globalTransform);
         }
     }
 
@@ -247,22 +229,12 @@ public class GLTFSkinning extends GdxTest {
 		float delta =Gdx.graphics.getDeltaTime();
         if(animationController != null) {
             animationController.update(delta);
-            updateBones();
+            updateBones(instance);
         }
 
 		cam.update();
 
-        Vector3 focalPoint = new Vector3(0, 2, 0);  // central position for shadow volume
-
-        shadowLight.begin(focalPoint, Vector3.Zero);
-        shadowBatch.begin(shadowLight.getCamera(), Color.BLUE, true, RenderPassType.DEPTH_ONLY);
-        modelBatch.render(instances, environment);
-        shadowBatch.end();
-        shadowLight.end();
-
-        WgScreenUtils.clear(Color.DARK_GRAY, true);
-
-        modelBatch.begin(cam);
+        modelBatch.begin(cam,Color.TEAL, true);
 		modelBatch.render(instances, environment);
 		modelBatch.end();
 
@@ -275,9 +247,6 @@ public class GLTFSkinning extends GdxTest {
 //		batch.begin();
 //        int y = 200;
 //		font.draw(batch, "Model loaded: "+modelFileName , 0, y-=20);
-//        font.draw(batch, "Meshes: "+numMeshes , 0, y-=20);
-//        font.draw(batch, "Vertices: "+numVerts , 0, y-=20);
-//        font.draw(batch, "Indices: "+numIndices , 0, y-=20);
 //        font.draw(batch, "FPS: "+Gdx.graphics.getFramesPerSecond() ,0, y -= 20);
 //        font.draw(batch, "delta time: "+(int)(1000000/(Gdx.graphics.getFramesPerSecond()+0.001f))+" microseconds",0, y -= 20);
 //

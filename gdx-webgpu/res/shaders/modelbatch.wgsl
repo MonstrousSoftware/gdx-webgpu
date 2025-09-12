@@ -149,7 +149,7 @@ fn vs_main(in: VertexInput, @builtin(instance_index) instance: u32) -> VertexOut
        joint3 * in.weights[3];
 
      // Bone transformed mesh
-   let worldPosition =   skinMatrix * vec4f(in.position, 1.0); // todo combine with instance matrix
+   let worldPosition =   instances[instance].modelMatrix * skinMatrix * vec4f(in.position, 1.0); // todo combine with instance matrix
    //worldPosition = skinMatrix * instances[instance].modelMatrix * vertPos;
    //out.weights = in.joints;
 #else

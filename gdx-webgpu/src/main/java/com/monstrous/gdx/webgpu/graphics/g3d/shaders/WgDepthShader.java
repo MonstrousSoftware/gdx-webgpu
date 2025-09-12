@@ -25,6 +25,8 @@ import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
+import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.webgpu.graphics.Binder;
 import com.monstrous.gdx.webgpu.graphics.WgMesh;
@@ -39,10 +41,11 @@ public class WgDepthShader extends WgShader {
     private final WebGPUUniformBuffer uniformBuffer;
     private final int uniformBufferSize;
     private final WebGPUUniformBuffer instanceBuffer;
+    private final WebGPUUniformBuffer jointMatricesBuffer;
+    private final WebGPUUniformBuffer inverseBindMatricesBuffer;
     private final WebGPUPipeline pipeline;
     private WebGPURenderPass renderPass;
     private final VertexAttributes vertexAttributes;
-
 
     public WgDepthShader(final Renderable renderable) {
         this(renderable, new WgDefaultShader.Config());
@@ -59,11 +62,15 @@ public class WgDepthShader extends WgShader {
         // define groups
         binder.defineGroup(0, createFrameBindGroupLayout(uniformBufferSize));
         binder.defineGroup(1, createInstancingBindGroupLayout());
+        if(renderable.bones != null)
+            binder.defineGroup(3, createSkinningBindGroupLayout());
 
         // define bindings in the groups
         // must match with shader code
         binder.defineBinding("uniforms", 0, 0);
         binder.defineBinding("instanceUniforms", 1, 0);
+        binder.defineBinding("jointMatrices", 3, 0);
+        binder.defineBinding("inverseBindMatrices", 3, 1);
 
         // define uniforms in uniform buffers with their offset
         // frame uniforms
@@ -83,6 +90,20 @@ public class WgDepthShader extends WgShader {
         instanceBuffer = new WebGPUUniformBuffer(instanceSize*config.maxInstances, WGPUBufferUsage.CopyDst.or( WGPUBufferUsage.Storage));
 
         binder.setBuffer("instanceUniforms", instanceBuffer, 0,  instanceSize *config.maxInstances);
+        if(renderable.bones != null) {
+            int numJoints = config.numBones;  // todo fixed number or renderable dependent?
+            if(renderable.bones.length > config.numBones)
+                throw new GdxRuntimeException("Too many bones in model. NumBones is configured as "+config.numBones+". Renderable has "+renderable.bones.length);
+            jointMatricesBuffer = new WebGPUUniformBuffer(16 * Float.BYTES * numJoints, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Storage));
+            binder.setBuffer("jointMatrices", jointMatricesBuffer, 0, 16 * Float.BYTES * numJoints);
+            inverseBindMatricesBuffer = new WebGPUUniformBuffer(16 * Float.BYTES * numJoints, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Storage));
+            binder.setBuffer("inverseBindMatrices", inverseBindMatricesBuffer, 0, 16 * Float.BYTES * numJoints);
+            // todo ibm is never set
+            // todo handle multiple renderables with rigging
+        } else {
+            jointMatricesBuffer = null;
+            inverseBindMatricesBuffer = null;
+        }
 
 
         // get pipeline layout which aggregates all the bind group layouts
@@ -183,9 +204,13 @@ public class WgDepthShader extends WgShader {
         // add instance data to instance buffer (instance transform)
         int offset = numRenderables * 16 * Float.BYTES;
         instanceBuffer.set(offset,  renderable.worldTransform);
-        // todo normal matrix per instance
+        // depth shader doesn't need normal matrix per instance
 
-
+        if(renderable.bones != null){
+            setBones(renderable.bones);
+            // bind group 3 (joints)
+            binder.bindGroup(renderPass, 3);
+        }
 
         if( prevRenderable != null && renderable.meshPart.equals(prevRenderable.meshPart)){
             // note that renderables get a copy of a mesh part not a reference to the Model's mesh part, so you can just compare references.
@@ -217,6 +242,23 @@ public class WgDepthShader extends WgShader {
         instanceBuffer.flush();
     }
 
+    private Matrix4 idt = new Matrix4();
+
+    // fill the skinning buffers (group 3)
+    private void setBones( Matrix4[] bones ){
+        int matrixSize = 16*Float.BYTES;
+
+        for(int i = 0; i < bones.length; i++){
+            Matrix4 mat = bones[i];
+            if(mat == null)
+                mat = idt;
+            jointMatricesBuffer.set(i * matrixSize, mat);
+            inverseBindMatricesBuffer.set(i * matrixSize, idt); // todo
+        }
+        jointMatricesBuffer.flush();
+        inverseBindMatricesBuffer.flush();
+    }
+
     private WebGPUBindGroupLayout createFrameBindGroupLayout(int uniformBufferSize) {
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("WgDepthShader bind group layout (frame)");
         layout.begin();
@@ -233,6 +275,18 @@ public class WgDepthShader extends WgShader {
         layout.end();
         return layout;
     }
+
+    private WebGPUBindGroupLayout createSkinningBindGroupLayout(){
+        // binding 0: joint matrices
+        // binding 1: inverseBoneTransforms matrices
+        WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch Binding Group Layout (Skinning)");
+        layout.begin();
+        layout.addBuffer(0, WGPUShaderStage.Vertex , WGPUBufferBindingType.ReadOnlyStorage, 0, false);
+        layout.addBuffer(1, WGPUShaderStage.Vertex , WGPUBufferBindingType.ReadOnlyStorage, 0, false);
+        layout.end();
+        return layout;
+    }
+
 
 
     private String getDefaultShaderSource() {

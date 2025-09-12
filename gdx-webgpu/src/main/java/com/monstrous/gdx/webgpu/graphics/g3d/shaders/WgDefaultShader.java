@@ -278,7 +278,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
             binder.setBuffer("jointMatrices", jointMatricesBuffer, 0, 16 * Float.BYTES * numJoints);
             inverseBindMatricesBuffer = new WebGPUUniformBuffer(16 * Float.BYTES * numJoints, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Storage));
             binder.setBuffer("inverseBindMatrices", inverseBindMatricesBuffer, 0, 16 * Float.BYTES * numJoints);
-            // todo ibm is never set
+            // todo ibm is never set (probably not needed with libgdx, seems to be pre-multiplied)
             // todo handle multiple renderables with rigging
         } else {
             jointMatricesBuffer = null;

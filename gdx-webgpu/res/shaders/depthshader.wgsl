@@ -19,9 +19,18 @@ struct ModelUniforms {
 // renderables
 @group(1) @binding(0) var<storage, read> instances: array<ModelUniforms>;
 
+// Skinning
+#ifdef SKIN
+    @group(3) @binding(0) var<storage, read> jointMatrices: array<mat4x4f>;
+    @group(3) @binding(1) var<storage, read> inverseBindMatrices: array<mat4x4f>;   // not used
+#endif
 
 struct VertexInput {
     @location(0) position: vec3f,
+#ifdef SKIN
+    @location(6) joints: vec4f,
+    @location(7) weights: vec4f,
+#endif
 };
 
 struct VertexOutput {
@@ -33,7 +42,28 @@ struct VertexOutput {
 fn vs_main(in: VertexInput, @builtin(instance_index) instance: u32) -> VertexOutput {
    var out: VertexOutput;
 
-   let worldPosition =  instances[instance].modelMatrix * vec4f(in.position, 1.0);
+#ifdef SKIN
+    // Get relevant 4 bone matrices
+    // joint matrix is already multiplied by inv bind matrix in Node.calculateBoneTransform
+    let joint0 = jointMatrices[u32(in.joints[0])];// * inverseBindMatrices[u32(in.joints[0])];
+    let joint1 = jointMatrices[u32(in.joints[1])];// * inverseBindMatrices[u32(in.joints[1])];
+    let joint2 = jointMatrices[u32(in.joints[2])];// * inverseBindMatrices[u32(in.joints[2])];
+    let joint3 = jointMatrices[u32(in.joints[3])];// * inverseBindMatrices[u32(in.joints[3])];
+
+    // Compute influence of joint based on weight
+    let skinMatrix =
+      joint0 * in.weights[0] +
+      joint1 * in.weights[1] +
+      joint2 * in.weights[2] +
+      joint3 * in.weights[3];
+
+    // Bone transformed mesh
+  let worldPosition =   skinMatrix * vec4f(in.position, 1.0); // todo combine with instance matrix
+  //worldPosition = skinMatrix * instances[instance].modelMatrix * vertPos;
+  //out.weights = in.joints;
+#else
+  let worldPosition =  instances[instance].modelMatrix * vec4f(in.position, 1.0);
+#endif
    out.position =   uFrame.projectionViewTransform * worldPosition;
    return out;
 }

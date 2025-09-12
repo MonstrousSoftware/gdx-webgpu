@@ -21,7 +21,7 @@ public class Launcher {
 
         config.useVsync(false);
 
-        new WgDesktopApplication(new GLTFSkinning(), config);
+        new WgDesktopApplication(new GLTFSkinningShadow(), config);
         //new WgDesktopApplication(new LoadGLTFTest(), config);
 
     }

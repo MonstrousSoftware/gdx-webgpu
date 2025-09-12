@@ -17,34 +17,45 @@
 package com.monstrous.gdx.tests.webgpu;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.graphics.g3d.*;
+import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.PerspectiveCamera;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.VertexAttributes;
+import com.badlogic.gdx.graphics.g3d.Environment;
+import com.badlogic.gdx.graphics.g3d.Material;
+import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
+import com.badlogic.gdx.graphics.g3d.model.Animation;
+import com.badlogic.gdx.graphics.g3d.model.Node;
+import com.badlogic.gdx.graphics.g3d.model.NodePart;
+import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Disposable;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
-import com.monstrous.gdx.tests.webgpu.utils.PerspectiveCamController;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
-import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
-
+import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLBModelLoader;
+import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLTFModelLoader;
+import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgModelLoader;
+import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDefaultShader;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDepthShaderProvider;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
-import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
-
 import com.monstrous.gdx.webgpu.wrappers.RenderPassType;
 
-/** Shadow demo.
+/** Skeletal animation and shadows.
  * */
-public class ShadowTest extends GdxTest {
+public class GLTFSkinningShadow extends GdxTest {
 
 	WgModelBatch modelBatch;
     WgModelBatch shadowBatch;
@@ -52,17 +63,21 @@ public class ShadowTest extends GdxTest {
 	CameraInputController controller;
 	WgSpriteBatch batch;
 	WgBitmapFont font;
-    WgTexture texture;
     Model box;
     Model ground;
     Model lightModel;
     ModelInstance lightInstance;
     Array<ModelInstance> instances;
+    ModelInstance animatedInstance;
+    Array<ModelInstance> jointBoxes;
+    Array<Node> jointNodes;
+    Array<Disposable> disposables;
     Environment environment;
     Environment emptyEnvironment;
     com.monstrous.gdx.webgpu.graphics.g3d.attributes.environment.WgDirectionalShadowLight shadowLight;
     Vector3 lightPos;
     WebGPUContext webgpu;
+    AnimationController animationController;
 
 
 
@@ -70,7 +85,12 @@ public class ShadowTest extends GdxTest {
         WgGraphics gfx = (WgGraphics) Gdx.graphics;
         webgpu = gfx.getContext();
 
-		modelBatch = new WgModelBatch();
+        disposables = new Array<>();
+
+        WgDefaultShader.Config config = new WgDefaultShader.Config();
+        config.numBones = 80;   // set number of bones as needed for the model
+        modelBatch = new WgModelBatch(config);
+        disposables.add( modelBatch );
 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		cam.position.set(0, 1, 5);
 		cam.near = 0.1f;
@@ -79,7 +99,13 @@ public class ShadowTest extends GdxTest {
 		controller = new CameraInputController(cam);
 		Gdx.input.setInputProcessor(controller);
 		batch = new WgSpriteBatch();
+        disposables.add( batch );
 		font = new WgBitmapFont();
+        disposables.add( font );
+
+        jointBoxes = new Array<>();
+        jointNodes = new Array<>();
+
 
 		//
 		// Create some renderables
@@ -87,17 +113,37 @@ public class ShadowTest extends GdxTest {
         instances = new Array<>();
 
         ModelBuilder modelBuilder = new WgModelBuilder();
-        texture = new WgTexture(Gdx.files.internal("data/badlogic.jpg"), true);
+        Texture texture = new WgTexture(Gdx.files.internal("data/badlogic.jpg"), true);
+        disposables.add( texture );
         texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear);
         Material mat = new Material(TextureAttribute.createDiffuse(texture));
         long attribs = VertexAttributes.Usage.Position | VertexAttributes.Usage.TextureCoordinates | VertexAttributes.Usage.Normal ;
         box = modelBuilder.createBox(1, 1, 1, mat, attribs);
+        disposables.add( box );
 
         Material mat2 = new Material(ColorAttribute.createDiffuse(Color.OLIVE));
         long attribs2 = VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.ColorPacked;
         ground = modelBuilder.createBox(8, 0.1f, 9, mat2, attribs2);
+        disposables.add( ground );
 
-        lightPos = new Vector3(-.75f, 2f, -0.25f);
+        Model animated = loadAnimatedModel();
+        disposables.add( animated );
+        animatedInstance = new ModelInstance(animated,0,2.0f,0);
+        instances.add(animatedInstance);
+        makeBones( animatedInstance );
+
+        System.out.println("Animation count: "+animatedInstance.animations.size);
+
+        if(animatedInstance.animations != null && animatedInstance.animations.size > 0) {
+            animationController = new AnimationController(animatedInstance);
+            String animationName = animatedInstance.animations.get(0).id;   // play first animation
+            Animation anim = animatedInstance.animations.get(0);
+            System.out.println("Animation[0]: " + animationName);
+            animationController.setAnimation(animationName, -1);
+        }
+
+
+        lightPos = new Vector3(-.75f, 1f, -0.25f);
         Vector3 vec = new Vector3(lightPos).nor();
 
         lightModel = modelBuilder.createArrow( vec, Vector3.Zero,
@@ -106,12 +152,12 @@ public class ShadowTest extends GdxTest {
 
         lightInstance = new ModelInstance(lightModel,lightPos);
 
-        instances.add(new ModelInstance(box,0,1.0f,0));
-        instances.add(new ModelInstance(box,2,0.5f,0));
-        instances.add(new ModelInstance(box,0,1.0f,-2));
-        instances.add(new ModelInstance(box,-2,1.0f,0));
-        instances.add(new ModelInstance(ground,0,0,0));
 
+//        instances.add(new ModelInstance(box,2,1f,0));
+//        instances.add(new ModelInstance(box,0,1f,-2));
+//        instances.add(new ModelInstance(box,-2,1f,0));
+//
+//        instances.add(new ModelInstance(ground,0,0,0));
 
         environment = new Environment();
         emptyEnvironment = new Environment();
@@ -134,12 +180,18 @@ public class ShadowTest extends GdxTest {
         shadowLight.set(dirLight1);
         environment.shadowMap = shadowLight;
 
-        shadowBatch = new WgModelBatch(new WgDepthShaderProvider());
+        shadowBatch = new WgModelBatch(new WgDepthShaderProvider(config));
 	}
 
 	public void render () {
 		float delta = Gdx.graphics.getDeltaTime();
-        instances.get(0).transform.rotate(Vector3.Y, 15f*delta);
+//        for(int i = 0; i < 4; i++)
+//            instances.get(i).transform.rotate(Vector3.Y, 15f*delta);
+
+        if(animationController != null) {
+            animationController.update(delta);
+            updateBones(animatedInstance);
+        }
 		cam.update();
 
         Vector3 focalPoint = new Vector3(0, 0, 0);  // central position for shadow volume
@@ -154,6 +206,10 @@ public class ShadowTest extends GdxTest {
         modelBatch.begin(cam,Color.TEAL, true);
         modelBatch.render(instances, environment);
 //        modelBatch.render(lightInstance, environment);
+        modelBatch.end();
+
+        modelBatch.begin(cam, null, true);
+        modelBatch.render(jointBoxes);
         modelBatch.end();
 
 		batch.begin();
@@ -175,12 +231,72 @@ public class ShadowTest extends GdxTest {
 
 	@Override
 	public void dispose () {
-		batch.dispose();
-		font.dispose();
-		modelBatch.dispose();
-        box.dispose();
-        ground.dispose();
-        texture.dispose();
+        for(Disposable disposable : disposables)
+            disposable.dispose();
 	}
+
+
+    private Model loadAnimatedModel(){
+        Model model = null;
+        String modelFileName = "data/g3d/gltf/SillyDancing/SillyDancing.gltf";
+
+
+        WgModelLoader.ModelParameters params = new WgModelLoader.ModelParameters();
+        params.textureParameter.genMipMaps = true;
+
+        System.out.println("Start loading");
+        long startLoad = System.currentTimeMillis();
+        FileHandle file = Gdx.files.internal(modelFileName);
+        if(file.extension().contentEquals("gltf"))
+            model = new WgGLTFModelLoader().loadModel(file, params);
+        else if(file.extension().contentEquals("glb"))
+            model = new WgGLBModelLoader().loadModel(file, params);
+        else
+            System.out.println("File extension not supported: "+modelFileName);
+        long endLoad = System.currentTimeMillis();
+        System.out.println("Model loading time (ms): "+(endLoad - startLoad));
+        return model;
+    }
+
+
+    /** create boxes to visualize the skeleton joints */
+    private void makeBones(ModelInstance instance){
+        ModelBuilder modelBuilder = new WgModelBuilder();
+
+        for(Node node : instance.nodes) {
+            System.out.println("instance.node: "+node.id);
+            makeBones(node, modelBuilder);
+        }
+    }
+
+
+
+    private void makeBones(Node node, ModelBuilder modelBuilder){
+        //System.out.println("checking node "+node.id);
+        for(NodePart part : node.parts){
+            if(part.invBoneBindTransforms != null){
+                for(Node joint : part.invBoneBindTransforms.keys()){
+                    //System.out.println("joint: "+joint.id);
+                    float size = 2.5f;
+                    Model model = modelBuilder.createBox(size, size, size, new Material(ColorAttribute.createDiffuse(Color.BLUE)),
+                        VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+                    ModelInstance boneInstance = new ModelInstance(model);
+                    boneInstance.transform.set(joint.globalTransform);
+                    disposables.add(model);
+                    jointBoxes.add(boneInstance);
+                    jointNodes.add(joint);
+                }
+            }
+        }
+        for(Node child : node.getChildren())
+            makeBones(child, modelBuilder);
+    }
+
+    private void updateBones(ModelInstance instance){
+        for(int i = 0; i < jointBoxes.size; i++){
+            if(jointNodes.get(i).isAnimated)
+                jointBoxes.get(i).transform.set(instance.transform).mul(jointNodes.get(i).globalTransform);
+        }
+    }
 
 }
