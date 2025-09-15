@@ -61,7 +61,9 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
 
     @Override
     public Model loadSync(AssetManager manager, String fileName, FileHandle file, ModelParameters parameters) {
-        gltfModel.rawBuffers.add( new GLTFRawBuffer(gltfModel.buffers.get(0).uri) );
+        for(GLTFBuffer buffer : gltfModel.buffers) {
+            gltfModel.rawBuffers.add(new GLTFRawBuffer(buffer.uri));
+        }
         ModelData modelData = load(gltfModel);
         ObjectMap.Entry<String, ModelData> item = new ObjectMap.Entry<String, ModelData>();
         item.key = fileName;

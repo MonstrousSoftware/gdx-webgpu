@@ -107,7 +107,8 @@ public class GLTFSkinning extends GdxTest {
         //modelFileName = "data/g3d/gltf/RiggedFigure/RiggedFigure.gltf";
         //modelFileName = "data/g3d/gltf/Fox/Fox.gltf";
         //modelFileName = "data/g3d/gltf/RiggedSimple/RiggedSimple.gltf";
-        modelFileName = "data/g3d/gltf/SillyDancing/SillyDancing.gltf";
+        //modelFileName = "data/g3d/gltf/SillyDancing/SillyDancing.gltf";
+        modelFileName = "data/g3d/gltf/Warrior/Warrior.gltf";
 
 
         WgModelLoader.ModelParameters params = new WgModelLoader.ModelParameters();
@@ -203,7 +204,7 @@ public class GLTFSkinning extends GdxTest {
             if(part.invBoneBindTransforms != null){
                 for(Node joint : part.invBoneBindTransforms.keys()){
                     //System.out.println("joint: "+joint.id);
-                    float size = 2.5f;
+                    float size = 0.05f;
                     model = modelBuilder.createBox(size, size, size, new Material(ColorAttribute.createDiffuse(Color.BLUE)),
                     VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
                     ModelInstance boneInstance = new ModelInstance(model);

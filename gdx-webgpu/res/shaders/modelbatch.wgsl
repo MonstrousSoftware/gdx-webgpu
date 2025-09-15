@@ -242,8 +242,8 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
     // metallic is coded in the blue channel and roughness in the green channel of the MR texture
     let mrSample = textureSample(metallicRoughnessTexture, metallicRoughnessSampler, in.uv).rgb;
 
-    let roughness : f32 = mrSample.g * material.roughnessFactor;
-    let metallic : f32 = mrSample.b * material.metallicFactor;
+    let roughness : f32 = 1; //mrSample.g * material.roughnessFactor;
+    let metallic : f32 = 0; //material.metallicFactor; //mrSample.b * material.metallicFactor;
 
     let shininess : f32 = material.shininess;   // used instead of roughness for non-PBR
 
@@ -267,7 +267,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
         for (var i: u32 = 0; i < u32(numDirectionalLights); i++) {
             let light = uFrame.directionalLights[i];
 
-            let lightVec = -normalize(light.direction.xyz);       // L is vector towards light
+            let lightVec = -normalize(light.direction.xyz);       // L is unit vector towards light source
             let irradiance = max(dot(lightVec, normal), 0.0);
 #ifdef PBR
             if(irradiance > 0.0) {
@@ -356,6 +356,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
     //return material.diffuseColor;
     //return vec4f(in.fogDepth, 0, 0, 1);
     //return vec4f(ambient, 1.0);
+
     return color;
 };
 
