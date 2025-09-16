@@ -108,7 +108,7 @@ public class IBLGenerator  {
         return radianceMap;
     }
 
-    /** Generate an outdoor environment map of given size (width & height). Sun position and color are based on directional light.
+    /** Generate an outdoor environment map of given size (width and height). Sun position and color are based on directional light.
      */
     public static WgCubemap createOutdoor(DirectionalLight sun, int size){
         System.out.println("Building indoor environment");
