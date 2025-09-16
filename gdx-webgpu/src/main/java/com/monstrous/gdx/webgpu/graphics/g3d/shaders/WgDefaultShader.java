@@ -81,6 +81,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
     private final boolean blended;
     private final boolean hasShadowMap;
     private final boolean hasCubeMap;
+    private final boolean hasBones;
     private final int primitiveType;
     private int frameNumber;
     private int instanceIndex;
@@ -134,6 +135,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
         hasShadowMap = renderable.environment != null && renderable.environment.shadowMap != null;
         hasCubeMap = renderable.environment != null && renderable.environment.has(WgCubemapAttribute.EnvironmentMap);
+        hasBones = renderable.bones != null;
         final boolean hasDiffuseCubeMap = renderable.environment != null && renderable.environment.has(WgCubemapAttribute.DiffuseCubeMap);
         final boolean hasSpecularCubeMap = renderable.environment != null && renderable.environment.has(WgCubemapAttribute.SpecularCubeMap);
 
@@ -156,7 +158,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         binder.defineGroup(0, createFrameBindGroupLayout(uniformBufferSize, hasShadowMap, hasCubeMap, hasDiffuseCubeMap, hasSpecularCubeMap));
         binder.defineGroup(1, createMaterialBindGroupLayout(materialSize));
         binder.defineGroup(2, createInstancingBindGroupLayout());
-        if(renderable.bones != null)
+        if(hasBones)
             binder.defineGroup(3, createSkinningBindGroupLayout());
 
         // define bindings in the groups
@@ -270,7 +272,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
         binder.setBuffer("instanceUniforms", instanceBuffer, 0,  instanceSize *config.maxInstances);
 
-        if(renderable.bones != null) {
+        if(hasBones) {
             int numJoints = config.numBones;  // todo fixed number or renderable dependent?
             if(renderable.bones.length > config.numBones)
                 throw new GdxRuntimeException("Too many bones in model. NumBones is configured as "+config.numBones+". Renderable has "+renderable.bones.length);
@@ -423,6 +425,11 @@ public class WgDefaultShader extends WgShader implements Disposable {
         if (renderable.material.getMask() != materialAttributesMask)
             return false;
 
+        if(hasBones && renderable.bones == null )
+            return false;
+        if(!hasBones && renderable.bones != null )
+            return false;
+
         long renderableEnvironmentMask = renderable.environment == null ? 0 : renderable.environment.getMask();
         if(environmentMask != renderableEnvironmentMask)
             return false;
@@ -474,7 +481,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         // normal matrix is transpose of inverse of world transform
         instanceBuffer.set(offset+16*Float.BYTES,  tmpM.set(renderable.worldTransform).inv().tra());
 
-        if(renderable.bones != null){
+        if(hasBones){
             setBones(renderable.bones);
             // bind group 3 (joints)
             binder.bindGroup(renderPass, 3);
