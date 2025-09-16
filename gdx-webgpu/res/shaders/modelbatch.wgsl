@@ -242,14 +242,12 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
     // metallic is coded in the blue channel and roughness in the green channel of the MR texture
     let mrSample = textureSample(metallicRoughnessTexture, metallicRoughnessSampler, in.uv).rgb;
 
-    let roughness : f32 = 1; //mrSample.g * material.roughnessFactor;
-    let metallic : f32 = 0; //material.metallicFactor; //mrSample.b * material.metallicFactor;
+    let roughness : f32 = mrSample.g * material.roughnessFactor;
+    let metallic : f32 = mrSample.b * material.metallicFactor;
 
     let shininess : f32 = material.shininess;   // used instead of roughness for non-PBR
 
-
-
-    var radiance : vec3f = vec3f(0);
+    var radiance : vec3f = vec3f(0);    // outgoing radiance (Lo)
     var specular : vec3f = vec3f(0);
     let viewVec : vec3f = normalize(uFrame.cameraPosition.xyz - in.worldPos.xyz);
 
@@ -268,16 +266,16 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
             let light = uFrame.directionalLights[i];
 
             let lightVec = -normalize(light.direction.xyz);       // L is unit vector towards light source
-            let irradiance = max(dot(lightVec, normal), 0.0);
+            let NdotL = max(dot(lightVec, normal), 0.0);
 #ifdef PBR
-            if(irradiance > 0.0) {
-                radiance += BRDF(lightVec, viewVec, normal, roughness, metallic, baseColor.rgb) * irradiance *  light.color.rgb;
+            if(NdotL > 0.0) {
+                radiance += BRDF(lightVec, viewVec, normal, roughness, metallic, baseColor.rgb) * NdotL *  light.color.rgb;
             }
 #else
-            radiance += irradiance *  light.color.rgb;
+            radiance += NdotL *  light.color.rgb;
     #ifdef SPECULAR
             let halfDotView = max(0.0, dot(normal, normalize(lightVec + viewVec)));
-            specular += irradiance *  light.color.rgb * pow(halfDotView, shininess);
+            specular += NdotL *  light.color.rgb * pow(halfDotView, shininess);
     #endif
 #endif // PBR
         }
@@ -297,16 +295,15 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
             lightVec  = normalize(lightVec);
             let attenuation : f32 = light.intensity/(1.0 + dist2);// attenuation (note this makes an assumption on the world scale)
             let NdotL : f32 = max(dot(lightVec, normal), 0.0);
-            let irradiance : f32 =  attenuation * NdotL;
 #ifdef PBR
-            if(irradiance > 0.0) {
-                radiance += BRDF(lightVec, viewVec, normal, roughness, metallic, baseColor.rgb) * irradiance *  light.color.rgb;
+            if(NdotL > 0.0) {
+                radiance += BRDF(lightVec, viewVec, normal, roughness, metallic, baseColor.rgb) * NdotL *  attenuation * light.color.rgb;
             }
 #else
-            radiance += irradiance *  light.color.rgb;
+            radiance += NdotL *  attenuation * light.color.rgb;
 #ifdef SPECULAR
             let halfDotView = max(0.0, dot(normal, normalize(lightVec + viewVec)));
-            specular += irradiance *  light.color.rgb * pow(halfDotView, shininess);
+            specular += NdotL *  attenuation * light.color.rgb * pow(halfDotView, shininess);
 #endif
 #endif // PBR
         }
@@ -394,11 +391,11 @@ fn D_GGX(NdotH: f32, roughness: f32) -> f32 {
 }
 
 fn G_SchlickSmith_GGX(NdotL : f32, NdotV : f32, roughness : f32) -> f32 {
-//    let r : f32 = (roughness + 1.0);
-//    let k : f32 = (r*r)/8.0;
+    let r : f32 = (roughness + 1.0);
+    let k : f32 = (r*r)/8.0;
 
-    let alpha: f32 = roughness * roughness;
-    let k: f32 = alpha / 2.0;
+//    let alpha: f32 = roughness * roughness;
+//    let k: f32 = alpha / 2.0;
 
     let GL : f32 = NdotL / (NdotL * (1.0 - k) + k);
     let GV : f32 = NdotV / (NdotV * (1.0 - k) + k);
@@ -418,11 +415,12 @@ fn BRDF( L : vec3f, V:vec3f, N: vec3f, roughness:f32, metallic:f32, baseColor: v
     let NdotL : f32 = clamp(dot(N, L), 0.001, 1.0);
     let LdotH : f32 = clamp(dot(L, H), 0.0, 1.0);
     let NdotH : f32 = clamp(dot(N, H), 0.0, 1.0);
+    let HdotV : f32 = clamp(dot(H, V), 0.0, 1.0);
 
     // calculate terms for microfacet shading model
     let D :f32      = D_GGX(NdotH, roughness);
     let G :f32      = G_SchlickSmith_GGX(NdotL, NdotV, roughness);
-    let F :vec3f    = F_Schlick(NdotV, metallic, baseColor);
+    let F :vec3f    = F_Schlick(HdotV, metallic, baseColor);
 
     let kS = F;
     let kD = (vec3f(1.0) - kS) * (1.0 - metallic);
