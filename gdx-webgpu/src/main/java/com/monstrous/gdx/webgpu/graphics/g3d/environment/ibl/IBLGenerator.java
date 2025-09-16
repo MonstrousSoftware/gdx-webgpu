@@ -72,7 +72,7 @@ public class IBLGenerator  {
 
 
     public static WgCubemap buildIrradianceMap(WgCubemap environmentMap, int size){
-        System.out.println("Building irradiance map, size "+size);
+        //System.out.println("Building irradiance map, size "+size);
         // Convert an environment cube map to an irradiance cube map
         Model cube = buildUnitCube(new Material());
         ModelInstance cubeInstance = new ModelInstance(cube);
@@ -84,13 +84,13 @@ public class IBLGenerator  {
         WgCubemap irradianceMap = constructMap(cubeInstance, shaderSource, environment, size, 1);
 
         cube.dispose();
-        System.out.println("Built irradiance map");
+        //System.out.println("Built irradiance map");
         return irradianceMap;
     }
 
 
     public static WgCubemap buildRadianceMap(WgCubemap environmentMap, int size){
-        System.out.println("Building radiance map");
+        //System.out.println("Building radiance map");
         // Convert an environment cube map to a radiance cube map
         Model cube = buildUnitCube(new Material());
         ModelInstance cubeInstance = new ModelInstance(cube);
@@ -104,14 +104,14 @@ public class IBLGenerator  {
         WgCubemap radianceMap = constructMap(cubeInstance, shaderSource, environment, size, WgTexture.calculateMipLevelCount(size, size));
 
         cube.dispose();
-        System.out.println("Built radiance map");
+        //System.out.println("Built radiance map");
         return radianceMap;
     }
 
     /** Generate an outdoor environment map of given size (width and height). Sun position and color are based on directional light.
      */
     public static WgCubemap createOutdoor(DirectionalLight sun, int size){
-        System.out.println("Building indoor environment");
+        //System.out.println("Building indoor environment");
         // Convert an environment cube map to a radiance cube map
         Model cube = buildUnitCube(new Material());
         ModelInstance cubeInstance = new ModelInstance(cube);
@@ -123,7 +123,7 @@ public class IBLGenerator  {
         WgCubemap envMap = constructMap(cubeInstance, shaderSource, environment, size, 1);
 
         cube.dispose();
-        System.out.println("Built indoor environment");
+        //System.out.println("Built indoor environment");
         return envMap;
     }
 

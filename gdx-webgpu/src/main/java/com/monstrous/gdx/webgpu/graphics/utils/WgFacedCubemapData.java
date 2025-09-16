@@ -163,7 +163,7 @@ public class WgFacedCubemapData implements WgCubemapData {
 	/** fill the existing cube map texture with the texture data provided in the constructor or via load(...) */
     @Override
 	public void consumeCubemapDataCreate (  WgTexture texture ) {
-        System.out.println("ConsumeCubemap Data");
+        //System.out.println("ConsumeCubemap Data");
 
 		for (int i = 0; i < data.length; i++) {
 			if (data[i].getType() == TextureData.TextureDataType.Custom) {

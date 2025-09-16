@@ -41,7 +41,7 @@ public class WgTextureArray  extends WgTexture {
 
     /** Sets the sides of this cubemap to the specified {@link CubemapData}. */
     public void load (WgTextureArrayData data, String label) {
-        System.out.println("Loading texture array: "+label);
+        //System.out.println("Loading texture array: "+label);
         this.data = data;
         this.label = label;
         if (!data.isPrepared()) data.prepare();

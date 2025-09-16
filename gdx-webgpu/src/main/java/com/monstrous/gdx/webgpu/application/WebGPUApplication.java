@@ -102,7 +102,7 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
             System.out.println("Description: " + description);
             String device = info.getDevice().c_str();
             System.out.println("Device: " + device);
-            System.out.println("Has Feature DepthClipControl: " + adapter.hasFeature(WGPUFeatureName.DepthClipControl));
+            //System.out.println("Has Feature DepthClipControl: " + adapter.hasFeature(WGPUFeatureName.DepthClipControl));
         }
 
         WGPUDeviceDescriptor deviceDescriptor = WGPUDeviceDescriptor.obtain();

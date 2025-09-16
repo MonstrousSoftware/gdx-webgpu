@@ -157,20 +157,20 @@ public class WgDesktopWindow implements Disposable {
             postRunnable(new Runnable() {
                 @Override
                 public void run() {
-                    System.out.println("Runnable resize");
+                    //System.out.println("Runnable resize");
                     if (!"glfw_async".equals(Configuration.GLFW_LIBRARY_NAME.get())) {
-                        System.out.println("resize callback");
+                        //System.out.println("resize callback");
                         graphics.updateFramebufferInfo();
                         if (!isListenerInitialized()) {
                             return;
                         }
                         //makeCurrent();
-                        System.out.println("context resize");
+                        //System.out.println("context resize");
                         listener.resize(width, height);
                         graphics.context.resize(width, height);
                     } else {
                         asyncResized = true;
-                        System.out.println("Window.async resized");
+                        //System.out.println("Window.async resized");
                     }
                 }
             });

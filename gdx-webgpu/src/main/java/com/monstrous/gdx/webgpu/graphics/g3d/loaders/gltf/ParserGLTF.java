@@ -326,7 +326,7 @@ public class ParserGLTF {
                 JsonValue an = animations.next();
                 if (an.has("name")) {
                     animation.name = an.get("name").asString();
-                    System.out.println("animation name: " + animation.name);
+                    //System.out.println("animation name: " + animation.name);
                 }
                 JsonValue.JsonIterator channels = an.iterator("channels");
                 if(channels != null) {
