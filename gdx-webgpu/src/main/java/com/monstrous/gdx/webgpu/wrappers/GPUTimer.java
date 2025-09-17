@@ -42,7 +42,7 @@ public class GPUTimer implements Disposable {
     private int passNumber;
     private int numPasses;
     private ByteBuffer ram;
-    private BufferMapCallback callback;
+    private WGPUBufferMapCallback callback;
 
     public GPUTimer(WGPUDevice device, boolean enabled) {
         this.enabled = enabled;
@@ -142,7 +142,7 @@ public class GPUTimer implements Disposable {
             return;
 
         if(callback == null) {
-            callback = new BufferMapCallback() {
+            callback = new WGPUBufferMapCallback() {
                 @Override
                 protected void onCallback(WGPUMapAsyncStatus status, String message) {
 
