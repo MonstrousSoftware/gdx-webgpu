@@ -71,6 +71,10 @@ public class WgDefaultRenderableSorter implements RenderableSorter, Comparator<R
             return dst < 0 ? 1 : (dst > 0 ? -1 : 0);
         }
 
+        // group by shader
+        if(o1.shader != o2.shader)
+            return o1.shader.hashCode() - o2.shader.hashCode();
+
         // we could sort opaques closest first to maximize occlusion
         // but here are maximizing on clustering mesh parts to allow instanced drawing
 
