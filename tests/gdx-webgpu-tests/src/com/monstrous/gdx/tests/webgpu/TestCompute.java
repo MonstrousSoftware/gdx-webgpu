@@ -141,7 +141,7 @@ public class TestCompute extends GdxTest {
         queue.submit(commandBuffer);
 
         WGPUBuffer map = mapBuffer.getBuffer();
-        WGPUFuture webGPUFuture = map.mapAsync(WGPUMapMode.Read, 0, BUFFER_SIZE, WGPUCallbackMode.AllowProcessEvents, new BufferMapCallback() {
+        WGPUFuture webGPUFuture = map.mapAsync(WGPUMapMode.Read, 0, BUFFER_SIZE, WGPUCallbackMode.AllowProcessEvents, new WGPUBufferMapCallback() {
             @Override
             protected void onCallback(WGPUMapAsyncStatus status, String message) {
                 System.out.println("Callback: " + status+ " "+message);
