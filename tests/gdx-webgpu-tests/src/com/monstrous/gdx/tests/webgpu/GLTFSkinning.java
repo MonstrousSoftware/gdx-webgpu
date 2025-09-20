@@ -73,6 +73,7 @@ public class GLTFSkinning extends GdxTest {
 	Array<ModelInstance> jointBoxes;
     Array<Node> jointNodes;
     ModelInstance instance;
+    ModelInstance instance2;
     Array<ModelInstance> instances;
     Array<Disposable> disposables;
     String modelFileName;
@@ -130,6 +131,8 @@ public class GLTFSkinning extends GdxTest {
 
         instance = new ModelInstance(model, 0, 1, 0);
         instances.add(instance);
+        instance2 = new ModelInstance(model, 3, 0, 0);
+        instances.add(instance2);
 
         makeBones(instance);
 

@@ -32,6 +32,6 @@ allprojects()  {
     }
 }
 
-apply(plugin = "publish")
+//apply(plugin = "publish")
 
 
