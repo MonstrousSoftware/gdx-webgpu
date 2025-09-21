@@ -180,7 +180,7 @@ public class GLTFSkinning extends GdxTest {
     private Model makeFloorModel(){
         ModelBuilder modelBuilder = new WgModelBuilder();
         float size = 20f;
-        model = modelBuilder.createBox(size, 1, size, new Material(ColorAttribute.createDiffuse(Color.OLIVE)),
+        Model model = modelBuilder.createBox(size, 1, size, new Material(ColorAttribute.createDiffuse(Color.OLIVE)),
             VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
         return model;
     }

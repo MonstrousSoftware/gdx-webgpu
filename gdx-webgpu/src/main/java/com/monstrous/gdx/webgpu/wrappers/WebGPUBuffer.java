@@ -88,7 +88,7 @@ public class WebGPUBuffer implements Disposable {
     @Override
     public void dispose() {
         buffer.destroy();
-        buffer.dispose();
+        //buffer.dispose();
         buffer = null;
     }
 

@@ -1,5 +1,6 @@
 package com.monstrous.gdx.webgpu.graphics.g3d;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
@@ -138,7 +139,7 @@ public class WgVertexBuffer implements VertexData {
 
     @Override
     public void dispose() {
-        //Gdx.app.log("WebGPUVertexData", "dispose"+getNumMaxVertices());
+        Gdx.app.log("WebGPUVertexData", "dispose"+getNumMaxVertices());
 
         vertexBuffer.dispose();
         if(!isFrozen)
