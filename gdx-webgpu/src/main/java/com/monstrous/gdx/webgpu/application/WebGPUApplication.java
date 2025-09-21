@@ -69,16 +69,18 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
 
     private void requestAdapter() {
         WGPURequestAdapterOptions op = WGPURequestAdapterOptions.obtain();
+        op.setPowerPreference(WGPUPowerPreference.HighPerformance);
         op.setBackendType(convertBackendType(config.requestedBackendType));
-        RequestAdapterCallback callback = new RequestAdapterCallback() {
+        WGPURequestAdapterCallback callback = new WGPURequestAdapterCallback() {
             @Override
-            protected void onCallback(WGPURequestAdapterStatus status, WGPUAdapter adapter) {
+            protected void onCallback(WGPURequestAdapterStatus status, WGPUAdapter adapter, String message) {
                 System.out.println("Adapter Status: " + status);
                 if(status == WGPURequestAdapterStatus.Success) {
                     initState = InitState.ADAPTER_VALID;
                     requestDevice( adapter);
                 }
                 else {
+                    System.out.println("Adapter Error: " + message);
                     initState = InitState.ADAPTER_NOT_VALID;
                     Gdx.app.error("WebGPU requestAdapter", "No adapter available for backend type "+config.requestedBackendType);
                 }
@@ -118,9 +120,9 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
 
         deviceDescriptor.getDefaultQueue().setLabel("The default queue");
 
-        adapter.requestDevice(deviceDescriptor, WGPUCallbackMode.AllowProcessEvents, new RequestDeviceCallback() {
+        adapter.requestDevice(deviceDescriptor, WGPUCallbackMode.AllowProcessEvents, new WGPURequestDeviceCallback() {
             @Override
-            protected void onCallback(WGPURequestDeviceStatus status, WGPUDevice device) {
+            protected void onCallback(WGPURequestDeviceStatus status, WGPUDevice device, String message) {
                 System.out.println("Device Status: " + status);
                 if(status == WGPURequestDeviceStatus.Success) {
                     initState = InitState.DEVICE_VALID;
@@ -165,13 +167,14 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
                     initState = InitState.DEVICE_VALID;
                 }
                 else {
+                    System.out.println("Device Error: " + message);
                     initState = InitState.DEVICE_NOT_VALID;
                 }
                 // Release the adapter only after it has been fully utilized
                 adapter.release();
                 adapter.dispose();
             }
-        }, new UncapturedErrorCallback() {
+        }, new WGPUUncapturedErrorCallback() {
             @Override
             protected void onCallback(WGPUErrorType errorType, String message) {
                 System.err.println("ErrorType: " + errorType);
