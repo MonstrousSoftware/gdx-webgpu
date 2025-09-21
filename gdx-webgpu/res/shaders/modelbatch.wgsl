@@ -38,7 +38,13 @@ struct FrameUniforms {
 struct ModelUniforms {
     modelMatrix: mat4x4f,
     normalMatrix: mat4x4f,
-    //jointOffset: f32,   // actualy an integer
+    //dummyMatrix: mat4x4f,
+    jointOffset: f32,   // actualy an integer
+    dummy1: vec3f,
+    dummy2: vec3f,
+    dummy3: vec3f,
+
+
 };
 
 struct MaterialUniforms {
@@ -135,12 +141,14 @@ fn vs_main(in: VertexInput, @builtin(instance_index) instance: u32) -> VertexOut
 
 
 #ifdef SKIN
+    var joff : u32 = u32(instances[instance].jointOffset);
+    //joff = 0;
      // Get relevant 4 bone matrices
      // joint matrix is already multiplied by inv bind matrix in Node.calculateBoneTransform
-     let joint0 = jointMatrices[u32(in.joints[0])];// * inverseBindMatrices[u32(in.joints[0])];
-     let joint1 = jointMatrices[u32(in.joints[1])];// * inverseBindMatrices[u32(in.joints[1])];
-     let joint2 = jointMatrices[u32(in.joints[2])];// * inverseBindMatrices[u32(in.joints[2])];
-     let joint3 = jointMatrices[u32(in.joints[3])];// * inverseBindMatrices[u32(in.joints[3])];
+     let joint0 = jointMatrices[joff+u32(in.joints[0])];// * inverseBindMatrices[u32(in.joints[0])];
+     let joint1 = jointMatrices[joff+u32(in.joints[1])];// * inverseBindMatrices[u32(in.joints[1])];
+     let joint2 = jointMatrices[joff+u32(in.joints[2])];// * inverseBindMatrices[u32(in.joints[2])];
+     let joint3 = jointMatrices[joff+u32(in.joints[3])];// * inverseBindMatrices[u32(in.joints[3])];
 
      // Compute influence of joint based on weight
      let skinMatrix =

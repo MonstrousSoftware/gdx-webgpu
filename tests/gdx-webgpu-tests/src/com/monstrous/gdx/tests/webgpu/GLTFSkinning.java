@@ -82,6 +82,7 @@ public class GLTFSkinning extends GdxTest {
     WebGPUContext webgpu;
     private Viewport viewport;
     private AnimationController animationController;
+    private AnimationController animationController2;
 
 
 
@@ -129,8 +130,11 @@ public class GLTFSkinning extends GdxTest {
 
         instances = new Array<>();
 
+
+
         instance = new ModelInstance(model, 0, 1, 0);
         instances.add(instance);
+
         instance2 = new ModelInstance(model, 3, 0, 0);
         instances.add(instance2);
 
@@ -144,6 +148,14 @@ public class GLTFSkinning extends GdxTest {
             Animation anim = instance.animations.get(0);
             System.out.println("Animation[0]: " + animationName);
             animationController.setAnimation(animationName, -1);
+        }
+
+        if(instance2.animations != null && instance2.animations.size > 0) {
+            animationController2 = new AnimationController(instance2);
+            String animationName = instance2.animations.get(5).id;   // play first animation
+            Animation anim = instance2.animations.get(5);
+            System.out.println("Animation[0]: " + animationName);
+            animationController2.setAnimation(animationName, -1);
         }
 
         ModelBuilder modelBuilder = new WgModelBuilder();
@@ -235,6 +247,10 @@ public class GLTFSkinning extends GdxTest {
             animationController.update(delta);
             updateBones(instance);
         }
+//        if(animationController2 != null) {
+//            animationController2.update(delta);
+//            updateBones(instance2);
+//        }
 
 		cam.update();
 

@@ -267,7 +267,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
         binder.setBuffer("materialUniforms", materialBuffer, 0,  materialSize);
 
-        int instanceSize = 2*16*Float.BYTES;      // data size per instance
+        int instanceSize = 3*16*Float.BYTES;      // data size per instance
 
         // for now we use a uniform buffer, but we organize data as an array of modelMatrix
         // we are not using dynamic offsets, but we will index the array in teh shader code using the instance_index
@@ -484,13 +484,14 @@ public class WgDefaultShader extends WgShader implements Disposable {
         }
 
         // add instance data to instance buffer (instance transform)
-        int offset = instanceIndex * (2 * 16)* Float.BYTES;
+        int offset = instanceIndex * (3 * 16)* Float.BYTES;
         // set world transform for this instance
         instanceBuffer.set(offset,  renderable.worldTransform);
         // normal matrix is transpose of inverse of world transform
         instanceBuffer.set(offset+16*Float.BYTES,  tmpM.set(renderable.worldTransform).inv().tra());
-        //instanceBuffer.set(offset+32*Float.BYTES,  config.numBones * numRigged);    // offset in joints[]
-
+        if(hasBones){
+            instanceBuffer.set(offset + 32 * Float.BYTES, (float) ((numRigged - 1) * jointMatricesBuffer.getUniformStride()) /(16*Float.BYTES));//config.numBones * numRigged);    // offset in joints[]
+        }
 
 
         int materialHash = renderable.material.hashCode();
@@ -641,14 +642,13 @@ public class WgDefaultShader extends WgShader implements Disposable {
             if(mat == null)
                 mat = idt;
             jointMatricesBuffer.set(i * matrixSize, mat);
-            //inverseBindMatricesBuffer.set(i * matrixSize, idt); // todo
         }
-        //jointMatricesBuffer.flush();        // todo flush only new part
+
         // bind group 3 (joints)
 
         // note: matrixSize * config.numBones must be multiple of 256
 
-        binder.bindGroup(renderPass, 3, matrixSize * config.numBones);
+        binder.bindGroup(renderPass, 3, numRigged * jointMatricesBuffer.getUniformStride()); //matrixSize * config.numBones);
         numRigged++;
         //jointMatricesBuffer.setDynamicOffsetIndex(numRigged);
         //inverseBindMatricesBuffer.flush();
