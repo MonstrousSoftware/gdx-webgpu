@@ -3,9 +3,6 @@ package com.monstrous.gdx.webgpu.graphics;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.utils.GdxRuntimeException;
-import com.github.xpenatan.webgpu.WGPUTexture;
-import com.github.xpenatan.webgpu.WGPUTextureFormat;
 import com.github.xpenatan.webgpu.WGPUTextureUsage;
 
 /** Version of TextureArray that uses WgTexture */
@@ -22,25 +19,29 @@ public class WgTextureArray  extends WgTexture {
     }
 
     public WgTextureArray(boolean useMipMaps, FileHandle... files) {
-        this(useMipMaps, Pixmap.Format.RGBA8888, files);
+        this(useMipMaps, Pixmap.Format.RGBA8888, true, files);
     }
 
-    public WgTextureArray(boolean useMipMaps, Pixmap.Format format, FileHandle... files) {
-        this(WgTextureArrayData.Factory.loadFromFiles(format, useMipMaps, files));
+    public WgTextureArray(boolean useMipMaps, boolean isColor, FileHandle... files) {
+        this(useMipMaps, Pixmap.Format.RGBA8888, isColor, files);
     }
 
-    public WgTextureArray(WgTextureArrayData data) {
+    public WgTextureArray(boolean useMipMaps, Pixmap.Format format, boolean isColor, FileHandle... files) {
+        this(WgTextureArrayData.Factory.loadFromFiles(format, useMipMaps, files), isColor);
+    }
+
+    public WgTextureArray(WgTextureArrayData data, boolean isColor) {
         // at this point we don't know if we use mipmapping yet
         // should we create texture instead in consumeTextureArrayData ?
         //
-        super("texture array", data.getWidth(), data.getHeight(), data.getDepth(), data.useMipMaps(), WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst));
+        super("texture array", data.getWidth(), data.getHeight(), data.getDepth(), data.useMipMaps(), WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst), isColor);
         // create a texture with layers
         // let texture data consume() fill each layer
         load(data, "texture array");
     }
 
     /** Sets the sides of this cubemap to the specified {@link CubemapData}. */
-    public void load (WgTextureArrayData data, String label) {
+    public void load(WgTextureArrayData data, String label) {
         //System.out.println("Loading texture array: "+label);
         this.data = data;
         this.label = label;
@@ -53,7 +54,7 @@ public class WgTextureArray  extends WgTexture {
     }
 
 
-    private static FileHandle[] getInternalHandles (String... internalPaths) {
+    private static FileHandle[] getInternalHandles(String... internalPaths) {
         FileHandle[] handles = new FileHandle[internalPaths.length];
         for (int i = 0; i < internalPaths.length; i++) {
             handles[i] = Gdx.files.internal(internalPaths[i]);
