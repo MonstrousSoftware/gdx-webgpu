@@ -47,7 +47,7 @@ public class WgTexture extends Texture {
     protected TextureData data; // cannot access data of Texture which is package private
 
     public WgTexture(String label, int width, int height, boolean useMipMaps, boolean renderAttachment, WGPUTextureFormat format, int numSamples ) {
-        this.data = new WgTextureData(width, height, useMipMaps);
+        this.data = new WgTextureData(width, height, useMipMaps, 0, 0);
         this.label = label;
 
         this.numSamples = numSamples;
@@ -58,7 +58,7 @@ public class WgTexture extends Texture {
     }
 
     public WgTexture(String label, int width, int height, boolean useMipMaps, WGPUTextureUsage textureUsage, WGPUTextureFormat format, int numSamples ) {
-        this.data = new WgTextureData(width, height, useMipMaps);
+        this.data = new WgTextureData(width, height, useMipMaps, 0, 0);
         this.label = label;
         this.numSamples = numSamples;
         this.format = format;
@@ -67,7 +67,7 @@ public class WgTexture extends Texture {
     }
 
     public WgTexture(String label, int width, int height, boolean useMipMaps, WGPUTextureUsage textureUsage, WGPUTextureFormat format, int numSamples, WGPUTextureFormat viewFormat ) {
-        this.data = new WgTextureData(width, height, useMipMaps);
+        this.data = new WgTextureData(width, height, useMipMaps, 0, 0);
         this.label = label;
         this.numSamples = numSamples;
         this.format = format;
@@ -75,17 +75,13 @@ public class WgTexture extends Texture {
     }
 
     // for cube map or texture array
-    public WgTexture(String label, int width, int height, int numLayers, boolean useMipMaps, boolean isColor, WGPUTextureUsage textureUsage ) {
-
-        this.data = new WgTextureData(width, height, useMipMaps);
+    public WgTexture(String label, int width, int height, int numLayers, boolean useMipMaps, WGPUTextureUsage textureUsage ) {
+        this.data = new WgTextureData(width, height, useMipMaps, 0, 0);
         this.label = label;
 
         this.numSamples = 1;
-        // for color textures set format to Srgb so that on sampling it will be inverse gamma corrected to provide a linear color value
-        // for non-color texture, e.g. normal map, leave content as is.
-        this.format = isColor ? WGPUTextureFormat.RGBA8UnormSrgb : WGPUTextureFormat.RGBA8Unorm;
 
-        create( label, useMipMaps, textureUsage, format, numLayers, numSamples, null);
+        create( label, useMipMaps, textureUsage, WGPUTextureFormat.RGBA8UnormSrgb, numLayers, numSamples, null);
     }
 
     /*

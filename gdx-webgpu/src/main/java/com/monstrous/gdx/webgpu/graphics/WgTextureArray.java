@@ -25,23 +25,15 @@ public class WgTextureArray  extends WgTexture {
         this(useMipMaps, Pixmap.Format.RGBA8888, files);
     }
 
-    public WgTextureArray(boolean useMipMaps, boolean isColor, FileHandle... files) {
-        this(useMipMaps, isColor, Pixmap.Format.RGBA8888, files);
-    }
-
     public WgTextureArray(boolean useMipMaps, Pixmap.Format format, FileHandle... files) {
-        this(WgTextureArrayData.Factory.loadFromFiles(format, useMipMaps, true, files));
-    }
-
-    public WgTextureArray(boolean useMipMaps, boolean isColor, Pixmap.Format format, FileHandle... files) {
-        this(WgTextureArrayData.Factory.loadFromFiles(format, useMipMaps, isColor, files));
+        this(WgTextureArrayData.Factory.loadFromFiles(format, useMipMaps, files));
     }
 
     public WgTextureArray(WgTextureArrayData data) {
         // at this point we don't know if we use mipmapping yet
         // should we create texture instead in consumeTextureArrayData ?
         //
-        super("texture array", data.getWidth(), data.getHeight(), data.getDepth(), data.useMipMaps(), data.isColor(), WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst));
+        super("texture array", data.getWidth(), data.getHeight(), data.getDepth(), data.useMipMaps(), WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst));
         // create a texture with layers
         // let texture data consume() fill each layer
         load(data, "texture array");
@@ -59,6 +51,7 @@ public class WgTextureArray  extends WgTexture {
 
         data.consumeTextureArrayData(this);
     }
+
 
     private static FileHandle[] getInternalHandles (String... internalPaths) {
         FileHandle[] handles = new FileHandle[internalPaths.length];

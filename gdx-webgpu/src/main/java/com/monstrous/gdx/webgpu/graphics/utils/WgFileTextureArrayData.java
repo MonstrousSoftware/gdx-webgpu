@@ -32,17 +32,15 @@ import com.monstrous.gdx.webgpu.graphics.WgTextureArrayData;
 /** @author Tomski **/
 public class WgFileTextureArrayData implements WgTextureArrayData {
 
-    protected final TextureData[] textureDatas;
-    protected boolean prepared;
-    protected final Pixmap.Format format;
-    protected final int depth;
-	protected boolean useMipMaps;
-    protected boolean isColor;
+	private final TextureData[] textureDatas;
+	private boolean prepared;
+	private final Pixmap.Format format;
+	private final int depth;
+	boolean useMipMaps;
 
-	public WgFileTextureArrayData(Pixmap.Format format, boolean useMipMaps, boolean isColor, FileHandle[] files) {
+	public WgFileTextureArrayData(Pixmap.Format format, boolean useMipMaps, FileHandle[] files) {
 		this.format = format;
 		this.useMipMaps = useMipMaps;
-        this.isColor = isColor;
 		this.depth = files.length;
 		textureDatas = new TextureData[files.length];
 		for (int i = 0; i < files.length; i++) {
@@ -108,13 +106,7 @@ public class WgFileTextureArrayData implements WgTextureArrayData {
         return useMipMaps;
     }
 
-    @Override
-    public boolean isColor (){
-        return isColor;
-    }
-
-
-    @Override
+	@Override
 	public int getWidth () {
 		return textureDatas[0].getWidth();
 	}

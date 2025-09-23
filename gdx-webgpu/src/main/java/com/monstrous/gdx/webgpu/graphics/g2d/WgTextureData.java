@@ -32,16 +32,16 @@ public class WgTextureData implements TextureData {
 
 	/** properties of texture */
 	boolean useMipMaps;
-//	int format;
-//	int type;
+	int format;
+	int type;
 
 
-	public WgTextureData(int width, int height, boolean useMipMaps) { //}, int format, int type) {
+	public WgTextureData(int width, int height, boolean useMipMaps, int format, int type) {
 		this.width = width;
 		this.height = height;
 		this.useMipMaps = useMipMaps;
-//		this.format = format;
-//		this.type = type;
+		this.format = format;
+		this.type = type;
 	}
 
 	@Override

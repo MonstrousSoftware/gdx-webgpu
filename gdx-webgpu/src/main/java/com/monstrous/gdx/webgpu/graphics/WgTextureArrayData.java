@@ -44,15 +44,12 @@ public interface WgTextureArrayData extends TextureArrayData {
     /** @return whether to generate mipmaps or not. */
     public boolean useMipMaps ();
 
-    /** @return whether this is a color texture (rather than data). Color textures are subject to gamma correction. */
-    public boolean isColor ();
-
 	/** Provides static method to instantiate the right implementation.
-    */
+	 * @author Tomski */
 	public static class Factory {
 
-		public static WgTextureArrayData loadFromFiles (Pixmap.Format format, boolean useMipMaps, boolean isColor, FileHandle... files) {
-			return new WgFileTextureArrayData(format, useMipMaps, isColor, files);
+		public static WgTextureArrayData loadFromFiles (Pixmap.Format format, boolean useMipMaps, FileHandle... files) {
+			return new WgFileTextureArrayData(format, useMipMaps, files);
 		}
 	}
 
