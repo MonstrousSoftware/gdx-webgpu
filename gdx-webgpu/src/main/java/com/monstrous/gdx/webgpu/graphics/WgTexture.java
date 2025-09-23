@@ -75,13 +75,15 @@ public class WgTexture extends Texture {
     }
 
     // for cube map or texture array
-    public WgTexture(String label, int width, int height, int numLayers, boolean useMipMaps, WGPUTextureUsage textureUsage ) {
+    public WgTexture(String label, int width, int height, int numLayers, boolean useMipMaps, WGPUTextureUsage textureUsage, boolean isColor) {
         this.data = new WgTextureData(width, height, useMipMaps, 0, 0);
         this.label = label;
 
         this.numSamples = 1;
 
-        create( label, useMipMaps, textureUsage, WGPUTextureFormat.RGBA8UnormSrgb, numLayers, numSamples, null);
+        WGPUTextureFormat format = isColor ? WGPUTextureFormat.RGBA8UnormSrgb : WGPUTextureFormat.RGBA8Unorm;
+
+        create( label, useMipMaps, textureUsage, format, numLayers, numSamples, null);
     }
 
     /*
