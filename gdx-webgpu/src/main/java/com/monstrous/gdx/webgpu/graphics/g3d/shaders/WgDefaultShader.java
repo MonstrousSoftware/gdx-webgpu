@@ -473,6 +473,11 @@ public class WgDefaultShader extends WgShader implements Disposable {
         }
 
         // renderable-specific data
+//        boolean helmet = false;
+//        if(renderable.meshPart.id.contentEquals("Skeleton_Warrior_Helmet.0")){
+//            System.out.println("Warrior: "+renderable.worldTransform);
+//            helmet = true;
+//        }
 
         // add instance data to instance buffer (instance transform)
         int offset = instanceIndex * 2 * 16 * Float.BYTES;
@@ -481,7 +486,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         // normal matrix is transpose of inverse of world transform
         instanceBuffer.set(offset+16*Float.BYTES,  tmpM.set(renderable.worldTransform).inv().tra());
 
-        if(hasBones){
+        if(hasBones){// && !helmet){
             setBones(renderable.bones);
             // bind group 3 (joints)
             binder.bindGroup(renderPass, 3);

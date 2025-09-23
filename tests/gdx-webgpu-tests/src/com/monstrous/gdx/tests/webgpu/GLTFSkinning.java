@@ -128,7 +128,7 @@ public class GLTFSkinning extends GdxTest {
 
         instances = new Array<>();
 
-        instance = new ModelInstance(model, 0, 1, 0);
+        instance = new ModelInstance(model, 0, 0, 0);
         instances.add(instance);
 
         makeBones(instance);
@@ -152,7 +152,7 @@ public class GLTFSkinning extends GdxTest {
         Model box = modelBuilder.createBox(1, 1, 1, mat, attribs);
         disposables.add( box );
 
-        instances.add(new ModelInstance(box, 0, .5f, 0));
+        //instances.add(new ModelInstance(box, 0, .5f, 0));
 
         floorModel = makeFloorModel();
         instances.add(new ModelInstance(floorModel, 0, -.5f, 0));
@@ -232,6 +232,7 @@ public class GLTFSkinning extends GdxTest {
             animationController.update(delta);
             updateBones(instance);
         }
+        //instance.calculateTransforms();
 
 		cam.update();
 

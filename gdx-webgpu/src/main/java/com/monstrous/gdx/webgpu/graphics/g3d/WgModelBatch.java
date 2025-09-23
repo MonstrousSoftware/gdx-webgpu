@@ -37,7 +37,7 @@ import com.monstrous.gdx.webgpu.wrappers.RenderPassType;
 import com.monstrous.gdx.webgpu.wrappers.WebGPURenderPass;
 
 /**
- * Class for 3d rendering, e.g. to render model instances.
+ * Class for 3d rendering, e.g. to render model instances. Use instead of ModelBatch.
  */
 public class WgModelBatch implements Disposable {
 
