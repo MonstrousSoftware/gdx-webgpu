@@ -81,14 +81,26 @@ public class WgCubemap extends WgTexture {
 
     /** Construct a Cubemap based on the given CubemapData. */
     public WgCubemap(WgCubemapData data, boolean useMipMaps) {
-        super("cubemap", data.getWidth(), data.getHeight(), 6, useMipMaps, WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst));
+        super("cubemap", data.getWidth(), data.getHeight(), 6, useMipMaps, true, WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst));
+        this.cubemapData = data;
+        load(data);
+    }
+
+    /** Construct a Cubemap based on the given CubemapData. */
+    public WgCubemap(WgCubemapData data, boolean useMipMaps, boolean isColor) {
+        super("cubemap", data.getWidth(), data.getHeight(), 6, useMipMaps, isColor, WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst));
         this.cubemapData = data;
         load(data);
     }
 
     /** Construct an empty Cubemap texture of given size. */
     public WgCubemap(int size,  boolean useMipMaps, WGPUTextureUsage textureUsage) {
-        super("cubemap", size, size, 6, useMipMaps, textureUsage);
+        super("cubemap", size, size, 6, useMipMaps, true, textureUsage);
+    }
+
+    /** Construct an empty Cubemap texture of given size. */
+    public WgCubemap(int size,  boolean useMipMaps, boolean isColor, WGPUTextureUsage textureUsage) {
+        super("cubemap", size, size, 6, useMipMaps, isColor, textureUsage);
     }
 
     /** Sets the sides of this cubemap to the specified {@link CubemapData}. */
