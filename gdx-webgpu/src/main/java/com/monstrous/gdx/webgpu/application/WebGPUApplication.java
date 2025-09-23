@@ -154,7 +154,7 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
                         WGPUFeatureName featureName = features.getFeatureAt(i);
                         System.out.println("\tFeature name: " + featureName);
                     }
-                    features.dispose();
+
 
                     WGPULimits limits = WGPULimits.obtain();
                     device.getLimits(limits);
@@ -422,7 +422,7 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
         surface.release();
         surface.dispose();
         queue.release();
-        queue.dispose();
+        //queue.dispose();
         device.destroy();
         device.dispose();
         gpuTimer.dispose();
