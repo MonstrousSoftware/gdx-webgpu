@@ -29,8 +29,12 @@ import com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton.ImageTextButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.utils.ActorGestureListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TiledDrawable;
+import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.ScreenUtils;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
+import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
+import com.monstrous.gdx.webgpu.scene2d.WgScrollPane;
 import com.monstrous.gdx.webgpu.scene2d.WgSkin;
 import com.monstrous.gdx.webgpu.scene2d.WgStage;
 
@@ -52,14 +56,25 @@ public class Scene2dTestScrollPane extends GdxTest {
 
 		Table screenTable = new Table();
         screenTable.setFillParent(true);
+        //screenTable.align(Align.top);
+
+        TextButton button1 = new TextButton("HELLO", skin);
+        screenTable.add(button1).pad(10).row();
 
         Label introLabel = new Label(introText(), skin);
         introLabel.setWrap(true);
-        introLabel.setSize(735, 120);
-        ScrollPane scrollPane = new ScrollPane(introLabel, skin, "default");
-        Table scrollTable = new Table();
-        scrollTable.add(scrollPane).width(735).height(120);
-        screenTable.add(scrollTable).width(793);
+
+        ScrollPane scrollPane = new WgScrollPane(introLabel, skin, "default");
+        scrollPane.setColor(Color.YELLOW);
+
+        screenTable.add(scrollPane).size(435, 120);
+
+
+        screenTable.row();
+        Label otherLabel = new Label("WgScrollPane test", skin);
+        screenTable.add(otherLabel).pad(10).row();
+        TextButton button = new TextButton("OKAY", skin);
+        screenTable.add(button).pad(10).row();
 
         screenTable.pack();
 
@@ -84,17 +99,9 @@ public class Scene2dTestScrollPane extends GdxTest {
 
 
 	public void render () {
-		// System.out.println(meow.getValue());
-		//Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        WgScreenUtils.clear(Color.TEAL);
 		stage.act(Gdx.graphics.getDeltaTime());
 		stage.draw();
-
-		stage.getBatch().begin();
-		//stage.getBatch().draw(region, 400, 100, 126, 126);
-
-		// bug: drawing patch erase screen contents on its left
-		//patch.draw(stage.getBatch(), 400, 100, 126, 126);
-		stage.getBatch().end();
 	}
 
 	public void resize (int width, int height) {

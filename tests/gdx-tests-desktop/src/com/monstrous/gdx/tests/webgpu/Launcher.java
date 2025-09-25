@@ -21,8 +21,8 @@ public class Launcher {
 
         config.useVsync(false);
 
-        new WgDesktopApplication(new SpriteBatchScissorTest(), config);
-        //new WgDesktopApplication(new LoadModelTest(), config);
+        //new WgDesktopApplication(new SpriteBatchScissorTest(), config);
+        new WgDesktopApplication(new Scene2dTestScrollPane(), config);
 
     }
 
