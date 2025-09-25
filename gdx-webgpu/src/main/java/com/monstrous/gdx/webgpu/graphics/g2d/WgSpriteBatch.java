@@ -326,6 +326,14 @@ public class WgSpriteBatch implements Batch {
         setPipeline();
     }
 
+    /**  Apply a scissor rectangle for further sprites. */
+    public void setScissorRect(int x, int y, int width, int height){
+        // start a new render pass (flush sprites up till now)
+        end();
+        begin();
+        renderPass.setScissorRect(x, y, width, height);
+    }
+
     public boolean isBlendingEnabled(){
         return pipelineSpec.isBlendingEnabled();
     }
