@@ -31,7 +31,6 @@ import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.model.Animation;
 import com.badlogic.gdx.graphics.g3d.model.Node;
-import com.badlogic.gdx.graphics.g3d.model.NodeAnimation;
 import com.badlogic.gdx.graphics.g3d.model.NodePart;
 import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
@@ -52,15 +51,12 @@ import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLBModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLTFModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDefaultShader;
-import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDepthShaderProvider;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
-import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
-import com.monstrous.gdx.webgpu.wrappers.RenderPassType;
 
 
-/** Test GLTF skinning i.e. skeletal animation */
+/** Test GLTF skinning i.e. skeletal animation with multiple rigged instances, not per se synchronized */
 
-public class GLTFSkinning extends GdxTest {
+public class GLTFSkinningMultiple extends GdxTest {
 
 	WgModelBatch modelBatch;
 	PerspectiveCamera cam;
@@ -68,6 +64,7 @@ public class GLTFSkinning extends GdxTest {
 	WgSpriteBatch batch;
 	WgBitmapFont font;
 	Model model;
+    Model model2;
     Model floorModel;
     ModelInstance floor;
 	Array<ModelInstance> jointBoxes;
@@ -103,7 +100,8 @@ public class GLTFSkinning extends GdxTest {
         jointNodes = new Array<>();
         disposables = new Array<>();
 
-        modelFileName = "data/g3d/gltf/SimpleSkin/SimpleSkin.gltf";
+        model = loadModel("data/g3d/gltf/SimpleSkin/SimpleSkin.gltf");
+        model2 = loadModel("data/g3d/gltf/SimpleSkin/SimpleSkin.gltf");
         //modelFileName = "data/g3d/gltf/RiggedFigure/RiggedFigure.gltf";
         //modelFileName = "data/g3d/gltf/Fox/Fox.gltf";
         //modelFileName = "data/g3d/gltf/RiggedSimple/RiggedSimple.gltf";
@@ -111,24 +109,12 @@ public class GLTFSkinning extends GdxTest {
         //modelFileName = "data/g3d/gltf/Warrior/Warrior.gltf";
 
 
-        WgModelLoader.ModelParameters params = new WgModelLoader.ModelParameters();
-        params.textureParameter.genMipMaps = true;
-
-        System.out.println("Start loading");
-        long startLoad = System.currentTimeMillis();
-        FileHandle file = Gdx.files.internal(modelFileName);
-        if(file.extension().contentEquals("gltf"))
-            model = new WgGLTFModelLoader().loadModel(file, params);
-        else if(file.extension().contentEquals("glb"))
-            model = new WgGLBModelLoader().loadModel(file, params);
-        else
-            System.out.println("File extension not supported: "+modelFileName);
-        long endLoad = System.currentTimeMillis();
-        System.out.println("Model loading time (ms): "+(endLoad - startLoad));
-
         instances = new Array<>();
 
-        instance = new ModelInstance(model, 0, 0, 0);
+        instance = new ModelInstance(model, -2, 0, 0);
+        instances.add(instance);
+
+        instance = new ModelInstance(model2, 2, 0, 0);
         instances.add(instance);
 
         makeBones(instance);
@@ -176,6 +162,22 @@ public class GLTFSkinning extends GdxTest {
 
         environment.add(dirLight1);
 	}
+
+    private Model loadModel(String modelFileName ){
+        Model model = null;
+        WgModelLoader.ModelParameters params = new WgModelLoader.ModelParameters();
+        params.textureParameter.genMipMaps = true;
+
+        FileHandle file = Gdx.files.internal(modelFileName);
+        if(file.extension().contentEquals("gltf"))
+            model = new WgGLTFModelLoader().loadModel(file, params);
+        else if(file.extension().contentEquals("glb"))
+            model = new WgGLBModelLoader().loadModel(file, params);
+        else
+            System.out.println("File extension not supported: "+modelFileName);
+
+        return model;
+    }
 
     private Model makeFloorModel(){
         ModelBuilder modelBuilder = new WgModelBuilder();
