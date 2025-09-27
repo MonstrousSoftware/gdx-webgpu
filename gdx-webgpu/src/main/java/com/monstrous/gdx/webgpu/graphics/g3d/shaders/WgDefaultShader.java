@@ -59,7 +59,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
     private final int uniformBufferSize;
     private final WebGPUUniformBuffer instanceBuffer;
     private final WebGPUUniformBuffer jointMatricesBuffer;
-    private final WebGPUUniformBuffer inverseBindMatricesBuffer;
+    //private final WebGPUUniformBuffer inverseBindMatricesBuffer;
     private final WebGPUUniformBuffer materialBuffer;
     private final int materialSize;
     private final WebGPUPipeline pipeline;            // a shader has one pipeline
@@ -204,7 +204,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         binder.defineBinding("instanceUniforms", 2, 0);
 
         binder.defineBinding("jointMatrices", 3, 0);
-        binder.defineBinding("inverseBindMatrices", 3, 1);
+        //binder.defineBinding("inverseBindMatrices", 3, 1);
 
         // define uniforms in uniform buffers with their offset
         // frame uniforms
@@ -278,13 +278,13 @@ public class WgDefaultShader extends WgShader implements Disposable {
                 throw new GdxRuntimeException("Too many bones in model. NumBones is configured as "+config.numBones+". Renderable has "+renderable.bones.length);
             jointMatricesBuffer = new WebGPUUniformBuffer(16 * Float.BYTES * numJoints, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Storage));
             binder.setBuffer("jointMatrices", jointMatricesBuffer, 0, 16 * Float.BYTES * numJoints);
-            inverseBindMatricesBuffer = new WebGPUUniformBuffer(16 * Float.BYTES * numJoints, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Storage));
-            binder.setBuffer("inverseBindMatrices", inverseBindMatricesBuffer, 0, 16 * Float.BYTES * numJoints);
+            //inverseBindMatricesBuffer = new WebGPUUniformBuffer(16 * Float.BYTES * numJoints, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Storage));
+           // binder.setBuffer("inverseBindMatrices", inverseBindMatricesBuffer, 0, 16 * Float.BYTES * numJoints);
             // todo ibm is never set (probably not needed with libgdx, seems to be pre-multiplied)
             // todo handle multiple renderables with rigging
         } else {
             jointMatricesBuffer = null;
-            inverseBindMatricesBuffer = null;
+            //inverseBindMatricesBuffer = null;
         }
 
 
@@ -633,10 +633,10 @@ public class WgDefaultShader extends WgShader implements Disposable {
             if(mat == null)
                 mat = idt;
             jointMatricesBuffer.set(i * matrixSize, mat);
-            inverseBindMatricesBuffer.set(i * matrixSize, idt); // todo
+            //inverseBindMatricesBuffer.set(i * matrixSize, idt); // todo
         }
         jointMatricesBuffer.flush();
-        inverseBindMatricesBuffer.flush();
+        //inverseBindMatricesBuffer.flush();
     }
 
     private WebGPUBindGroupLayout createFrameBindGroupLayout(int uniformBufferSize, boolean hasShadowMap, boolean hasCubeMap, boolean hasDiffuseCubeMap, boolean hasSpecularCubeMap) {
@@ -693,11 +693,11 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
     private WebGPUBindGroupLayout createSkinningBindGroupLayout(){
         // binding 0: joint matrices
-        // binding 1: inverseBoneTransforms matrices
+        // removed: binding 1: inverseBoneTransforms matrices
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch Binding Group Layout (Skinning)");
         layout.begin();
         layout.addBuffer(0, WGPUShaderStage.Vertex , WGPUBufferBindingType.ReadOnlyStorage, 0, false);
-        layout.addBuffer(1, WGPUShaderStage.Vertex , WGPUBufferBindingType.ReadOnlyStorage, 0, false);
+        //layout.addBuffer(1, WGPUShaderStage.Vertex , WGPUBufferBindingType.ReadOnlyStorage, 0, false);
         layout.end();
         return layout;
     }

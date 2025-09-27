@@ -83,7 +83,7 @@ struct MaterialUniforms {
 // Skinning
 #ifdef SKIN
     @group(3) @binding(0) var<storage, read> jointMatrices: array<mat4x4f>;
-    @group(3) @binding(1) var<storage, read> inverseBindMatrices: array<mat4x4f>;   // not used
+    //@group(3) @binding(1) var<storage, read> inverseBindMatrices: array<mat4x4f>;   // not used
 #endif
 
 struct VertexInput {
