@@ -70,6 +70,7 @@ public class GLTFSkinningMultiple extends GdxTest {
 	Array<ModelInstance> jointBoxes;
     Array<Node> jointNodes;
     ModelInstance instance;
+    ModelInstance instance2;
     Array<ModelInstance> instances;
     Array<Disposable> disposables;
     String modelFileName;
@@ -78,6 +79,7 @@ public class GLTFSkinningMultiple extends GdxTest {
     WebGPUContext webgpu;
     private Viewport viewport;
     private AnimationController animationController;
+    private AnimationController animationController2;
 
 
 
@@ -114,8 +116,8 @@ public class GLTFSkinningMultiple extends GdxTest {
         instance = new ModelInstance(model, -2, 0, 0);
         instances.add(instance);
 
-        instance = new ModelInstance(model2, 2, 0, 0);
-        instances.add(instance);
+        instance2 = new ModelInstance(model2, 2, 0, 0);
+        instances.add(instance2);
 
         makeBones(instance);
 
@@ -127,6 +129,14 @@ public class GLTFSkinningMultiple extends GdxTest {
             Animation anim = instance.animations.get(0);
             System.out.println("Animation[0]: " + animationName);
             animationController.setAnimation(animationName, -1);
+        }
+
+        if(instance2.animations != null && instance2.animations.size > 0) {
+            animationController2 = new AnimationController(instance2);
+            String animationName = instance2.animations.get(0).id;   // play first animation
+            Animation anim = instance2.animations.get(0);
+            System.out.println("Animation[0]: " + animationName);
+            animationController2.setAnimation(animationName, -1);
         }
 
         ModelBuilder modelBuilder = new WgModelBuilder();
@@ -233,6 +243,9 @@ public class GLTFSkinningMultiple extends GdxTest {
         if(animationController != null) {
             animationController.update(delta);
             updateBones(instance);
+        }
+        if(animationController2 != null) {
+            animationController2.update(delta*2f);
         }
         //instance.calculateTransforms();
 

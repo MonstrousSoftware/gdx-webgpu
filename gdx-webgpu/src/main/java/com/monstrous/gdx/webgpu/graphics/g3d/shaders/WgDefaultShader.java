@@ -59,6 +59,8 @@ public class WgDefaultShader extends WgShader implements Disposable {
     private final int uniformBufferSize;
     private final WebGPUUniformBuffer instanceBuffer;
     private final WebGPUUniformBuffer jointMatricesBuffer;
+    private int numRigged;
+    private int rigSize; // bytes per rigged instance
     //private final WebGPUUniformBuffer inverseBindMatricesBuffer;
     private final WebGPUUniformBuffer materialBuffer;
     private final int materialSize;
@@ -94,7 +96,8 @@ public class WgDefaultShader extends WgShader implements Disposable {
         public int maxMaterials;
         public int maxDirectionalLights;
         public int maxPointLights;
-        public int numBones;
+        public int numBones;            // max bone count per rigged instance
+        public int maxRigged;           // max number of instances that are rigged
 
         public Config() {
             this.maxInstances = 1024;
@@ -102,6 +105,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
             this.maxDirectionalLights = 3;
             this.maxPointLights = 3;
             this.numBones = 48; // todo
+            this.maxRigged = 20;
         }
     }
 
@@ -153,13 +157,15 @@ public class WgDefaultShader extends WgShader implements Disposable {
         // allocate a uniform buffer with dynamic offsets
         materialBuffer = new WebGPUUniformBuffer(materialSize, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Uniform),  config.maxMaterials);
 
+        rigSize = config.numBones * 16 * Float.BYTES;
+
         binder = new Binder();
         // define groups
         binder.defineGroup(0, createFrameBindGroupLayout(uniformBufferSize, hasShadowMap, hasCubeMap, hasDiffuseCubeMap, hasSpecularCubeMap));
         binder.defineGroup(1, createMaterialBindGroupLayout(materialSize));
         binder.defineGroup(2, createInstancingBindGroupLayout());
         if(hasBones)
-            binder.defineGroup(3, createSkinningBindGroupLayout());
+            binder.defineGroup(3, createSkinningBindGroupLayout(rigSize));
 
         // define bindings in the groups
         // must match with shader code
@@ -276,11 +282,11 @@ public class WgDefaultShader extends WgShader implements Disposable {
             int numJoints = config.numBones;  // todo fixed number or renderable dependent?
             if(renderable.bones.length > config.numBones)
                 throw new GdxRuntimeException("Too many bones in model. NumBones is configured as "+config.numBones+". Renderable has "+renderable.bones.length);
-            jointMatricesBuffer = new WebGPUUniformBuffer(16 * Float.BYTES * numJoints, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Storage));
-            binder.setBuffer("jointMatrices", jointMatricesBuffer, 0, 16 * Float.BYTES * numJoints);
+
+            jointMatricesBuffer = new WebGPUUniformBuffer(rigSize, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Storage), config.maxRigged);
+            binder.setBuffer("jointMatrices", jointMatricesBuffer, 0, rigSize);
             //inverseBindMatricesBuffer = new WebGPUUniformBuffer(16 * Float.BYTES * numJoints, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Storage));
            // binder.setBuffer("inverseBindMatrices", inverseBindMatricesBuffer, 0, 16 * Float.BYTES * numJoints);
-            // todo ibm is never set (probably not needed with libgdx, seems to be pre-multiplied)
             // todo handle multiple renderables with rigging
         } else {
             jointMatricesBuffer = null;
@@ -392,6 +398,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         if(webgpu.frameNumber != this.frameNumber ){    // reset at the start of a frame
             instanceIndex = 0;
             numMaterials = 0;
+            numRigged = 0;
             this.frameNumber = webgpu.frameNumber;
         }
         numRenderables = 0;
@@ -489,7 +496,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         if(hasBones){// && !helmet){
             setBones(renderable.bones);
             // bind group 3 (joints)
-            binder.bindGroup(renderPass, 3);
+           //binder.bindGroup(renderPass, 3);
         }
 
         int materialHash = renderable.material.hashCode();
@@ -628,15 +635,23 @@ public class WgDefaultShader extends WgShader implements Disposable {
     private void setBones( Matrix4[] bones ){
         int matrixSize = 16*Float.BYTES;
 
+        if(numRigged == config.maxRigged-1) {
+            Gdx.app.error("setBones", "Too many rigged instances. Increase config.maxRigged.");
+            return;
+        }
+        jointMatricesBuffer.setDynamicOffsetIndex(numRigged);
+
         for(int i = 0; i < bones.length; i++){
             Matrix4 mat = bones[i];
             if(mat == null)
                 mat = idt;
             jointMatricesBuffer.set(i * matrixSize, mat);
-            //inverseBindMatricesBuffer.set(i * matrixSize, idt); // todo
+            //inverseBindMatricesBuffer.set(i * matrixSize, idt);
         }
-        jointMatricesBuffer.flush();
+        jointMatricesBuffer.flush();    // todo should only be needed for the last one
         //inverseBindMatricesBuffer.flush();
+        binder.bindGroup(renderPass, 3, numRigged*jointMatricesBuffer.getUniformStride());
+        numRigged++;
     }
 
     private WebGPUBindGroupLayout createFrameBindGroupLayout(int uniformBufferSize, boolean hasShadowMap, boolean hasCubeMap, boolean hasDiffuseCubeMap, boolean hasSpecularCubeMap) {
@@ -691,12 +706,12 @@ public class WgDefaultShader extends WgShader implements Disposable {
         return layout;
     }
 
-    private WebGPUBindGroupLayout createSkinningBindGroupLayout(){
+    private WebGPUBindGroupLayout createSkinningBindGroupLayout(int rigStride){
         // binding 0: joint matrices
         // removed: binding 1: inverseBoneTransforms matrices
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch Binding Group Layout (Skinning)");
         layout.begin();
-        layout.addBuffer(0, WGPUShaderStage.Vertex , WGPUBufferBindingType.ReadOnlyStorage, 0, false);
+        layout.addBuffer(0, WGPUShaderStage.Vertex , WGPUBufferBindingType.ReadOnlyStorage, rigStride, true);
         //layout.addBuffer(1, WGPUShaderStage.Vertex , WGPUBufferBindingType.ReadOnlyStorage, 0, false);
         layout.end();
         return layout;
