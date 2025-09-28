@@ -108,7 +108,8 @@ public class WebGPUTests {
         IBL_GenerateOutdoor.class,
         GLTFAnimation.class,
         GLTFSkinning.class,
-        Scene2dTestScrollPane.class
+        Scene2dTestScrollPane.class,
+        GLTFSkinningMultiple.class
 
         // @on
 

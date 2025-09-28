@@ -119,7 +119,7 @@ public class GLTFSkinningMultiple extends GdxTest {
         instance2 = new ModelInstance(model2, 2, 0, 0);
         instances.add(instance2);
 
-        makeBones(instance2);
+        makeBones(instance);
 
         System.out.println("Animation count: "+instance.animations.size);
 
@@ -148,10 +148,10 @@ public class GLTFSkinningMultiple extends GdxTest {
         Model box = modelBuilder.createBox(1, 1, 1, mat, attribs);
         disposables.add( box );
 
-        //instances.add(new ModelInstance(box, 0, .5f, 0));
+        instances.add(new ModelInstance(box, 0, .5f, 0));
 
         floorModel = makeFloorModel();
-//        instances.add(new ModelInstance(floorModel, 0, -.5f, 0));
+        instances.add(new ModelInstance(floorModel, 0, -.5f, 0));
 
 		controller = new CameraInputController(cam);
 
@@ -245,8 +245,8 @@ public class GLTFSkinningMultiple extends GdxTest {
         if(animationController2 != null) {
             animationController2.update(delta);
         }
-        updateBones(instance2);
-        //instance.calculateTransforms();
+        updateBones(instance);
+
 
 		cam.update();
 
