@@ -493,24 +493,24 @@ public class WgDefaultShader extends WgShader implements Disposable {
         // normal matrix is transpose of inverse of world transform
         instanceBuffer.set(offset+16*Float.BYTES,  tmpM.set(renderable.worldTransform).inv().tra());
 
-        if(hasBones){// && !helmet){
-            setBones(renderable.bones);
-            // bind group 3 (joints)
-           //binder.bindGroup(renderPass, 3);
-        }
 
         int materialHash = renderable.material.hashCode();
 
-        if( prevRenderable != null && materialHash == prevMaterialHash && renderable.meshPart.equals(prevRenderable.meshPart)){
+        if( !hasBones && prevRenderable != null && materialHash == prevMaterialHash && renderable.meshPart.equals(prevRenderable.meshPart)){
             // renderable is similar to the previous one, add to an instance batch
             // note that renderables get a copy of a mesh part not a reference to the Model's mesh part, so you can just compare references.
+            // can't put rigged renderables in a batch, because the animation may be different
             instanceCount++;
         } else {    // either a new material or a new mesh part, we need to flush the run of instances
 
             if(prevRenderable != null) {
                 applyMaterial(prevRenderable.material);
+                if(hasBones){
+                    setBones(prevRenderable.bones);
+                }
                 renderBatch(prevRenderable.meshPart, instanceCount, firstInstance);
             }
+            // and start a new run with the new renderable
             instanceCount = 1;
             firstInstance = numRenderables;
             prevRenderable = renderable;
@@ -535,6 +535,9 @@ public class WgDefaultShader extends WgShader implements Disposable {
     public void end(){
         if(prevRenderable != null) {
             applyMaterial(prevRenderable.material);
+            if(hasBones){
+                setBones(prevRenderable.bones);
+            }
             renderBatch(prevRenderable.meshPart, instanceCount, firstInstance);
         }
         instanceBuffer.flush();

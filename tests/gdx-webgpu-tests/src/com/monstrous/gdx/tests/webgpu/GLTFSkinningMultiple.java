@@ -103,7 +103,7 @@ public class GLTFSkinningMultiple extends GdxTest {
         disposables = new Array<>();
 
         model = loadModel("data/g3d/gltf/SimpleSkin/SimpleSkin.gltf");
-        model2 = loadModel("data/g3d/gltf/SimpleSkin/SimpleSkin.gltf");
+        model2 = loadModel("data/g3d/gltf/SillyDancing/SillyDancing.gltf");
         //modelFileName = "data/g3d/gltf/RiggedFigure/RiggedFigure.gltf";
         //modelFileName = "data/g3d/gltf/Fox/Fox.gltf";
         //modelFileName = "data/g3d/gltf/RiggedSimple/RiggedSimple.gltf";
@@ -119,7 +119,7 @@ public class GLTFSkinningMultiple extends GdxTest {
         instance2 = new ModelInstance(model2, 2, 0, 0);
         instances.add(instance2);
 
-        makeBones(instance);
+        makeBones(instance2);
 
         System.out.println("Animation count: "+instance.animations.size);
 
@@ -151,7 +151,7 @@ public class GLTFSkinningMultiple extends GdxTest {
         //instances.add(new ModelInstance(box, 0, .5f, 0));
 
         floorModel = makeFloorModel();
-        instances.add(new ModelInstance(floorModel, 0, -.5f, 0));
+//        instances.add(new ModelInstance(floorModel, 0, -.5f, 0));
 
 		controller = new CameraInputController(cam);
 
@@ -208,7 +208,7 @@ public class GLTFSkinningMultiple extends GdxTest {
     }
 
 
-    // todo : this assumes instance is at origin
+    //
     private void makeBones(Node node, ModelInstance instance, ModelBuilder modelBuilder){
         //System.out.println("checking node "+node.id);
         instance.calculateTransforms();
@@ -233,8 +233,7 @@ public class GLTFSkinningMultiple extends GdxTest {
 
     private void updateBones(ModelInstance instance){
         for(int i = 0; i < jointBoxes.size; i++){
-            if(jointNodes.get(i).isAnimated)
-                jointBoxes.get(i).transform.set(instance.transform).mul(jointNodes.get(i).globalTransform);
+            jointBoxes.get(i).transform.set(instance.transform).mul(jointNodes.get(i).globalTransform);
         }
     }
 
@@ -242,11 +241,11 @@ public class GLTFSkinningMultiple extends GdxTest {
 		float delta =Gdx.graphics.getDeltaTime();
         if(animationController != null) {
             animationController.update(delta);
-            updateBones(instance);
         }
         if(animationController2 != null) {
-            animationController2.update(delta*2f);
+            animationController2.update(delta);
         }
+        updateBones(instance2);
         //instance.calculateTransforms();
 
 		cam.update();
