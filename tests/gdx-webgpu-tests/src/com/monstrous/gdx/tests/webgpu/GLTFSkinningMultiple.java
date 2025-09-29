@@ -102,13 +102,13 @@ public class GLTFSkinningMultiple extends GdxTest {
         jointNodes = new Array<>();
         disposables = new Array<>();
 
-        model = loadModel("data/g3d/gltf/SimpleSkin/SimpleSkin.gltf");
-        //model2 = loadModel("data/g3d/gltf/SillyDancing/SillyDancing.gltf");
+        //model = loadModel("data/g3d/gltf/SimpleSkin/SimpleSkin.gltf");
+        model2 = loadModel("data/g3d/gltf/SillyDancing/SillyDancing.gltf");
         //modelFileName = "data/g3d/gltf/RiggedFigure/RiggedFigure.gltf";
         //modelFileName = "data/g3d/gltf/Fox/Fox.gltf";
         //modelFileName = "data/g3d/gltf/RiggedSimple/RiggedSimple.gltf";
         //modelFileName = "data/g3d/gltf/SillyDancing/SillyDancing.gltf";
-        model2 = loadModel("data/g3d/gltf/Warrior/Warrior.gltf");
+        model = loadModel("data/g3d/gltf/Warrior/Warrior.gltf");
 
 
         instances = new Array<>();
