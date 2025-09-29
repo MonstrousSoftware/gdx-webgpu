@@ -103,12 +103,12 @@ public class GLTFSkinningMultiple extends GdxTest {
         disposables = new Array<>();
 
         model = loadModel("data/g3d/gltf/SimpleSkin/SimpleSkin.gltf");
-        model2 = loadModel("data/g3d/gltf/SillyDancing/SillyDancing.gltf");
+        //model2 = loadModel("data/g3d/gltf/SillyDancing/SillyDancing.gltf");
         //modelFileName = "data/g3d/gltf/RiggedFigure/RiggedFigure.gltf";
         //modelFileName = "data/g3d/gltf/Fox/Fox.gltf";
         //modelFileName = "data/g3d/gltf/RiggedSimple/RiggedSimple.gltf";
         //modelFileName = "data/g3d/gltf/SillyDancing/SillyDancing.gltf";
-        //modelFileName = "data/g3d/gltf/Warrior/Warrior.gltf";
+        model2 = loadModel("data/g3d/gltf/Warrior/Warrior.gltf");
 
 
         instances = new Array<>();
@@ -119,7 +119,7 @@ public class GLTFSkinningMultiple extends GdxTest {
         instance2 = new ModelInstance(model2, 2, 0, 0);
         instances.add(instance2);
 
-        makeBones(instance);
+        makeBones(instance2);
 
         System.out.println("Animation count: "+instance.animations.size);
 
@@ -245,7 +245,7 @@ public class GLTFSkinningMultiple extends GdxTest {
         if(animationController2 != null) {
             animationController2.update(delta);
         }
-        updateBones(instance);
+        updateBones(instance2);
 
 
 		cam.update();

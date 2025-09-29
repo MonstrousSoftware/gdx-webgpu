@@ -179,7 +179,9 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                 if(node.parts == null)
                     continue;
                 for(ModelNodePart nodePart : node.parts){
-                    nodePart.bones = new ArrayMap<>(true, ibmAccessor.count);
+                    if(nodePart.bones == null)
+                        continue;
+                    //nodePart.bones = new ArrayMap<>(true, ibmAccessor.count);
                     for (int j = 0; j < skin.joints.size(); j++) {
                         nodePart.bones.put(nodes.get(skin.joints.get(j)).id, new Matrix4(transforms[j]).inv());
                     }
@@ -473,10 +475,10 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
     Texture.TextureWrap convertWrap( int glWrap ){
         Texture.TextureWrap wrap;
         switch(glWrap){
-            case GL20.GL_MIRRORED_REPEAT: wrap = Texture.TextureWrap.MirroredRepeat; break;
-            case GL20.GL_CLAMP_TO_EDGE: wrap = Texture.TextureWrap.ClampToEdge; break;
+            case GL20.GL_MIRRORED_REPEAT:   wrap = Texture.TextureWrap.MirroredRepeat; break;
+            case GL20.GL_CLAMP_TO_EDGE:     wrap = Texture.TextureWrap.ClampToEdge; break;
             case GL20.GL_REPEAT:
-            default:                wrap = Texture.TextureWrap.Repeat; break;
+            default:                        wrap = Texture.TextureWrap.Repeat; break;
         }
         return wrap;
     }
@@ -521,9 +523,17 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                 int materialId =  primitive.material < 0 ? fallbackMaterialId :primitive.material;
                 nodePart.materialId = modelData.materials.get(materialId).id;
                 //System.out.println("Node refers to mesh part :" + nodePart.meshPartId + " material: "+nodePart.materialId);
-                // todo
-//                nodePart.bones = 1;
-//                nodePart.uvMapping = 1;
+
+                // if this primitive is rigged (vertex attributes include JOINTS_0) add a bones array to the node part (will be filled in loadSkins())
+                // otherwise leave it null
+                for(GLTFAttribute attrib : primitive.attributes ){
+                    if(attrib.name.contentEquals("JOINTS_0")){
+                        nodePart.bones = new ArrayMap<>(true, 10);
+                        break;
+                    }
+                }
+
+//                nodePart.uvMapping = 1; // what is this?
 
                 node.parts[partId++] = nodePart;
             }
