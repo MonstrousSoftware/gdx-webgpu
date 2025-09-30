@@ -163,6 +163,8 @@ public class WgDepthShader extends WgShader {
         numRenderables = 0;
         drawCalls = 0;
         prevRenderable = null;  // to store renderable that still needs to be rendered
+        if(jointMatricesBuffer != null)
+            jointMatricesBuffer.beginSlices();
 
         renderPass.setPipeline(pipeline);
     }
@@ -245,6 +247,7 @@ public class WgDepthShader extends WgShader {
         if(prevRenderable != null) {
             if(prevRenderable.bones != null){
                 setBones(prevRenderable.bones);
+                jointMatricesBuffer.endSlices();
             }
             renderBatch(prevRenderable.meshPart, instanceCount, firstInstance);
         }
@@ -256,23 +259,14 @@ public class WgDepthShader extends WgShader {
 
     // fill the skinning buffers (group 3
     private void setBones( Matrix4[] bones ){
-        int matrixSize = 16*Float.BYTES;
-
         if(numRigged == config.maxRigged-1) {
             Gdx.app.error("setBones", "Too many rigged instances. Increase config.maxRigged.");
             return;
         }
-        jointMatricesBuffer.setDynamicOffsetIndex(numRigged);
+        int dynamicOffset = jointMatricesBuffer.nextSlice();
+        jointMatricesBuffer.set(0, bones);
 
-        for(int i = 0; i < bones.length; i++){
-            Matrix4 mat = bones[i];
-            if(mat == null)
-                mat = idt;
-            jointMatricesBuffer.set(i * matrixSize, mat);
-        }
-        jointMatricesBuffer.flush();    // todo should only be needed for the last one
-
-        binder.bindGroup(renderPass, GROUP_SKIN, numRigged*jointMatricesBuffer.getUniformStride());
+        binder.bindGroup(renderPass, GROUP_SKIN, dynamicOffset);
         numRigged++;
     }
 

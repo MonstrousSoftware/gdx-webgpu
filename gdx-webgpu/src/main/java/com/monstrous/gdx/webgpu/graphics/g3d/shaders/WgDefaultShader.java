@@ -210,7 +210,6 @@ public class WgDefaultShader extends WgShader implements Disposable {
         binder.defineBinding("instanceUniforms", 2, 0);
 
         binder.defineBinding("jointMatrices", 3, 0);
-        //binder.defineBinding("inverseBindMatrices", 3, 1);
 
         // define uniforms in uniform buffers with their offset
         // frame uniforms
@@ -396,6 +395,9 @@ public class WgDefaultShader extends WgShader implements Disposable {
             numMaterials = 0;
             numRigged = 0;
             this.frameNumber = webgpu.frameNumber;
+            materialBuffer.beginSlices();
+            if(jointMatricesBuffer != null)
+                jointMatricesBuffer.beginSlices();
         }
         numRenderables = 0;
         drawCalls = 0;
@@ -531,8 +533,10 @@ public class WgDefaultShader extends WgShader implements Disposable {
     public void end(){
         if(prevRenderable != null) {
             applyMaterial(prevRenderable.material);
+            materialBuffer.endSlices();
             if(hasBones){
                 setBones(prevRenderable.bones);
+                jointMatricesBuffer.endSlices();
             }
             renderBatch(prevRenderable.meshPart, instanceCount, firstInstance);
         }
@@ -544,7 +548,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
             throw new RuntimeException("Too many materials (> "+config.maxMaterials+"). Increase shader.maxMaterials");
 
         // move to new buffer offset for this new material (flushes previous one).
-        materialBuffer.setDynamicOffsetIndex(numMaterials); // indicate which section of the uniform buffer to use
+        int dynamicOffset = materialBuffer.nextSlice(); //setDynamicOffsetIndex(numMaterials); // indicate which section of the uniform buffer to use
 
         // diffuse color
         ColorAttribute diffuse = (ColorAttribute) material.get(ColorAttribute.Diffuse);
@@ -623,7 +627,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         binder.setSampler("emissiveSampler", emissiveTexture.getSampler());
 
         materialBuffer.flush(); // write to GPU
-        binder.bindGroup(renderPass, 1, numMaterials*materialBuffer.getUniformStride());
+        binder.bindGroup(renderPass, 1, dynamicOffset); //numMaterials*materialBuffer.getUniformStride());
 
         numMaterials++;
     }
@@ -638,16 +642,9 @@ public class WgDefaultShader extends WgShader implements Disposable {
             Gdx.app.error("setBones", "Too many rigged instances. Increase config.maxRigged.");
             return;
         }
-        jointMatricesBuffer.setDynamicOffsetIndex(numRigged);
-
-        for(int i = 0; i < bones.length; i++){
-            Matrix4 mat = bones[i];
-            if(mat == null)
-                mat = idt;
-            jointMatricesBuffer.set(i * matrixSize, mat);
-        }
-        jointMatricesBuffer.flush();    // todo should only be needed for the last one
-        binder.bindGroup(renderPass, 3, numRigged*jointMatricesBuffer.getUniformStride());
+        int dynamicOffset = jointMatricesBuffer.nextSlice();
+        jointMatricesBuffer.set(0, bones);
+        binder.bindGroup(renderPass, 3, dynamicOffset); //numRigged*jointMatricesBuffer.getUniformStride());
         numRigged++;
     }
 

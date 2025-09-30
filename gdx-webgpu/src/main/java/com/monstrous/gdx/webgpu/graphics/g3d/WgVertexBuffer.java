@@ -139,7 +139,7 @@ public class WgVertexBuffer implements VertexData {
 
     @Override
     public void dispose() {
-        Gdx.app.log("WebGPUVertexData", "dispose"+getNumMaxVertices());
+        //Gdx.app.log("WebGPUVertexData", "dispose"+getNumMaxVertices());
 
         vertexBuffer.dispose();
         if(!isFrozen)

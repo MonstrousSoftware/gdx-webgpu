@@ -359,7 +359,7 @@ public class WgSpriteBatch implements Batch {
             Rectangle view = webgpu.getViewportRectangle();
             renderPass.setViewport(view.x, view.y, view.width, view.height, 0, 1);
 
-            uniformBuffer.setDynamicOffsetIndex(0); // reset the dynamic offset to the start
+            uniformBuffer.beginSlices(); //setDynamicOffsetIndex(0); // reset the dynamic offset to the start
             // if the same spritebatch is used multiple times per frame this will overwrite the previous pass
             // to solve this we reset at the start of a new frame.
             numSpritesPerFlush = 0;
@@ -412,9 +412,9 @@ public class WgSpriteBatch implements Batch {
         renderCalls++;
 
         // bind group
-
+        int dynamicOffset = uniformBuffer.nextSlice();
         updateMatrices();
-        int dynamicOffset = flushCount *uniformBuffer.getUniformStride();
+        //int dynamicOffset = flushCount *uniformBuffer.getUniformStride();
         WebGPUBindGroup wbg = binder.getBindGroup(0);
         WGPUBindGroup bg = wbg.getBindGroup();
         renderPass.setBindGroup( 0, bg, dynamicOffset );
@@ -439,7 +439,7 @@ public class WgSpriteBatch implements Batch {
         numSpritesPerFlush = 0;   // reset
         flushCount++;
         // advance the dynamic offset in the uniform buffer ready for the next flush
-        uniformBuffer.setDynamicOffsetIndex(flushCount);
+        //uniformBuffer.setDynamicOffsetIndex(flushCount);
     }
 
     public void end() {
@@ -447,6 +447,7 @@ public class WgSpriteBatch implements Batch {
             throw new RuntimeException("Cannot end() without begin()");
         drawing = false;
         flush();
+        uniformBuffer.endSlices();
         renderPass.end();
         renderPass = null;
         pipelineCount = pipelines.size();   // statistics
