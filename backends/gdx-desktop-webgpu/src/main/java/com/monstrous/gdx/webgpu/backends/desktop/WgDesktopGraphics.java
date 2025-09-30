@@ -24,9 +24,9 @@ import com.badlogic.gdx.graphics.glutils.HdpiMode;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.utils.Disposable;
 
+import com.github.xpenatan.jParser.idl.IDLBase;
 import com.github.xpenatan.webgpu.WGPUInstance;
 import com.github.xpenatan.webgpu.WGPUSurface;
-import com.github.xpenatan.webgpu.idl.IDLBase;
 import com.monstrous.gdx.webgpu.application.WebGPUApplication;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.utils.WgGL20;
