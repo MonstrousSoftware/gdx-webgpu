@@ -3,6 +3,7 @@
 // Licensed under the Apache License, Version 2.0 (the "License");
 
 
+
 struct FrameUniforms {
     projectionViewTransform: mat4x4f,   // from light source point of view
 };
@@ -21,8 +22,7 @@ struct ModelUniforms {
 
 // Skinning
 #ifdef SKIN
-    @group(3) @binding(0) var<storage, read> jointMatrices: array<mat4x4f>;
-    @group(3) @binding(1) var<storage, read> inverseBindMatrices: array<mat4x4f>;   // not used
+    @group(2) @binding(0) var<storage, read> jointMatrices: array<mat4x4f>;
 #endif
 
 struct VertexInput {
@@ -45,10 +45,10 @@ fn vs_main(in: VertexInput, @builtin(instance_index) instance: u32) -> VertexOut
 #ifdef SKIN
     // Get relevant 4 bone matrices
     // joint matrix is already multiplied by inv bind matrix in Node.calculateBoneTransform
-    let joint0 = jointMatrices[u32(in.joints[0])];// * inverseBindMatrices[u32(in.joints[0])];
-    let joint1 = jointMatrices[u32(in.joints[1])];// * inverseBindMatrices[u32(in.joints[1])];
-    let joint2 = jointMatrices[u32(in.joints[2])];// * inverseBindMatrices[u32(in.joints[2])];
-    let joint3 = jointMatrices[u32(in.joints[3])];// * inverseBindMatrices[u32(in.joints[3])];
+    let joint0 = jointMatrices[u32(in.joints[0])];
+    let joint1 = jointMatrices[u32(in.joints[1])];
+    let joint2 = jointMatrices[u32(in.joints[2])];
+    let joint3 = jointMatrices[u32(in.joints[3])];
 
     // Compute influence of joint based on weight
     let skinMatrix =
@@ -58,9 +58,7 @@ fn vs_main(in: VertexInput, @builtin(instance_index) instance: u32) -> VertexOut
       joint3 * in.weights[3];
 
     // Bone transformed mesh
-  let worldPosition =   skinMatrix * vec4f(in.position, 1.0); // todo combine with instance matrix
-  //worldPosition = skinMatrix * instances[instance].modelMatrix * vertPos;
-  //out.weights = in.joints;
+  let worldPosition =  instances[instance].modelMatrix * skinMatrix * vec4f(in.position, 1.0);
 #else
   let worldPosition =  instances[instance].modelMatrix * vec4f(in.position, 1.0);
 #endif

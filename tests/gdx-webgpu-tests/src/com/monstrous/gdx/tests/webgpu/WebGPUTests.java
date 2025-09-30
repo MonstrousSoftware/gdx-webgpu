@@ -109,7 +109,8 @@ public class WebGPUTests {
         GLTFAnimation.class,
         GLTFSkinning.class,
         Scene2dTestScrollPane.class,
-        GLTFSkinningMultiple.class
+        GLTFSkinningMultiple.class,
+        GLTFSkinningShadow.class
 
         // @on
 

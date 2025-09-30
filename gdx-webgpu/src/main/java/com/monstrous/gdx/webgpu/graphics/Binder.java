@@ -247,12 +247,14 @@ public class Binder implements Disposable {
             WGPUVectorBindGroupLayout layouts = WGPUVectorBindGroupLayout.obtain();
 
             // does this need to be in sequential order of group id? Can group id's skip numbers?
+            // Answer: you cannot skip numbers. The vector is assumed to contain layout 0, 1, 2, ...
+            // note the BindGroupLayout does not contain the bind group id.
             for(WebGPUBindGroupLayout layout : groupLayouts.values())
                 layouts.push_back(layout.getLayout());
 
             WGPUPipelineLayoutDescriptor pipelineLayoutDesc = WGPUPipelineLayoutDescriptor.obtain();
             pipelineLayoutDesc.setNextInChain(WGPUChainedStruct.NULL);
-            pipelineLayoutDesc.setLabel(label);
+            pipelineLayoutDesc.setLabel(label+groupLayouts.size());
             pipelineLayoutDesc.setBindGroupLayouts(layouts);
 
             pipelineLayout = new WGPUPipelineLayout();

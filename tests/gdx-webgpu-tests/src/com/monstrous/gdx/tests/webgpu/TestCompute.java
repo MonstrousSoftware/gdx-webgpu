@@ -135,7 +135,6 @@ public class TestCompute extends GdxTest {
         WGPUCommandBuffer commandBuffer = WGPUCommandBuffer.obtain();
         WGPUCommandBufferDescriptor commandDescr = WGPUCommandBufferDescriptor.obtain();
         encoder.finish(commandDescr, commandBuffer);
-        encoder.dispose();
 
         // feed the command buffer to the queue
         queue.submit(commandBuffer);
@@ -162,10 +161,7 @@ public class TestCompute extends GdxTest {
         // show the new outputData[] values
 
         commandBuffer.release();
-        commandBuffer.dispose();
-        encoder.dispose();
         pass.dispose();
-        queue.dispose();
     }
 
 

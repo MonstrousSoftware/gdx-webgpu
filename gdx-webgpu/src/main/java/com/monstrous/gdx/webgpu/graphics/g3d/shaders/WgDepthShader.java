@@ -35,6 +35,8 @@ import com.monstrous.gdx.webgpu.wrappers.*;
 /** Depth shader to render renderables to a depth buffer */
 public class WgDepthShader extends WgShader {
 
+    private static final int GROUP_SKIN = 2;
+
     private final WgDefaultShader.Config config;
     private static String defaultShader;
     public final Binder binder;
@@ -42,7 +44,9 @@ public class WgDepthShader extends WgShader {
     private final int uniformBufferSize;
     private final WebGPUUniformBuffer instanceBuffer;
     private final WebGPUUniformBuffer jointMatricesBuffer;
-    private final WebGPUUniformBuffer inverseBindMatricesBuffer;
+    private boolean hasBones;
+    private int numRigged;
+    private int rigSize; // bytes per rigged instance
     private final WebGPUPipeline pipeline;
     private WebGPURenderPass renderPass;
     private final VertexAttributes vertexAttributes;
@@ -58,19 +62,22 @@ public class WgDepthShader extends WgShader {
         uniformBufferSize = 16* Float.BYTES;
         uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Uniform));
 
+        hasBones = renderable.bones != null;
+        rigSize = config.numBones * 16 * Float.BYTES;
+
         binder = new Binder();
         // define groups
         binder.defineGroup(0, createFrameBindGroupLayout(uniformBufferSize));
         binder.defineGroup(1, createInstancingBindGroupLayout());
-        if(renderable.bones != null)
-            binder.defineGroup(3, createSkinningBindGroupLayout());
+        if(hasBones)
+            binder.defineGroup(GROUP_SKIN, createSkinningBindGroupLayout(rigSize));
 
         // define bindings in the groups
         // must match with shader code
         binder.defineBinding("uniforms", 0, 0);
         binder.defineBinding("instanceUniforms", 1, 0);
-        binder.defineBinding("jointMatrices", 3, 0);
-        binder.defineBinding("inverseBindMatrices", 3, 1);
+        binder.defineBinding("jointMatrices", GROUP_SKIN, 0);
+
 
         // define uniforms in uniform buffers with their offset
         // frame uniforms
@@ -85,24 +92,20 @@ public class WgDepthShader extends WgShader {
 
         int instanceSize = 16*Float.BYTES;      // data size per instance
 
+
         // for now we use a uniform buffer, but we organize data as an array of modelMatrix
         // we are not using dynamic offsets, but we will index the array in the shader code using the instance_index
         instanceBuffer = new WebGPUUniformBuffer(instanceSize*config.maxInstances, WGPUBufferUsage.CopyDst.or( WGPUBufferUsage.Storage));
 
         binder.setBuffer("instanceUniforms", instanceBuffer, 0,  instanceSize *config.maxInstances);
-        if(renderable.bones != null) {
-            int numJoints = config.numBones;  // todo fixed number or renderable dependent?
+
+        if(hasBones) {
             if(renderable.bones.length > config.numBones)
                 throw new GdxRuntimeException("Too many bones in model. NumBones is configured as "+config.numBones+". Renderable has "+renderable.bones.length);
-            jointMatricesBuffer = new WebGPUUniformBuffer(16 * Float.BYTES * numJoints, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Storage));
-            binder.setBuffer("jointMatrices", jointMatricesBuffer, 0, 16 * Float.BYTES * numJoints);
-            inverseBindMatricesBuffer = new WebGPUUniformBuffer(16 * Float.BYTES * numJoints, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Storage));
-            binder.setBuffer("inverseBindMatrices", inverseBindMatricesBuffer, 0, 16 * Float.BYTES * numJoints);
-            // todo ibm is never set
-            // todo handle multiple renderables with rigging
+            jointMatricesBuffer = new WebGPUUniformBuffer(rigSize, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Storage), config.maxRigged);
+            binder.setBuffer("jointMatrices", jointMatricesBuffer, 0, rigSize);
         } else {
             jointMatricesBuffer = null;
-            inverseBindMatricesBuffer = null;
         }
 
 
@@ -153,9 +156,10 @@ public class WgDepthShader extends WgShader {
         // bind group 0 (frame) once per frame
         binder.bindGroup(renderPass, 0);
 
-        // idem for group 2 (instances), we will fill in the buffer as we go
+        // idem for group 1 (instances), we will fill in the buffer as we go
         binder.bindGroup(renderPass, 1);
 
+        numRigged = 0;
         numRenderables = 0;
         drawCalls = 0;
         prevRenderable = null;  // to store renderable that still needs to be rendered
@@ -174,6 +178,10 @@ public class WgDepthShader extends WgShader {
 
     @Override
     public boolean canRender(Renderable instance) {
+        if(hasBones && instance.bones == null )
+            return false;
+        if(!hasBones && instance.bones != null )
+            return false;
         return instance.meshPart.mesh.getVertexAttributes().getMask() == vertexAttributes.getMask();
     }
 
@@ -206,17 +214,15 @@ public class WgDepthShader extends WgShader {
         instanceBuffer.set(offset,  renderable.worldTransform);
         // depth shader doesn't need normal matrix per instance
 
-        if(renderable.bones != null){
-            setBones(renderable.bones);
-            // bind group 3 (joints)
-            binder.bindGroup(renderPass, 3);
-        }
 
-        if( prevRenderable != null && renderable.meshPart.equals(prevRenderable.meshPart)){
+        if( renderable.bones == null && prevRenderable != null && renderable.meshPart.equals(prevRenderable.meshPart)){
             // note that renderables get a copy of a mesh part not a reference to the Model's mesh part, so you can just compare references.
             instanceCount++;
         } else {    // either a new material or a new mesh part, we need to flush the run of instances
             if(prevRenderable != null) {
+                if(prevRenderable.bones != null){
+                    setBones(prevRenderable.bones);
+                }
                 renderBatch(prevRenderable.meshPart, instanceCount, firstInstance);
             }
             instanceCount = 1;
@@ -237,26 +243,37 @@ public class WgDepthShader extends WgShader {
     @Override
     public void end(){
         if(prevRenderable != null) {
+            if(prevRenderable.bones != null){
+                setBones(prevRenderable.bones);
+            }
             renderBatch(prevRenderable.meshPart, instanceCount, firstInstance);
         }
         instanceBuffer.flush();
     }
 
-    private Matrix4 idt = new Matrix4();
+    private final Matrix4 idt = new Matrix4();
 
-    // fill the skinning buffers (group 3)
+
+    // fill the skinning buffers (group 3
     private void setBones( Matrix4[] bones ){
         int matrixSize = 16*Float.BYTES;
+
+        if(numRigged == config.maxRigged-1) {
+            Gdx.app.error("setBones", "Too many rigged instances. Increase config.maxRigged.");
+            return;
+        }
+        jointMatricesBuffer.setDynamicOffsetIndex(numRigged);
 
         for(int i = 0; i < bones.length; i++){
             Matrix4 mat = bones[i];
             if(mat == null)
                 mat = idt;
             jointMatricesBuffer.set(i * matrixSize, mat);
-            inverseBindMatricesBuffer.set(i * matrixSize, idt); // todo
         }
-        jointMatricesBuffer.flush();
-        inverseBindMatricesBuffer.flush();
+        jointMatricesBuffer.flush();    // todo should only be needed for the last one
+
+        binder.bindGroup(renderPass, GROUP_SKIN, numRigged*jointMatricesBuffer.getUniformStride());
+        numRigged++;
     }
 
     private WebGPUBindGroupLayout createFrameBindGroupLayout(int uniformBufferSize) {
@@ -276,13 +293,11 @@ public class WgDepthShader extends WgShader {
         return layout;
     }
 
-    private WebGPUBindGroupLayout createSkinningBindGroupLayout(){
-        // binding 0: joint matrices
-        // binding 1: inverseBoneTransforms matrices
-        WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch Binding Group Layout (Skinning)");
+    private WebGPUBindGroupLayout createSkinningBindGroupLayout(int rigSize){
+        // binding 0: joint matrices for skeletal animation
+        WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("WgDepthShader Binding Group Layout (Skinning)");
         layout.begin();
-        layout.addBuffer(0, WGPUShaderStage.Vertex , WGPUBufferBindingType.ReadOnlyStorage, 0, false);
-        layout.addBuffer(1, WGPUShaderStage.Vertex , WGPUBufferBindingType.ReadOnlyStorage, 0, false);
+        layout.addBuffer(0, WGPUShaderStage.Vertex , WGPUBufferBindingType.ReadOnlyStorage, rigSize, true);
         layout.end();
         return layout;
     }

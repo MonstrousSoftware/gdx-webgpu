@@ -285,12 +285,8 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
             jointMatricesBuffer = new WebGPUUniformBuffer(rigSize, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Storage), config.maxRigged);
             binder.setBuffer("jointMatrices", jointMatricesBuffer, 0, rigSize);
-            //inverseBindMatricesBuffer = new WebGPUUniformBuffer(16 * Float.BYTES * numJoints, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Storage));
-           // binder.setBuffer("inverseBindMatrices", inverseBindMatricesBuffer, 0, 16 * Float.BYTES * numJoints);
-            // todo handle multiple renderables with rigging
         } else {
             jointMatricesBuffer = null;
-            //inverseBindMatricesBuffer = null;
         }
 
 
@@ -649,10 +645,8 @@ public class WgDefaultShader extends WgShader implements Disposable {
             if(mat == null)
                 mat = idt;
             jointMatricesBuffer.set(i * matrixSize, mat);
-            //inverseBindMatricesBuffer.set(i * matrixSize, idt);
         }
         jointMatricesBuffer.flush();    // todo should only be needed for the last one
-        //inverseBindMatricesBuffer.flush();
         binder.bindGroup(renderPass, 3, numRigged*jointMatricesBuffer.getUniformStride());
         numRigged++;
     }
@@ -711,11 +705,9 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
     private WebGPUBindGroupLayout createSkinningBindGroupLayout(int rigStride){
         // binding 0: joint matrices
-        // removed: binding 1: inverseBoneTransforms matrices
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch Binding Group Layout (Skinning)");
         layout.begin();
         layout.addBuffer(0, WGPUShaderStage.Vertex , WGPUBufferBindingType.ReadOnlyStorage, rigStride, true);
-        //layout.addBuffer(1, WGPUShaderStage.Vertex , WGPUBufferBindingType.ReadOnlyStorage, 0, false);
         layout.end();
         return layout;
     }

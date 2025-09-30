@@ -92,7 +92,7 @@ public class TransparencyTest extends GdxTest {
 	public void render () {
 		WgScreenUtils.clear(Color.WHITE, true);
 		cam.update();
-        System.out.println("cam: "+cam.position);
+        //System.out.println("cam: "+cam.position);
 		modelBatch.begin(cam);
 		modelBatch.render(instances);
 		modelBatch.end();

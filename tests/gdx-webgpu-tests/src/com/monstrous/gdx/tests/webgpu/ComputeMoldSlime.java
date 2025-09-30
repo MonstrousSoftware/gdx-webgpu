@@ -165,12 +165,9 @@ public class ComputeMoldSlime extends GdxTest {
 
     // clean up all the resources
     private void exitSim(){
-//        texture1.dispose();
-//        texture2.dispose();
         uniforms.dispose();
         agents.dispose();
 
-        queue.dispose();
         pipeline1.dispose();
         pipeline2.dispose();
         pipeline3.dispose();
@@ -260,14 +257,11 @@ public class ComputeMoldSlime extends GdxTest {
         WGPUCommandBuffer commandBuffer = WGPUCommandBuffer.obtain();
         WGPUCommandBufferDescriptor commandDescr = WGPUCommandBufferDescriptor.obtain();
         encoder.finish(commandDescr, commandBuffer);
-        encoder.dispose();
 
         // feed the command buffer to the queue
         queue.submit(commandBuffer);
         commandBuffer.release();
-        commandBuffer.dispose();
         encoder.release();
-        encoder.dispose();
         pass.release();
     }
 
