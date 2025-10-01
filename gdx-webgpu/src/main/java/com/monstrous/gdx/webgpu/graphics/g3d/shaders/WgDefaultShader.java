@@ -99,6 +99,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         public int maxPointLights;
         public int numBones;            // max bone count per rigged instance
         public int maxRigged;           // max number of instances that are rigged
+        public boolean usePBR;          // use physics based rendering
 
         public Config() {
             this.maxInstances = 1024;
@@ -107,6 +108,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
             this.maxPointLights = 3;
             this.numBones = 48; // todo
             this.maxRigged = 20;
+            this.usePBR = true;
         }
     }
 
@@ -324,7 +326,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
         pipelineSpec.maxDirLights = config.maxDirectionalLights;
         pipelineSpec.maxPointLights = config.maxPointLights;
-
+        pipelineSpec.usePBR = config.usePBR;
         //System.out.println("pipeline spec: "+pipelineSpec.hashCode()+pipelineSpec.vertexAttributes);
 
         pipeline = new WebGPUPipeline(pipelineLayout, pipelineSpec);

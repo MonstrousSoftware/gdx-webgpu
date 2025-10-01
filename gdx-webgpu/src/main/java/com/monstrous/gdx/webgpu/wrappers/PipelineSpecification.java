@@ -58,6 +58,7 @@ public class PipelineSpecification {
     public WGPUTextureFormat depthFormat;
     public int maxDirLights;
     public int maxPointLights;
+    public boolean usePBR;
     private int hash;
     private boolean dirty;  // does hash need to be recalculated?
 
@@ -85,6 +86,7 @@ public class PipelineSpecification {
         afterDepthPrepass = false;
         maxDirLights = 0;
         maxPointLights = 0;
+        usePBR = true;
     }
 
     public PipelineSpecification(VertexAttributes vertexAttributes, String shaderSource) {
@@ -126,6 +128,7 @@ public class PipelineSpecification {
         this.numSamples = spec.numSamples;
         this.maxDirLights = spec.maxDirLights;
         this.maxPointLights = spec.maxPointLights;
+        this.usePBR = spec.usePBR;
         this.fragmentShaderEntryPoint = spec.fragmentShaderEntryPoint;
         this.vertexShaderEntryPoint = spec.vertexShaderEntryPoint;
         this.dirty = true;
@@ -239,6 +242,7 @@ public class PipelineSpecification {
         hash = 31 * hash + numSamples;
         hash = 31 * hash + maxDirLights;
         hash = 31 * hash + maxPointLights;
+        hash = 31 * hash + (usePBR ? 1231 : 1237);
 
 //
 //        hash = Objects.hash(

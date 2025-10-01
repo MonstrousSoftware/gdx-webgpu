@@ -37,6 +37,7 @@ import com.monstrous.gdx.webgpu.graphics.g3d.attributes.PBRFloatAttribute;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute;
 import com.monstrous.gdx.webgpu.graphics.g3d.environment.ibl.HDRLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.environment.ibl.IBLGenerator;
+import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDefaultShader;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
 import com.monstrous.gdx.webgpu.wrappers.SkyBox;
 

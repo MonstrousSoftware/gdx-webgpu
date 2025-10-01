@@ -39,7 +39,7 @@ public class WebGPUPipeline implements Disposable {
             shader = spec.shader;   // make use of the shader in the spec
             ownsShader = false;     // we don't have to dispose it
         } else {
-            String prefix = ShaderPrefix.buildPrefix(spec.vertexAttributes, spec.environment, spec.maxDirLights, spec.maxPointLights, false);
+            String prefix = ShaderPrefix.buildPrefix(spec.vertexAttributes, spec.environment, spec.maxDirLights, spec.maxPointLights, spec.usePBR);
             //System.out.println("Compiling shader Source [] Prefix: ["+prefix+"]");
             shader = new WgShaderProgram(spec.name, spec.shaderSource, prefix);
             spec.shader = shader;

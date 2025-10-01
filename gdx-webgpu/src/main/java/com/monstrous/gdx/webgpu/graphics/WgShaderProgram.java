@@ -51,7 +51,7 @@ public class WgShaderProgram implements Disposable {
         this.name = name;
 
         String processedSource = Preprocessor.process(shaderSource);
-        System.out.println("Preprocessed source:\n"+processedSource);
+        //System.out.println("Preprocessed source:\n"+processedSource);
 
         // Create Shader Module
         WGPUShaderModuleDescriptor shaderDesc = WGPUShaderModuleDescriptor.obtain();
