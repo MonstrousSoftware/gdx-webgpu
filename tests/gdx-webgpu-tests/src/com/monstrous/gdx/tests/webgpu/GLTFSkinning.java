@@ -185,38 +185,42 @@ public class GLTFSkinning extends GdxTest {
         return model;
     }
 
+
     /** create boxes to visualize the skeleton joints */
     private void makeBones(ModelInstance instance){
         ModelBuilder modelBuilder = new WgModelBuilder();
 
+        // model a bone as a little blue box
+        float size = 2.5f;
+        Model model = modelBuilder.createBox(size, size, size, new Material(ColorAttribute.createDiffuse(Color.BLUE)),
+            VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+        disposables.add(model);
+
         for(Node node : instance.nodes) {
             System.out.println("instance.node: "+node.id);
-            makeBones(node, instance, modelBuilder);
+            makeBones(node, instance, model);
         }
     }
 
+    private void makeBones(Node node, ModelInstance instance, Model model){
 
-    // todo : this assumes instance is at origin
-    private void makeBones(Node node, ModelInstance instance, ModelBuilder modelBuilder){
         //System.out.println("checking node "+node.id);
         instance.calculateTransforms();
         for(NodePart part : node.parts){
             if(part.invBoneBindTransforms != null){
                 for(Node joint : part.invBoneBindTransforms.keys()){
                     //System.out.println("joint: "+joint.id);
-                    float size = 0.05f;
-                    model = modelBuilder.createBox(size, size, size, new Material(ColorAttribute.createDiffuse(Color.BLUE)),
-                    VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+
                     ModelInstance boneInstance = new ModelInstance(model);
                     boneInstance.transform.set(joint.globalTransform);
-                    disposables.add(model);
+
                     jointBoxes.add(boneInstance);
                     jointNodes.add(joint);
                 }
             }
         }
         for(Node child : node.getChildren())
-            makeBones(child, instance, modelBuilder);
+            makeBones(child, instance, model);
     }
 
     private void updateBones(ModelInstance instance){

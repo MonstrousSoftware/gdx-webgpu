@@ -23,7 +23,7 @@ public class Launcher {
 
         //new WgDesktopApplication(new SpriteBatchScissorTest(), config);
         //new WgDesktopApplication(new Scene2dTestScrollPane(), config);
-        new WgDesktopApplication(new GLTFSkinningMultiple(), config);
+        new WgDesktopApplication(new GLTFSkinning(), config);
         //new WgDesktopApplication(new SpriteBatchBasic(), config);
 
     }

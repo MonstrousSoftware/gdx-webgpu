@@ -64,6 +64,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
     //private final WebGPUUniformBuffer inverseBindMatricesBuffer;
     private final WebGPUUniformBuffer materialBuffer;
     private final int materialSize;
+    private Material appliedMaterial;
     private final WebGPUPipeline pipeline;            // a shader has one pipeline
     private WebGPURenderPass renderPass;
     private final VertexAttributes vertexAttributes;
@@ -396,12 +397,14 @@ public class WgDefaultShader extends WgShader implements Disposable {
             numRigged = 0;
             this.frameNumber = webgpu.frameNumber;
             materialBuffer.beginSlices();
+            appliedMaterial = null;
             if(jointMatricesBuffer != null)
                 jointMatricesBuffer.beginSlices();
         }
         numRenderables = 0;
         drawCalls = 0;
         prevRenderable = null;  // to store renderable that still needs to be rendered
+        appliedMaterialHash = -1;
 
         renderPass.setPipeline(pipeline);
     }
@@ -466,6 +469,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
     private Renderable prevRenderable;
     private int prevMaterialHash;
+    private int appliedMaterialHash;
     private int firstInstance;
     private int instanceCount;
     private final Matrix4 tmpM = new Matrix4();
@@ -491,10 +495,11 @@ public class WgDefaultShader extends WgShader implements Disposable {
         // normal matrix is transpose of inverse of world transform
         instanceBuffer.set(offset+16*Float.BYTES,  tmpM.set(renderable.worldTransform).inv().tra());
 
+        // don't use Material.hashCode() because that also looks at the id which is not relevant
+        int materialHash = renderable.material.attributesHash();
+        boolean meshPartMatch = prevRenderable != null && renderable.meshPart.equals(prevRenderable.meshPart);
 
-        int materialHash = renderable.material.hashCode();
-
-        if( !hasBones && prevRenderable != null && materialHash == prevMaterialHash && renderable.meshPart.equals(prevRenderable.meshPart)){
+        if( !hasBones && prevRenderable != null && materialHash == prevMaterialHash && meshPartMatch) { //renderable.meshPart.equals(prevRenderable.meshPart)){
             // renderable is similar to the previous one, add to an instance batch
             // note that renderables get a copy of a mesh part not a reference to the Model's mesh part, so you can just compare references.
             // can't put rigged renderables in a batch, because the animation may be different
@@ -502,7 +507,10 @@ public class WgDefaultShader extends WgShader implements Disposable {
         } else {    // either a new material or a new mesh part, we need to flush the run of instances
 
             if(prevRenderable != null) {
-                applyMaterial(prevRenderable.material);
+                if (prevMaterialHash != appliedMaterialHash)   { // if there is a new material, bind the previous material
+                    applyMaterial(prevRenderable.material);
+                    appliedMaterialHash = prevMaterialHash;
+                }
                 if(hasBones){
                     setBones(prevRenderable.bones);
                 }
@@ -542,6 +550,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         }
         instanceBuffer.flush();
     }
+
 
     private void applyMaterial(Material material){
         if(numMaterials >= config.maxMaterials)
@@ -626,7 +635,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         binder.setTexture("emissiveTexture", emissiveTexture.getTextureView());
         binder.setSampler("emissiveSampler", emissiveTexture.getSampler());
 
-        materialBuffer.flush(); // write to GPU
+        //materialBuffer.flush(); // write to GPU
         binder.bindGroup(renderPass, 1, dynamicOffset); //numMaterials*materialBuffer.getUniformStride());
 
         numMaterials++;
