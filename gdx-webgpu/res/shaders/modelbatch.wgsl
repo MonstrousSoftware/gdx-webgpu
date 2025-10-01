@@ -430,8 +430,6 @@ fn BRDF( L : vec3f, V:vec3f, N: vec3f, roughness:f32, metallic:f32, baseColor: v
     return Lo;
 }
 
-#endif // PBR
-
 #ifdef USE_IBL
 fn ambientIBL( V:vec3f, N: vec3f, roughness:f32, metallic:f32, baseColor: vec3f) -> vec3f {
 
@@ -453,4 +451,5 @@ fn ambientIBL( V:vec3f, N: vec3f, roughness:f32, metallic:f32, baseColor: vec3f)
 
     return vec3f(ambient);
 }
-#endif
+#endif // USE_IBL
+#endif // PBR

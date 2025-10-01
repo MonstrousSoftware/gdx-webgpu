@@ -32,7 +32,7 @@ public class ShaderPrefix {
      * The prefix consists of a number of #define statements.
      * */
     // todo add material attributes
-    public static String buildPrefix(VertexAttributes vertexAttributes, Environment environment, int maxDirLights, int maxPointLights ){
+    public static String buildPrefix(VertexAttributes vertexAttributes, Environment environment, int maxDirLights, int maxPointLights, boolean usePBR ){
         sb.setLength(0);
 
         if(vertexAttributes != null) {
@@ -71,14 +71,14 @@ public class ShaderPrefix {
             if(environment.shadowMap != null){
                 sb.append("#define SHADOW_MAP\n");
             }
-            if((environment.getMask() & WgCubemapAttribute.DiffuseCubeMap) != 0){
+            if(usePBR && (environment.getMask() & WgCubemapAttribute.DiffuseCubeMap) != 0){
                 sb.append("#define USE_IBL\n");
             }
         }
 
         // todo select this based on material
-
-        sb.append("#define PBR\n");
+        if(usePBR)
+            sb.append("#define PBR\n");
 
         if(maxDirLights > 0)
             sb.append("#define MAX_DIR_LIGHTS ").append(maxDirLights).append('\n');
@@ -86,7 +86,7 @@ public class ShaderPrefix {
             sb.append("#define MAX_POINT_LIGHTS ").append(maxPointLights).append('\n');
 
         // SPECULAR is ignored if PBR is active
-       // sb.append("#define SPECULAR\n");
+        //sb.append("#define SPECULAR\n");
 
 //        if (environment != null && !environment.depthPass && environment.renderShadows) {
 //            sb.append("#define SHADOWS\n");
