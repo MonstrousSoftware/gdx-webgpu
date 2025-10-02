@@ -1,5 +1,7 @@
+
 plugins {
     id("java")
+    id("java-library")
     id("maven-publish")
 }
 
@@ -21,7 +23,7 @@ dependencies {
     implementation("org.lwjgl:lwjgl-glfw:3.3.3")
     implementation("org.lwjgl:lwjgl:3.3.3")
 
-    implementation("com.github.xpenatan.jWebGPU:webgpu-core:$jWebGPUVVersion")
+    api("com.github.xpenatan.jWebGPU:webgpu-core:$jWebGPUVVersion")
     implementation("com.github.xpenatan.jWebGPU:webgpu-desktop:$jWebGPUVVersion:windows_64_dawn")
     implementation("com.github.xpenatan.jWebGPU:webgpu-desktop:$jWebGPUVVersion:windows_64_wgpu")
     implementation("com.github.xpenatan.jWebGPU:webgpu-desktop:$jWebGPUVVersion:linux_64_wgpu")

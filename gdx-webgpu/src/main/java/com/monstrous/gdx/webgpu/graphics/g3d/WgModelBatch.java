@@ -180,7 +180,7 @@ public class WgModelBatch implements Disposable {
 
     public void flush() {
         if(renderables.size > config.maxInstances)
-            throw new ArrayIndexOutOfBoundsException("Too many renderables");
+            throw new ArrayIndexOutOfBoundsException("Too many renderables (> "+renderables.size+"). Increase config.maxInstances.");
         sorter.sort(camera, renderables);
 
         WgShader currentShader = null;
