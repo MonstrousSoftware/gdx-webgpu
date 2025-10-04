@@ -50,25 +50,18 @@ public class WgDefaultShader extends WgShader implements Disposable {
     private WebGPUContext webgpu;
     private final Config config;
     private static String defaultShader;
-    private final WgTexture defaultTexture;
-    private final WgTexture defaultNormalTexture;
-    private final WgTexture defaultBlackTexture;
     private final Matrix4 dummyMatrix = new Matrix4();
     public final Binder binder;
     private final WebGPUUniformBuffer uniformBuffer;
     private final int uniformBufferSize;
     private final WebGPUUniformBuffer instanceBuffer;
     private final WebGPUUniformBuffer jointMatricesBuffer;
+    private final MaterialsCache materials;
     private int numRigged;
     private int rigSize; // bytes per rigged instance
-    //private final WebGPUUniformBuffer inverseBindMatricesBuffer;
-    private final WebGPUUniformBuffer materialBuffer;
-    private final int materialSize;
-    private Material appliedMaterial;
     private final WebGPUPipeline pipeline;            // a shader has one pipeline
     private WebGPURenderPass renderPass;
     private final VertexAttributes vertexAttributes;
-    private final Material material;
     private final Matrix4 combined;
     private final Matrix4 projection;
     private final Matrix4 shiftDepthMatrix;
@@ -119,25 +112,13 @@ public class WgDefaultShader extends WgShader implements Disposable {
     public WgDefaultShader(final Renderable renderable, Config config) {
         this.config = config;
 
-
 //        System.out.println("Create WgDefaultShader "+renderable.meshPart.id+" vert mask: "+renderable.meshPart.mesh.getVertexAttributes().getMask()+
 //            "mat mask: "+renderable.material.getMask());
 
         WgGraphics gfx = (WgGraphics)Gdx.graphics;
         webgpu = gfx.getContext();
 
-        // fallback texture
-        // todo these could be static?
-        Pixmap pixmap = new Pixmap(1,1,RGBA8888);
-        pixmap.setColor(Color.WHITE);
-        pixmap.fill();
-        defaultTexture = new WgTexture(pixmap,"default (white)");
-        pixmap.setColor(Color.GREEN);
-        pixmap.fill();
-        defaultNormalTexture = new WgTexture(pixmap,"default normal texture");
-        pixmap.setColor(Color.BLACK);
-        pixmap.fill();
-        defaultBlackTexture = new WgTexture(pixmap,"default (black)");
+
         linearFogColor = new Color();
 
         hasShadowMap = renderable.environment != null && renderable.environment.shadowMap != null;
@@ -152,20 +133,14 @@ public class WgDefaultShader extends WgShader implements Disposable {
                 +12*config.maxPointLights)* Float.BYTES;
         uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Uniform));
 
-
-        materialSize = 20*Float.BYTES;      // data size per material (should be enough for now)
-        // buffer for uniforms per material, e.g. color, shininess, ...
-        // this does not include textures
-
-        // allocate a uniform buffer with dynamic offsets
-        materialBuffer = new WebGPUUniformBuffer(materialSize, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Uniform),  config.maxMaterials);
+        materials = new MaterialsCache(config.maxMaterials);
 
         rigSize = config.numBones * 16 * Float.BYTES;
 
         binder = new Binder();
         // define groups
         binder.defineGroup(0, createFrameBindGroupLayout(uniformBufferSize, hasShadowMap, hasCubeMap, hasDiffuseCubeMap, hasSpecularCubeMap));
-        binder.defineGroup(1, createMaterialBindGroupLayout(materialSize));
+        binder.defineGroup(1, materials.createMaterialBindGroupLayout());
         binder.defineGroup(2, createInstancingBindGroupLayout());
         if(hasBones)
             binder.defineGroup(3, createSkinningBindGroupLayout(rigSize));
@@ -198,17 +173,6 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
         } else
             brdfLUT = null;
-
-
-        binder.defineBinding("materialUniforms", 1, 0);
-        binder.defineBinding("diffuseTexture", 1, 1);
-        binder.defineBinding("diffuseSampler", 1, 2);
-        binder.defineBinding("normalTexture", 1, 3);
-        binder.defineBinding("normalSampler", 1, 4);
-        binder.defineBinding("metallicRoughnessTexture", 1, 5);
-        binder.defineBinding("metallicRoughnessSampler", 1, 6);
-        binder.defineBinding("emissiveTexture", 1, 7);
-        binder.defineBinding("emissiveSampler", 1, 8);
 
         binder.defineBinding("instanceUniforms", 2, 0);
 
@@ -252,25 +216,17 @@ public class WgDefaultShader extends WgShader implements Disposable {
         binder.defineUniform("numRoughnessLevels", 0, 0, offset); offset += 4;
 
 
-
-
         // note: put shorter uniforms last for padding reasons
 
         //System.out.println("offset:"+offset+" "+uniformBufferSize);
         if(offset > uniformBufferSize) throw new RuntimeException("Mismatch in frame uniform buffer size");
         //binder.defineUniform("modelMatrix", 2, 0, 0);
 
-        // material uniforms
-        offset = 0;
-        binder.defineUniform("diffuseColor", 1, 0, offset); offset += 4*4;
-        binder.defineUniform("shininess", 1, 0, offset); offset += 4;
-        binder.defineUniform("roughnessFactor", 1, 0, offset); offset += 4;
-        binder.defineUniform("metallicFactor", 1, 0, offset); offset += 4;
 
         // set binding 0 to uniform buffer
         binder.setBuffer("uniforms", uniformBuffer, 0, uniformBufferSize);
 
-        binder.setBuffer("materialUniforms", materialBuffer, 0,  materialSize);
+//        binder.setBuffer("materialUniforms", materialBuffer, 0,  materialSize);
 
         int instanceSize = 2*16*Float.BYTES;      // data size per instance
 
@@ -297,7 +253,6 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
         environmentMask = renderable.environment == null ? 0 : renderable.environment.getMask();
 
-        material = new Material(renderable.material);
 
         // get pipeline layout which aggregates all the bind group layouts
         WGPUPipelineLayout pipelineLayout = binder.getPipelineLayout("ModelBatch pipeline layout");
@@ -383,6 +338,8 @@ public class WgDefaultShader extends WgShader implements Disposable {
         // todo: different shaders may overwrite lighting uniforms if renderables have other environments ...
         bindLights(renderable.environment);
 
+        binder.setUniform("normalMapStrength", 0.5f);   // emphasis factor for normal map [0-1]
+
         // now that we've set all the uniforms (camera,lights, etc.) write the buffer to the gpu
         uniformBuffer.flush();
 
@@ -398,8 +355,6 @@ public class WgDefaultShader extends WgShader implements Disposable {
             numMaterials = 0;
             numRigged = 0;
             this.frameNumber = webgpu.frameNumber;
-            materialBuffer.beginSlices();
-            appliedMaterial = null;
             if(jointMatricesBuffer != null)
                 jointMatricesBuffer.beginSlices();
         }
@@ -484,11 +439,6 @@ public class WgDefaultShader extends WgShader implements Disposable {
         }
 
         // renderable-specific data
-//        boolean helmet = false;
-//        if(renderable.meshPart.id.contentEquals("Skeleton_Warrior_Helmet.0")){
-//            System.out.println("Warrior: "+renderable.worldTransform);
-//            helmet = true;
-//        }
 
         // add instance data to instance buffer (instance transform)
         int offset = instanceIndex * 2 * 16 * Float.BYTES;
@@ -509,13 +459,11 @@ public class WgDefaultShader extends WgShader implements Disposable {
         } else {    // either a new material or a new mesh part, we need to flush the run of instances
 
             if(prevRenderable != null) {
-                if (prevMaterialHash != appliedMaterialHash)   { // if there is a new material, bind the previous material
-                    applyMaterial(prevRenderable.material);
-                    appliedMaterialHash = prevMaterialHash;
-                }
+
                 if(hasBones){
                     setBones(prevRenderable.bones);
                 }
+                materials.bindMaterial(renderPass, prevRenderable.material);
                 renderBatch(prevRenderable.meshPart, instanceCount, firstInstance);
             }
             // and start a new run with the new renderable
@@ -542,106 +490,17 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
     public void end(){
         if(prevRenderable != null) {
-            applyMaterial(prevRenderable.material);
-            materialBuffer.endSlices();
             if(hasBones){
                 setBones(prevRenderable.bones);
                 jointMatricesBuffer.endSlices();
             }
+            materials.bindMaterial(renderPass, prevRenderable.material);
             renderBatch(prevRenderable.meshPart, instanceCount, firstInstance);
         }
         instanceBuffer.flush();
     }
 
 
-    private void applyMaterial(Material material){
-        if(numMaterials >= config.maxMaterials)
-            throw new RuntimeException("Too many materials (> "+config.maxMaterials+"). Increase shader.maxMaterials");
-
-        // move to new buffer offset for this new material (flushes previous one).
-        int dynamicOffset = materialBuffer.nextSlice(); //setDynamicOffsetIndex(numMaterials); // indicate which section of the uniform buffer to use
-
-        // diffuse color
-        ColorAttribute diffuse = (ColorAttribute) material.get(ColorAttribute.Diffuse);
-        binder.setUniform("diffuseColor", diffuse == null ? Color.WHITE : diffuse.color);
-
-        final FloatAttribute shiny = material.get(FloatAttribute.class,FloatAttribute.Shininess);
-        binder.setUniform("shininess",  shiny == null ? 20f : shiny.value );
-
-        // the following are multiplication factors for the MR texture. If not provided, use 1.0.
-        final FloatAttribute roughness = material.get(PBRFloatAttribute.class, PBRFloatAttribute.Roughness);
-        binder.setUniform("roughnessFactor", roughness == null ? 1f : roughness.value);
-
-        final FloatAttribute metallic = material.get(PBRFloatAttribute.class, PBRFloatAttribute.Metallic);
-        binder.setUniform("metallicFactor", metallic == null ? 1f : metallic.value);
-
-        // diffuse texture
-        WgTexture diffuseTexture;
-        if(material.has(TextureAttribute.Diffuse)) {
-            TextureAttribute ta = (TextureAttribute) material.get(TextureAttribute.Diffuse);
-            assert ta != null;
-            Texture tex = ta.textureDescription.texture;
-            diffuseTexture = (WgTexture)tex;
-            diffuseTexture.setWrap(ta.textureDescription.uWrap, ta.textureDescription.vWrap);
-            diffuseTexture.setFilter(ta.textureDescription.minFilter, ta.textureDescription.magFilter);
-        } else {
-            diffuseTexture = defaultTexture;
-        }
-
-
-        //System.out.println("binding diffuse texture: "+diffuseTexture.getLabel()+diffuseTexture.getUWrap()+diffuseTexture.getVWrap());
-
-
-        binder.setTexture("diffuseTexture", diffuseTexture.getTextureView());
-        binder.setSampler("diffuseSampler", diffuseTexture.getSampler());
-
-        // normal texture
-        WgTexture normalTexture;
-        if(material.has(TextureAttribute.Normal)) {
-            TextureAttribute ta = (TextureAttribute) material.get(TextureAttribute.Normal);
-            assert ta != null;
-            Texture tex = ta.textureDescription.texture;
-            normalTexture = (WgTexture)tex;
-        } else {
-            normalTexture = defaultNormalTexture;   // green texture, ie. Y = 1
-        }
-        binder.setTexture("normalTexture", normalTexture.getTextureView());
-        binder.setSampler("normalSampler", normalTexture.getSampler());
-        binder.setUniform("normalMapStrength", 0.5f);   // emphasis factor for normal map [0-1]
-
-        // metallic roughness texture
-        WgTexture metallicRoughnessTexture;
-        if(material.has(PBRTextureAttribute.MetallicRoughness)) {
-            TextureAttribute ta = (TextureAttribute) material.get(PBRTextureAttribute.MetallicRoughness);
-            assert ta != null;
-            Texture tex = ta.textureDescription.texture;
-            metallicRoughnessTexture = (WgTexture)tex;
-        } else {
-            metallicRoughnessTexture = defaultTexture;  // suitable?
-        }
-        binder.setTexture("metallicRoughnessTexture", metallicRoughnessTexture.getTextureView());
-        binder.setSampler("metallicRoughnessSampler", metallicRoughnessTexture.getSampler());
-
-
-
-        // metallic roughness texture
-        WgTexture emissiveTexture;
-        if(material.has(TextureAttribute.Emissive)) {
-            TextureAttribute ta = (TextureAttribute) material.get(TextureAttribute.Emissive);
-            assert ta != null;
-            Texture tex = ta.textureDescription.texture;
-            emissiveTexture = (WgTexture)tex;
-        } else {
-            emissiveTexture = defaultBlackTexture;
-        }
-        binder.setTexture("emissiveTexture", emissiveTexture.getTextureView());
-        binder.setSampler("emissiveSampler", emissiveTexture.getSampler());
-
-        //materialBuffer.flush(); // write to GPU
-        binder.bindGroup(renderPass, 1, dynamicOffset); //numMaterials*materialBuffer.getUniformStride());
-
-        numMaterials++;
-    }
 
     private Matrix4 idt = new Matrix4();
 
@@ -685,23 +544,6 @@ public class WgDefaultShader extends WgShader implements Disposable {
         return layout;
     }
 
-    private WebGPUBindGroupLayout createMaterialBindGroupLayout(int materialStride) {
-        WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch bind group layout (material)");
-        layout.begin();
-        layout.addBuffer(0, WGPUShaderStage.Vertex.or(WGPUShaderStage.Fragment), WGPUBufferBindingType.Uniform, materialStride, true);
-        layout.addTexture(1, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D, false);
-        layout.addSampler(2, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering );
-        layout.addTexture(3, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D, false);
-        layout.addSampler(4, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering );
-        layout.addTexture(5, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D, false);
-        layout.addSampler(6, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering );
-        layout.addTexture(7, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D, false);
-        layout.addSampler(8, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering );
-
-        layout.end();
-        return layout;
-    }
-
     // 2 mat4 per instance: worldTransform and normalTransform
     private WebGPUBindGroupLayout createInstancingBindGroupLayout(){
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch Binding Group Layout (instance)");
@@ -736,9 +578,6 @@ public class WgDefaultShader extends WgShader implements Disposable {
     @Override
     public void dispose() {
         binder.dispose();
-        defaultTexture.dispose();
-        defaultNormalTexture.dispose();
-        defaultBlackTexture.dispose();
         instanceBuffer.dispose();
         uniformBuffer.dispose();
         if(brdfLUT != null)
