@@ -64,7 +64,7 @@ public class IBL_GenerateOutdoor extends GdxTest {
     PerspectiveCamera cam;
     SkyBox skyBox;
 
-    WgTexture equiRectangular;
+    //WgTexture equiRectangular;
     Model model;
     private ModelInstance instance;
     WgModelBatch modelBatch;
@@ -261,7 +261,7 @@ public class IBL_GenerateOutdoor extends GdxTest {
 	@Override
 	public void dispose () {
         skyBox.dispose();
-        equiRectangular.dispose();
+        //equiRectangular.dispose();
         model.dispose();
 
 	}

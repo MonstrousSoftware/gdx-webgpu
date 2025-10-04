@@ -3,6 +3,7 @@ package com.monstrous.gdx.webgpu.graphics.g3d.shaders;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g3d.Attributes;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute;
@@ -43,7 +44,8 @@ public class MaterialsCache implements Disposable {
     private WgTexture defaultTexture;
     private WgTexture defaultNormalTexture;
     private WgTexture defaultBlackTexture;
-    private final Map<Material, MaterialEntry> cache;
+    private final Map<Integer, MaterialEntry> cache;
+    private MaterialEntry boundEntry;
 
     public MaterialsCache(int maxMaterials) {
         this.maxMaterials = maxMaterials;
@@ -52,6 +54,7 @@ public class MaterialsCache implements Disposable {
         group = 1;
 
         cache = new HashMap<>();
+        boundEntry = null;
 
         defineDefaultTextures();
 
@@ -100,12 +103,16 @@ public class MaterialsCache implements Disposable {
             throw new GdxRuntimeException("Too many materials for MaterialsCache ("+numMaterials+"). Increase maxMaterials.");
         entry = applyMaterial(mat);
         numMaterials++;
-        cache.put(mat, entry);
+        // need a defensive copy of mat?
+        cache.put(mat.attributesHash(), entry);
+        System.out.println("Add material: "+numMaterials+" : "+mat.id+ " "+mat.attributesHash());
         return entry;
     }
 
+
     public MaterialEntry findMaterial( Material mat ){
-        return cache.get(mat);
+        // use attributesHash as key so that we look only at the material contents, not the material's id
+        return cache.get(mat.attributesHash());
     }
 
     public void bindMaterial( WebGPURenderPass renderPass, Material mat ){
@@ -124,6 +131,7 @@ public class MaterialsCache implements Disposable {
         binder.setTexture("emissiveTexture", entry.emissiveTexture.getTextureView());
         binder.setSampler("emissiveSampler", entry.emissiveTexture.getSampler());
         binder.bindGroup(renderPass, group, entry.dynamicOffset);
+        boundEntry = entry;
     }
 
     private MaterialEntry applyMaterial(Material material){

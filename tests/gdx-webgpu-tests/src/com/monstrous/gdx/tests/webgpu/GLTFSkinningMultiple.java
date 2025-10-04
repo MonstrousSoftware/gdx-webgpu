@@ -270,6 +270,8 @@ public class GLTFSkinningMultiple extends GdxTest {
 //            font.draw(batch, "GPU time (pass "+pass+" "+webgpu.getGPUTimer().getPassName(pass)+") : "+(int)webgpu.getAverageGPUtime(pass)+ " microseconds" ,0, y -= 20);
 //        batch.end();
 
+
+
 	}
 
 	@Override
