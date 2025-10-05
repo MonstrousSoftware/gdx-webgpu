@@ -30,6 +30,7 @@ import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.webgpu.graphics.Binder;
 import com.monstrous.gdx.webgpu.graphics.WgMesh;
+import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.wrappers.*;
 
 /** Depth shader to render renderables to a depth buffer */
@@ -37,7 +38,7 @@ public class WgDepthShader extends WgShader {
 
     private static final int GROUP_SKIN = 2;
 
-    private final WgDefaultShader.Config config;
+    private final WgModelBatch.Config config;
     private static String defaultShader;
     public final Binder binder;
     private final WebGPUUniformBuffer uniformBuffer;
@@ -52,10 +53,10 @@ public class WgDepthShader extends WgShader {
     private final VertexAttributes vertexAttributes;
 
     public WgDepthShader(final Renderable renderable) {
-        this(renderable, new WgDefaultShader.Config());
+        this(renderable, new WgModelBatch.Config());
     }
 
-    public WgDepthShader(final Renderable renderable, WgDefaultShader.Config config) {
+    public WgDepthShader(final Renderable renderable, WgModelBatch.Config config) {
         this.config = config;
 
         // Create uniform buffer for global (per-frame) uniforms, i.e. projection matrix

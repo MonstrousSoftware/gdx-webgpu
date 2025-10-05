@@ -105,7 +105,7 @@ public class MaterialsCache implements Disposable {
         entry = applyMaterial(mat);
         numMaterials++;
         cache.put(hashCode(mat), entry);
-        System.out.println("Add material: "+numMaterials+" : "+mat.id+ " "+mat.attributesHash());
+        //System.out.println("Add material: "+numMaterials+" : "+mat.id+ " "+mat.attributesHash());
         return entry;
     }
 

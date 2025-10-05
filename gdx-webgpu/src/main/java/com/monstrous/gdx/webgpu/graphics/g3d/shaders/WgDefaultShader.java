@@ -36,6 +36,7 @@ import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.Binder;
 import com.monstrous.gdx.webgpu.graphics.WgMesh;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
+import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.PBRFloatAttribute;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.PBRTextureAttribute;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute;
@@ -48,7 +49,7 @@ import static com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888;
 public class WgDefaultShader extends WgShader implements Disposable {
 
     private WebGPUContext webgpu;
-    private final Config config;
+    private final WgModelBatch.Config config;
     private static String defaultShader;
     private final Matrix4 dummyMatrix = new Matrix4();
     public final Binder binder;
@@ -85,33 +86,33 @@ public class WgDefaultShader extends WgShader implements Disposable {
     private final WgTexture brdfLUT;
 
 
-    public static class Config {
-        public int maxInstances;
-        public int maxMaterials;
-        public int maxDirectionalLights;
-        public int maxPointLights;
-        public int numBones;            // max bone count per rigged instance
-        public int maxRigged;           // max number of instances that are rigged
-        public boolean usePBR;          // use physics based rendering
-        public MaterialsCache materials;
-
-        public Config() {
-            this.maxInstances = 1024;
-            this.maxMaterials = 512;
-            this.maxDirectionalLights = 3;
-            this.maxPointLights = 3;
-            this.numBones = 48; // todo
-            this.maxRigged = 20;
-            this.usePBR = true;
-            this.materials = null;
-        }
-    }
+//    public static class Config {
+//        public int maxInstances;
+//        public int maxMaterials;
+//        public int maxDirectionalLights;
+//        public int maxPointLights;
+//        public int numBones;            // max bone count per rigged instance
+//        public int maxRigged;           // max number of instances that are rigged
+//        public boolean usePBR;          // use physics based rendering
+//        public MaterialsCache materials;
+//
+//        public Config() {
+//            this.maxInstances = 1024;
+//            this.maxMaterials = 512;
+//            this.maxDirectionalLights = 3;
+//            this.maxPointLights = 3;
+//            this.numBones = 48; // todo
+//            this.maxRigged = 20;
+//            this.usePBR = true;
+//            this.materials = null;
+//        }
+//    }
 
     public WgDefaultShader(final Renderable renderable) {
-        this(renderable, new Config());
+        this(renderable, new WgModelBatch.Config());
     }
 
-    public WgDefaultShader(final Renderable renderable, Config config) {
+    public WgDefaultShader(final Renderable renderable, WgModelBatch.Config config) {
         this.config = config;
         this.materials = config.materials;
 

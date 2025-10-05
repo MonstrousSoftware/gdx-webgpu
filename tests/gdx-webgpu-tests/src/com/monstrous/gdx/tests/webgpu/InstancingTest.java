@@ -82,7 +82,7 @@ public class InstancingTest extends GdxTest {
 	public void create () {
         gfx = (WgGraphics) Gdx.graphics;
 
-		WgDefaultShader.Config config = new WgDefaultShader.Config();
+        WgModelBatch.Config config = new WgModelBatch.Config();
 		config.maxInstances = MAX_INSTANCES;
 		modelBatch = new WgModelBatch(config);
 

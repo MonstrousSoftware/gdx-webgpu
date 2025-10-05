@@ -87,7 +87,7 @@ public class GLTFSkinningShadow extends GdxTest {
 
         disposables = new Array<>();
 
-        WgDefaultShader.Config config = new WgDefaultShader.Config();
+        WgModelBatch.Config config = new WgModelBatch.Config();
         config.numBones = 80;   // set number of bones as needed for the model
         modelBatch = new WgModelBatch(config);
         disposables.add( modelBatch );

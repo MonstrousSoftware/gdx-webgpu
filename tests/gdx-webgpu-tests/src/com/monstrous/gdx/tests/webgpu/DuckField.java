@@ -79,7 +79,7 @@ public class DuckField extends GdxTest {
         environment.add( light );
         environment.set(ColorAttribute.createAmbientLight(Color.DARK_GRAY));
 
-        WgDefaultShader.Config config = new WgDefaultShader.Config();
+        WgModelBatch.Config config = new WgModelBatch.Config();
         config.maxInstances = 4000;
         modelBatch = new WgModelBatch(config );
 

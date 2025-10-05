@@ -18,6 +18,7 @@ package com.monstrous.gdx.tests.webgpu;
 
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
@@ -34,6 +35,7 @@ import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Array;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
@@ -43,10 +45,16 @@ import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 
+
+/** Testing efficient use of materials.  Rendering should be done with a minimum number of bindings
+ * of the material bind group by identifying equivalent materials and grouping them together.
+ */
+
 public class MaterialsTest extends GdxTest {
 	public PerspectiveCamera cam;
 	public CameraInputController inputController;
 	public WgModelBatch modelBatch;
+    private ModelBuilder modelBuilder;
 	public Model model;
 	public Array<ModelInstance> instances;
 	public Environment environment;
@@ -57,7 +65,10 @@ public class MaterialsTest extends GdxTest {
 
 	@Override
 	public void create () {
-		modelBatch = new WgModelBatch();
+        WgModelBatch.Config config = new WgModelBatch.Config();
+        config.maxMaterials = 2048;
+        config.maxInstances = 2048;
+		modelBatch = new WgModelBatch(config);
 
 		environment = new Environment();
 		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, .4f, .4f, .4f, 1f));
@@ -71,7 +82,7 @@ public class MaterialsTest extends GdxTest {
 		cam.update();
 
         instances = new Array<>();
-        ModelBuilder modelBuilder = new WgModelBuilder();
+        modelBuilder = new WgModelBuilder();
 		model = modelBuilder.createBox(1f, 1f, 1f, new Material(ColorAttribute.createDiffuse(Color.GREEN)),
 			VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		instances.add( new ModelInstance(model));
@@ -127,9 +138,20 @@ public class MaterialsTest extends GdxTest {
 
 	}
 
+    private void spawnRandom(){
+        Color col = new Color(MathUtils.random(), MathUtils.random(), MathUtils.random(), 1f);
+        model = modelBuilder.createBox(1f, 1f, 1f, new Material(ColorAttribute.createDiffuse(col)),
+            VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+        instances.add( new ModelInstance(model, 128*(MathUtils.random()-0.5f), 8*(MathUtils.random()-0.5f), 128*(MathUtils.random()-0.5f)));
+    }
+
 	@Override
 	public void render () {
 		inputController.update();
+
+        if(Gdx.input.isKeyPressed(Input.Keys.SPACE)){
+            spawnRandom();
+        }
 
 
         WgScreenUtils.clear(Color.TEAL, true);
@@ -142,6 +164,7 @@ public class MaterialsTest extends GdxTest {
         font.draw(batch, "FPS: "+Gdx.graphics.getFramesPerSecond(), 10, 110);
         font.draw(batch, "Materials: "+modelBatch.materials.count(), 10, 80);
         font.draw(batch, "Material bindings/frame: "+modelBatch.materials.materialBindings(), 10, 50);
+        font.draw(batch, "(SPACE to spawn more)", 10, 30);
         batch.end();
 	}
 

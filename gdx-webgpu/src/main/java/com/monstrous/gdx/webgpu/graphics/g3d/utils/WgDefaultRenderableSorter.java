@@ -79,10 +79,10 @@ public class WgDefaultRenderableSorter implements RenderableSorter, Comparator<R
         // but here are maximizing on clustering mesh parts to allow instanced drawing
 
         // sort by material to reduce material switches
-//        int m1 = o1.material.attributesHash();
-//        int m2 = o2.material.attributesHash();
-//        if(m1 != m2)
-//            return m1 - m2;
+        int m1 = o1.material.attributesHash();
+        int m2 = o2.material.attributesHash();
+        if(m1 != m2)
+            return m1 - m2;
 
         // sort by mesh part
 		int h1 = hashCode(o1.meshPart);

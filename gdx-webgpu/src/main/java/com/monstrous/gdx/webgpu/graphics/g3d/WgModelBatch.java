@@ -42,7 +42,7 @@ import com.monstrous.gdx.webgpu.wrappers.WebGPURenderPass;
  */
 public class WgModelBatch implements Disposable {
 
-    private final WgDefaultShader.Config config;
+    private final Config config;
     private boolean drawing;
     private WebGPURenderPass renderPass;
     private final ShaderProvider shaderProvider;
@@ -56,6 +56,28 @@ public class WgModelBatch implements Disposable {
     public int shaderSwitches;
     public int numMaterials;
     public MaterialsCache materials;
+
+    public static class Config {
+        public int maxInstances;
+        public int maxMaterials;
+        public int maxDirectionalLights;
+        public int maxPointLights;
+        public int numBones;            // max bone count per rigged instance
+        public int maxRigged;           // max number of instances that are rigged
+        public boolean usePBR;          // use physics based rendering
+        public MaterialsCache materials;
+
+        public Config() {
+            this.maxInstances = 1024;
+            this.maxMaterials = 512;
+            this.maxDirectionalLights = 3;
+            this.maxPointLights = 3;
+            this.numBones = 48; // todo
+            this.maxRigged = 20;
+            this.usePBR = true;
+            this.materials = null;
+        }
+    }
 
 
     protected static class RenderablePool extends FlushablePool<Renderable> {
@@ -80,10 +102,10 @@ public class WgModelBatch implements Disposable {
      *
      */
     public WgModelBatch() {
-        this(new WgDefaultShader.Config());
+        this(new Config());
     }
 
-    public WgModelBatch(WgDefaultShader.Config config) {
+    public WgModelBatch(Config config) {
         this(null, config);
     }
 
@@ -91,8 +113,8 @@ public class WgModelBatch implements Disposable {
         this(shaderProvider, null);
     }
 
-    public WgModelBatch(ShaderProvider shaderProvider, WgDefaultShader.Config config) {
-        this.config = config == null ? new WgDefaultShader.Config() : config;
+    public WgModelBatch(ShaderProvider shaderProvider, Config config) {
+        this.config = config == null ? new Config() : config;
         this.shaderProvider = shaderProvider == null ?  new WgDefaultShaderProvider(this.config) : shaderProvider;
         ownsShaderProvider = shaderProvider == null;
         renderables = new Array<>();

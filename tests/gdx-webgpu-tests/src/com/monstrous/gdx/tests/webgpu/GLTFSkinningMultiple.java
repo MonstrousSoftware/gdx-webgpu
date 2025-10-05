@@ -88,7 +88,7 @@ public class GLTFSkinningMultiple extends GdxTest {
         gfx = (WgGraphics) Gdx.graphics;
         webgpu = gfx.getContext();
 
-        WgDefaultShader.Config config = new WgDefaultShader.Config();
+        WgModelBatch.Config config = new WgModelBatch.Config();
         config.numBones = 80;   // set number of bones as needed for the model
 		modelBatch = new WgModelBatch(config);
 

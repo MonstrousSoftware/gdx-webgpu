@@ -107,7 +107,7 @@ public class IBL_GenerateOutdoor extends GdxTest {
         // use cube map as a sky box
         skyBox = new SkyBox(envMap);
 
-        WgDefaultShader.Config config = new WgDefaultShader.Config();
+        WgModelBatch.Config config = new WgModelBatch.Config();
         config.maxPointLights = 4;
         config.maxDirectionalLights = 0;
         modelBatch = new WgModelBatch(config);
