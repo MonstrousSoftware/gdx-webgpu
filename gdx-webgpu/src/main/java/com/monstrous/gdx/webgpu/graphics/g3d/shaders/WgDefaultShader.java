@@ -56,7 +56,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
     private final int uniformBufferSize;
     private final WebGPUUniformBuffer instanceBuffer;
     private final WebGPUUniformBuffer jointMatricesBuffer;
-    private final MaterialsCache materials;
+    private MaterialsCache materials;
     private int numRigged;
     private int rigSize; // bytes per rigged instance
     private final WebGPUPipeline pipeline;            // a shader has one pipeline
@@ -93,6 +93,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         public int numBones;            // max bone count per rigged instance
         public int maxRigged;           // max number of instances that are rigged
         public boolean usePBR;          // use physics based rendering
+        public MaterialsCache materials;
 
         public Config() {
             this.maxInstances = 1024;
@@ -102,6 +103,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
             this.numBones = 48; // todo
             this.maxRigged = 20;
             this.usePBR = true;
+            this.materials = null;
         }
     }
 
@@ -111,6 +113,8 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
     public WgDefaultShader(final Renderable renderable, Config config) {
         this.config = config;
+        this.materials = config.materials;
+
 
 //        System.out.println("Create WgDefaultShader "+renderable.meshPart.id+" vert mask: "+renderable.meshPart.mesh.getVertexAttributes().getMask()+
 //            "mat mask: "+renderable.material.getMask());
@@ -132,8 +136,6 @@ public class WgDefaultShader extends WgShader implements Disposable {
                 +8*config.maxDirectionalLights
                 +12*config.maxPointLights)* Float.BYTES;
         uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Uniform));
-
-        materials = new MaterialsCache(config.maxMaterials);
 
         rigSize = config.numBones * 16 * Float.BYTES;
 
@@ -315,7 +317,6 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
     public void begin(Camera camera, Renderable renderable, WebGPURenderPass renderPass){
         this.renderPass = renderPass;
-
 
 
         // set global uniforms, that do not depend on renderables

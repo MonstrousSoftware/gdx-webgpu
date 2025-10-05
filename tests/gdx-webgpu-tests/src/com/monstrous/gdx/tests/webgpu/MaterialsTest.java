@@ -21,17 +21,24 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.VertexAttributes;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.utils.Array;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
+import com.monstrous.gdx.webgpu.graphics.WgTexture;
+import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
+import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
@@ -43,6 +50,9 @@ public class MaterialsTest extends GdxTest {
 	public Model model;
 	public Array<ModelInstance> instances;
 	public Environment environment;
+    private WgSpriteBatch batch;
+    private BitmapFont font;
+    private Texture texture1, texture2;
 
 
 	@Override
@@ -86,7 +96,35 @@ public class MaterialsTest extends GdxTest {
             VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
         instances.add( new ModelInstance(model, 0, 5, 0));
 
+        model = modelBuilder.createBox(1f, 1f, 1f, new Material(ColorAttribute.createDiffuse(Color.BLUE)),
+            VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+        instances.add( new ModelInstance(model, 0, 6, 0));
+
+        model = modelBuilder.createBox(1f, 1f, 1f, new Material(ColorAttribute.createDiffuse(Color.BLUE)),
+            VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+        instances.add( new ModelInstance(model, 0, 7, 0));
+
+        texture1 = new WgTexture(Gdx.files.internal("data/badlogic.jpg"), true);
+        texture1.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear);
+        Material mat1 = new Material(TextureAttribute.createDiffuse(texture1));
+
+        model = modelBuilder.createBox(1f, 1f, 1f, mat1,
+            VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.TextureCoordinates);
+        instances.add( new ModelInstance(model, 2, 0, 0));
+
+        texture2 = new WgTexture(Gdx.files.internal("data/webgpu.png"), true);
+        texture2.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear);
+        Material mat2 = new Material(TextureAttribute.createDiffuse(texture2));
+
+        model = modelBuilder.createBox(1f, 1f, 1f, mat2,
+            VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.TextureCoordinates);
+        instances.add( new ModelInstance(model, 2, 1, 0));
+
 		Gdx.input.setInputProcessor(new InputMultiplexer(this, inputController = new CameraInputController(cam)));
+
+        batch = new WgSpriteBatch();
+        font = new WgBitmapFont();
+
 	}
 
 	@Override
@@ -99,21 +137,22 @@ public class MaterialsTest extends GdxTest {
 		modelBatch.begin(cam);
 		modelBatch.render(instances, environment);
 		modelBatch.end();
+
+        batch.begin();
+        font.draw(batch, "FPS: "+Gdx.graphics.getFramesPerSecond(), 10, 110);
+        font.draw(batch, "Materials: "+modelBatch.materials.count(), 10, 80);
+        font.draw(batch, "Material bindings/frame: "+modelBatch.materials.materialBindings(), 10, 50);
+        batch.end();
 	}
 
 	@Override
 	public void dispose () {
 		modelBatch.dispose();
 		model.dispose();
+        batch.dispose();
+        font.dispose();
+        texture1.dispose();
+        texture2.dispose();
 	}
 
-
-	public void resume () {
-	}
-
-	public void resize (int width, int height) {
-	}
-
-	public void pause () {
-	}
 }

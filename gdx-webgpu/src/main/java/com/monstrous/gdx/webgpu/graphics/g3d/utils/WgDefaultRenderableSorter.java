@@ -63,7 +63,7 @@ public class WgDefaultRenderableSorter implements RenderableSorter, Comparator<R
 			&& ((BlendingAttribute)o2.material.get(BlendingAttribute.Type)).blended;
 		if (b1 != b2) return b1 ? 1 : -1;		// blended goes after opaque
 
-        if(b1){ // renderables are blended, need to be depth sorted, closest one last
+        if(b1){ // renderables are blended, need to be depth sorted, back to front
             getTranslation(o1.worldTransform, o1.meshPart.center, tmpV1);
             getTranslation(o2.worldTransform, o2.meshPart.center, tmpV2);
             // changed to dst against overflow, even though dst2 is faster
@@ -78,6 +78,13 @@ public class WgDefaultRenderableSorter implements RenderableSorter, Comparator<R
         // we could sort opaques closest first to maximize occlusion
         // but here are maximizing on clustering mesh parts to allow instanced drawing
 
+        // sort by material to reduce material switches
+        int m1 = o1.material.attributesHash();
+        int m2 = o2.material.attributesHash();
+        if(m1 != m2)
+            return m1 - m2;
+
+        // sort by mesh part
 		int h1 = hashCode(o1.meshPart);
 		int h2  = hashCode(o2.meshPart);
 

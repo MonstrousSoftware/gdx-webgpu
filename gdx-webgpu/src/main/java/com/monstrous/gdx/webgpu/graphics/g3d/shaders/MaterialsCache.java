@@ -46,6 +46,7 @@ public class MaterialsCache implements Disposable {
     private WgTexture defaultBlackTexture;
     private final Map<Integer, MaterialEntry> cache;
     private MaterialEntry boundEntry;
+    private int bindCount;
 
     public MaterialsCache(int maxMaterials) {
         this.maxMaterials = maxMaterials;
@@ -103,25 +104,57 @@ public class MaterialsCache implements Disposable {
             throw new GdxRuntimeException("Too many materials for MaterialsCache ("+numMaterials+"). Increase maxMaterials.");
         entry = applyMaterial(mat);
         numMaterials++;
-        // need a defensive copy of mat?
-        cache.put(mat.attributesHash(), entry);
+        cache.put(hashCode(mat), entry);
         System.out.println("Add material: "+numMaterials+" : "+mat.id+ " "+mat.attributesHash());
         return entry;
     }
 
+    /** returns actual number of materials in the cache. */
+    public int count(){
+        return numMaterials;
+    }
+
+    /** returns number of material bindings done since start() was called */
+    public int materialBindings(){
+        return bindCount;
+    }
 
     public MaterialEntry findMaterial( Material mat ){
         // use attributesHash as key so that we look only at the material contents, not the material's id
-        return cache.get(mat.attributesHash());
+        return cache.get( hashCode(mat) );
+    }
+
+    private int hashCode(Material material){
+        // ignore material.id
+        int code = material.attributesHash();
+        // just the attributes hash is not sufficient, check if texture is different
+        if(material.has(TextureAttribute.Diffuse)) {
+            TextureAttribute ta = (TextureAttribute) material.get(TextureAttribute.Diffuse);
+            assert ta != null;
+            Texture tex = ta.textureDescription.texture;
+            code += 31 * tex.hashCode();
+        }
+        // assume the other textures are not relevant to distinguish materials
+        return code;
+    }
+
+    public void start(){
+        //System.out.println("===== start");
+        boundEntry = null;
+        bindCount = 0;
     }
 
     public void bindMaterial( WebGPURenderPass renderPass, Material mat ){
+
         // todo check if mat is same as current bound material
         MaterialEntry entry = findMaterial( mat );
 
         if(entry == null)
             entry = addMaterial(mat);
+        if(entry == boundEntry)
+            return;
 
+        //System.out.println("bind "+bindCount+ ": "+mat.attributesHash());
         binder.setTexture("diffuseTexture", entry.diffuseTexture.getTextureView());
         binder.setSampler("diffuseSampler", entry.diffuseTexture.getSampler());
         binder.setTexture("normalTexture", entry.normalTexture.getTextureView());
@@ -132,6 +165,7 @@ public class MaterialsCache implements Disposable {
         binder.setSampler("emissiveSampler", entry.emissiveTexture.getSampler());
         binder.bindGroup(renderPass, group, entry.dynamicOffset);
         boundEntry = entry;
+        bindCount++;
     }
 
     private MaterialEntry applyMaterial(Material material){
@@ -210,7 +244,6 @@ public class MaterialsCache implements Disposable {
 
         // todo not needed except for last one
         materialBuffer.flush(); // write to GPU
-
 
         return entry;
     }

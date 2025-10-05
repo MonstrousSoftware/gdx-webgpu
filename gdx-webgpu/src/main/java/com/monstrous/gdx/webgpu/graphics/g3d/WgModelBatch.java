@@ -28,6 +28,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.FlushablePool;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
+import com.monstrous.gdx.webgpu.graphics.g3d.shaders.MaterialsCache;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDefaultShader;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDefaultShaderProvider;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgShader;
@@ -41,19 +42,20 @@ import com.monstrous.gdx.webgpu.wrappers.WebGPURenderPass;
  */
 public class WgModelBatch implements Disposable {
 
-    private WgDefaultShader.Config config;
+    private final WgDefaultShader.Config config;
     private boolean drawing;
     private WebGPURenderPass renderPass;
-    private ShaderProvider shaderProvider;
-    private boolean ownsShaderProvider;
+    private final ShaderProvider shaderProvider;
+    private final boolean ownsShaderProvider;
     private final Array<Renderable> renderables;
     protected final RenderablePool renderablesPool = new RenderablePool();
     private Camera camera;
-    private RenderableSorter sorter;
+    private final RenderableSorter sorter;
     public int numRenderables;
     public int drawCalls;
     public int shaderSwitches;
     public int numMaterials;
+    public MaterialsCache materials;
 
 
     protected static class RenderablePool extends FlushablePool<Renderable> {
@@ -82,13 +84,7 @@ public class WgModelBatch implements Disposable {
     }
 
     public WgModelBatch(WgDefaultShader.Config config) {
-        this.config = config;
-        drawing = false;
-
-        shaderProvider = new WgDefaultShaderProvider(config);
-        ownsShaderProvider = true;
-        renderables = new Array<>();
-        this.sorter = new WgDefaultRenderableSorter();
+        this(null, config);
     }
 
     public WgModelBatch(ShaderProvider shaderProvider) {
@@ -97,12 +93,13 @@ public class WgModelBatch implements Disposable {
 
     public WgModelBatch(ShaderProvider shaderProvider, WgDefaultShader.Config config) {
         this.config = config == null ? new WgDefaultShader.Config() : config;
-        drawing = false;
-
-        this.shaderProvider = shaderProvider;
-        ownsShaderProvider = false;
+        this.shaderProvider = shaderProvider == null ?  new WgDefaultShaderProvider(this.config) : shaderProvider;
+        ownsShaderProvider = shaderProvider == null;
         renderables = new Array<>();
+        materials = new MaterialsCache(this.config.maxMaterials);
+        this.config.materials = materials;
         this.sorter = new WgDefaultRenderableSorter();
+        drawing = false;
     }
 
 
@@ -137,6 +134,7 @@ public class WgModelBatch implements Disposable {
         shaderSwitches = 0;
         drawCalls = 0;
         numMaterials = 0;
+        materials.start();
     }
 
 
@@ -221,6 +219,7 @@ public class WgModelBatch implements Disposable {
     public void dispose(){
         if(ownsShaderProvider)
             shaderProvider.dispose();
+        materials.dispose();
     }
 
 
