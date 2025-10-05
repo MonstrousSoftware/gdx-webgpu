@@ -69,26 +69,31 @@ public class WgDefaultRenderableSorter implements RenderableSorter, Comparator<R
             // changed to dst against overflow, even though dst2 is faster
             final float dst = camera.position.dst(tmpV1) - camera.position.dst(tmpV2);
             return dst < 0 ? 1 : (dst > 0 ? -1 : 0);
+        } else {
+
+            // group by shader
+            if (o1.shader != o2.shader) {
+                int sh1 = o1.shader.hashCode();
+                int sh2 = o2.shader.hashCode();
+                if (sh1 != sh2)
+                    return sh1 - sh2;
+            }
+
+            // we could sort opaques closest first to maximize occlusion
+            // but here are maximizing on clustering mesh parts to allow instanced drawing
+
+            // sort by material to reduce material switches
+            int m1 = o1.material.attributesHash();
+            int m2 = o2.material.attributesHash();
+            if (m1 != m2)
+                return m1 - m2;
+
+            // sort by mesh part
+            int h1 = hashCode(o1.meshPart);
+            int h2 = hashCode(o2.meshPart);
+
+            return h1 - h2;    // sort by mesh part to cluster the same mesh parts together
         }
-
-        // group by shader
-        if(o1.shader != o2.shader)
-            return o1.shader.hashCode() - o2.shader.hashCode();
-
-        // we could sort opaques closest first to maximize occlusion
-        // but here are maximizing on clustering mesh parts to allow instanced drawing
-
-        // sort by material to reduce material switches
-        int m1 = o1.material.attributesHash();
-        int m2 = o2.material.attributesHash();
-        if(m1 != m2)
-            return m1 - m2;
-
-        // sort by mesh part
-		int h1 = hashCode(o1.meshPart);
-		int h2  = hashCode(o2.meshPart);
-
-		return h1 - h2;	// sort by mesh part to cluster the same mesh parts together
 	}
 
 	private int hashCode(MeshPart meshPart) {
