@@ -41,10 +41,69 @@ public class WgDefaultRenderableSorter implements RenderableSorter, Comparator<R
 	@Override
 	public void sort (final Camera camera, final Array<Renderable> renderables) {
 		this.camera = camera;
+//        if(renderables.size > 590){
+//            System.out.println("Big array!");
+//            verifyTransitivity(renderables);
+//        }
 		renderables.sort(this);
 	}
 
-	private Vector3 getTranslation (Matrix4 worldTransform, Vector3 center, Vector3 output) {
+//    private void verifyTransitivity(final Array<Renderable> renderables)
+//    {
+//        for (int i = 0; i < renderables.size; i++)
+//        {
+//            Renderable first = renderables.get(i);
+//            for (int j = 0; j < renderables.size; j++)
+//            {
+//                Renderable second = renderables.get(j);
+//                int result1 = compare(first, second);
+//                int result2 = compare(second, first);
+//                if (result1 != -result2)
+//                {
+//                    // Uncomment the following line to step through the failed case
+//                    //comparator.compare(first, second);
+//                    throw new AssertionError("compare(" + first + ", " + second + ") == " + result1 +
+//                        " but swapping the parameters returns " + result2);
+//                }
+//            }
+//        }
+//        System.out.println("Pairs are okay");
+//        for (int i = 0; i < renderables.size; i++)
+//        {
+//            Renderable first = renderables.get(i);
+//            for (int j = 0; j < renderables.size; j++)
+//            {
+//                Renderable second = renderables.get(j);
+//                int firstGreaterThanSecond = compare(first, second);
+//                if (firstGreaterThanSecond <= 0)
+//                    continue;
+//                for (int k = 0; k < renderables.size; k++)
+//                {
+//                    Renderable third = renderables.get(k);
+//                    int secondGreaterThanThird = compare(second, third);
+//                    if (secondGreaterThanThird <= 0)
+//                        continue;
+//                    int firstGreaterThanThird = compare(first, third);
+//                    if (firstGreaterThanThird <= 0)
+//                    {
+//                        // Uncomment the following line to step through the failed case
+//                        //comparator.compare(first, third);
+//                        System.out.println("ijk "+i+" "+j+" "+k);
+//                        print(first);
+//                        print(second);
+//                        print(third);
+//
+//                        throw new AssertionError("compare(" + first + ", " + second + ") > 0, " +
+//                            "compare(" + second + ", " + third + ") > 0, but compare(" + first + ", " + third + ") == " +
+//                            firstGreaterThanThird);
+//                    }
+//                }
+//            }
+//        }
+//    }
+
+
+    private Vector3 getTranslation (Matrix4 worldTransform, Vector3 center, Vector3 output) {
 		if (center.isZero())
 			worldTransform.getTranslation(output);
 		else if (!worldTransform.hasRotationOrScaling())
@@ -53,6 +112,12 @@ public class WgDefaultRenderableSorter implements RenderableSorter, Comparator<R
 			output.set(center).mul(worldTransform);
 		return output;
 	}
+
+//    private void print(Renderable renderable){
+//        System.out.println("shader hashcode: "+renderable.shader.hashCode());
+//        System.out.println("mat attr hash: "+renderable.material.attributesHash());
+//        System.out.println("mesh part: "+hashCode(renderable.meshPart));
+//    }
 
 	@Override
 	public int compare (final Renderable o1, final Renderable o2) {
@@ -82,9 +147,10 @@ public class WgDefaultRenderableSorter implements RenderableSorter, Comparator<R
             // we could sort opaques closest first to maximize occlusion
             // but here are maximizing on clustering mesh parts to allow instanced drawing
 
-            // sort by material to reduce material switches
-            int m1 = o1.material.attributesHash();
-            int m2 = o2.material.attributesHash();
+            // sort by material to reduce material switche
+            // mask off hi bits to avoid overflow problem that can lead to "Contract violation"
+            int m1 = o1.material.attributesHash() & 0xFFFFFF;
+            int m2 = o2.material.attributesHash() & 0xFFFFFF;
             if (m1 != m2)
                 return m1 - m2;
 
