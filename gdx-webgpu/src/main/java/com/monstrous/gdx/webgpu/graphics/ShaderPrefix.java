@@ -101,7 +101,7 @@ public class ShaderPrefix {
             sb.append("#define GAMMA_CORRECTION\n");
         }
 
-        System.out.println("Prefix: "+sb.toString());
+        //System.out.println("Prefix: "+sb.toString());
         return sb.toString();
     }
 }

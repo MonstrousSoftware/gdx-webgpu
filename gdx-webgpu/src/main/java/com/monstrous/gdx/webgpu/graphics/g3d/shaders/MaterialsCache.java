@@ -3,13 +3,13 @@ package com.monstrous.gdx.webgpu.graphics.g3d.shaders;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g3d.Attributes;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.GdxRuntimeException;
+import com.badlogic.gdx.utils.Null;
 import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.webgpu.graphics.Binder;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
@@ -18,7 +18,6 @@ import com.monstrous.gdx.webgpu.graphics.g3d.attributes.PBRTextureAttribute;
 import com.monstrous.gdx.webgpu.wrappers.WebGPUBindGroupLayout;
 import com.monstrous.gdx.webgpu.wrappers.WebGPURenderPass;
 import com.monstrous.gdx.webgpu.wrappers.WebGPUUniformBuffer;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -59,8 +58,8 @@ public class MaterialsCache implements Disposable {
 
         defineDefaultTextures();
 
-        // todo check
-        materialSize = 20 * Float.BYTES;      // data size per material (should be enough for now)
+        materialSize = 8 * Float.BYTES;      // data size per material (should be enough for now)
+
         // buffer for uniforms per material, e.g. color, shininess, ...
         // this does not include textures
         //todo  when a texture is missing we can use a place holder texture, or flag via uniforms that it is not present to save a binding call.
@@ -92,7 +91,6 @@ public class MaterialsCache implements Disposable {
         binder.defineUniform("metallicFactor", group, 0, offset); offset += 4;
 
         binder.setBuffer("materialUniforms", materialBuffer, 0, materialSize);
-
     }
 
     public MaterialEntry addMaterial(Material mat){
@@ -119,7 +117,7 @@ public class MaterialsCache implements Disposable {
         return bindCount;
     }
 
-    public MaterialEntry findMaterial( Material mat ){
+    public @Null MaterialEntry findMaterial( Material mat ){
         // use attributesHash as key so that we look only at the material contents, not the material's id
         return cache.get( hashCode(mat) );
     }
@@ -146,11 +144,7 @@ public class MaterialsCache implements Disposable {
 
     public void bindMaterial( WebGPURenderPass renderPass, Material mat ){
 
-        // todo check if mat is same as current bound material
-        MaterialEntry entry = findMaterial( mat );
-
-        if(entry == null)
-            entry = addMaterial(mat);
+        MaterialEntry entry = addMaterial(mat);
         if(entry == boundEntry)
             return;
 

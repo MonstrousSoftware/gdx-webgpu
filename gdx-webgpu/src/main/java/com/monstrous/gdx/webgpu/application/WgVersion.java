@@ -3,6 +3,6 @@ package com.monstrous.gdx.webgpu.application;
 public class WgVersion {
 
     public static String getVersion(){
-        return "gdx-webgpu v0.4-snapshot Oct 6,2025";
+        return "gdx-webgpu v0.4-snapshot Oct 7,2025";
     }
 }

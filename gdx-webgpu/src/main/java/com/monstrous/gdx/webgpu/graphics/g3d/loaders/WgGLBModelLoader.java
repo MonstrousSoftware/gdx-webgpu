@@ -22,7 +22,6 @@ import com.badlogic.gdx.graphics.g3d.model.data.ModelData;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.gltf.GLTF;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.gltf.GLTFRawBuffer;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.gltf.ParserGLTF;
-import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -48,7 +47,7 @@ public class WgGLBModelLoader extends WgModelLoader<WgModelLoader.ModelParameter
 		return parseModel(fileHandle);
 	}
 
-	public ModelData parseModel (@NotNull FileHandle handle) {
+	public ModelData parseModel (FileHandle handle) {
         // create path to find additional resources
         int lastSlashPos = handle.path().lastIndexOf('/');
         String path = handle.path().substring(0, lastSlashPos + 1);
