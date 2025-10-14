@@ -137,13 +137,13 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
     private WGPUSurface createSurface(WGPUInstance instance, long windowHandle) {
         WGPUSurface surface = null;
         String osName = System.getProperty("os.name").toLowerCase();
-        System.out.println("os.name: "+osName);
+        //System.out.println("os.name: "+osName);
         if(osName.contains("win")) {
             long display = GLFWNativeWin32.glfwGetWin32Window(windowHandle);
             surface = instance.createWindowsSurface(IDLBase.native_new().native_setVoid(display));
         }
         else if(osName.contains("linux")) {
-            System.out.println("Platform: "+glfwGetPlatform());
+            //System.out.println("Platform: "+glfwGetPlatform());
             if(glfwGetPlatform() == GLFW_PLATFORM_WAYLAND) {
                 System.out.println("Wayland");
                 long display = glfwGetWaylandDisplay();
@@ -153,7 +153,7 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
                 surface = instance.createLinuxSurface(true, idlwindow, idlDisplay);
             }
             else {
-                System.out.println("X11");
+                //System.out.println("X11");
                 long display = glfwGetX11Display();
                 long surf = glfwGetX11Window(windowHandle);
                 IDLBase idlwindow = IDLBase.native_new().native_setVoid(surf);
@@ -471,7 +471,7 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
 
 	@Override
 	public boolean setFullscreenMode (DisplayMode displayMode) {
-        System.out.println("setFullScreenMode()");
+        //System.out.println("setFullScreenMode()");
 
 
 		window.getInput().resetPollingStates();
@@ -492,16 +492,16 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
 
             //context.drop(); // TEST
 
-            System.out.println("calling glfwSetWindowMonitor()");
+            //System.out.println("calling glfwSetWindowMonitor()");
 			// switch from windowed to fullscreen
             // this will trigger a resize before we return
 			GLFW.glfwSetWindowMonitor(window.getWindowHandle(), newMode.getMonitor(), 0, 0, newMode.width, newMode.height,
 				newMode.refreshRate);
 
-            System.out.println("after glfwSetWindowMonitor()");
+            //System.out.println("after glfwSetWindowMonitor()");
 
             // probably don't need this
-            System.out.println("setFullScreenMode: set viewport: 0,0, "+backBufferWidth+", "+backBufferHeight);
+            //System.out.println("setFullScreenMode: set viewport: 0,0, "+backBufferWidth+", "+backBufferHeight);
             context.setViewportRectangle(0, 0, backBufferWidth, backBufferHeight);
 		}
 		updateFramebufferInfo();

@@ -354,7 +354,6 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
         if(webgpu.frameNumber != this.frameNumber ){    // reset at the start of a frame
             instanceIndex = 0;
-            numMaterials = 0;
             numRigged = 0;
             this.frameNumber = webgpu.frameNumber;
             if(jointMatricesBuffer != null)

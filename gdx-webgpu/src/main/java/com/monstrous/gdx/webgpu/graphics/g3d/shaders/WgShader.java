@@ -11,7 +11,6 @@ import com.monstrous.gdx.webgpu.wrappers.WebGPURenderPass;
 public abstract class WgShader implements Shader {
     public int numRenderables;
     public int drawCalls;
-    public int numMaterials;
 
     public abstract void init();
     public abstract void begin(Camera camera, RenderContext context);

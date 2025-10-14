@@ -74,13 +74,12 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
         WGPURequestAdapterCallback callback = new WGPURequestAdapterCallback() {
             @Override
             protected void onCallback(WGPURequestAdapterStatus status, WGPUAdapter adapter, String message) {
-                System.out.println("Adapter Status: " + status);
+                //System.out.println("Adapter Status: " + status);
                 if(status == WGPURequestAdapterStatus.Success) {
                     initState = InitState.ADAPTER_VALID;
                     requestDevice( adapter);
                 }
                 else {
-                    System.out.println("Adapter Error: " + message);
                     initState = InitState.ADAPTER_NOT_VALID;
                     Gdx.app.error("WebGPU requestAdapter", "No adapter available for backend type "+config.requestedBackendType);
                 }
@@ -90,22 +89,22 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
     }
 
     private void requestDevice( WGPUAdapter adapter) {
-        WGPUAdapterInfo info = WGPUAdapterInfo.obtain();
-        if(adapter.getInfo(info)) {
-            WGPUBackendType backendType = info.getBackendType();
-            System.out.println("BackendType: " + backendType);
-            WGPUAdapterType adapterType = info.getAdapterType();
-            System.out.println("AdapterType: " + adapterType);
-            String vendor = info.getVendor().c_str();
-            System.out.println("Vendor: " + vendor);
-            String architecture = info.getArchitecture().c_str();
-            System.out.println("Architecture: " + architecture);
-            String description = info.getDescription().c_str();
-            System.out.println("Description: " + description);
-            String device = info.getDevice().c_str();
-            System.out.println("Device: " + device);
-            //System.out.println("Has Feature DepthClipControl: " + adapter.hasFeature(WGPUFeatureName.DepthClipControl));
-        }
+//        WGPUAdapterInfo info = WGPUAdapterInfo.obtain();
+//        if(adapter.getInfo(info)) {
+//            WGPUBackendType backendType = info.getBackendType();
+//            System.out.println("BackendType: " + backendType);
+//            WGPUAdapterType adapterType = info.getAdapterType();
+//            System.out.println("AdapterType: " + adapterType);
+//            String vendor = info.getVendor().c_str();
+//            System.out.println("Vendor: " + vendor);
+//            String architecture = info.getArchitecture().c_str();
+//            System.out.println("Architecture: " + architecture);
+//            String description = info.getDescription().c_str();
+//            System.out.println("Description: " + description);
+//            String device = info.getDevice().c_str();
+//            System.out.println("Device: " + device);
+//            //System.out.println("Has Feature DepthClipControl: " + adapter.hasFeature(WGPUFeatureName.DepthClipControl));
+//        }
 
         WGPUDeviceDescriptor deviceDescriptor = WGPUDeviceDescriptor.obtain();
         WGPULimits limits = WGPULimits.obtain();
@@ -123,7 +122,7 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
         adapter.requestDevice(deviceDescriptor, WGPUCallbackMode.AllowProcessEvents, new WGPURequestDeviceCallback() {
             @Override
             protected void onCallback(WGPURequestDeviceStatus status, WGPUDevice device, String message) {
-                System.out.println("Device Status: " + status);
+                //System.out.println("Device Status: " + status);
                 if(status == WGPURequestDeviceStatus.Success) {
                     initState = InitState.DEVICE_VALID;
                     WebGPUApplication.this.device = device;
@@ -134,7 +133,7 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
                     WGPUSurfaceCapabilities surfaceCapabilities = WGPUSurfaceCapabilities.obtain();
                     surface.getCapabilities(adapter, surfaceCapabilities);
                     surfaceFormat = surfaceCapabilities.getFormats().get(0);
-                    System.out.println("surfaceFormat: " + surfaceFormat);
+                    //System.out.println("surfaceFormat: " + surfaceFormat);
 
                     // allocate some objects we will reuse a lot
                     encoder = new WGPUCommandEncoder();
@@ -144,31 +143,31 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
 
                     gpuTimer = new GPUTimer(device, config.gpuTimingEnabled);
 
-                    System.out.println("Platform: " + WGPU.getPlatformType());
+                    //System.out.println("Platform: " + WGPU.getPlatformType());
 
                     WGPUSupportedFeatures features = WGPUSupportedFeatures.obtain();
                     device.getFeatures(features);
                     int featureCount = features.getFeatureCount();
-                    System.out.println("Total Features: " + featureCount);
+                    //System.out.println("Total Features: " + featureCount);
                     for(int i = 0; i < featureCount; i++) {
                         WGPUFeatureName featureName = features.getFeatureAt(i);
-                        System.out.println("\tFeature name: " + featureName);
+                        //System.out.println("\tFeature name: " + featureName);
                     }
 
 
-                    WGPULimits limits = WGPULimits.obtain();
-                    device.getLimits(limits);
-                    System.out.println("Device limits: " + featureCount);
-                    System.out.println("MaxTextureDimension1D: " + limits.getMaxTextureDimension1D());
-                    System.out.println("MaxTextureDimension2D: " + limits.getMaxTextureDimension2D());
-                    System.out.println("MaxTextureDimension3D: " + limits.getMaxTextureDimension3D());
-                    System.out.println("MaxTextureArrayLayers: " + limits.getMaxTextureArrayLayers());
+//                    WGPULimits limits = WGPULimits.obtain();
+//                    device.getLimits(limits);
+//                    System.out.println("Device limits: " + featureCount);
+//                    System.out.println("MaxTextureDimension1D: " + limits.getMaxTextureDimension1D());
+//                    System.out.println("MaxTextureDimension2D: " + limits.getMaxTextureDimension2D());
+//                    System.out.println("MaxTextureDimension3D: " + limits.getMaxTextureDimension3D());
+//                    System.out.println("MaxTextureArrayLayers: " + limits.getMaxTextureArrayLayers());
 
                     initState = InitState.DEVICE_VALID;
                 }
                 else {
-                    System.out.println("Device Error: " + message);
                     initState = InitState.DEVICE_NOT_VALID;
+                    Gdx.app.error("WebGPU requestDevice", "No adapter available for backend type "+config.requestedBackendType+ " : "+message);
                 }
                 // Release the adapter only after it has been fully utilized
                 adapter.release();
@@ -177,8 +176,8 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
         }, new WGPUUncapturedErrorCallback() {
             @Override
             protected void onCallback(WGPUErrorType errorType, String message) {
-                System.err.println("ErrorType: " + errorType);
-                System.err.println("Error Message: " + message);
+                Gdx.app.error("WebGPU Error", "ErrorType: "+ errorType);
+                Gdx.app.error("Error Message: ", message);
                 initState = InitState.ERROR;
             }
         });
@@ -303,7 +302,7 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
     // E.g. WgDesktopWindow calls this via postRunnable() after having received an async resize event from GLFW.
     //
     public void resize(int width, int height){
-        System.out.println("resize: "+width+" x "+height);
+        //System.out.println("resize: "+width+" x "+height);
 
         // if there was already a swap chain, release it
         // (there won't be one on the very first resize, or coming back from a minimize)
@@ -329,7 +328,7 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
 
         if(scissor == null)
             scissor = new Rectangle();
-        System.out.println("set scissor & viewport: "+width+" x "+height);
+        //System.out.println("set scissor & viewport: "+width+" x "+height);
         scissor.set(0,0,width, height); // on resize, set scissor to whole window
         viewportRectangle.set(0,0,width, height);
         this.width = width;
@@ -377,7 +376,7 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
 
 
     private void initSwapChain(int width, int height, boolean vsyncEnabled) {
-        System.out.println("initSwapChain");
+        //System.out.println("initSwapChain");
         WGPUSurfaceConfiguration config = WGPUSurfaceConfiguration.obtain();
         config.setWidth(width);
         config.setHeight(height);
@@ -391,12 +390,12 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
     }
 
     private void exitSwapChain(){
-        System.out.println("exitSwapChain");
+        //System.out.println("exitSwapChain");
         surface.unconfigure();
     }
 
     private void initDepthBuffer(int width, int height, int samples){
-        System.out.println("initDepthBuffer: "+width+" x "+height);
+        //System.out.println("initDepthBuffer: "+width+" x "+height);
         depthTexture = new WgTexture("depth texture", width, height, false, WGPUTextureUsage.RenderAttachment,
                 WGPUTextureFormat.Depth24Plus, samples, WGPUTextureFormat.Depth24Plus );
     }

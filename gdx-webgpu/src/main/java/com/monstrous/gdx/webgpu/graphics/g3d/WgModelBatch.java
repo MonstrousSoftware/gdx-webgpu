@@ -54,7 +54,7 @@ public class WgModelBatch implements Disposable {
     public int numRenderables;
     public int drawCalls;
     public int shaderSwitches;
-    public int numMaterials;
+    //public int numMaterials;
     public MaterialsCache materials;
 
     public static class Config {
@@ -155,7 +155,6 @@ public class WgModelBatch implements Disposable {
         renderables.clear();
         shaderSwitches = 0;
         drawCalls = 0;
-        numMaterials = 0;
         materials.start();
     }
 
@@ -207,8 +206,6 @@ public class WgModelBatch implements Disposable {
         for(Renderable renderable : renderables) {
             if (currentShader != renderable.shader) {
                 if (currentShader != null) {
-                    numMaterials += currentShader.numMaterials;
-
                     currentShader.end();
                     drawCalls += currentShader.drawCalls;
                     shaderSwitches++;
@@ -219,7 +216,6 @@ public class WgModelBatch implements Disposable {
             currentShader.render(renderable);
         }
         if (currentShader != null){
-            numMaterials += currentShader.numMaterials;
             currentShader.end();
             drawCalls += currentShader.drawCalls;
         }
@@ -242,6 +238,10 @@ public class WgModelBatch implements Disposable {
         if(ownsShaderProvider)
             shaderProvider.dispose();
         materials.dispose();
+    }
+
+    public int getMaterialCount(){
+        return materials.count();
     }
 
 
