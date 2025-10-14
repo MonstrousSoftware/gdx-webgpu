@@ -339,7 +339,7 @@ public class InstancingTest extends GdxTest {
 		int y = 250;
 		font.draw(batch, "Draw calls: "+modelBatch.drawCalls+" shader switches: "+modelBatch.shaderSwitches,0, y -= 20);
 		font.draw(batch, "numRenderables: "+modelBatch.numRenderables ,0, y -= 20);
-		font.draw(batch, "Materials: "+modelBatch.numMaterials ,0, y -= 20);
+		font.draw(batch, "Materials: "+modelBatch.getMaterialCount() ,0, y -= 20);
 		font.draw(batch, "FPS: "+Gdx.graphics.getFramesPerSecond() ,0, y -= 20);
         batch.end();
 
