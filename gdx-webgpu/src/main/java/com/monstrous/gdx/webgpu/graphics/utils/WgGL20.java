@@ -24,7 +24,7 @@ public class WgGL20 implements GL20 {
         WebGPUContext webgpu = gfx.getContext();
         Rectangle view = webgpu.getViewportRectangle();
         if(x != view.x || y != view.y || width != view.width || height != view.height){
-            Gdx.app.log("glViewport", "x=" + x + " y=" + y + " w=" + width + " h=" + height);
+            //Gdx.app.log("glViewport", "x=" + x + " y=" + y + " w=" + width + " h=" + height);
             webgpu.setViewportRectangle(x,y,width, height);
         }
     }
@@ -37,7 +37,7 @@ public class WgGL20 implements GL20 {
 
         Rectangle scissor = webgpu.getScissor();
         if(x != scissor.x || y != scissor.y || width != scissor.width || height != scissor.height){
-            Gdx.app.log("glScissor", "x=" + x + " y=" + y + " w=" + width + " h=" + height);
+            //Gdx.app.log("glScissor", "x=" + x + " y=" + y + " w=" + width + " h=" + height);
             webgpu.setScissor(x,y,width, height);
         }
     }

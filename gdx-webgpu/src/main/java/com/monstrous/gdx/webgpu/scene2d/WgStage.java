@@ -89,7 +89,7 @@ public class WgStage extends Stage {
 		// there is a complicated logic with debug under mouse etc. that is not replicated here.
 
 		if(debugShapes == null){
-			Gdx.app.log("WebGPUStage", "create shape renderer");
+			//Gdx.app.log("WebGPUStage", "create shape renderer");
 			debugShapes = new WgShapeRenderer();
 		}
 

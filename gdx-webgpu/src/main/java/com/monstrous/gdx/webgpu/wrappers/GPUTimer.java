@@ -170,7 +170,7 @@ public class GPUTimer implements Disposable {
     public void dispose() {
         if(!enabled)
             return;
-        System.out.println("GPUTimer.dispose()");
+        //System.out.println("GPUTimer.dispose()");
 //        while(timeStampMapOngoing) {
 //            System.out.println("Waiting for time stamp map before disposing... ");
 //            // todo device.tick();
