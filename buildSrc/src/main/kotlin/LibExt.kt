@@ -8,7 +8,7 @@ object LibExt {
         get() {
             return getVersion()
         }
-    var isRelease = false
+    var isRelease = true
 }
 
 private fun getVersion(): String {
