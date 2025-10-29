@@ -4,8 +4,8 @@ import java.net.URLEncoder
 
 var libProjects = mutableSetOf(
     project(":gdx-webgpu"),
-    project(":backends:gdx-desktop-webgpu"),
-    project(":backends:gdx-teavm-webgpu")
+    project(":backends:backend-desktop"),
+    project(":backends:backend-teavm")
 )
 
 LibExt.isRelease = gradle.startParameter.taskNames.any { it == "publishRelease" }
@@ -43,12 +43,12 @@ configure(libProjects) {
             if (this is MavenPublication) {
                 pom {
                     name.set(LibExt.libName)
-                    description.set("WebGPU extension for LibGDX") // TODO update description
+                    description.set("WebGPU extension for LibGDX")
                     url.set("https://github.com/MonstrousSoftware/gdx-webgpu")
                     developers {
                         developer {
-                            id.set("MonstrousSoftware")     // TODO update the developer id
-                            name.set("MonstrousSoftware")   // TODO update name
+                            id.set("MonstrousSoftware")
+                            name.set("MonstrousSoftware")
                         }
                     }
                     scm {

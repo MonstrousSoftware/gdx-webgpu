@@ -137,7 +137,7 @@ To include the library in your project add the following lines to your `build.gr
 Assuming we want to use the LWJGL3 (=Desktop) platform, add the following to `build.gradle` in the `lwjgl3` module:
 
     dependencies {
-        implementation "io.github.monstroussoftware.gdx-webgpu:gdx-desktop-webgpu:$gdxWebGPUVersion"
+        implementation "io.github.monstroussoftware.gdx-webgpu:backend-desktop:$gdxWebGPUVersion"
     }
 
 In the `lwjgl3` module add a starter class called `Launcher.java` with a content as follows:
@@ -174,7 +174,7 @@ In the `lwjgl3` module find the line in `build.gradle` which defines `mainClassN
 Assuming we want to use the Web teaVM platform, add the following to `build.gradle` in the `teaVM` module:
 
     dependencies {
-        implementation "io.github.monstroussoftware.gdx-webgpu:gdx-teavm-webgpu:$gdxWebGPUVersion"
+        implementation "io.github.monstroussoftware.gdx-webgpu:backend-teavm:$gdxWebGPUVersion"
     }
 
 Also here, you will need to modify the launcher class (to be described...)

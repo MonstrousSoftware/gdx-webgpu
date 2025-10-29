@@ -26,7 +26,7 @@ dependencies {
 
     implementation(project(":gdx-webgpu"))
     implementation(project(":tests:gdx-webgpu-tests"))
-    implementation(project(":backends:gdx-teavm-webgpu"))     // broken: could not resolve
+    implementation(project(":backends:backend-teavm"))
 
     // Have Build errors
 }

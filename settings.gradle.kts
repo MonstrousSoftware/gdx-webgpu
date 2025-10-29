@@ -10,8 +10,8 @@ plugins {
 include(":gdx-webgpu")
 
 include(":backends")
-include(":backends:gdx-desktop-webgpu")
-include(":backends:gdx-teavm-webgpu")
+include(":backends:backend-desktop")
+include(":backends:backend-teavm")
 
 include(":tests")
 include(":tests:gdx-webgpu-tests")

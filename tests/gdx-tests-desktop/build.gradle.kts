@@ -15,7 +15,7 @@ if (JavaVersion.current().isJava9Compatible) {
 
 dependencies {
     implementation(project(":gdx-webgpu"))
-    implementation(project(":backends:gdx-desktop-webgpu"))
+    implementation(project(":backends:backend-desktop"))
     implementation(project(":tests:gdx-webgpu-tests"))
 }
 
