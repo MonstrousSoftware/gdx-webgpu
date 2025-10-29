@@ -24,7 +24,7 @@ dependencies {
 publishing {
     publications {
         create<MavenPublication>("maven") {
-            artifactId = "gdx-teavm-webgpu"
+            artifactId = "backend-teavm"
             from(components["java"])
         }
     }

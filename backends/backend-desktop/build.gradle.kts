@@ -34,7 +34,7 @@ dependencies {
 publishing {
     publications {
         create<MavenPublication>("maven") {
-            artifactId = "gdx-desktop-webgpu"
+            artifactId = "backend-desktop"
             from(components["java"])
         }
     }
