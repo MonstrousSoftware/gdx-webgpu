@@ -347,10 +347,23 @@ public class WgSpriteBatch implements Batch {
     }
 
     public void begin(Color clearColor) {
-        renderPass = RenderPassBuilder.create("SpriteBatch", clearColor, webgpu.getSamples());
-
         if (drawing)
             throw new RuntimeException("Must end() before begin()");
+
+        renderPass = RenderPassBuilder.create("SpriteBatch", clearColor, webgpu.getSamples());
+
+        // default blending values
+        pipelineSpec.enableBlending();
+        pipelineSpec.setBlendFactor(WGPUBlendFactor.SrcAlpha, WGPUBlendFactor.OneMinusSrcAlpha);
+        pipelineSpec.disableDepthTest();
+
+        // if the pipeline was never changed (no shader changes, no blending changes)
+        // continue with the one from the constructor, and we can avoid a cache lookup
+        if(currentPipeline == initialPipeline)
+            renderPass.setPipeline(currentPipeline);
+        else
+            setPipeline();
+
 
         // First begin() call in this render frame?
         if(webgpu.frameNumber != this.frameNumber) {
@@ -374,12 +387,7 @@ public class WgSpriteBatch implements Batch {
         // set default state
         tint.set(Color.WHITE);
 
-        // if the pipeline was never changed (no shader changes, no blending changes)
-        // continue with the one from the constructor, and we can avoid a cache lookup
-        if(currentPipeline != initialPipeline)
-            setPipeline();
-        else
-            renderPass.setPipeline(currentPipeline);
+
 
         // don't reset the matrices because setProjectionMatrix() and setTransformMatrix()
         // may be called before begin() and need to be respected.

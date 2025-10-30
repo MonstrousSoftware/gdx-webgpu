@@ -36,6 +36,9 @@ public class SpriteBatchDraw extends GdxTest {
         float delta = Gdx.graphics.getDeltaTime();
         angleDegrees += 30 * delta;
 
+        sprite.setPosition(200, 200);
+        sprite.setRotation(angleDegrees);
+
         viewport.apply();
         batch.setProjectionMatrix(viewport.getCamera().combined);
 
@@ -43,10 +46,7 @@ public class SpriteBatchDraw extends GdxTest {
         batch.begin(Color.WHITE);
         batch.draw(texture, 0, 0);  // bottom left, full texture size
 
-        batch.draw(texture, 0, 320, 128, 32); // resized
-
-        sprite.setPosition(200, 200);
-        sprite.setRotation(angleDegrees);
+        batch.draw(texture, 0, 320, 32, 32); // resized
 
         // set tint to use from now on
         batch.setColor(Color.YELLOW);
@@ -64,9 +64,9 @@ public class SpriteBatchDraw extends GdxTest {
         // smaller size at top right, should appear opaque
         batch.draw(texture, Gdx.graphics.getWidth()-128, Gdx.graphics.getHeight()-64, 64, 64);
 
-
-
-        sprite.draw(batch);
+//
+//
+//        sprite.draw(batch);
 
         batch.end();
     }
