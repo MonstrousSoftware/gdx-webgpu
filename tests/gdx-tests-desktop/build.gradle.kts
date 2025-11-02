@@ -19,7 +19,7 @@ dependencies {
     implementation(project(":tests:gdx-webgpu-tests"))
 }
 
-tasks.register<JavaExec>("launchTestsWebGPU") {
+tasks.register<JavaExec>("gdx_webgpu_tests_run_desktop") {
     group = "LibGDX"
     description = "Run the WebGPU tests"
     mainClass.set(mainClassName)
