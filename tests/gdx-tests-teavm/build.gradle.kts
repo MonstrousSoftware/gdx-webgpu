@@ -9,26 +9,26 @@ gretty {
 }
 
 dependencies {
-    val gdxVersion = project.property("gdxVersion") as String
     val gdxTeaVMVersion = project.property("gdxTeaVMVersion") as String
-    val teaVMVersion = project.property("teaVMVersion") as String
+//    val gdxVersion = project.property("gdxVersion") as String
+//    val teaVMVersion = project.property("teaVMVersion") as String
 
-    implementation("com.badlogicgames.gdx:gdx:$gdxVersion")
+    //implementation("com.badlogicgames.gdx:gdx:$gdxVersion")
     implementation("com.github.xpenatan.gdx-teavm:backend-teavm:$gdxTeaVMVersion")
     implementation("com.github.xpenatan.gdx-teavm:backend-teavm:$gdxTeaVMVersion:sources")
 
-    implementation("org.teavm:teavm-classlib:${teaVMVersion}")
-    implementation("org.teavm:teavm-core:${teaVMVersion}")
-    implementation("org.teavm:teavm-jso-apis:${teaVMVersion}")
-    implementation("org.teavm:teavm-jso-impl:${teaVMVersion}")
-    implementation("org.teavm:teavm-jso:${teaVMVersion}")
-    implementation("org.teavm:teavm-tooling:${teaVMVersion}")
+//    implementation("org.teavm:teavm-classlib:${teaVMVersion}")
+//    implementation("org.teavm:teavm-core:${teaVMVersion}")
+//    implementation("org.teavm:teavm-jso-apis:${teaVMVersion}")
+//    implementation("org.teavm:teavm-jso-impl:${teaVMVersion}")
+//    implementation("org.teavm:teavm-jso:${teaVMVersion}")
+//    implementation("org.teavm:teavm-tooling:${teaVMVersion}")
 
     implementation(project(":gdx-webgpu"))
-    implementation(project(":tests:gdx-webgpu-tests"))
     implementation(project(":backends:backend-teavm"))
+    //implementation(project("backends:backend-teavm:sources"))
+    implementation(project(":tests:gdx-webgpu-tests"))
 
-    // Have Build errors
 }
 
 val mainClassName = "com.monstrous.gdx.tests.webgpu.BuildTeaVM"
