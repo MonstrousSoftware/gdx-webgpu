@@ -103,7 +103,7 @@ See here for some more information: [intro to WebGPU](docs/intro-to-webgpu.md)
 If you run the `WebGPUTestStarter` application in the tests module, you get a menu with lots of 
 different test cases.
 
-You can also check out the web version here: [tests](https://xpenatan.github.io/gdx-webgpu/tests/).
+You can also check out the web version here: [tests](https://monstrous-software.itch.io/gdx-webgpu-sampler).
 (Press Escape to return to the test selection menu).
 
 ## New features 
@@ -111,10 +111,19 @@ You can also check out the web version here: [tests](https://xpenatan.github.io/
 Apart from the graphics platform, gdx-webgpu offers some new features with regard to LibGDX:
 - support for 32-bit index values for a mesh allowing for larger meshes.
 - automatic instancing of identical modelInstances so that they are rendered in a single draw call.
-- support for GLTF and GLB model format (still with some limitations).
+- built-in support for GLTF and GLB model format.
 - debug feature to measure GPU time per render pass.
 
+## Dependencies
+
+| gdx-webgpu | libgdx | gdx-teavm  |
+|------------|--------|------------|
+| 0.6        |1.13.5  | 1.3.0      |
+
 ## How to get it
+
+There are a few configuration steps to use `gdx-webgpu`. This assumes you have created a project with `gdx-liftoff`.
+If you are starting a new project, it is also a good idea to start with `gdx-liftoff` to set up a project structure. 
 
 The library is available via Maven Central. Make sure the following section is included under `subprojects` in `build.gradle`:
 
@@ -122,22 +131,32 @@ The library is available via Maven Central. Make sure the following section is i
         maven { url = uri("https://central.sonatype.com/repository/maven-snapshots/") }
     }
 
+
 Define the version you want to use in the `gradle.properties` file, e.g. 
 
-    gdxWebGPUVersion=0.2
+    gdxWebGPUVersion=0.6
 
-You can refer to the latest stable release number, e.g. `0.2` or use `-SNAPSHOT` to follow the very latest developments.
+You can refer to the latest stable release number, e.g. `0.6` or use `-SNAPSHOT` to follow the very latest developments. 
+(Beware when using a snapshot version, that functions may break without notice. Use a stable version by preference).
 
 To include the library in your project add the following lines to your `build.gradle` file in the `core` module:
 
     dependencies {
-        implementation "io.github.monstroussoftware.gdx-webgpu:gdx-webgpu:$gdxWebGPUVersion"
+        
+        api "io.github.monstroussoftware.gdx-webgpu:gdx-webgpu:$gdxWebGPUVersion"  
+        // comment out the following:
+        // api "com.badlogicgames.gdx:gdx:$gdxVersion"
     }
+
 
 Assuming we want to use the LWJGL3 (=Desktop) platform, add the following to `build.gradle` in the `lwjgl3` module:
 
     dependencies {
         implementation "io.github.monstroussoftware.gdx-webgpu:backend-desktop:$gdxWebGPUVersion"
+        // comment out the following:
+        //  implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
+        //  implementation "com.badlogicgames.gdx:gdx-lwjgl3-angle:$gdxVersion"
+        //  implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
     }
 
 In the `lwjgl3` module add a starter class called `Launcher.java` with a content as follows:
@@ -163,7 +182,7 @@ Launcher.java:
     }
 ```
 
-In the `lwjgl3` module find the line in `build.gradle` which defines `mainClassName` and point it to the new starter class (you can delete Lwjgl3Launcher.java):
+In the `lwjgl3` module find the line in `build.gradle` which defines `mainClassName` and point it to the new starter class (delete the file `Lwjgl3Launcher.java`):
 
     // old line: 
     //mainClassName = 'com.monstrous.test.lwjgl3.Lwjgl3Launcher'
@@ -171,12 +190,40 @@ In the `lwjgl3` module find the line in `build.gradle` which defines `mainClassN
     // new line:
     mainClassName = 'com.monstrous.test.lwjgl3.Launcher'
 
-Assuming we want to use the Web teaVM platform, add the following to `build.gradle` in the `teaVM` module:
+Make sure your application uses gdx-webgpu classes where necessary, e.g. WgSpriteBatch instead of SpriteBatch,
+WgTexture instead of Texture, WgScreenUtils instead of ScreenUtils, etcetera.
+
+
+If you want to use the Web TeaVM platform, set the dependencies as follows in `build.gradle` of the `teavm` module:
 
     dependencies {
+        implementation "com.github.xpenatan.gdx-teavm:backend-teavm:$gdxTeaVMVersion"
         implementation "io.github.monstroussoftware.gdx-webgpu:backend-teavm:$gdxWebGPUVersion"
+        implementation "io.github.monstroussoftware.gdx-webgpu:backend-teavm:$gdxWebGPUVersion:sources"
+
+        // the following lines can be commented out as gdx-teavm will pull these in anyway:
+        //  implementation "org.teavm:teavm-classlib:$teaVMVersion"
+        //  implementation "org.teavm:teavm-core:$teaVMVersion"
+        //  implementation "org.teavm:teavm-jso-apis:$teaVMVersion"
+        //  implementation "org.teavm:teavm-jso-impl:$teaVMVersion"
+        //  implementation "org.teavm:teavm-jso:$teaVMVersion"
+        //  implementation "org.teavm:teavm-tooling:$teaVMVersion"
+
+        implementation project(':core')
     }
 
-Also here, you will need to modify the launcher class (to be described...)
+Also here, you will need to modify the launcher class (to be described...). 
+Modify the last line which creates a `TeaApplication` to create a `WgTeaApplication` instead: 
+
+```java
+    public static void main(String[] args) {
+        TeaApplicationConfiguration config = new TeaApplicationConfiguration("canvas");
+    
+        //...
+    
+        new WgTeaApplication(new Main(), config);
+        //new TeaApplication(new Main(), config);
+    }
+```
 
 

@@ -12,8 +12,7 @@ import org.teavm.tooling.TeaVMTool;
 import org.teavm.tooling.sources.DirectorySourceFileProvider;
 import org.teavm.vm.TeaVMOptimizationLevel;
 
-public class
-BuildTeaVM {
+public class BuildTeaVM {
 
     public static void main(String[] args) throws IOException {
         String reflectionPackage = "com.badlogic.gdx.math";

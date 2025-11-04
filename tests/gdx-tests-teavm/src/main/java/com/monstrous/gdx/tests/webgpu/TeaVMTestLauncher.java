@@ -19,11 +19,12 @@ public class TeaVMTestLauncher {
         config.height = 0;
         config.showDownloadLogs = false;
 
+        // example of overriding the default start-up logo
         WgTeaPreloadApplicationListener preloadAppListener = new WgTeaPreloadApplicationListener();
         preloadAppListener.startupLogo = startupLogo;
 
 //        new WgTeaApplication(new ComputeMoldSlime(), config);
-        new WgTeaApplication(new TestChooser(), preloadAppListener, config);
+        new WgTeaApplication(new TestChooser(),  preloadAppListener, config);
 //        new WgTeaApplication(new LoadModelTest(), config);
 //        new WgTeaApplication(new HelloTexture(), config);
     }
