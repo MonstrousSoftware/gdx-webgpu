@@ -5,6 +5,15 @@ val mainClassName = "com.monstrous.gdx.tests.webgpu.WebGPUTestStarter"
 
 val javaVersion = project.property("java") as String
 
+plugins {
+    application
+}
+
+application {
+    mainClass = "com.monstrous.gdx.tests.webgpu.WebGPUTestStarter"
+}
+
+
 sourceSets["main"].resources.srcDirs(File("../assets"))
 
 if (JavaVersion.current().isJava9Compatible) {
@@ -19,7 +28,7 @@ dependencies {
     implementation(project(":tests:gdx-webgpu-tests"))
 }
 
-tasks.register<JavaExec>("launchTestsWebGPU") {
+tasks.register<JavaExec>("gdx_webgpu_tests_run_desktop") {
     group = "LibGDX"
     description = "Run the WebGPU tests"
     mainClass.set(mainClassName)
