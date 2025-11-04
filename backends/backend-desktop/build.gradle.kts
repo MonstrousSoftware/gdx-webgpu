@@ -24,11 +24,11 @@ dependencies {
     implementation("org.lwjgl:lwjgl:3.3.3")
 
     api("com.github.xpenatan.jWebGPU:webgpu-core:$jWebGPUVVersion")
-    implementation("com.github.xpenatan.jWebGPU:webgpu-desktop:$jWebGPUVVersion:windows_64_dawn")
-    implementation("com.github.xpenatan.jWebGPU:webgpu-desktop:$jWebGPUVVersion:windows_64_wgpu")
-    implementation("com.github.xpenatan.jWebGPU:webgpu-desktop:$jWebGPUVVersion:linux_64_wgpu")
-    implementation("com.github.xpenatan.jWebGPU:webgpu-desktop:$jWebGPUVVersion:mac_arm64_wgpu")
-    implementation("com.github.xpenatan.jWebGPU:webgpu-desktop:$jWebGPUVVersion:mac_64_wgpu")
+    api("com.github.xpenatan.jWebGPU:webgpu-desktop:$jWebGPUVVersion:windows_64_dawn")
+    api("com.github.xpenatan.jWebGPU:webgpu-desktop:$jWebGPUVVersion:windows_64_wgpu")
+    api("com.github.xpenatan.jWebGPU:webgpu-desktop:$jWebGPUVVersion:linux_64_wgpu")
+    api("com.github.xpenatan.jWebGPU:webgpu-desktop:$jWebGPUVVersion:mac_arm64_wgpu")
+    api("com.github.xpenatan.jWebGPU:webgpu-desktop:$jWebGPUVVersion:mac_64_wgpu")
 }
 
 publishing {
