@@ -114,11 +114,13 @@ Apart from the graphics platform, gdx-webgpu offers some new features with regar
 - built-in support for GLTF and GLB model format.
 - debug feature to measure GPU time per render pass.
 
-## Dependencies
+## Dependencies (software bill of materials)
 
-| gdx-webgpu | libgdx | gdx-teavm  |
-|------------|--------|------------|
-| 0.6        |1.13.5  | 1.3.0      |
+| gdx-webgpu | libgdx | gdx-teavm  | jWebGPU |
+|------------|--------|------------|---------|
+| 0.7.1      |1.14.0  | 1.4.0      |0.1.9    |
+| 0.7        |1.14.0  | 1.4.0      |0.1.9    |
+| 0.6        |1.13.5  | 1.3.0      |0.1.6    |
 
 ## How to get it
 
