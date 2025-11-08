@@ -47,7 +47,7 @@ public class WgDesktopApplication implements Application {
 	private final Files files;
 	private final Net net;
 	private final ObjectMap<String, Preferences> preferences = new ObjectMap<String, Preferences>();
-	private final Lwjgl3Clipboard clipboard;
+	private final WgDesktopClipboard clipboard;
 	private int logLevel = LOG_INFO;
 	private ApplicationLogger applicationLogger;
 	private volatile boolean running = true;
@@ -123,7 +123,7 @@ public class WgDesktopApplication implements Application {
 		Lwjgl3ApplicationConfiguration lwConfig = new Lwjgl3ApplicationConfiguration();
 		lwConfig.setMaxNetThreads(config.maxNetThreads);
 		this.net = Gdx.net = new Lwjgl3Net(lwConfig);
-		this.clipboard = new Lwjgl3Clipboard();
+		this.clipboard = new WgDesktopClipboard();
 
 		this.sync = new Sync();
 
