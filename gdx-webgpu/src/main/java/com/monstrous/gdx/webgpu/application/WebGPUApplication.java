@@ -423,10 +423,11 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
         queue.release();
         //queue.dispose();
         device.destroy();
-        device.dispose();
         gpuTimer.dispose();
 
         WebGPURenderPass.clearPool();
+        
+        device.dispose();
     }
 
 

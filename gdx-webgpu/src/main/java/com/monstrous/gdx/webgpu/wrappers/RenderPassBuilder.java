@@ -175,9 +175,7 @@ public class RenderPassBuilder {
             renderPassDescriptor.setTimestampWrites(query);
         }
 
-
-        //WebGPURenderPass pass = WebGPURenderPass.obtain();
-        WebGPURenderPass pass = new WebGPURenderPass();
+        WebGPURenderPass pass = WebGPURenderPass.obtain(); // Reuse render pass
 
         Rectangle view = webgpu.getViewportRectangle();         // todo may change over time
         WGPUTextureFormat format = WGPUTextureFormat.RGBA8UnormSrgb;        // TMP
