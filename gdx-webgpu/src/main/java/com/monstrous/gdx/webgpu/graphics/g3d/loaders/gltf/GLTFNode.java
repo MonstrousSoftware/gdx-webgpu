@@ -1,6 +1,5 @@
 package com.monstrous.gdx.webgpu.graphics.g3d.loaders.gltf;
 
-
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;

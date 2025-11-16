@@ -16,31 +16,31 @@
 
 package com.monstrous.gdx.webgpu.wrappers;
 
-
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.github.xpenatan.webgpu.*;
 
-
 public class WebGPUVertexLayout {
 
     /** create a vertex buffer layout object from the VertexAttributes */
-    public static WGPUVertexBufferLayout buildVertexBufferLayout(VertexAttributes attributes ){
+    public static WGPUVertexBufferLayout buildVertexBufferLayout(VertexAttributes attributes) {
 
         WGPUVectorVertexAttribute attribs = WGPUVectorVertexAttribute.obtain();
 
         boolean hasBones = false;
         int offset = 0;
-        for(VertexAttribute attrib : attributes ){
+        for (VertexAttribute attrib : attributes) {
             // if there is a BoneWeight attribute defined add a vec4f on location 6 and 7 for joint ids and bone weights
-            // but do this only once. (libgdx attributes instead treat each BoneWeight unit as a pair of joint id and bne weight
+            // but do this only once. (libgdx attributes instead treat each BoneWeight unit as a pair of joint id and
+            // bne weight
             // and treats this as 4 vec2f).
-            if(attrib.usage == VertexAttributes.Usage.BoneWeight){
-                if(!hasBones) {
+            if (attrib.usage == VertexAttributes.Usage.BoneWeight) {
+                if (!hasBones) {
                     WGPUVertexFormat format = WGPUVertexFormat.Float32x4;
 
-                    WGPUVertexAttribute attribute = new WGPUVertexAttribute();  // to dispose....or is it safe to use obtain?
+                    WGPUVertexAttribute attribute = new WGPUVertexAttribute(); // to dispose....or is it safe to use
+                                                                               // obtain?
                     attribute.setFormat(format);
                     attribute.setOffset(offset);
                     attribute.setShaderLocation(6);
@@ -74,29 +74,42 @@ public class WebGPUVertexLayout {
         return vertexBufferLayout;
     }
 
-    private static WGPUVertexFormat convertFormat(VertexAttribute attrib){
-        WGPUVertexFormat format  = WGPUVertexFormat.CUSTOM;
+    private static WGPUVertexFormat convertFormat(VertexAttribute attrib) {
+        WGPUVertexFormat format = WGPUVertexFormat.CUSTOM;
 
         // todo complete all combinations
-        switch(attrib.type){
+        switch (attrib.type) {
             case GL20.GL_FLOAT:
-                switch(attrib.numComponents){
-                    case 1:   format = WGPUVertexFormat.Float32; break;
-                    case 2:   format = WGPUVertexFormat.Float32x2; break;
-                    case 3:   format = WGPUVertexFormat.Float32x3; break;
-                    case 4:   format = WGPUVertexFormat.Float32x4; break;
+                switch (attrib.numComponents) {
+                    case 1:
+                        format = WGPUVertexFormat.Float32;
+                        break;
+                    case 2:
+                        format = WGPUVertexFormat.Float32x2;
+                        break;
+                    case 3:
+                        format = WGPUVertexFormat.Float32x3;
+                        break;
+                    case 4:
+                        format = WGPUVertexFormat.Float32x4;
+                        break;
                 }
                 break;
             case GL20.GL_UNSIGNED_BYTE:
-                switch(attrib.numComponents){
-                    case 2:   format = WGPUVertexFormat.Unorm8x2; break;
-                    case 4:   format = WGPUVertexFormat.Unorm8x4; break;
+                switch (attrib.numComponents) {
+                    case 2:
+                        format = WGPUVertexFormat.Unorm8x2;
+                        break;
+                    case 4:
+                        format = WGPUVertexFormat.Unorm8x4;
+                        break;
                 }
                 break;
 
         }
-        if(format == WGPUVertexFormat.CUSTOM) {
-            throw new RuntimeException("Unsupported vertex attribute format type: " + attrib.type + " numComponents: " + attrib.numComponents);
+        if (format == WGPUVertexFormat.CUSTOM) {
+            throw new RuntimeException("Unsupported vertex attribute format type: " + attrib.type + " numComponents: "
+                    + attrib.numComponents);
         }
         return format;
     }
@@ -123,7 +136,7 @@ public class WebGPUVertexLayout {
             case Sint32:
             case Float16x2:
             case Float32:
-            //case Unorm1010102:
+                // case Unorm1010102:
                 return 4;
 
             case Uint16x4:
@@ -152,21 +165,39 @@ public class WebGPUVertexLayout {
         }
     }
 
-
-    /** use standard locations for vertex attributes. Shader code needs to follow this too.
+    /**
+     * use standard locations for vertex attributes. Shader code needs to follow this too.
      */
-    public static int getLocation(int usage){
+    public static int getLocation(int usage) {
         int loc = -1;
-        switch(usage){
-            case VertexAttributes.Usage.Position:  loc = 0; break;
-            case VertexAttributes.Usage.ColorUnpacked:  loc = 5; break;
-            case VertexAttributes.Usage.ColorPacked:  loc = 5; break;
-            case VertexAttributes.Usage.Normal:  loc = 2; break;
-            case VertexAttributes.Usage.TextureCoordinates:  loc = 1; break;
-            case VertexAttributes.Usage.Generic:  loc = 0; break;
-            case VertexAttributes.Usage.BoneWeight:  loc = 7; break;    // we use 6 for joints and 7 for weights
-            case VertexAttributes.Usage.Tangent:  loc = 3; break;
-            case VertexAttributes.Usage.BiNormal:  loc = 4; break;
+        switch (usage) {
+            case VertexAttributes.Usage.Position:
+                loc = 0;
+                break;
+            case VertexAttributes.Usage.ColorUnpacked:
+                loc = 5;
+                break;
+            case VertexAttributes.Usage.ColorPacked:
+                loc = 5;
+                break;
+            case VertexAttributes.Usage.Normal:
+                loc = 2;
+                break;
+            case VertexAttributes.Usage.TextureCoordinates:
+                loc = 1;
+                break;
+            case VertexAttributes.Usage.Generic:
+                loc = 0;
+                break;
+            case VertexAttributes.Usage.BoneWeight:
+                loc = 7;
+                break; // we use 6 for joints and 7 for weights
+            case VertexAttributes.Usage.Tangent:
+                loc = 3;
+                break;
+            case VertexAttributes.Usage.BiNormal:
+                loc = 4;
+                break;
             default:
                 throw new RuntimeException("Unknown usage: " + usage);
         }

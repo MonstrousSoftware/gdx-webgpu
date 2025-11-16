@@ -53,21 +53,20 @@ import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDefaultShader;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
 
-
 /** Test GLTF skinning i.e. skeletal animation with multiple rigged instances, not per se synchronized */
 
 public class GLTFSkinningMultiple extends GdxTest {
 
-	WgModelBatch modelBatch;
-	PerspectiveCamera cam;
+    WgModelBatch modelBatch;
+    PerspectiveCamera cam;
     CameraInputController controller;
-	WgSpriteBatch batch;
-	WgBitmapFont font;
-	Model model;
+    WgSpriteBatch batch;
+    WgBitmapFont font;
+    Model model;
     Model model2;
     Model floorModel;
     ModelInstance floor;
-	Array<ModelInstance> jointBoxes;
+    Array<ModelInstance> jointBoxes;
     Array<Node> jointNodes;
     ModelInstance instance;
     ModelInstance instance2;
@@ -81,35 +80,32 @@ public class GLTFSkinningMultiple extends GdxTest {
     private AnimationController animationController;
     private AnimationController animationController2;
 
-
-
-	// application
-	public void create () {
+    // application
+    public void create() {
         gfx = (WgGraphics) Gdx.graphics;
         webgpu = gfx.getContext();
 
         WgModelBatch.Config config = new WgModelBatch.Config();
-        config.numBones = 80;   // set number of bones as needed for the model
-		modelBatch = new WgModelBatch(config);
+        config.numBones = 80; // set number of bones as needed for the model
+        modelBatch = new WgModelBatch(config);
 
-		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		cam.position.set(2, 2, 3f);
-		cam.lookAt(0,1,0);
-		cam.near = 0.001f;
-		cam.far = 1000f;
+        cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        cam.position.set(2, 2, 3f);
+        cam.lookAt(0, 1, 0);
+        cam.near = 0.001f;
+        cam.far = 1000f;
 
         jointBoxes = new Array<>();
         jointNodes = new Array<>();
         disposables = new Array<>();
 
-        //model = loadModel("data/g3d/gltf/SimpleSkin/SimpleSkin.gltf");
+        // model = loadModel("data/g3d/gltf/SimpleSkin/SimpleSkin.gltf");
         model2 = loadModel("data/g3d/gltf/SillyDancing/SillyDancing.gltf");
-        //modelFileName = "data/g3d/gltf/RiggedFigure/RiggedFigure.gltf";
-        //modelFileName = "data/g3d/gltf/Fox/Fox.gltf";
-        //modelFileName = "data/g3d/gltf/RiggedSimple/RiggedSimple.gltf";
-        //modelFileName = "data/g3d/gltf/SillyDancing/SillyDancing.gltf";
+        // modelFileName = "data/g3d/gltf/RiggedFigure/RiggedFigure.gltf";
+        // modelFileName = "data/g3d/gltf/Fox/Fox.gltf";
+        // modelFileName = "data/g3d/gltf/RiggedSimple/RiggedSimple.gltf";
+        // modelFileName = "data/g3d/gltf/SillyDancing/SillyDancing.gltf";
         model = loadModel("data/g3d/gltf/Warrior/Warrior.gltf");
-
 
         instances = new Array<>();
 
@@ -121,19 +117,19 @@ public class GLTFSkinningMultiple extends GdxTest {
 
         makeBones(instance2);
 
-        System.out.println("Animation count: "+instance.animations.size);
+        System.out.println("Animation count: " + instance.animations.size);
 
-        if(instance.animations != null && instance.animations.size > 0) {
+        if (instance.animations != null && instance.animations.size > 0) {
             animationController = new AnimationController(instance);
-            String animationName = instance.animations.get(0).id;   // play first animation
+            String animationName = instance.animations.get(0).id; // play first animation
             Animation anim = instance.animations.get(0);
             System.out.println("Animation[0]: " + animationName);
             animationController.setAnimation(animationName, -1);
         }
 
-        if(instance2.animations != null && instance2.animations.size > 0) {
+        if (instance2.animations != null && instance2.animations.size > 0) {
             animationController2 = new AnimationController(instance2);
-            String animationName = instance2.animations.get(0).id;   // play first animation
+            String animationName = instance2.animations.get(0).id; // play first animation
             Animation anim = instance2.animations.get(0);
             System.out.println("Animation[0]: " + animationName);
             animationController2.setAnimation(animationName, -1);
@@ -141,28 +137,29 @@ public class GLTFSkinningMultiple extends GdxTest {
 
         ModelBuilder modelBuilder = new WgModelBuilder();
         Texture texture = new WgTexture(Gdx.files.internal("data/badlogic.jpg"), true);
-        disposables.add( texture );
+        disposables.add(texture);
         texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear);
         Material mat = new Material(TextureAttribute.createDiffuse(texture));
-        long attribs = VertexAttributes.Usage.Position | VertexAttributes.Usage.TextureCoordinates | VertexAttributes.Usage.Normal ;
+        long attribs = VertexAttributes.Usage.Position | VertexAttributes.Usage.TextureCoordinates
+                | VertexAttributes.Usage.Normal;
         Model box = modelBuilder.createBox(1, 1, 1, mat, attribs);
-        disposables.add( box );
+        disposables.add(box);
 
         instances.add(new ModelInstance(box, 0, .5f, 0));
 
         floorModel = makeFloorModel();
         instances.add(new ModelInstance(floorModel, 0, -.5f, 0));
 
-		controller = new CameraInputController(cam);
+        controller = new CameraInputController(cam);
 
-		Gdx.input.setInputProcessor(controller);
+        Gdx.input.setInputProcessor(controller);
         viewport = new ScreenViewport();
-		batch = new WgSpriteBatch();
-		font = new WgBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
+        batch = new WgSpriteBatch();
+        font = new WgBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
 
         environment = new Environment();
         float amb = 0.2f;
-        ColorAttribute ambient =  ColorAttribute.createAmbientLight(amb, amb, amb, 1f);
+        ColorAttribute ambient = ColorAttribute.createAmbientLight(amb, amb, amb, 1f);
         environment.set(ambient);
 
         Vector3 lightPos = new Vector3(-.75f, 2f, -0.25f);
@@ -171,54 +168,54 @@ public class GLTFSkinningMultiple extends GdxTest {
         dirLight1.setColor(24f, 2f, 2f, 1f);// color * intensity
 
         environment.add(dirLight1);
-	}
+    }
 
-    private Model loadModel(String modelFileName ){
+    private Model loadModel(String modelFileName) {
         Model model = null;
         WgModelLoader.ModelParameters params = new WgModelLoader.ModelParameters();
         params.textureParameter.genMipMaps = true;
 
         FileHandle file = Gdx.files.internal(modelFileName);
-        if(file.extension().contentEquals("gltf"))
+        if (file.extension().contentEquals("gltf"))
             model = new WgGLTFModelLoader().loadModel(file, params);
-        else if(file.extension().contentEquals("glb"))
+        else if (file.extension().contentEquals("glb"))
             model = new WgGLBModelLoader().loadModel(file, params);
         else
-            System.out.println("File extension not supported: "+modelFileName);
+            System.out.println("File extension not supported: " + modelFileName);
 
         return model;
     }
 
-    private Model makeFloorModel(){
+    private Model makeFloorModel() {
         ModelBuilder modelBuilder = new WgModelBuilder();
         float size = 20f;
         Model model = modelBuilder.createBox(size, 1, size, new Material(ColorAttribute.createDiffuse(Color.OLIVE)),
-            VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+                VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
         return model;
     }
 
     /** create boxes to visualize the skeleton joints */
-    private void makeBones(ModelInstance instance){
+    private void makeBones(ModelInstance instance) {
         ModelBuilder modelBuilder = new WgModelBuilder();
 
-        for(Node node : instance.nodes) {
-            System.out.println("instance.node: "+node.id);
+        for (Node node : instance.nodes) {
+            System.out.println("instance.node: " + node.id);
             makeBones(node, instance, modelBuilder);
         }
     }
 
-
     //
-    private void makeBones(Node node, ModelInstance instance, ModelBuilder modelBuilder){
-        //System.out.println("checking node "+node.id);
+    private void makeBones(Node node, ModelInstance instance, ModelBuilder modelBuilder) {
+        // System.out.println("checking node "+node.id);
         instance.calculateTransforms();
-        for(NodePart part : node.parts){
-            if(part.invBoneBindTransforms != null){
-                for(Node joint : part.invBoneBindTransforms.keys()){
-                    //System.out.println("joint: "+joint.id);
+        for (NodePart part : node.parts) {
+            if (part.invBoneBindTransforms != null) {
+                for (Node joint : part.invBoneBindTransforms.keys()) {
+                    // System.out.println("joint: "+joint.id);
                     float size = 0.05f;
-                    model = modelBuilder.createBox(size, size, size, new Material(ColorAttribute.createDiffuse(Color.BLUE)),
-                    VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+                    model = modelBuilder.createBox(size, size, size,
+                            new Material(ColorAttribute.createDiffuse(Color.BLUE)),
+                            VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
                     ModelInstance boneInstance = new ModelInstance(model);
                     boneInstance.transform.set(joint.globalTransform);
                     disposables.add(model);
@@ -227,71 +224,69 @@ public class GLTFSkinningMultiple extends GdxTest {
                 }
             }
         }
-        for(Node child : node.getChildren())
+        for (Node child : node.getChildren())
             makeBones(child, instance, modelBuilder);
     }
 
-    private void updateBones(ModelInstance instance){
-        for(int i = 0; i < jointBoxes.size; i++){
+    private void updateBones(ModelInstance instance) {
+        for (int i = 0; i < jointBoxes.size; i++) {
             jointBoxes.get(i).transform.set(instance.transform).mul(jointNodes.get(i).globalTransform);
         }
     }
 
-	public void render () {
-		float delta =Gdx.graphics.getDeltaTime();
-        if(animationController != null) {
+    public void render() {
+        float delta = Gdx.graphics.getDeltaTime();
+        if (animationController != null) {
             animationController.update(delta);
         }
-        if(animationController2 != null) {
+        if (animationController2 != null) {
             animationController2.update(delta);
         }
         updateBones(instance2);
 
+        cam.update();
 
-		cam.update();
-
-        modelBatch.begin(cam,Color.TEAL, true);
-		modelBatch.render(instances, environment);
-		modelBatch.end();
+        modelBatch.begin(cam, Color.TEAL, true);
+        modelBatch.render(instances, environment);
+        modelBatch.end();
 
         modelBatch.begin(cam, null, true);
         modelBatch.render(jointBoxes);
         modelBatch.end();
 
-//        viewport.apply();
-//        batch.setProjectionMatrix(viewport.getCamera().combined);
-//		batch.begin();
-//        int y = 200;
-//		font.draw(batch, "Model loaded: "+modelFileName , 0, y-=20);
-//        font.draw(batch, "FPS: "+Gdx.graphics.getFramesPerSecond() ,0, y -= 20);
-//        font.draw(batch, "delta time: "+(int)(1000000/(Gdx.graphics.getFramesPerSecond()+0.001f))+" microseconds",0, y -= 20);
-//
-//        for(int pass = 0; pass < webgpu.getGPUTimer().getNumPasses(); pass++)
-//            font.draw(batch, "GPU time (pass "+pass+" "+webgpu.getGPUTimer().getPassName(pass)+") : "+(int)webgpu.getAverageGPUtime(pass)+ " microseconds" ,0, y -= 20);
-//        batch.end();
+        // viewport.apply();
+        // batch.setProjectionMatrix(viewport.getCamera().combined);
+        // batch.begin();
+        // int y = 200;
+        // font.draw(batch, "Model loaded: "+modelFileName , 0, y-=20);
+        // font.draw(batch, "FPS: "+Gdx.graphics.getFramesPerSecond() ,0, y -= 20);
+        // font.draw(batch, "delta time: "+(int)(1000000/(Gdx.graphics.getFramesPerSecond()+0.001f))+" microseconds",0,
+        // y -= 20);
+        //
+        // for(int pass = 0; pass < webgpu.getGPUTimer().getNumPasses(); pass++)
+        // font.draw(batch, "GPU time (pass "+pass+" "+webgpu.getGPUTimer().getPassName(pass)+") :
+        // "+(int)webgpu.getAverageGPUtime(pass)+ " microseconds" ,0, y -= 20);
+        // batch.end();
 
+    }
 
-
-	}
-
-	@Override
-	public void resize(int width, int height) {
-		cam.viewportWidth = width;
-		cam.viewportHeight = height;
-		cam.update();
+    @Override
+    public void resize(int width, int height) {
+        cam.viewportWidth = width;
+        cam.viewportHeight = height;
+        cam.update();
         viewport.update(width, height, true);
 
-	}
+    }
 
-	@Override
-	public void dispose () {
-		batch.dispose();
-		font.dispose();
-		modelBatch.dispose();
-		model.dispose();
+    @Override
+    public void dispose() {
+        batch.dispose();
+        font.dispose();
+        modelBatch.dispose();
+        model.dispose();
         floorModel.dispose();
 
-	}
-
+    }
 
 }

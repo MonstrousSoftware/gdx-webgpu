@@ -10,7 +10,6 @@ public class GLTFMaterial {
     public float alphaCutoff;
     public boolean doubleSide;
 
-
     public GLTFMaterial() {
         alphaMode = "OPAQUE";
         alphaCutoff = 0.5f;

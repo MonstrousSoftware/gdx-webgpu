@@ -16,7 +16,6 @@
 
 package com.monstrous.gdx.webgpu.graphics.g3d.attributes;
 
-
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g3d.Attribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
@@ -38,55 +37,57 @@ public class WgCubemapAttribute extends Attribute {
 
     protected static long Mask = EnvironmentMap | DiffuseCubeMap | SpecularCubeMap;
 
-    public static boolean is (final long mask) {
+    public static boolean is(final long mask) {
         return (mask & Mask) != 0;
     }
 
-	public final TextureDescriptor<WgCubemap> textureDescription;
+    public final TextureDescriptor<WgCubemap> textureDescription;
 
-	public WgCubemapAttribute(final long type) {
-		super(type);
-		if (!is(type)) throw new GdxRuntimeException("Invalid type specified");
-		textureDescription = new TextureDescriptor<WgCubemap>();
-	}
+    public WgCubemapAttribute(final long type) {
+        super(type);
+        if (!is(type))
+            throw new GdxRuntimeException("Invalid type specified");
+        textureDescription = new TextureDescriptor<WgCubemap>();
+    }
 
-	public <T extends WgCubemap> WgCubemapAttribute(final long type, final TextureDescriptor<T> textureDescription) {
-		this(type);
-		this.textureDescription.set(textureDescription);
-	}
+    public <T extends WgCubemap> WgCubemapAttribute(final long type, final TextureDescriptor<T> textureDescription) {
+        this(type);
+        this.textureDescription.set(textureDescription);
+    }
 
-	public WgCubemapAttribute(final long type, final WgCubemap texture) {
-		this(type);
-		textureDescription.texture = texture;
-	}
+    public WgCubemapAttribute(final long type, final WgCubemap texture) {
+        this(type);
+        textureDescription.texture = texture;
+    }
 
-	public WgCubemapAttribute(final WgCubemapAttribute copyFrom) {
-		this(copyFrom.type, copyFrom.textureDescription);
-	}
+    public WgCubemapAttribute(final WgCubemapAttribute copyFrom) {
+        this(copyFrom.type, copyFrom.textureDescription);
+    }
 
-    public static WgCubemapAttribute createDiffuseCubeMap (final WgCubemap cubeMap) {
+    public static WgCubemapAttribute createDiffuseCubeMap(final WgCubemap cubeMap) {
         return new WgCubemapAttribute(DiffuseCubeMap, cubeMap);
     }
 
-    public static WgCubemapAttribute createSpecularCubeMap (final WgCubemap cubeMap) {
+    public static WgCubemapAttribute createSpecularCubeMap(final WgCubemap cubeMap) {
         return new WgCubemapAttribute(SpecularCubeMap, cubeMap);
     }
 
-	@Override
-	public Attribute copy () {
-		return new WgCubemapAttribute(this);
-	}
+    @Override
+    public Attribute copy() {
+        return new WgCubemapAttribute(this);
+    }
 
-	@Override
-	public int hashCode () {
-		int result = super.hashCode();
-		result = 967 * result + textureDescription.hashCode();
-		return result;
-	}
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 967 * result + textureDescription.hashCode();
+        return result;
+    }
 
-	@Override
-	public int compareTo (Attribute o) {
-		if (type != o.type) return (int)(type - o.type);
-		return textureDescription.compareTo(((WgCubemapAttribute)o).textureDescription);
-	}
+    @Override
+    public int compareTo(Attribute o) {
+        if (type != o.type)
+            return (int) (type - o.type);
+        return textureDescription.compareTo(((WgCubemapAttribute) o).textureDescription);
+    }
 }

@@ -6,18 +6,16 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * This file contains code to read and write four byte rgbe file format
- * developed by Greg Ward.  It handles the conversions between rgbe and
- * pixels consisting of floats.  The data is assumed to be an array of floats.
- * By default there are three floats per pixel in the order red, green, blue.
- * (RGBE_DATA_??? values control this.)  Only the mimimal header reading and
- * writing is implemented.  Each routine does error checking and will return
- * a status value as defined below.  This code is intended as a skeleton so
- * feel free to modify it to suit your needs. <P>
+ * This file contains code to read and write four byte rgbe file format developed by Greg Ward. It handles the
+ * conversions between rgbe and pixels consisting of floats. The data is assumed to be an array of floats. By default
+ * there are three floats per pixel in the order red, green, blue. (RGBE_DATA_??? values control this.) Only the mimimal
+ * header reading and writing is implemented. Each routine does error checking and will return a status value as defined
+ * below. This code is intended as a skeleton so feel free to modify it to suit your needs.
+ * <P>
  * <p/>
  * Ported to Java and restructured by Kenneth Russell. <BR>
  * posted to http://www.graphics.cornell.edu/~bjw/ <BR>
- * written by Bruce Walter  (bjw@graphics.cornell.edu)  5/26/95 <BR>
+ * written by Bruce Walter (bjw@graphics.cornell.edu) 5/26/95 <BR>
  * based on code written by Greg Ward <BR>
  * <p/>
  * Source: https://java.net/projects/jogl-demos/sources/svn/content/trunk/src/demos/hdr/RGBE.java
@@ -53,12 +51,7 @@ public class RGBE {
         private int width;
         private int height;
 
-        private Header(int valid,
-                       String programType,
-                       float gamma,
-                       float exposure,
-                       int width,
-                       int height) {
+        private Header(int valid, String programType, float gamma, float exposure, int width, int height) {
             this.valid = valid;
             this.programType = programType;
             this.gamma = gamma;
@@ -145,8 +138,8 @@ public class RGBE {
                 throw new IOException("Unexpected EOF reading line after magic token");
             }
         }
-        if((valid & VALID_PROGRAMTYPE) == 0 || (!programType.equals("RADIANCE") && !programType.equals("RGBE"))){
-        	throw new IOException("not an HDR file");
+        if ((valid & VALID_PROGRAMTYPE) == 0 || (!programType.equals("RADIANCE") && !programType.equals("RGBE"))) {
+            throw new IOException("not an HDR file");
         }
 
         boolean foundFormat = false;
@@ -158,12 +151,10 @@ public class RGBE {
             else if (buf.startsWith(gammaString)) {
                 valid |= VALID_GAMMA;
                 gamma = Float.parseFloat(buf.substring(gammaString.length()));
-            }
-            else if (buf.startsWith(exposureString)) {
+            } else if (buf.startsWith(exposureString)) {
                 valid |= VALID_EXPOSURE;
                 exposure = Float.parseFloat(buf.substring(exposureString.length()));
-            }
-            else {
+            } else {
                 Matcher m = widthHeightPattern.matcher(buf);
                 if (m.matches()) {
                     width = Integer.parseInt(m.group(2));
@@ -188,7 +179,7 @@ public class RGBE {
     }
 
     /**
-     * Simple read routine.  Will not correctly handle run length encoding.
+     * Simple read routine. Will not correctly handle run length encoding.
      */
     public static void readPixels(DataInput in, float[] data, int numpixels) throws IOException {
         byte[] rgbe = new byte[4];
@@ -211,8 +202,8 @@ public class RGBE {
         in.readFully(data, offset, numExpected);
     }
 
-    public static void readPixelsRawRLE(DataInput in, byte[] data, int offset,
-                                        int scanline_width, int num_scanlines) throws IOException {
+    public static void readPixelsRawRLE(DataInput in, byte[] data, int offset, int scanline_width, int num_scanlines)
+            throws IOException {
         byte[] rgbe = new byte[4];
         byte[] scanline_buffer = null;
         int ptr, ptr_end;
@@ -238,9 +229,8 @@ public class RGBE {
             }
 
             if ((((rgbe[2] & 0xFF) << 8) | (rgbe[3] & 0xFF)) != scanline_width) {
-                throw new IOException("Wrong scanline width " +
-                        (((rgbe[2] & 0xFF) << 8) | (rgbe[3] & 0xFF)) +
-                        ", expected " + scanline_width);
+                throw new IOException("Wrong scanline width " + (((rgbe[2] & 0xFF) << 8) | (rgbe[3] & 0xFF))
+                        + ", expected " + scanline_width);
             }
 
             if (scanline_buffer == null) {
@@ -263,8 +253,7 @@ public class RGBE {
                         while (count-- > 0) {
                             scanline_buffer[ptr++] = buf[1];
                         }
-                    }
-                    else {
+                    } else {
                         // a non-run
                         count = buf[0] & 0xFF;
                         if ((count == 0) || (count > ptr_end - ptr)) {
@@ -304,8 +293,7 @@ public class RGBE {
         }
         if (v < 1e-32f) {
             rgbe[0] = rgbe[1] = rgbe[2] = rgbe[3] = 0;
-        }
-        else {
+        } else {
             FracExp fe = frexp(v);
             v = (float) (fe.getFraction() * 256.0 / v);
             rgbe[0] = (byte) (red * v);
@@ -318,7 +306,7 @@ public class RGBE {
     /**
      * Standard conversion from float pixels to rgbe pixels.
      */
-    public static void float2rgbe(byte[] rgbe, float red, float green, float blue,int off,int separation) {
+    public static void float2rgbe(byte[] rgbe, float red, float green, float blue, int off, int separation) {
         float v;
 
         v = red;
@@ -329,71 +317,69 @@ public class RGBE {
             v = blue;
         }
         if (v < 1e-32f) {
-            rgbe[off] = rgbe[off+separation] = rgbe[off+separation*2] = rgbe[off+separation*3] = 0;
-        }
-        else {
+            rgbe[off] = rgbe[off + separation] = rgbe[off + separation * 2] = rgbe[off + separation * 3] = 0;
+        } else {
             FracExp fe = frexp(v);
             v = (float) (fe.getFraction() * 256.0 / v);
             rgbe[off] = (byte) (red * v);
-            rgbe[off+separation] = (byte) (green * v);
-            rgbe[off+separation*2] = (byte) (blue * v);
-            rgbe[off+separation*3] = (byte) (fe.getExponent() + 128);
+            rgbe[off + separation] = (byte) (green * v);
+            rgbe[off + separation * 2] = (byte) (blue * v);
+            rgbe[off + separation * 3] = (byte) (fe.getExponent() + 128);
         }
     }
 
     /**
      * Standard conversion from float pixels to re pixels.
      */
-    public static void float2re(byte[] re, float red,int off,int separation) {
+    public static void float2re(byte[] re, float red, int off, int separation) {
         float v;
 
         v = red;
 
         if (v < 1e-32f) {
-        	re[off] = re[off+separation] = 0;
-        }
-        else {
+            re[off] = re[off + separation] = 0;
+        } else {
             FracExp fe = frexp(v);
             v = (float) (fe.getFraction() * 256.0 / v);
             re[off] = (byte) (red * v);
-            re[off+separation] = (byte) (fe.getExponent() + 128);
+            re[off + separation] = (byte) (fe.getExponent() + 128);
         }
     }
 
     /**
-     * Standard conversion from rgbe to float pixels.  Note: Ward uses
-     * ldexp(col+0.5,exp-(128+8)). However we wanted pixels in the
-     * range [0,1] to map back into the range [0,1].
+     * Standard conversion from rgbe to float pixels. Note: Ward uses ldexp(col+0.5,exp-(128+8)). However we wanted
+     * pixels in the range [0,1] to map back into the range [0,1].
      */
     public static void rgbe2float(float[] rgb, byte[] rgbe, int startRGBEOffset) {
-    	rgbe2float(rgb,rgbe,startRGBEOffset,0);
+        rgbe2float(rgb, rgbe, startRGBEOffset, 0);
     }
-    public static void rgbe2float(float[] rgb, byte[] rgbe, int startRGBEOffset,int startFloatOffset) {
+
+    public static void rgbe2float(float[] rgb, byte[] rgbe, int startRGBEOffset, int startFloatOffset) {
         float f;
 
-        if (rgbe[startRGBEOffset + 3] != 0) {   // nonzero pixel
+        if (rgbe[startRGBEOffset + 3] != 0) { // nonzero pixel
             f = (float) ldexp(1.0, (rgbe[startRGBEOffset + 3] & 0xFF) - (128 + 8));
             rgb[startFloatOffset] = (rgbe[startRGBEOffset + 0] & 0xFF) * f;
-            rgb[startFloatOffset+1] = (rgbe[startRGBEOffset + 1] & 0xFF) * f;
-            rgb[startFloatOffset+2] = (rgbe[startRGBEOffset + 2] & 0xFF) * f;
-        }
-        else {
+            rgb[startFloatOffset + 1] = (rgbe[startRGBEOffset + 1] & 0xFF) * f;
+            rgb[startFloatOffset + 2] = (rgbe[startRGBEOffset + 2] & 0xFF) * f;
+        } else {
             rgb[startFloatOffset] = 0;
-            rgb[startFloatOffset+1] = 0;
-            rgb[startFloatOffset+2] = 0;
+            rgb[startFloatOffset + 1] = 0;
+            rgb[startFloatOffset + 2] = 0;
         }
     }
+
     public static void re2float(float[] rgb, byte[] rgbe, int startRGBEOffset) {
-    	re2float(rgb,rgbe,startRGBEOffset,0);
+        re2float(rgb, rgbe, startRGBEOffset, 0);
     }
-    public static void re2float(float[] r, byte[] rgbe, int startRGBEOffset,int startFloatOffset) {
+
+    public static void re2float(float[] r, byte[] rgbe, int startRGBEOffset, int startFloatOffset) {
         float f;
 
-        if (rgbe[startRGBEOffset + 3] != 0) {   // nonzero pixel
+        if (rgbe[startRGBEOffset + 3] != 0) { // nonzero pixel
             f = (float) ldexp(1.0, (rgbe[startRGBEOffset + 3] & 0xFF) - (128 + 8));
             r[startFloatOffset] = (rgbe[startRGBEOffset + 0] & 0xFF) * f;
-        }
-        else {
+        } else {
             r[startFloatOffset] = 0;
         }
     }
@@ -409,11 +395,11 @@ public class RGBE {
         return value;
     }
 
-    //----------------------------------------------------------------------
+    // ----------------------------------------------------------------------
     // Internals only below this point
     //
 
-    //----------------------------------------------------------------------
+    // ----------------------------------------------------------------------
     // Math routines, some fdlibm-derived
     //
 
@@ -435,8 +421,8 @@ public class RGBE {
         }
     }
 
-    private static final double two54 = 1.80143985094819840000e+16;  // 43500000 00000000
-    private static final double twom54 = 5.55111512312578270212e-17;  // 0x3C900000 0x00000000
+    private static final double two54 = 1.80143985094819840000e+16; // 43500000 00000000
+    private static final double twom54 = 5.55111512312578270212e-17; // 0x3C900000 0x00000000
     private static final double huge = 1.0e+300;
     private static final double tiny = 1.0e-300;
 
@@ -451,8 +437,7 @@ public class RGBE {
     }
 
     private static double fromhilo(int hi, int lo) {
-        return Double.longBitsToDouble((((long) hi) << 32) |
-                (((long) lo) & 0xFFFFFFFFL));
+        return Double.longBitsToDouble((((long) hi) << 32) | (((long) lo) & 0xFFFFFFFFL));
     }
 
     private static FracExp frexp(double x) {
@@ -461,9 +446,9 @@ public class RGBE {
         int lx = lo(x);
         int e = 0;
         if (ix >= 0x7ff00000 || ((ix | lx) == 0)) {
-            return new FracExp(x, e);         // 0,inf,nan
+            return new FracExp(x, e); // 0,inf,nan
         }
-        if (ix < 0x00100000) {                // subnormal
+        if (ix < 0x00100000) { // subnormal
             x *= two54;
             hx = hi(x);
             ix = hx & 0x7fffffff;
@@ -483,8 +468,7 @@ public class RGBE {
 
     /**
      * copysign(double x, double y) <BR>
-     * copysign(x,y) returns a value with the magnitude of x and
-     * with the sign bit of y.
+     * copysign(x,y) returns a value with the magnitude of x and with the sign bit of y.
      */
     private static double copysign(double x, double y) {
         return fromhilo((hi(x) & 0x7fffffff) | (hi(y) & 0x80000000), lo(x));
@@ -492,15 +476,14 @@ public class RGBE {
 
     /**
      * scalbn (double x, int n) <BR>
-     * scalbn(x,n) returns x* 2**n  computed by  exponent
-     * manipulation rather than by actually performing an
+     * scalbn(x,n) returns x* 2**n computed by exponent manipulation rather than by actually performing an
      * exponentiation or a multiplication.
      */
     private static double scalbn(double x, int n) {
         int hx = hi(x);
         int lx = lo(x);
-        int k = (hx & 0x7ff00000) >> 20;         // extract exponent
-        if (k == 0) {                          // 0 or subnormal x
+        int k = (hx & 0x7ff00000) >> 20; // extract exponent
+        if (k == 0) { // 0 or subnormal x
             if ((lx | (hx & 0x7fffffff)) == 0) {
                 return x; // +-0
             }
@@ -508,15 +491,15 @@ public class RGBE {
             hx = hi(x);
             k = ((hx & 0x7ff00000) >> 20) - 54;
             if (n < -50000) {
-                return tiny * x;                   // underflow
+                return tiny * x; // underflow
             }
         }
         if (k == 0x7ff) {
-            return x + x;                        // NaN or Inf
+            return x + x; // NaN or Inf
         }
         k = k + n;
         if (k > 0x7fe) {
-            return huge * copysign(huge, x);      // overflow
+            return huge * copysign(huge, x); // overflow
         }
         if (k > 0) {
             // normal result
@@ -525,18 +508,17 @@ public class RGBE {
         if (k <= -54) {
             if (n > 50000) {
                 // in case integer overflow in n+k
-                return huge * copysign(huge, x);  // overflow
-            }
-            else {
-                return tiny * copysign(tiny, x);    // underflow
+                return huge * copysign(huge, x); // overflow
+            } else {
+                return tiny * copysign(tiny, x); // underflow
             }
         }
-        k += 54;                             // subnormal result
+        k += 54; // subnormal result
         x = fromhilo((hx & 0x800fffff) | (k << 20), lo(x));
         return x * twom54;
     }
 
-    //----------------------------------------------------------------------
+    // ----------------------------------------------------------------------
     // Test harness
     //
 
@@ -550,8 +532,7 @@ public class RGBE {
                 byte[] data = new byte[header.getWidth() * header.getHeight() * 4];
                 readPixelsRawRLE(in, data, 0, header.getWidth(), header.getHeight());
                 in.close();
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }

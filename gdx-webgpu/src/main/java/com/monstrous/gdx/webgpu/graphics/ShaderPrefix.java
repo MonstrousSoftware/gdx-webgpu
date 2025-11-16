@@ -16,7 +16,6 @@
 
 package com.monstrous.gdx.webgpu.graphics;
 
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.Environment;
@@ -28,28 +27,30 @@ import com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute;
 public class ShaderPrefix {
     private static final StringBuffer sb = new StringBuffer();
 
-    /** create a shader prefix depending on the defined attributes which allows to skip some shader code via conditional compilation.
-     * The prefix consists of a number of #define statements.
-     * */
+    /**
+     * create a shader prefix depending on the defined attributes which allows to skip some shader code via conditional
+     * compilation. The prefix consists of a number of #define statements.
+     */
     // todo add material attributes
-    public static String buildPrefix(VertexAttributes vertexAttributes, Environment environment, int maxDirLights, int maxPointLights, boolean usePBR ){
+    public static String buildPrefix(VertexAttributes vertexAttributes, Environment environment, int maxDirLights,
+            int maxPointLights, boolean usePBR) {
         sb.setLength(0);
 
-        if(vertexAttributes != null) {
+        if (vertexAttributes != null) {
             long mask = vertexAttributes.getMask();
             if ((mask & VertexAttributes.Usage.TextureCoordinates) != 0) {
                 sb.append("#define TEXTURE_COORDINATE\n");
             }
-            if ((mask & VertexAttributes.Usage.ColorUnpacked) != 0 ) {
+            if ((mask & VertexAttributes.Usage.ColorUnpacked) != 0) {
                 sb.append("#define COLOR\n");
             }
-            if ((mask & VertexAttributes.Usage.ColorPacked) != 0 ) {
+            if ((mask & VertexAttributes.Usage.ColorPacked) != 0) {
                 sb.append("#define COLOR\n");
             }
             if ((mask & VertexAttributes.Usage.Normal) != 0) {
                 sb.append("#define NORMAL\n");
             }
-            if ((mask & VertexAttributes.Usage.Tangent) != 0) {  // this is taken as indication that a normal map is used
+            if ((mask & VertexAttributes.Usage.Tangent) != 0) { // this is taken as indication that a normal map is used
                 sb.append("#define NORMAL_MAP\n");
             }
             if ((mask & VertexAttributes.Usage.BoneWeight) != 0) {
@@ -61,47 +62,46 @@ public class ShaderPrefix {
                 sb.append("#define LIGHTING\n");
             }
         }
-        if(environment != null){
-            if((environment.getMask() & ColorAttribute.Fog) != 0){
+        if (environment != null) {
+            if ((environment.getMask() & ColorAttribute.Fog) != 0) {
                 sb.append("#define FOG\n");
             }
-            if((environment.getMask() & WgCubemapAttribute.EnvironmentMap) != 0){
+            if ((environment.getMask() & WgCubemapAttribute.EnvironmentMap) != 0) {
                 sb.append("#define ENVIRONMENT_MAP\n");
             }
-            if(environment.shadowMap != null){
+            if (environment.shadowMap != null) {
                 sb.append("#define SHADOW_MAP\n");
             }
-            if(usePBR && (environment.getMask() & WgCubemapAttribute.DiffuseCubeMap) != 0){
+            if (usePBR && (environment.getMask() & WgCubemapAttribute.DiffuseCubeMap) != 0) {
                 sb.append("#define USE_IBL\n");
             }
         }
 
         // todo select this based on material
-        if(usePBR)
+        if (usePBR)
             sb.append("#define PBR\n");
 
-        if(maxDirLights > 0)
+        if (maxDirLights > 0)
             sb.append("#define MAX_DIR_LIGHTS ").append(maxDirLights).append('\n');
-        if(maxPointLights > 0)
+        if (maxPointLights > 0)
             sb.append("#define MAX_POINT_LIGHTS ").append(maxPointLights).append('\n');
 
         // SPECULAR is ignored if PBR is active
-        //sb.append("#define SPECULAR\n");
+        // sb.append("#define SPECULAR\n");
 
-//        if (environment != null && !environment.depthPass && environment.renderShadows) {
-//            sb.append("#define SHADOWS\n");
-//        }
-
+        // if (environment != null && !environment.depthPass && environment.renderShadows) {
+        // sb.append("#define SHADOWS\n");
+        // }
 
         // Add gamma correction if surface format is not Srgb
 
-        WgGraphics gfx = (WgGraphics)Gdx.graphics;
+        WgGraphics gfx = (WgGraphics) Gdx.graphics;
         WebGPUContext webgpu = gfx.getContext();
-        if(!webgpu.hasLinearOutput()){
+        if (!webgpu.hasLinearOutput()) {
             sb.append("#define GAMMA_CORRECTION\n");
         }
 
-        //System.out.println("Prefix: "+sb.toString());
+        // System.out.println("Prefix: "+sb.toString());
         return sb.toString();
     }
 }

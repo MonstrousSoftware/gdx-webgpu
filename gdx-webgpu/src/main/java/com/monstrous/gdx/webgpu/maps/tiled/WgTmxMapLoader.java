@@ -29,29 +29,31 @@ import com.monstrous.gdx.webgpu.graphics.WgTexture;
 /** @brief synchronous loader for TMX maps created with the Tiled tool */
 public class WgTmxMapLoader extends TmxMapLoader {
 
+    /**
+     * Loads the {@link TiledMap} from the given file. The file is resolved via the {@link FileHandleResolver} set in
+     * the constructor of this class. By default it will resolve to an internal file.
+     * 
+     * @param fileName the filename
+     * @param parameter specifies whether to use y-up, generate mip maps etc.
+     * @return the TiledMap
+     */
+    public TiledMap load(String fileName, Parameters parameter) {
+        FileHandle tmxFile = resolve(fileName);
 
-	/** Loads the {@link TiledMap} from the given file. The file is resolved via the {@link FileHandleResolver} set in the
-	 * constructor of this class. By default it will resolve to an internal file.
-	 * @param fileName the filename
-	 * @param parameter specifies whether to use y-up, generate mip maps etc.
-	 * @return the TiledMap */
-	public TiledMap load (String fileName, Parameters parameter) {
-		FileHandle tmxFile = resolve(fileName);
+        this.root = xml.parse(tmxFile);
 
-		this.root = xml.parse(tmxFile);
+        ObjectMap<String, Texture> textures = new ObjectMap<String, Texture>();
 
-		ObjectMap<String, Texture> textures = new ObjectMap<String, Texture>();
+        final Array<FileHandle> textureFiles = getDependencyFileHandles(tmxFile);
+        for (FileHandle textureFile : textureFiles) {
+            Texture texture = new WgTexture(textureFile, parameter.generateMipMaps);
+            texture.setFilter(parameter.textureMinFilter, parameter.textureMagFilter);
+            textures.put(textureFile.path(), texture);
+        }
 
-		final Array<FileHandle> textureFiles = getDependencyFileHandles(tmxFile);
-		for (FileHandle textureFile : textureFiles) {
-			Texture texture = new WgTexture(textureFile, parameter.generateMipMaps);
-			texture.setFilter(parameter.textureMinFilter, parameter.textureMagFilter);
-			textures.put(textureFile.path(), texture);
-		}
-
-		TiledMap map = loadTiledMap(tmxFile, parameter, new DirectImageResolver(textures));
-		map.setOwnedResources(textures.values().toArray());
-		return map;
-	}
+        TiledMap map = loadTiledMap(tmxFile, parameter, new DirectImageResolver(textures));
+        map.setOwnedResources(textures.values().toArray());
+        return map;
+    }
 
 }

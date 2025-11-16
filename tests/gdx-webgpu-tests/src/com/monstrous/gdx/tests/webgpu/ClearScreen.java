@@ -1,7 +1,6 @@
 
 package com.monstrous.gdx.tests.webgpu;
 
-
 import com.badlogic.gdx.graphics.Color;
 
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
@@ -11,11 +10,10 @@ import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 //
 public class ClearScreen extends GdxTest {
 
+    @Override
+    public void render() {
 
-	@Override
-	public void render () {
-
-        WgScreenUtils.clear(0.15f, 0.15f, 0.20f, 1.0f); //Color.CORAL);	// use ScreenUtils variant to clear the screen
-	}
+        WgScreenUtils.clear(0.15f, 0.15f, 0.20f, 1.0f); // Color.CORAL); // use ScreenUtils variant to clear the screen
+    }
 
 }

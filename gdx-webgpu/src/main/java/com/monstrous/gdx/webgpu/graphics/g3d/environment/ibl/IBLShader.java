@@ -16,7 +16,6 @@
 
 package com.monstrous.gdx.webgpu.graphics.g3d.environment.ibl;
 
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.*;
@@ -38,11 +37,10 @@ import com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgShader;
 import com.monstrous.gdx.webgpu.wrappers.*;
 
-
-/** Simple shader for IBL generation.
- * Is used to generate textures for a cube map, such as an environment map, an irradiance map or a radiance map.
- * Supports only diffuse texture for materials and ignores environment.
- * */
+/**
+ * Simple shader for IBL generation. Is used to generate textures for a cube map, such as an environment map, an
+ * irradiance map or a radiance map. Supports only diffuse texture for materials and ignores environment.
+ */
 
 public class IBLShader extends WgShader implements Disposable {
 
@@ -63,8 +61,8 @@ public class IBLShader extends WgShader implements Disposable {
 
     public IBLShader(final Renderable renderable, Config config) {
 
-
-        boolean hasCubeMap = renderable.environment != null && renderable.environment.has(WgCubemapAttribute.EnvironmentMap);
+        boolean hasCubeMap = renderable.environment != null
+                && renderable.environment.has(WgCubemapAttribute.EnvironmentMap);
 
         // Group 0
         // binding 0 : uniform buffer (projectionView matrix, sunColor, sunDirection and numRoughnessLevels)
@@ -76,9 +74,8 @@ public class IBLShader extends WgShader implements Disposable {
         // binding 2 : texture sampler
 
         // Create uniform buffer for global (per-frame) uniforms, i.e. projectionView matrix and numRoughnessLevels
-        final int uniformBufferSize = (16 + 4 + 4 + 4)* Float.BYTES;
+        final int uniformBufferSize = (16 + 4 + 4 + 4) * Float.BYTES;
         uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Uniform));
-
 
         binder = new Binder();
         // define groups
@@ -93,11 +90,14 @@ public class IBLShader extends WgShader implements Disposable {
         // define uniforms in uniform buffers with their offset
         // frame uniforms
         int offset = 0;
-        binder.defineUniform("projectionViewTransform", 0, 0, offset); offset += 16*4;
-        binder.defineUniform("sunColor", 0, 0, offset); offset += 4*4;
-        binder.defineUniform("sunDirection", 0, 0, offset); offset += 4*4;
-        binder.defineUniform("numRoughnessLevels", 0, 0, offset); offset += 4;
-
+        binder.defineUniform("projectionViewTransform", 0, 0, offset);
+        offset += 16 * 4;
+        binder.defineUniform("sunColor", 0, 0, offset);
+        offset += 4 * 4;
+        binder.defineUniform("sunDirection", 0, 0, offset);
+        offset += 4 * 4;
+        binder.defineUniform("numRoughnessLevels", 0, 0, offset);
+        offset += 4;
 
         if (hasCubeMap) {
             binder.defineBinding("cubeMap", 0, 3);
@@ -109,7 +109,6 @@ public class IBLShader extends WgShader implements Disposable {
             binder.defineBinding("diffuseTexture", 1, 1);
             binder.defineBinding("diffuseSampler", 1, 2);
         }
-
 
         // get pipeline layout which aggregates all the bind group layouts
         WGPUPipelineLayout pipelineLayout = binder.getPipelineLayout("IBL Gen pipeline layout");
@@ -124,11 +123,10 @@ public class IBLShader extends WgShader implements Disposable {
         WgGraphics gfx = (WgGraphics) Gdx.graphics;
         WebGPUContext webgpu = gfx.getContext();
 
-        pipelineSpec.colorFormat = webgpu.surfaceFormat; //WGPUTextureFormat.BGRA8Unorm;
+        pipelineSpec.colorFormat = webgpu.surfaceFormat; // WGPUTextureFormat.BGRA8Unorm;
 
         pipeline = new WebGPUPipeline(pipelineLayout, pipelineSpec);
     }
-
 
     @Override
     public void init() {
@@ -140,33 +138,34 @@ public class IBLShader extends WgShader implements Disposable {
         throw new IllegalArgumentException("Use begin(Camera, WebGPURenderPass)");
     }
 
-    public void begin(Camera camera, Renderable renderable, WebGPURenderPass renderPass){
+    public void begin(Camera camera, Renderable renderable, WebGPURenderPass renderPass) {
         this.renderPass = renderPass;
 
         binder.setUniform("projectionViewTransform", camera.combined);
         binder.setUniform("numRoughnessLevels", numRoughnessLevels);
         uniformBuffer.flush();
 
-        if(renderable.environment != null) {
-            final WgCubemapAttribute cubemapAttribute = renderable.environment.get(WgCubemapAttribute.class, WgCubemapAttribute.EnvironmentMap);
+        if (renderable.environment != null) {
+            final WgCubemapAttribute cubemapAttribute = renderable.environment.get(WgCubemapAttribute.class,
+                    WgCubemapAttribute.EnvironmentMap);
             if (cubemapAttribute != null) {
-                //System.out.println("Setting cube map via binder");
+                // System.out.println("Setting cube map via binder");
                 WgTexture cubeMap = cubemapAttribute.textureDescription.texture;
                 binder.setTexture("cubeMap", cubeMap.getTextureView());
                 binder.setSampler("cubeSampler", cubeMap.getSampler());
             }
 
-            final DirectionalLightsAttribute dla = renderable.environment.get(DirectionalLightsAttribute.class, DirectionalLightsAttribute.Type);
+            final DirectionalLightsAttribute dla = renderable.environment.get(DirectionalLightsAttribute.class,
+                    DirectionalLightsAttribute.Type);
             final Array<DirectionalLight> dirs = dla == null ? null : dla.lights;
             int numDirectionalLights = dirs == null ? 0 : dirs.size;
-            if(numDirectionalLights > 0) {  // we actually only look at the first directional light
-                binder.setUniform("sunColor",  dirs.get(0).color);
+            if (numDirectionalLights > 0) { // we actually only look at the first directional light
+                binder.setUniform("sunColor", dirs.get(0).color);
                 // change from light direction to sun vector
                 tmpVec.set(dirs.get(0).direction).scl(-1);
-                binder.setUniform("sunDirection",  tmpVec);
+                binder.setUniform("sunDirection", tmpVec);
             }
         }
-
 
         // bind group 0 (frame) once per frame
         binder.bindGroup(renderPass, 0);
@@ -184,8 +183,9 @@ public class IBLShader extends WgShader implements Disposable {
     }
 
     @Override
-    public void render (Renderable renderable) {
-        if (renderable.worldTransform.det3x3() == 0) return;
+    public void render(Renderable renderable) {
+        if (renderable.worldTransform.det3x3() == 0)
+            return;
 
         applyMaterial(renderable.material);
         final WgMesh mesh = (WgMesh) renderable.meshPart.mesh;
@@ -199,17 +199,17 @@ public class IBLShader extends WgShader implements Disposable {
     }
 
     @Override
-    public void end(){
+    public void end() {
     }
 
-    private void applyMaterial(Material material){
+    private void applyMaterial(Material material) {
         // diffuse texture
         WgTexture diffuseTexture;
-        if(material.has(TextureAttribute.Diffuse)) {
+        if (material.has(TextureAttribute.Diffuse)) {
             TextureAttribute ta = (TextureAttribute) material.get(TextureAttribute.Diffuse);
             assert ta != null;
             Texture tex = ta.textureDescription.texture;
-            diffuseTexture = (WgTexture)tex;
+            diffuseTexture = (WgTexture) tex;
             diffuseTexture.setWrap(ta.textureDescription.uWrap, ta.textureDescription.vWrap);
             diffuseTexture.setFilter(ta.textureDescription.minFilter, ta.textureDescription.magFilter);
 
@@ -218,15 +218,16 @@ public class IBLShader extends WgShader implements Disposable {
             binder.bindGroup(renderPass, 1);
         }
 
-
     }
 
     private WebGPUBindGroupLayout createFrameBindGroupLayout(int uniformBufferSize, boolean hasCubeMap) {
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch bind group layout (frame)");
         layout.begin();
-        layout.addBuffer(0, WGPUShaderStage.Vertex.or(WGPUShaderStage.Fragment), WGPUBufferBindingType.Uniform, uniformBufferSize, false);
-        if(hasCubeMap) {
-            layout.addTexture(3, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension.Cube, false);
+        layout.addBuffer(0, WGPUShaderStage.Vertex.or(WGPUShaderStage.Fragment), WGPUBufferBindingType.Uniform,
+                uniformBufferSize, false);
+        if (hasCubeMap) {
+            layout.addTexture(3, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension.Cube,
+                    false);
             layout.addSampler(4, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering);
         }
         layout.end();
@@ -236,12 +237,12 @@ public class IBLShader extends WgShader implements Disposable {
     private WebGPUBindGroupLayout createMaterialBindGroupLayout() {
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch bind group layout (material)");
         layout.begin();
-        layout.addTexture(1, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D, false);
-        layout.addSampler(2, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering );
+        layout.addTexture(1, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D,
+                false);
+        layout.addSampler(2, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering);
         layout.end();
         return layout;
     }
-
 
     @Override
     public void dispose() {

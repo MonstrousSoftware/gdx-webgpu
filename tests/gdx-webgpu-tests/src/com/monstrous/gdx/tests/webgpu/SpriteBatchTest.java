@@ -31,10 +31,9 @@ public class SpriteBatchTest extends GdxTest {
     float SCALE_SPEED = -1;
     WebGPUContext webgpu;
 
-
     @Override
     public void create() {
-        WgGraphics gfx = (WgGraphics)Gdx.graphics;
+        WgGraphics gfx = (WgGraphics) Gdx.graphics;
         webgpu = gfx.getContext();
         Gdx.app.log(TAG, "[" + this.hashCode() + "] create() START"); // Log instance and start
 
@@ -44,7 +43,7 @@ public class SpriteBatchTest extends GdxTest {
 
     }
 
-    private void generateSprites(int screenWidth, int screenHeight){
+    private void generateSprites(int screenWidth, int screenHeight) {
         int width = 32;
         int height = 32;
 
@@ -52,7 +51,7 @@ public class SpriteBatchTest extends GdxTest {
             for (int i = 0; i < SPRITES; i++) {
                 int x = (int) (Math.random() * screenWidth);
                 int y = (int) (Math.random() * screenHeight);
-                if(sprites[i] == null) {
+                if (sprites[i] == null) {
                     sprites[i] = new Sprite(texture, width, height);
                     sprites[i].setOrigin(width * 0.5f, height * 0.5f);
                 }
@@ -68,9 +67,9 @@ public class SpriteBatchTest extends GdxTest {
 
     @Override
     public void resize(int width, int height) {
-        System.out.println("Resize: "+width+" x "+height);
+        System.out.println("Resize: " + width + " x " + height);
         viewport.update(width, height, true);
-        generateSprites(width,height);
+        generateSprites(width, height);
     }
 
     @Override
@@ -101,8 +100,10 @@ public class SpriteBatchTest extends GdxTest {
 
         start = TimeUtils.nanoTime();
         for (int i = 0; i < SPRITES; i++) {
-            if (angleInc != 0) sprites[i].rotate(angleInc);
-            if (scale != 1) sprites[i].setScale(scale);
+            if (angleInc != 0)
+                sprites[i].rotate(angleInc);
+            if (scale != 1)
+                sprites[i].setScale(scale);
             sprites[i].draw(spriteBatch);
         }
         draw1 = (TimeUtils.nanoTime() - start) / 1000000000.0f;
@@ -115,12 +116,15 @@ public class SpriteBatchTest extends GdxTest {
         end = (TimeUtils.nanoTime() - start) / 1000000000.0f;
 
         if (TimeUtils.nanoTime() - startTime > 1000000000) {
-            Gdx.app.log(TAG, "fps: " + frames + ", render calls: " + spriteBatch.renderCalls + ", begin: " + df.format(begin) + ", " + df.format(draw1) + ", " + df.format(drawText) + ", end: " + df.format(end));
+            Gdx.app.log(TAG,
+                    "fps: " + frames + ", render calls: " + spriteBatch.renderCalls + ", begin: " + df.format(begin)
+                            + ", " + df.format(draw1) + ", " + df.format(drawText) + ", end: " + df.format(end));
             frames = 0;
             startTime = TimeUtils.nanoTime();
 
-            for(int pass = 0; pass < webgpu.getGPUTimer().getNumPasses(); pass++)
-                Gdx.app.log(TAG, "GPU time (pass "+pass+" "+webgpu.getGPUTimer().getPassName(pass)+") : "+(int)webgpu.getAverageGPUtime(pass)+ " microseconds");
+            for (int pass = 0; pass < webgpu.getGPUTimer().getNumPasses(); pass++)
+                Gdx.app.log(TAG, "GPU time (pass " + pass + " " + webgpu.getGPUTimer().getPassName(pass) + ") : "
+                        + (int) webgpu.getAverageGPUtime(pass) + " microseconds");
         }
         frames++;
     }

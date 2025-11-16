@@ -26,12 +26,10 @@ import com.monstrous.gdx.webgpu.graphics.g3d.environment.ibl.HDRLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.environment.ibl.IBLGenerator;
 import com.monstrous.gdx.webgpu.wrappers.*;
 
-
-/** Test IBL
- * Generates environment cube map from equirectangular texture.
+/**
+ * Test IBL Generates environment cube map from equirectangular texture.
  *
- * */
-
+ */
 
 public class IBL_EquirectangularMap extends GdxTest {
     CameraInputController controller;
@@ -39,16 +37,14 @@ public class IBL_EquirectangularMap extends GdxTest {
     SkyBox skyBox;
     WgTexture equiRectangular;
 
-
-	public void create () {
+    public void create() {
 
         cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         cam.position.set(0, 0, 0f);
-        cam.direction.set(0,0,1);
+        cam.direction.set(0, 0, 1);
         cam.near = 1f;
         cam.far = 100f;
         cam.update();
-
 
         controller = new CameraInputController(cam);
         controller.scrollFactor = -0.01f;
@@ -62,19 +58,17 @@ public class IBL_EquirectangularMap extends GdxTest {
 
         // use cube map as a sky box
         skyBox = new SkyBox(envMap);
-	}
+    }
 
-
-    public void render () {
+    public void render() {
         controller.update();
         skyBox.renderPass(cam, true);
     }
 
-
-	@Override
-	public void dispose () {
+    @Override
+    public void dispose() {
         skyBox.dispose();
         equiRectangular.dispose();
-	}
+    }
 
 }

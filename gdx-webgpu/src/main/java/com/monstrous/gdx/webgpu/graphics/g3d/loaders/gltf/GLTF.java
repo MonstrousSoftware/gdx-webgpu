@@ -12,7 +12,6 @@ public class GLTF {
     public static int UINT32 = 5125;
     public static int FLOAT32 = 5126;
 
-
     public int scene;
     public ArrayList<GLTFTexture> textures;
     public ArrayList<GLTFMaterial> materials;
@@ -26,7 +25,7 @@ public class GLTF {
     public ArrayList<GLTFAnimation> animations;
     public ArrayList<GLTFSkin> skins;
     public ArrayList<GLTFScene> scenes;
-    public ArrayList<GLTFRawBuffer> rawBuffers;     // binary data either from a .bin file or from second chunk in .glb file
+    public ArrayList<GLTFRawBuffer> rawBuffers; // binary data either from a .bin file or from second chunk in .glb file
 
     public GLTF() {
         textures = new ArrayList<>();

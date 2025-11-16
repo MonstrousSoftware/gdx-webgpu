@@ -45,72 +45,60 @@ import com.monstrous.gdx.webgpu.scene2d.WgStage;
 
 /** Test model loading via asset manager for OBJ, G3DJ and G3DB formats */
 
-
 public class LoadModelTest2 extends GdxTest {
 
-	final static String[] fileNames = {
-        "data/g3d/gltf/DungeonModular/dungeonmodular.gltf",
-        "data/g3d/gltf/characters/Warrior.gltf",
-        "data/g3d/gltf/StanfordDragon/stanfordDragon.gltf",
-        "data/g3d/ship.obj",
+    final static String[] fileNames = {"data/g3d/gltf/DungeonModular/dungeonmodular.gltf",
+            "data/g3d/gltf/characters/Warrior.gltf", "data/g3d/gltf/StanfordDragon/stanfordDragon.gltf",
+            "data/g3d/ship.obj",
 
-        "data/g3d/gltf/DamagedHelmet/DamagedHelmet.gltf",
-        "data/g3d/gltf/waterbottle/waterbottle.glb",
+            "data/g3d/gltf/DamagedHelmet/DamagedHelmet.gltf", "data/g3d/gltf/waterbottle/waterbottle.glb",
 
-        "data/g3d/head.g3db",
-        "data/g3d/invaders.g3dj",
-        "data/g3d/monkey.g3db",
-        "data/g3d/skydome.g3db",
-        "data/g3d/teapot.g3db",
+            "data/g3d/head.g3db", "data/g3d/invaders.g3dj", "data/g3d/monkey.g3db", "data/g3d/skydome.g3db",
+            "data/g3d/teapot.g3db",
 
-        "data/g3d/gltf/Cube/Cube.gltf",
-        "data/g3d/gltf/Sponza/Sponza.gltf"
-	};
+            "data/g3d/gltf/Cube/Cube.gltf", "data/g3d/gltf/Sponza/Sponza.gltf"};
 
-	WgModelBatch modelBatch;
-	PerspectiveCamera cam;
+    WgModelBatch modelBatch;
+    PerspectiveCamera cam;
     CameraInputController controller;
-	Model model;
-	ModelInstance instance;
+    Model model;
+    ModelInstance instance;
     ModelInstance instance2;
-	AssetManager assets;
-	ScreenViewport viewport;
-	WgStage stage;
-	WgSkin skin;
-	boolean loadedFirst;
+    AssetManager assets;
+    ScreenViewport viewport;
+    WgStage stage;
+    WgSkin skin;
+    boolean loadedFirst;
     boolean loadedAll;
-	WgSpriteBatch batch;
-	WgBitmapFont font;
+    WgSpriteBatch batch;
+    WgBitmapFont font;
     Environment environment;
 
+    // application
+    public void create() {
+        batch = new WgSpriteBatch();
+        font = new WgBitmapFont();
 
-	// application
-	public void create () {
-		batch = new WgSpriteBatch();
-		font = new WgBitmapFont();
+        modelBatch = new WgModelBatch();
+        cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        cam.position.set(0, 2, 4);
+        cam.lookAt(0, 0, 0);
+        cam.near = 0.1f;
+        cam.far = 1000f; // extend far distance to avoid clipping the skybox
 
-		modelBatch = new WgModelBatch();
-		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		cam.position.set(0, 2, 4);
-		cam.lookAt(0,0,0);
-		cam.near = 0.1f;
-		cam.far = 1000f;		// extend far distance to avoid clipping the skybox
-
-
-		// queue for asynchronous loading
+        // queue for asynchronous loading
         // load one asset first to appear responsive
         // load the rest of the assets while the user is admiring the dragon :-)
-		assets = new WgAssetManager();
-		loadedAll = false;
+        assets = new WgAssetManager();
+        loadedAll = false;
         loadedFirst = false;
 
         assets.load(fileNames[0], Model.class);
 
-
         // Create an environment with lights
         environment = new Environment();
 
-        ColorAttribute ambient =  ColorAttribute.createAmbientLight(0.5f, 0.5f, 0.5f, 1f);
+        ColorAttribute ambient = ColorAttribute.createAmbientLight(0.5f, 0.5f, 0.5f, 1f);
         environment.set(ambient);
 
         DirectionalLight dirLight1 = new DirectionalLight();
@@ -118,122 +106,122 @@ public class LoadModelTest2 extends GdxTest {
         dirLight1.setColor(Color.YELLOW);
         environment.add(dirLight1);
 
-		controller = new CameraInputController(cam);
-		Gdx.input.setInputProcessor(controller);
+        controller = new CameraInputController(cam);
+        Gdx.input.setInputProcessor(controller);
 
-		// Add some GUI
-		//
-		viewport = new ScreenViewport();
-		stage = new WgStage(viewport);
-		//stage.setDebugAll(true);
+        // Add some GUI
+        //
+        viewport = new ScreenViewport();
+        stage = new WgStage(viewport);
+        // stage.setDebugAll(true);
 
-		InputMultiplexer im = new InputMultiplexer();
-		Gdx.input.setInputProcessor(im);
-		im.addProcessor(stage);
-		im.addProcessor(controller);
+        InputMultiplexer im = new InputMultiplexer();
+        Gdx.input.setInputProcessor(im);
+        im.addProcessor(stage);
+        im.addProcessor(controller);
 
-		skin = new WgSkin(Gdx.files.internal("data/uiskin.json"));
-		SelectBox<String> selectBox = new SelectBox<>(skin);
-		// Add a listener to the button. ChangeListener is fired when the button's checked state changes, eg when clicked,
-		// Button#setChecked() is called, via a key press, etc. If the event.cancel() is called, the checked state will be reverted.
-		// ClickListener could have been used, but would only fire when clicked. Also, canceling a ClickListener event won't
-		// revert the checked state.
-		selectBox.addListener(new ChangeListener() {
-			public void changed (ChangeEvent event, Actor actor) {
-				System.out.println("Clicked! Is checked: " + selectBox.getSelected());
-				if(loadedAll) {
+        skin = new WgSkin(Gdx.files.internal("data/uiskin.json"));
+        SelectBox<String> selectBox = new SelectBox<>(skin);
+        // Add a listener to the button. ChangeListener is fired when the button's checked state changes, eg when
+        // clicked,
+        // Button#setChecked() is called, via a key press, etc. If the event.cancel() is called, the checked state will
+        // be reverted.
+        // ClickListener could have been used, but would only fire when clicked. Also, canceling a ClickListener event
+        // won't
+        // revert the checked state.
+        selectBox.addListener(new ChangeListener() {
+            public void changed(ChangeEvent event, Actor actor) {
+                System.out.println("Clicked! Is checked: " + selectBox.getSelected());
+                if (loadedAll) {
                     System.out.println("Loading model " + selectBox.getSelected());
-					model = assets.get(selectBox.getSelected(), Model.class);
+                    model = assets.get(selectBox.getSelected(), Model.class);
                     System.out.println("Creating instance");
-					instance = new ModelInstance(model);
-				}
-			}
-		});
+                    instance = new ModelInstance(model);
+                }
+            }
+        });
 
-		selectBox.setItems(fileNames );
+        selectBox.setItems(fileNames);
 
-		Table screenTable = new Table();
-		screenTable.setFillParent(true);
-		Table controls = new Table();
-		controls.add(new Label("File: ", skin));
-		controls.add(selectBox).row();
-		controls.debug();
-		screenTable.add(controls).left().top().expand();
+        Table screenTable = new Table();
+        screenTable.setFillParent(true);
+        Table controls = new Table();
+        controls.add(new Label("File: ", skin));
+        controls.add(selectBox).row();
+        controls.debug();
+        screenTable.add(controls).left().top().expand();
 
+        stage.addActor(screenTable);
 
-		stage.addActor(screenTable);
-
-	}
+    }
 
     boolean startLoading = false;
 
-	public void render () {
+    public void render() {
 
-		float delta = Gdx.graphics.getDeltaTime();
-        if(!loadedFirst && assets.update()) {	// advance loading
+        float delta = Gdx.graphics.getDeltaTime();
+        if (!loadedFirst && assets.update()) { // advance loading
             loadedFirst = true;
             model = assets.get(fileNames[0], Model.class);
             instance = new ModelInstance(model);
             // start loading rest of assets
-            for(int i = 1; i < fileNames.length; i++){
+            for (int i = 1; i < fileNames.length; i++) {
                 assets.load(fileNames[i], Model.class);
             }
         }
-		if(!loadedAll) {
-            if( assets.update()) {    // advance loading
+        if (!loadedAll) {
+            if (assets.update()) { // advance loading
                 loadedAll = true;
                 System.out.println("Loading complete");
                 model = assets.get(fileNames[1], Model.class);
                 instance2 = new ModelInstance(model);
             }
-		}
+        }
 
-		if(loadedFirst)
-			instance.transform.rotate(Vector3.Y, 15f*delta);
+        if (loadedFirst)
+            instance.transform.rotate(Vector3.Y, 15f * delta);
 
-		WgScreenUtils.clear(Color.TEAL,true);
+        WgScreenUtils.clear(Color.TEAL, true);
 
+        cam.update();
+        modelBatch.begin(cam);
 
-		cam.update();
-		modelBatch.begin(cam);
-
-		if(loadedFirst)
-			modelBatch.render(instance, environment);
-        if(loadedAll)
+        if (loadedFirst)
+            modelBatch.render(instance, environment);
+        if (loadedAll)
             modelBatch.render(instance2, environment);
 
-		modelBatch.end();
+        modelBatch.end();
 
-        if(loadedAll)
-		    stage.act();
-		stage.draw();
+        if (loadedAll)
+            stage.act();
+        stage.draw();
 
-		if(!loadedAll) {
-			batch.begin();
-			font.draw(batch, "Loading models from file...", 100, 100);
-			batch.end();
-		}
+        if (!loadedAll) {
+            batch.begin();
+            font.draw(batch, "Loading models from file...", 100, 100);
+            batch.end();
+        }
 
-	}
+    }
 
-	@Override
-	public void resize(int width, int height) {
-		cam.viewportWidth = width;
-		cam.viewportHeight = height;
-		cam.update(true);
+    @Override
+    public void resize(int width, int height) {
+        cam.viewportWidth = width;
+        cam.viewportHeight = height;
+        cam.update(true);
         stage.getViewport().update(width, height, true);
 
-	}
+    }
 
-	@Override
-	public void dispose () {
-		modelBatch.dispose();
-		skin.dispose();
-		stage.dispose();
-		assets.dispose();
-		batch.dispose();
-		font.dispose();
-	}
-
+    @Override
+    public void dispose() {
+        modelBatch.dispose();
+        skin.dispose();
+        stage.dispose();
+        assets.dispose();
+        batch.dispose();
+        font.dispose();
+    }
 
 }

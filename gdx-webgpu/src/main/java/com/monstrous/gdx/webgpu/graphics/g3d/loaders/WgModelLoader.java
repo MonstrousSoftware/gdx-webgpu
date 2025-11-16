@@ -40,110 +40,113 @@ import java.util.Iterator;
 
 /** Abstract class for the different model loaders, e.g. OBJ, G3DJ, G3DB, GLTF and GLB */
 public abstract class WgModelLoader<P extends WgModelLoader.ModelParameters> extends AsynchronousAssetLoader<Model, P> {
-	public WgModelLoader(FileHandleResolver resolver) {
-		super(resolver);
-	}
+    public WgModelLoader(FileHandleResolver resolver) {
+        super(resolver);
+    }
 
-	protected Array<ObjectMap.Entry<String, ModelData>> items = new Array<ObjectMap.Entry<String, ModelData>>();
-	protected ModelParameters defaultParameters = new ModelParameters();
+    protected Array<ObjectMap.Entry<String, ModelData>> items = new Array<ObjectMap.Entry<String, ModelData>>();
+    protected ModelParameters defaultParameters = new ModelParameters();
 
-	/** Directly load the raw model data on the calling thread. */
-	public abstract ModelData loadModelData (final FileHandle fileHandle, P parameters);
+    /** Directly load the raw model data on the calling thread. */
+    public abstract ModelData loadModelData(final FileHandle fileHandle, P parameters);
 
-	/** Directly load the raw model data on the calling thread. */
-	public ModelData loadModelData (final FileHandle fileHandle) {
+    /** Directly load the raw model data on the calling thread. */
+    public ModelData loadModelData(final FileHandle fileHandle) {
 
         return loadModelData(fileHandle, null);
-	}
+    }
 
-	/** Directly load the model on the calling thread. The model with not be managed by an {@link AssetManager}. */
-	public Model loadModel (final FileHandle fileHandle, TextureProvider textureProvider, P parameters) {
-		final ModelData data = loadModelData(fileHandle, parameters);
-		return data == null ? null : new WgModel(data, textureProvider);
-	}
+    /** Directly load the model on the calling thread. The model with not be managed by an {@link AssetManager}. */
+    public Model loadModel(final FileHandle fileHandle, TextureProvider textureProvider, P parameters) {
+        final ModelData data = loadModelData(fileHandle, parameters);
+        return data == null ? null : new WgModel(data, textureProvider);
+    }
 
-	/** Directly load the model on the calling thread. The model with not be managed by an {@link AssetManager}. */
-	public Model loadModel (final FileHandle fileHandle, P parameters) {
-		return loadModel(fileHandle, new WgTextureProvider.FileTextureProvider(), parameters);
-	}
+    /** Directly load the model on the calling thread. The model with not be managed by an {@link AssetManager}. */
+    public Model loadModel(final FileHandle fileHandle, P parameters) {
+        return loadModel(fileHandle, new WgTextureProvider.FileTextureProvider(), parameters);
+    }
 
-	/** Directly load the model on the calling thread. The model with not be managed by an {@link AssetManager}. */
-	public Model loadModel (final FileHandle fileHandle, TextureProvider textureProvider) {
-		return loadModel(fileHandle, textureProvider, null);
-	}
+    /** Directly load the model on the calling thread. The model with not be managed by an {@link AssetManager}. */
+    public Model loadModel(final FileHandle fileHandle, TextureProvider textureProvider) {
+        return loadModel(fileHandle, textureProvider, null);
+    }
 
-	/** Directly load the model on the calling thread. The model with not be managed by an {@link AssetManager}. */
-	public Model loadModel (final FileHandle fileHandle) {
-		return loadModel(fileHandle, new WgTextureProvider.FileTextureProvider(), null);
-	}
+    /** Directly load the model on the calling thread. The model with not be managed by an {@link AssetManager}. */
+    public Model loadModel(final FileHandle fileHandle) {
+        return loadModel(fileHandle, new WgTextureProvider.FileTextureProvider(), null);
+    }
 
-	@Override
-	public Array<AssetDescriptor> getDependencies (String fileName, FileHandle file, P parameters) {
-		final Array<AssetDescriptor> deps = new Array();
-		ModelData data = loadModelData(file, parameters);
-		if (data == null) return deps;
+    @Override
+    public Array<AssetDescriptor> getDependencies(String fileName, FileHandle file, P parameters) {
+        final Array<AssetDescriptor> deps = new Array();
+        ModelData data = loadModelData(file, parameters);
+        if (data == null)
+            return deps;
 
-		ObjectMap.Entry<String, ModelData> item = new ObjectMap.Entry<String, ModelData>();
-		item.key = fileName;
-		item.value = data;
-		synchronized (items) {
-			items.add(item);
-		}
+        ObjectMap.Entry<String, ModelData> item = new ObjectMap.Entry<String, ModelData>();
+        item.key = fileName;
+        item.value = data;
+        synchronized (items) {
+            items.add(item);
+        }
 
-		TextureLoader.TextureParameter textureParameter = (parameters != null) ? parameters.textureParameter
-			: defaultParameters.textureParameter;
+        TextureLoader.TextureParameter textureParameter = (parameters != null) ? parameters.textureParameter
+                : defaultParameters.textureParameter;
 
-		for (final ModelMaterial modelMaterial : data.materials) {
-			if (modelMaterial.textures != null) {
-				for (final ModelTexture modelTexture : modelMaterial.textures) {
+        for (final ModelMaterial modelMaterial : data.materials) {
+            if (modelMaterial.textures != null) {
+                for (final ModelTexture modelTexture : modelMaterial.textures) {
                     // if texture was preloaded from a binary chunk, don't add as dependency
-                    if(!(modelTexture instanceof PBRModelTexture) || ((PBRModelTexture)modelTexture).texture == null) {
+                    if (!(modelTexture instanceof PBRModelTexture)
+                            || ((PBRModelTexture) modelTexture).texture == null) {
                         deps.add(new AssetDescriptor(modelTexture.fileName, Texture.class, textureParameter));
                     }
                 }
-			}
-		}
-		return deps;
-	}
+            }
+        }
+        return deps;
+    }
 
-	@Override
-	public void loadAsync (AssetManager manager, String fileName, FileHandle file, P parameters) {
-	}
+    @Override
+    public void loadAsync(AssetManager manager, String fileName, FileHandle file, P parameters) {
+    }
 
-	@Override
-	public Model loadSync (AssetManager manager, String fileName, FileHandle file, P parameters) {
-        System.out.println("Model.loadSync "+fileName);
-		ModelData data = null;
-		synchronized (items) {
-			for (int i = 0; i < items.size; i++) {
-				if (items.get(i).key.equals(fileName)) {
-					data = items.get(i).value;
-					items.removeIndex(i);
-				}
-			}
-		}
-		if (data == null) return null;
-		final Model result = new WgModel(data, new WgTextureProvider.AssetTextureProvider(manager));
-		// need to remove the textures from the managed disposables, or else ref counting
-		// doesn't work!
-		Iterator<Disposable> disposables = result.getManagedDisposables().iterator();
-		while (disposables.hasNext()) {
-			Disposable disposable = disposables.next();
-			if (disposable instanceof Texture) {
-				disposables.remove();
-			}
-		}
-		return result;
-	}
+    @Override
+    public Model loadSync(AssetManager manager, String fileName, FileHandle file, P parameters) {
+        System.out.println("Model.loadSync " + fileName);
+        ModelData data = null;
+        synchronized (items) {
+            for (int i = 0; i < items.size; i++) {
+                if (items.get(i).key.equals(fileName)) {
+                    data = items.get(i).value;
+                    items.removeIndex(i);
+                }
+            }
+        }
+        if (data == null)
+            return null;
+        final Model result = new WgModel(data, new WgTextureProvider.AssetTextureProvider(manager));
+        // need to remove the textures from the managed disposables, or else ref counting
+        // doesn't work!
+        Iterator<Disposable> disposables = result.getManagedDisposables().iterator();
+        while (disposables.hasNext()) {
+            Disposable disposable = disposables.next();
+            if (disposable instanceof Texture) {
+                disposables.remove();
+            }
+        }
+        return result;
+    }
 
-	static public class ModelParameters extends AssetLoaderParameters<Model> {
-		public TextureLoader.TextureParameter textureParameter;
+    static public class ModelParameters extends AssetLoaderParameters<Model> {
+        public TextureLoader.TextureParameter textureParameter;
 
-		public ModelParameters () {
-			textureParameter = new TextureLoader.TextureParameter();
+        public ModelParameters() {
+            textureParameter = new TextureLoader.TextureParameter();
             textureParameter.genMipMaps = true;
-			textureParameter.minFilter = textureParameter.magFilter = Texture.TextureFilter.Linear;
-			textureParameter.wrapU = textureParameter.wrapV = Texture.TextureWrap.Repeat;
-		}
-	}
+            textureParameter.minFilter = textureParameter.magFilter = Texture.TextureFilter.Linear;
+            textureParameter.wrapU = textureParameter.wrapV = Texture.TextureWrap.Repeat;
+        }
+    }
 }

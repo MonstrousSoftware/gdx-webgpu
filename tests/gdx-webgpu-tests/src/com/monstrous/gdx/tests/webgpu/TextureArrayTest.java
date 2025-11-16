@@ -32,76 +32,72 @@ import com.monstrous.gdx.webgpu.graphics.WgTextureArray;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 import com.monstrous.gdx.webgpu.wrappers.*;
 
-
 /** @author Tomski **/
 /** Adapted for gdx-webgpu */
 public class TextureArrayTest extends GdxTest {
 
-	WgTextureArray textureArray;
-	WgMesh terrain;
+    WgTextureArray textureArray;
+    WgMesh terrain;
 
-	ShaderProgram shaderProgram;
+    ShaderProgram shaderProgram;
     WebGPUPipeline pipeline;
 
-	PerspectiveCamera camera;
+    PerspectiveCamera camera;
     CameraInputController cameraController;
 
-	Matrix4 modelView = new Matrix4();
+    Matrix4 modelView = new Matrix4();
     Binder binder;
 
     WebGPUUniformBuffer uniformBuffer;
     int uniformBufferSize;
 
+    @Override
+    public void create() {
 
+        String[] texPaths = new String[] {"data/g3d/materials/Searing Gorge.jpg", "data/g3d/materials/Lava Cracks.jpg",
+                "data/g3d/materials/Deep Fire.jpg"};
 
-	@Override
-	public void create () {
+        camera = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        camera.position.set(8, 10f, 20f);
+        camera.lookAt(10, 0, 10);
+        camera.up.set(0, 1, 0);
+        camera.update();
+        cameraController = new CameraInputController(camera);
+        Gdx.input.setInputProcessor(cameraController);
 
-		String[] texPaths = new String[] {
-            "data/g3d/materials/Searing Gorge.jpg",
-            "data/g3d/materials/Lava Cracks.jpg",
-			"data/g3d/materials/Deep Fire.jpg"};
+        FileHandle[] texFiles = new FileHandle[texPaths.length];
+        for (int i = 0; i < texPaths.length; i++) {
+            texFiles[i] = Gdx.files.internal(texPaths[i]);
+        }
 
-		camera = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		camera.position.set(8, 10f, 20f);
-		camera.lookAt(10, 0, 10);
-		camera.up.set(0, 1, 0);
-		camera.update();
-		cameraController = new CameraInputController(camera);
-		Gdx.input.setInputProcessor(cameraController);
+        textureArray = new WgTextureArray(true, texFiles);
+        textureArray.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
+        textureArray.setFilter(TextureFilter.MipMapLinearLinear, TextureFilter.Linear);
 
-		FileHandle[] texFiles = new FileHandle[texPaths.length];
-		for (int i = 0; i < texPaths.length; i++) {
-			texFiles[i] = Gdx.files.internal(texPaths[i]);
-		}
+        VertexAttributes vattr = new VertexAttributes(VertexAttribute.Position(),
+                new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 3, ShaderProgram.TEXCOORD_ATTRIBUTE));
 
-		textureArray = new WgTextureArray(true, texFiles);
-		textureArray.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
-		textureArray.setFilter(TextureFilter.MipMapLinearLinear, TextureFilter.Linear);
+        int vertexStride = 6;
+        int vertexCount = 100 * 100;
+        terrain = new WgMesh(false, vertexCount * 6, 0, vattr);
 
-        VertexAttributes vattr = new VertexAttributes(VertexAttribute.Position(), new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 3, ShaderProgram.TEXCOORD_ATTRIBUTE));
+        Pixmap data = new Pixmap(Gdx.files.internal("data/g3d/heightmap.png"));
+        float[] vertices = new float[vertexCount * vertexStride * 6];
+        int idx = 0;
+        for (int i = 0; i < 100 - 1; i++) {
+            for (int j = 0; j < 100 - 1; j++) {
+                idx = addVertex(i, j, vertices, data, idx);
+                idx = addVertex(i, j + 1, vertices, data, idx);
+                idx = addVertex(i + 1, j, vertices, data, idx);
 
-		int vertexStride = 6;
-		int vertexCount = 100 * 100;
-		terrain = new WgMesh(false, vertexCount * 6, 0, vattr);
+                idx = addVertex(i, j + 1, vertices, data, idx);
+                idx = addVertex(i + 1, j + 1, vertices, data, idx);
+                idx = addVertex(i + 1, j, vertices, data, idx);
+            }
+        }
+        terrain.setVertices(vertices);
 
-		Pixmap data = new Pixmap(Gdx.files.internal("data/g3d/heightmap.png"));
-		float[] vertices = new float[vertexCount * vertexStride * 6];
-		int idx = 0;
-		for (int i = 0; i < 100 - 1; i++) {
-			for (int j = 0; j < 100 - 1; j++) {
-				idx = addVertex(i, j, vertices, data, idx);
-				idx = addVertex(i, j + 1, vertices, data, idx);
-				idx = addVertex(i + 1, j, vertices, data, idx);
-
-				idx = addVertex(i, j + 1, vertices, data, idx);
-				idx = addVertex(i + 1, j + 1, vertices, data, idx);
-				idx = addVertex(i + 1, j, vertices, data, idx);
-			}
-		}
-		terrain.setVertices(vertices);
-
-		data.dispose();
+        data.dispose();
 
         // Create uniform buffer for global uniforms, e.g. projection matrix, model matrix
         uniformBufferSize = 2 * 16 * Float.BYTES;
@@ -119,26 +115,26 @@ public class TextureArrayTest extends GdxTest {
 
     }
 
-	Color tmpColor = new Color();
+    Color tmpColor = new Color();
 
-	private int addVertex (int i, int j, float[] vertsOut, Pixmap heightmap, int idx) {
-		int pixel = heightmap.getPixel((int)(i / 100f * heightmap.getWidth()), (int)(j / 100f * heightmap.getHeight()));
-		tmpColor.set(pixel);
+    private int addVertex(int i, int j, float[] vertsOut, Pixmap heightmap, int idx) {
+        int pixel = heightmap.getPixel((int) (i / 100f * heightmap.getWidth()),
+                (int) (j / 100f * heightmap.getHeight()));
+        tmpColor.set(pixel);
         // position
-		vertsOut[idx++] = i / 5f;
-		vertsOut[idx++] = tmpColor.r * 25f / 5f;
-		vertsOut[idx++] = j / 5f;
+        vertsOut[idx++] = i / 5f;
+        vertsOut[idx++] = tmpColor.r * 25f / 5f;
+        vertsOut[idx++] = j / 5f;
 
         // texture coord (3d)
-		vertsOut[idx++] = i / 20f;
-		vertsOut[idx++] = j / 20f;
-        float h =  (tmpColor.r * 3f) - 0.5f;
-		vertsOut[idx++] = h;
-		return idx;
-	}
+        vertsOut[idx++] = i / 20f;
+        vertsOut[idx++] = j / 20f;
+        float h = (tmpColor.r * 3f) - 0.5f;
+        vertsOut[idx++] = h;
+        return idx;
+    }
 
-
-    private void initBinder(){
+    private void initBinder() {
 
         binder = new Binder();
         // define groups
@@ -153,8 +149,10 @@ public class TextureArrayTest extends GdxTest {
         // define uniforms in uniform buffers with their offset
         // frame uniforms
         int offset = 0;
-        binder.defineUniform("projectionViewTransform", 0, 0, offset); offset += 16*4;
-        binder.defineUniform("modelTransform", 0, 0, offset); offset += 16*4;
+        binder.defineUniform("projectionViewTransform", 0, 0, offset);
+        offset += 16 * 4;
+        binder.defineUniform("modelTransform", 0, 0, offset);
+        offset += 16 * 4;
 
         // set binding 0 to uniform buffer
         binder.setBuffer("uniforms", uniformBuffer, 0, uniformBufferSize);
@@ -164,15 +162,17 @@ public class TextureArrayTest extends GdxTest {
     private WebGPUBindGroupLayout createBindGroupLayout(int uniformBufferSize) {
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("bind group layout (frame)");
         layout.begin();
-        layout.addBuffer(0, WGPUShaderStage.Vertex.or(WGPUShaderStage.Fragment), WGPUBufferBindingType.Uniform, uniformBufferSize, false);
-        layout.addTexture(1, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2DArray, false);
-        layout.addSampler(2, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering );
+        layout.addBuffer(0, WGPUShaderStage.Vertex.or(WGPUShaderStage.Fragment), WGPUBufferBindingType.Uniform,
+                uniformBufferSize, false);
+        layout.addTexture(1, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2DArray,
+                false);
+        layout.addSampler(2, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering);
         layout.end();
         return layout;
     }
 
-	@Override
-	public void render () {
+    @Override
+    public void render() {
 
         modelView.translate(10f, 0, 10f).rotate(0, 1f, 0, 2f * Gdx.graphics.getDeltaTime()).translate(-10f, 0, -10f);
 
@@ -183,12 +183,12 @@ public class TextureArrayTest extends GdxTest {
 
         WgScreenUtils.clear(Color.BLACK, true);
 
-		modelView.translate(10f, 0, 10f).rotate(0, 1f, 0, 2f * Gdx.graphics.getDeltaTime()).translate(-10f, 0, -10f);
+        modelView.translate(10f, 0, 10f).rotate(0, 1f, 0, 2f * Gdx.graphics.getDeltaTime()).translate(-10f, 0, -10f);
 
-		cameraController.update();
+        cameraController.update();
 
         // create a render pass
-        WebGPURenderPass pass = RenderPassBuilder.create( "Test Mesh", Color.BLACK );
+        WebGPURenderPass pass = RenderPassBuilder.create("Test Mesh", Color.BLACK);
 
         pass.setPipeline(pipeline);
         binder.bindGroup(pass, 0);
@@ -197,14 +197,14 @@ public class TextureArrayTest extends GdxTest {
 
         // end the render pass
         pass.end();
-	}
+    }
 
-	@Override
-	public void dispose () {
-		terrain.dispose();
-		pipeline.dispose();
+    @Override
+    public void dispose() {
+        terrain.dispose();
+        pipeline.dispose();
         uniformBuffer.dispose();
-	}
+    }
 
     private String getShaderSource() {
         return Gdx.files.internal("data/wgsl/texture-array.wgsl").readString();

@@ -17,7 +17,7 @@ public class DistanceFontTest extends GdxTest {
     private WgShaderProgram shader;
 
     @Override
-    public void create () {
+    public void create() {
 
         shader = WgDistanceFieldFont.createDistanceFieldShader();
         batch = new WgSpriteBatch();
@@ -25,7 +25,7 @@ public class DistanceFontTest extends GdxTest {
     }
 
     @Override
-    public void render () {
+    public void render() {
 
         batch.begin();
         batch.setShader(shader);
@@ -34,14 +34,13 @@ public class DistanceFontTest extends GdxTest {
         batch.end();
     }
 
-
     @Override
-    public void resize (int width, int height) {
+    public void resize(int width, int height) {
         Gdx.app.log("resize", "");
     }
 
     @Override
-    public void dispose () {
+    public void dispose() {
         batch.dispose();
         font.dispose();
     }

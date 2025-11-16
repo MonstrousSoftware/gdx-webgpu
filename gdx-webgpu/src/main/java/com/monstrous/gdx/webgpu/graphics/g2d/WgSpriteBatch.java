@@ -1,6 +1,5 @@
 package com.monstrous.gdx.webgpu.graphics.g2d;
 
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.Batch;
@@ -40,7 +39,7 @@ public class WgSpriteBatch implements Batch {
     private boolean drawing;
     private final int vertexSize;
     private final ByteBuffer vertexBB;
-    private final FloatBuffer vertexFloats;     // float buffer view on byte buffer
+    private final FloatBuffer vertexFloats; // float buffer view on byte buffer
     public int numSprites;
     private int numSpritesPerFlush;
     private final Color tint;
@@ -63,10 +62,10 @@ public class WgSpriteBatch implements Batch {
     private final PipelineCache pipelines;
     private WebGPUPipeline currentPipeline;
     private WebGPUPipeline initialPipeline;
-    public int maxSpritesInBatch;    // most nr of sprites in the batch over its lifetime
+    public int maxSpritesInBatch; // most nr of sprites in the batch over its lifetime
     public int renderCalls;
     public int pipelineCount;
-    public int flushCount;          // number of flushes since begin()
+    public int flushCount; // number of flushes since begin()
     public int maxFlushes;
     private float invTexWidth;
     private float invTexHeight;
@@ -88,26 +87,27 @@ public class WgSpriteBatch implements Batch {
         this(maxSprites, specificShader, 100);
     }
 
-    /** Create a SpriteBatch.
+    /**
+     * Create a SpriteBatch.
      *
-     * @param maxSprites        maximum number of sprite to be supported (default is 1000)
-     * @param specificShader    specific ShaderProgram to use, must be compatible with "sprite.wgsl". Leave null to use the default shader.
-     * @param maxFlushes        maximum number of flushes (e.g. texture changes, blending changes)
+     * @param maxSprites maximum number of sprite to be supported (default is 1000)
+     * @param specificShader specific ShaderProgram to use, must be compatible with "sprite.wgsl". Leave null to use the
+     *            default shader.
+     * @param maxFlushes maximum number of flushes (e.g. texture changes, blending changes)
      */
     public WgSpriteBatch(int maxSprites, WgShaderProgram specificShader, int maxFlushes) {
         gfx = (WgGraphics) Gdx.graphics;
         webgpu = gfx.getContext();
 
-        if(maxSprites > 16384)
+        if (maxSprites > 16384)
             throw new GdxRuntimeException("Too many sprites. Max is 16384.");
 
         this.maxSprites = maxSprites;
         this.specificShader = specificShader;
 
         vertexAttributes = new VertexAttributes(
-                            new VertexAttribute(VertexAttributes.Usage.Position, 2, ShaderProgram.POSITION_ATTRIBUTE),
-                            VertexAttribute.ColorPacked(),
-                            VertexAttribute.TexCoords(0) );
+                new VertexAttribute(VertexAttributes.Usage.Position, 2, ShaderProgram.POSITION_ATTRIBUTE),
+                VertexAttribute.ColorPacked(), VertexAttribute.TexCoords(0));
 
         // vertex: x, y, rgba, u, v
         vertexSize = vertexAttributes.vertexSize; // bytes
@@ -119,13 +119,13 @@ public class WgSpriteBatch implements Batch {
 
         // allocate data buffers based on default vertex attributes which are assumed to be the worst case.
         // i.e. with setVertexAttributes() you can specify a subset
-        createBuffers(maxFlushes+1);
+        createBuffers(maxFlushes + 1);
         fillIndexBuffer(maxSprites);
 
         // Create FloatBuffer to hold vertex data per batch, is reset every flush
         vertexBB = BufferUtils.newUnsafeByteBuffer(maxSprites * VERTS_PER_SPRITE * vertexSize);
         vertexBB.order(ByteOrder.LITTLE_ENDIAN);
-        // important, webgpu expects little endian.  ByteBuffer defaults to big endian.
+        // important, webgpu expects little endian. ByteBuffer defaults to big endian.
         vertexFloats = vertexBB.asFloatBuffer();
 
         projectionMatrix = new Matrix4();
@@ -134,7 +134,7 @@ public class WgSpriteBatch implements Batch {
 
         // matrix which will transform an opengl ortho matrix to a webgpu ortho matrix
         // by scaling the Z range from [-1..1] to [0..1]
-        shiftDepthMatrix = new Matrix4().idt().scl(1,1,-0.5f).trn(0,0,0.5f);
+        shiftDepthMatrix = new Matrix4().idt().scl(1, 1, -0.5f).trn(0, 0, 0.5f);
 
         tint = new Color(Color.WHITE);
 
@@ -175,54 +175,52 @@ public class WgSpriteBatch implements Batch {
         // use provided (compiled) shader or else use default shader (source)
         // this can be overruled with setShader()
         pipelineSpec.shader = specificShader;
-        if(specificShader == null) {
+        if (specificShader == null) {
             pipelineSpec.shaderSource = getDefaultShaderSource();
         }
 
         setPipeline();
         initialPipeline = currentPipeline;
 
-        projectionMatrix.setToOrtho2D(0, 0, Gdx.graphics.getWidth(),  Gdx.graphics.getHeight(), 0, 100);
+        projectionMatrix.setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), 0, 100);
         transformMatrix.idt();
 
         drawing = false;
         frameNumber = -1;
     }
 
-
     // the index buffer is fixed and only has to be filled on start-up
-    private void fillIndexBuffer(int maxSprites){
-        ByteBuffer bb = BufferUtils.newUnsafeByteBuffer(maxSprites*INDICES_PER_SPRITE*Short.BYTES);
-        bb.order(ByteOrder.LITTLE_ENDIAN);  // webgpu expects little endian data
+    private void fillIndexBuffer(int maxSprites) {
+        ByteBuffer bb = BufferUtils.newUnsafeByteBuffer(maxSprites * INDICES_PER_SPRITE * Short.BYTES);
+        bb.order(ByteOrder.LITTLE_ENDIAN); // webgpu expects little endian data
         ShortBuffer shorts = bb.asShortBuffer();
-        for(int i = 0; i < maxSprites; i++){
+        for (int i = 0; i < maxSprites; i++) {
             // note: even if there is overflow above 32767 and the short becomes negative
             // the GPU will interpret it as a uint32, and it will still work.
             // The real limit is where there are more than 16384 * 4 indices (per flush!),
             // and it wraps back to zero.
-            short vertexOffset = (short)(i * 4);
+            short vertexOffset = (short) (i * 4);
             // two triangles per sprite
             shorts.put(vertexOffset);
-            shorts.put((short)(vertexOffset + 1));
-            shorts.put((short)(vertexOffset + 2));
+            shorts.put((short) (vertexOffset + 1));
+            shorts.put((short) (vertexOffset + 2));
 
             shorts.put(vertexOffset);
-            shorts.put((short)(vertexOffset + 2));
-            shorts.put((short)(vertexOffset + 3));
+            shorts.put((short) (vertexOffset + 2));
+            shorts.put((short) (vertexOffset + 3));
         }
         // set the limit of the byte buffer to the number of bytes filled
-        ((Buffer)bb).limit(shorts.limit()*Short.BYTES);
+        ((Buffer) bb).limit(shorts.limit() * Short.BYTES);
 
         indexBuffer.setIndices(bb);
         BufferUtils.disposeUnsafeByteBuffer(bb);
-     }
-
-
-    public void setColor(float r, float g, float b, float a){
-        tint.set(r,g,b,a);
     }
 
-    public void setColor(Color color){
+    public void setColor(float r, float g, float b, float a) {
+        tint.set(r, g, b, a);
+    }
+
+    public void setColor(Color color) {
         tint.set(color);
     }
 
@@ -231,31 +229,31 @@ public class WgSpriteBatch implements Batch {
     }
 
     @Override
-    public void setPackedColor (float packedColor) {
+    public void setPackedColor(float packedColor) {
         Color.abgr8888ToColor(tint, packedColor);
         this.tintPacked = packedColor;
     }
 
     @Override
-    public float getPackedColor () {
+    public float getPackedColor() {
         return tintPacked;
     }
-
 
     public void setBlendFactor(WGPUBlendFactor srcFunc, WGPUBlendFactor dstFunc) {
         pipelineSpec.setBlendFactorSeparate(srcFunc, dstFunc, srcFunc, dstFunc);
     }
 
-    public void setBlendFactorSeparate(WGPUBlendFactor srcFuncColor, WGPUBlendFactor dstFuncColor, WGPUBlendFactor srcFuncAlpha, WGPUBlendFactor dstFuncAlpha) {
-        if (pipelineSpec.getBlendSrcFactor() == srcFuncColor && pipelineSpec.getBlendDstFactor() == dstFuncColor &&
-            pipelineSpec.getBlendSrcFactorAlpha() == srcFuncAlpha && pipelineSpec.getBlendDstFactorAlpha() == dstFuncAlpha )
+    public void setBlendFactorSeparate(WGPUBlendFactor srcFuncColor, WGPUBlendFactor dstFuncColor,
+            WGPUBlendFactor srcFuncAlpha, WGPUBlendFactor dstFuncAlpha) {
+        if (pipelineSpec.getBlendSrcFactor() == srcFuncColor && pipelineSpec.getBlendDstFactor() == dstFuncColor
+                && pipelineSpec.getBlendSrcFactorAlpha() == srcFuncAlpha
+                && pipelineSpec.getBlendDstFactorAlpha() == dstFuncAlpha)
             return;
 
         flush();
         pipelineSpec.setBlendFactorSeparate(srcFuncColor, dstFuncColor, srcFuncAlpha, dstFuncAlpha);
         setPipeline();
     }
-
 
     public WGPUBlendFactor getBlendSrcFactor() {
         return pipelineSpec.getBlendSrcFactor();
@@ -283,8 +281,9 @@ public class WgSpriteBatch implements Batch {
         WGPUBlendFactor dstFactorColor = blendConstantMap.get(dstFuncColor);
         WGPUBlendFactor srcFactorAlpha = blendConstantMap.get(srcFuncAlpha);
         WGPUBlendFactor dstFactorAlpha = blendConstantMap.get(dstFuncAlpha);
-        if (pipelineSpec.getBlendSrcFactor() == srcFactorColor && pipelineSpec.getBlendDstFactor() == dstFactorColor &&
-                pipelineSpec.getBlendSrcFactorAlpha() == srcFactorAlpha && pipelineSpec.getBlendDstFactorAlpha() == dstFactorAlpha )
+        if (pipelineSpec.getBlendSrcFactor() == srcFactorColor && pipelineSpec.getBlendDstFactor() == dstFactorColor
+                && pipelineSpec.getBlendSrcFactorAlpha() == srcFactorAlpha
+                && pipelineSpec.getBlendDstFactorAlpha() == dstFactorAlpha)
             return;
 
         flush();
@@ -292,16 +291,13 @@ public class WgSpriteBatch implements Batch {
         setPipeline();
     }
 
-
     public int getBlendSrcFunc() {
         return blendGLConstantMap.get(pipelineSpec.getBlendSrcFactor());
     }
 
-
     public int getBlendDstFunc() {
         return blendGLConstantMap.get(pipelineSpec.getBlendDstFactor());
     }
-
 
     public int getBlendSrcFuncAlpha() {
         return blendGLConstantMap.get(pipelineSpec.getBlendSrcFactorAlpha());
@@ -311,38 +307,39 @@ public class WgSpriteBatch implements Batch {
         return blendGLConstantMap.get(pipelineSpec.getBlendDstFactorAlpha());
     }
 
-    public void enableBlending(){
-        if(pipelineSpec.isBlendingEnabled())
+    public void enableBlending() {
+        if (pipelineSpec.isBlendingEnabled())
             return;
         flush();
         pipelineSpec.enableBlending();
         setPipeline();
     }
-    public void disableBlending(){
-        if(!pipelineSpec.isBlendingEnabled())
+
+    public void disableBlending() {
+        if (!pipelineSpec.isBlendingEnabled())
             return;
         flush();
         pipelineSpec.disableBlending();
         setPipeline();
     }
 
-    /**  Apply a scissor rectangle for further sprites. */
-    public void setScissorRect(int x, int y, int width, int height){
+    /** Apply a scissor rectangle for further sprites. */
+    public void setScissorRect(int x, int y, int width, int height) {
         // start a new render pass (flush sprites up till now)
         end();
         begin();
         renderPass.setScissorRect(x, y, width, height);
     }
 
-    public boolean isBlendingEnabled(){
+    public boolean isBlendingEnabled() {
         return pipelineSpec.isBlendingEnabled();
     }
 
-    public boolean isDrawing () {
+    public boolean isDrawing() {
         return drawing;
     }
 
-    public void begin(){
+    public void begin() {
         begin(null);
     }
 
@@ -359,20 +356,19 @@ public class WgSpriteBatch implements Batch {
 
         // if the pipeline was never changed (no shader changes, no blending changes)
         // continue with the one from the constructor, and we can avoid a cache lookup
-        if(currentPipeline == initialPipeline)
+        if (currentPipeline == initialPipeline)
             renderPass.setPipeline(currentPipeline);
         else
             setPipeline();
 
-
         // First begin() call in this render frame?
-        if(webgpu.frameNumber != this.frameNumber) {
+        if (webgpu.frameNumber != this.frameNumber) {
             this.frameNumber = webgpu.frameNumber;
 
             Rectangle view = webgpu.getViewportRectangle();
             renderPass.setViewport(view.x, view.y, view.width, view.height, 0, 1);
 
-            uniformBuffer.beginSlices(); //setDynamicOffsetIndex(0); // reset the dynamic offset to the start
+            uniformBuffer.beginSlices(); // setDynamicOffsetIndex(0); // reset the dynamic offset to the start
             // if the same spritebatch is used multiple times per frame this will overwrite the previous pass
             // to solve this we reset at the start of a new frame.
             numSpritesPerFlush = 0;
@@ -387,34 +383,31 @@ public class WgSpriteBatch implements Batch {
         // set default state
         tint.set(Color.WHITE);
 
-
-
         // don't reset the matrices because setProjectionMatrix() and setTransformMatrix()
         // may be called before begin() and need to be respected.
-
 
         drawing = true;
     }
 
-    protected void switchTexture (Texture texture) {
+    protected void switchTexture(Texture texture) {
         flush();
-        if(!(texture instanceof WgTexture))
+        if (!(texture instanceof WgTexture))
             throw new IllegalArgumentException("texture must be WebGPUTexture");
-        lastTexture = (WgTexture)texture;
+        lastTexture = (WgTexture) texture;
         invTexWidth = 1.0f / texture.getWidth();
         invTexHeight = 1.0f / texture.getHeight();
 
-        binder.setTexture("texture",lastTexture.getTextureView());
-        binder.setSampler("textureSampler",lastTexture.getSampler());
+        binder.setTexture("texture", lastTexture.getTextureView());
+        binder.setSampler("textureSampler", lastTexture.getSampler());
     }
 
     public void flush() {
-        if(numSpritesPerFlush == 0)
+        if (numSpritesPerFlush == 0)
             return;
-        if(numSpritesPerFlush > maxSpritesInBatch)
+        if (numSpritesPerFlush > maxSpritesInBatch)
             maxSpritesInBatch = numSpritesPerFlush;
-        if(flushCount > maxFlushes-1){
-            Gdx.app.error("WgSpriteBatch", "Too many flushes ("+flushCount+"). Increase maxFlushes.");
+        if (flushCount > maxFlushes - 1) {
+            Gdx.app.error("WgSpriteBatch", "Too many flushes (" + flushCount + "). Increase maxFlushes.");
             return;
         }
         renderCalls++;
@@ -422,11 +415,10 @@ public class WgSpriteBatch implements Batch {
         // bind group
         int dynamicOffset = uniformBuffer.nextSlice();
         updateMatrices();
-        //int dynamicOffset = flushCount *uniformBuffer.getUniformStride();
+        // int dynamicOffset = flushCount *uniformBuffer.getUniformStride();
         WebGPUBindGroup wbg = binder.getBindGroup(0);
         WGPUBindGroup bg = wbg.getBindGroup();
-        renderPass.setBindGroup( 0, bg, dynamicOffset );
-
+        renderPass.setBindGroup(0, bg, dynamicOffset);
 
         // append new vertex data to GPU vertex buffer
         int numBytes = numSpritesPerFlush * VERTS_PER_SPRITE * vertexSize;
@@ -434,20 +426,21 @@ public class WgSpriteBatch implements Batch {
 
         // Set vertex buffer while encoding the render pass
         // use an offset to set the vertex buffer for this batch
-        renderPass.setVertexBuffer( 0, vertexBuffer.getBuffer(), vbOffset, numBytes);
-        renderPass.setIndexBuffer( indexBuffer.getBuffer(), WGPUIndexFormat.Uint16, 0,  numSpritesPerFlush *6*Short.BYTES);
+        renderPass.setVertexBuffer(0, vertexBuffer.getBuffer(), vbOffset, numBytes);
+        renderPass.setIndexBuffer(indexBuffer.getBuffer(), WGPUIndexFormat.Uint16, 0,
+                numSpritesPerFlush * 6 * Short.BYTES);
 
-        renderPass.drawIndexed( numSpritesPerFlush *6, 1, 0, 0, 0);
+        renderPass.drawIndexed(numSpritesPerFlush * 6, 1, 0, 0, 0);
 
-        //bg.release();
+        // bg.release();
 
         vbOffset += numBytes;
         vertexFloats.clear(); // reset fill position for next batch
         numSprites += numSpritesPerFlush;
-        numSpritesPerFlush = 0;   // reset
+        numSpritesPerFlush = 0; // reset
         flushCount++;
         // advance the dynamic offset in the uniform buffer ready for the next flush
-        //uniformBuffer.setDynamicOffsetIndex(flushCount);
+        // uniformBuffer.setDynamicOffsetIndex(flushCount);
     }
 
     public void end() {
@@ -458,41 +451,39 @@ public class WgSpriteBatch implements Batch {
         uniformBuffer.endSlices();
         renderPass.end();
         renderPass = null;
-        pipelineCount = pipelines.size();   // statistics
+        pipelineCount = pipelines.size(); // statistics
     }
 
     // create or reuse pipeline on demand to match the pipeline spec
     private void setPipeline() {
-        WebGPUPipeline pipeline = pipelines.findPipeline( pipelineLayout, pipelineSpec);
+        WebGPUPipeline pipeline = pipelines.findPipeline(pipelineLayout, pipelineSpec);
         if (pipeline != currentPipeline) { // avoid unneeded switches
-            if(renderPass != null)
+            if (renderPass != null)
                 renderPass.setPipeline(pipeline);
             currentPipeline = pipeline;
         }
     }
 
-    /** Set shader to use instead of the default shader or the shader provided
-     * in the constructor.
-     * Use null to reset to default shader
+    /**
+     * Set shader to use instead of the default shader or the shader provided in the constructor. Use null to reset to
+     * default shader
      */
     public void setShader(@Null WgShaderProgram shaderProgram) {
-        if(pipelineSpec.shader == shaderProgram) return;
-        if(drawing)
+        if (pipelineSpec.shader == shaderProgram)
+            return;
+        if (drawing)
             flush();
         if (shaderProgram == null) {
             pipelineSpec.shader = specificShader;
             if (specificShader == null)
                 pipelineSpec.shaderSource = getDefaultShaderSource();
-        }
-        else {
+        } else {
             pipelineSpec.shader = shaderProgram;
-            pipelineSpec.shaderSource = "precompiled"; //shaderProgram.getName();   // todo
+            pipelineSpec.shaderSource = "precompiled"; // shaderProgram.getName(); // todo
         }
         pipelineSpec.invalidateHashCode();
         setPipeline();
     }
-
-
 
     @Override
     public Matrix4 getProjectionMatrix() {
@@ -504,21 +495,20 @@ public class WgSpriteBatch implements Batch {
         return transformMatrix;
     }
 
-
-    /** Set projection matrix.
-     * Expects an OpenGL standard projection matrix, i.e. mapping Z to [-1 .. 1]
+    /**
+     * Set projection matrix. Expects an OpenGL standard projection matrix, i.e. mapping Z to [-1 .. 1]
      *
      */
     @Override
     public void setProjectionMatrix(Matrix4 projection) {
-        if(drawing)
+        if (drawing)
             flush();
         projectionMatrix.set(projection);
     }
 
     @Override
     public void setTransformMatrix(Matrix4 transform) {
-        if(drawing)
+        if (drawing)
             flush();
         transformMatrix.set(transform);
     }
@@ -537,11 +527,11 @@ public class WgSpriteBatch implements Batch {
         draw(texture, x, y, texture.getWidth(), texture.getHeight());
     }
 
-    public void draw(Texture texture, float x, float y, float w, float h){
+    public void draw(Texture texture, float x, float y, float w, float h) {
         this.draw(texture, x, y, w, h, 0f, 1f, 1f, 0f);
     }
 
-    public void draw(TextureRegion region, float x, float y){
+    public void draw(TextureRegion region, float x, float y) {
         // note: v2 is top of glyph, v the bottom
         draw(region, x, y, region.getRegionWidth(), region.getRegionHeight());
     }
@@ -556,39 +546,41 @@ public class WgSpriteBatch implements Batch {
         return true;
     }
 
+    public void draw(TextureRegion region, float x, float y, float w, float h) {
+        if (!check())
+            return;
 
-    public void draw(TextureRegion region, float x, float y, float w, float h){
-        if(!check()) return;
-
-        if(region.getTexture() != lastTexture) { // changing texture, need to flush what we have so far
+        if (region.getTexture() != lastTexture) { // changing texture, need to flush what we have so far
             switchTexture(region.getTexture());
         }
-        addRect(x, y, w, h, region.getU(), region.getV2(), region.getU2(), region.getV());  // flip v and v2
+        addRect(x, y, w, h, region.getU(), region.getV2(), region.getU2(), region.getV()); // flip v and v2
         numSpritesPerFlush++;
     }
 
+    public void draw(Texture texture, float x, float y, float width, float height, float u, float v, float u2,
+            float v2) {
+        if (!check())
+            return;
 
-    public void draw (Texture texture, float x, float y, float width, float height, float u, float v, float u2, float v2) {
-        if(!check()) return;
-
-        if(texture != lastTexture) { // changing texture, need to flush what we have so far
+        if (texture != lastTexture) { // changing texture, need to flush what we have so far
             switchTexture(texture);
         }
         addRect(x, y, width, height, u, v, u2, v2);
         numSpritesPerFlush++;
     }
 
+    public void draw(Texture texture, float x, float y, float originX, float originY, float width, float height,
+            float scaleX, float scaleY, float rotation, int srcX, int srcY, int srcWidth, int srcHeight, boolean flipX,
+            boolean flipY) {
+        if (!check())
+            return;
 
-    public void draw (Texture texture, float x, float y, float originX, float originY, float width, float height, float scaleX,
-                      float scaleY, float rotation, int srcX, int srcY, int srcWidth, int srcHeight, boolean flipX, boolean flipY) {
-        if(!check()) return;
-
-        if(texture != lastTexture) { // changing texture, need to flush what we have so far
+        if (texture != lastTexture) { // changing texture, need to flush what we have so far
             switchTexture(texture);
         }
 
-//        if (idx == vertices.length) //
-//            flush();
+        // if (idx == vertices.length) //
+        // flush();
 
         // bottom left and top right corner points relative to origin
         final float worldOriginX = x + originX;
@@ -687,11 +679,10 @@ public class WgSpriteBatch implements Batch {
         numSpritesPerFlush++;
     }
 
-
-
-    public void draw (Texture texture, float x, float y, float width, float height, int srcX, int srcY, int srcWidth,
-                      int srcHeight, boolean flipX, boolean flipY) {
-        if(!check()) return;
+    public void draw(Texture texture, float x, float y, float width, float height, int srcX, int srcY, int srcWidth,
+            int srcHeight, boolean flipX, boolean flipY) {
+        if (!check())
+            return;
 
         if (texture != lastTexture)
             switchTexture(texture);
@@ -717,14 +708,14 @@ public class WgSpriteBatch implements Batch {
 
         addVertex(x, y, u, v);
         addVertex(x, fy2, u, v2);
-        addVertex(fx2,fy2, u2, v2);
+        addVertex(fx2, fy2, u2, v2);
         addVertex(fx2, y, u2, v);
         numSpritesPerFlush++;
     }
 
-
-    public void draw (Texture texture, float x, float y, int srcX, int srcY, int srcWidth, int srcHeight) {
-        if(!check()) return;
+    public void draw(Texture texture, float x, float y, int srcX, int srcY, int srcWidth, int srcHeight) {
+        if (!check())
+            return;
 
         if (texture != lastTexture)
             switchTexture(texture);
@@ -738,49 +729,50 @@ public class WgSpriteBatch implements Batch {
 
         addVertex(x, y, u, v);
         addVertex(x, fy2, u, v2);
-        addVertex(fx2,fy2, u2, v2);
+        addVertex(fx2, fy2, u2, v2);
         addVertex(fx2, y, u2, v);
         numSpritesPerFlush++;
     }
 
+    // public void draw (Texture texture, float x, float y, float width, float height, float u, float v, float u2, float
+    // v2) {
+    // if (!drawing) throw new IllegalStateException("SpriteBatch.begin must be called before draw.");
+    //
+    // if (texture != lastTexture)
+    // switchTexture(texture);
+    // final float fx2 = x + width;
+    // final float fy2 = y + height;
+    //
+    // addVertex(x, y, u, v);
+    // addVertex(x, fy2, u, v2);
+    // addVertex(fx2,fy2, u2, v2);
+    // addVertex(fx2, y, u2, v);
+    // }
 
-//    public void draw (Texture texture, float x, float y, float width, float height, float u, float v, float u2, float v2) {
-//        if (!drawing) throw new IllegalStateException("SpriteBatch.begin must be called before draw.");
-//
-//        if (texture != lastTexture)
-//            switchTexture(texture);
-//        final float fx2 = x + width;
-//        final float fy2 = y + height;
-//
-//        addVertex(x, y, u, v);
-//        addVertex(x, fy2, u, v2);
-//        addVertex(fx2,fy2, u2, v2);
-//        addVertex(fx2, y, u2, v);
-//    }
-
-//    @Override
-//    public void draw (Texture texture, float x, float y) {
-//        draw(texture, x, y, texture.getWidth(), texture.getHeight());
-//    }
+    // @Override
+    // public void draw (Texture texture, float x, float y) {
+    // draw(texture, x, y, texture.getWidth(), texture.getHeight());
+    // }
 
     // used by Sprite class and BitmapFont
-    public void draw(Texture texture, float[] spriteVertices, int offset, int numFloats){
-        if(!check()) return;
+    public void draw(Texture texture, float[] spriteVertices, int offset, int numFloats) {
+        if (!check())
+            return;
 
-        if(texture != lastTexture) { // changing texture, need to flush what we have so far
+        if (texture != lastTexture) { // changing texture, need to flush what we have so far
             switchTexture(texture);
         }
-        int remaining = 20*(maxSprites - numSpritesPerFlush);
-        if(numFloats > remaining)   // avoid buffer overflow by truncating as needed
+        int remaining = 20 * (maxSprites - numSpritesPerFlush);
+        if (numFloats > remaining) // avoid buffer overflow by truncating as needed
             numFloats = remaining;
         vertexFloats.put(spriteVertices, offset, numFloats);
-        numSpritesPerFlush += numFloats/20;
+        numSpritesPerFlush += numFloats / 20;
     }
 
-
-    public void draw (TextureRegion region, float x, float y, float originX, float originY, float width, float height,
-                      float scaleX, float scaleY, float rotation) {
-        if(!check()) return;
+    public void draw(TextureRegion region, float x, float y, float originX, float originY, float width, float height,
+            float scaleX, float scaleY, float rotation) {
+        if (!check())
+            return;
         Texture texture = region.getTexture();
         if (texture != lastTexture)
             switchTexture(texture);
@@ -871,10 +863,10 @@ public class WgSpriteBatch implements Batch {
         numSpritesPerFlush++;
     }
 
-
-    public void draw (TextureRegion region, float x, float y, float originX, float originY, float width, float height,
-                      float scaleX, float scaleY, float rotation, boolean clockwise) {
-        if(!check()) return;
+    public void draw(TextureRegion region, float x, float y, float originX, float originY, float width, float height,
+            float scaleX, float scaleY, float rotation, boolean clockwise) {
+        if (!check())
+            return;
         Texture texture = region.getTexture();
         if (texture != lastTexture)
             switchTexture(texture);
@@ -981,9 +973,9 @@ public class WgSpriteBatch implements Batch {
         numSpritesPerFlush++;
     }
 
-
-    public void draw (TextureRegion region, float width, float height, Affine2 transform) {
-        if(!check()) return;
+    public void draw(TextureRegion region, float width, float height, Affine2 transform) {
+        if (!check())
+            return;
         Texture texture = region.getTexture();
         if (texture != lastTexture)
             switchTexture(texture);
@@ -1010,21 +1002,17 @@ public class WgSpriteBatch implements Batch {
         numSpritesPerFlush++;
     }
 
-
-
-
     private void addRect(float x, float y, float w, float h, float u, float v, float u2, float v2) {
         addVertex(x, y, u, v);
-        addVertex(x, y+h, u, v2);
-        addVertex(x+w, y+h, u2, v2);
-        addVertex(x+w, y, u2, v);
+        addVertex(x, y + h, u, v2);
+        addVertex(x + w, y + h, u2, v2);
+        addVertex(x + w, y, u2, v);
     }
 
     private void addVertex(float x, float y, float u, float v) {
         boolean hasColor = (vertexAttributes.getMask() & VertexAttributes.Usage.ColorPacked) != 0;
         boolean hasUV = (vertexAttributes.getMask() & VertexAttributes.Usage.TextureCoordinates) != 0;
         float col = tint.toFloatBits();
-
 
         vertexFloats.put(x);
         vertexFloats.put(y);
@@ -1036,26 +1024,26 @@ public class WgSpriteBatch implements Batch {
             vertexFloats.put(v);
         }
 
-
     }
-
 
     private void createBuffers(int maxFlushes) {
         int indexSize = maxSprites * INDICES_PER_SPRITE * Short.BYTES;
 
         // Create vertex buffer and index buffer
-        vertexBuffer = new WebGPUVertexBuffer(WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Vertex),  maxSprites * 4 * vertexSize);
+        vertexBuffer = new WebGPUVertexBuffer(WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Vertex),
+                maxSprites * 4 * vertexSize);
         indexBuffer = new WebGPUIndexBuffer(WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Index), indexSize, Short.BYTES);
 
         // Create uniform buffer with dynamic offset for the view projection matrix
         // dynamic offset will be incremented per flush so that it can have a specific view projection matrix
         uniformBufferSize = 16 * Float.BYTES;
-        uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize,WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Uniform), maxFlushes  );
+        uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Uniform),
+                maxFlushes);
     }
 
     private Matrix4 prevMatrix = new Matrix4();
 
-    private void updateMatrices(){
+    private void updateMatrices() {
         combinedMatrix.set(shiftDepthMatrix).mul(projectionMatrix).mul(transformMatrix);
         binder.setUniform("projectionViewTransform", combinedMatrix);
     }
@@ -1064,27 +1052,24 @@ public class WgSpriteBatch implements Batch {
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("SpriteBatch bind group layout");
         layout.begin();
         layout.addBuffer(0, WGPUShaderStage.Vertex, WGPUBufferBindingType.Uniform, uniformBufferSize, true);
-        layout.addTexture(1, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D, false);
-        layout.addSampler(2, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering );
+        layout.addTexture(1, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D,
+                false);
+        layout.addSampler(2, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering);
         layout.end();
         return layout;
     }
 
-
-
-
     @Override
-    public void dispose(){
+    public void dispose() {
         binder.dispose();
         pipelines.dispose();
         vertexBuffer.dispose();
         indexBuffer.dispose();
         uniformBuffer.dispose();
         bindGroupLayout.dispose();
-        //pipelineLayout.dispose();
+        // pipelineLayout.dispose();
 
     }
-
 
     private String getDefaultShaderSource() {
         if (defaultShader == null)
@@ -1092,7 +1077,7 @@ public class WgSpriteBatch implements Batch {
         return defaultShader;
     }
 
-    private void initBlendMap(){
+    private void initBlendMap() {
         blendConstantMap.put(GL20.GL_ZERO, WGPUBlendFactor.Zero);
         blendConstantMap.put(GL20.GL_ONE, WGPUBlendFactor.One);
         blendConstantMap.put(GL20.GL_SRC_ALPHA, WGPUBlendFactor.SrcAlpha);
@@ -1106,7 +1091,7 @@ public class WgSpriteBatch implements Batch {
         blendConstantMap.put(GL20.GL_SRC_ALPHA_SATURATE, WGPUBlendFactor.SrcAlphaSaturated);
 
         // and build the inverse mapping
-        for(int key : blendConstantMap.keySet()){
+        for (int key : blendConstantMap.keySet()) {
             WGPUBlendFactor factor = blendConstantMap.get(key);
             blendGLConstantMap.put(factor, key);
         }

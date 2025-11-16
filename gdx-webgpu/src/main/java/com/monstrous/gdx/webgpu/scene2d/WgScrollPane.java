@@ -27,22 +27,22 @@ public class WgScrollPane extends ScrollPane {
     }
 
     @Override
-    public void draw (Batch batch, float parentAlpha) {
+    public void draw(Batch batch, float parentAlpha) {
 
         // make a copy of the children
         SnapshotArray<Actor> theChildren = new SnapshotArray<>();
-        for(Actor child : getChildren())
+        for (Actor child : getChildren())
             theChildren.add(child);
         // then delete the scrollpane's children
         clearChildren();
         // draw scroll pane without children
         super.draw(batch, parentAlpha);
         // add children back
-        for(Actor child : theChildren)
+        for (Actor child : theChildren)
             setActor(child);
         // draw children
         Rectangle localRect = Rectangle.tmp;
-        localRect.set(1, 1, getScrollWidth(), getScrollHeight());   // actorArea
+        localRect.set(1, 1, getScrollWidth(), getScrollHeight()); // actorArea
 
         // Setup transform for this group.
         validate();
@@ -52,7 +52,9 @@ public class WgScrollPane extends ScrollPane {
         getStage().calculateScissors(localRect, screenRect);
 
         // set scissor rectangle via WgSpriteBatch method (reverse Y direction)
-        ((WgSpriteBatch)batch).setScissorRect((int)screenRect.x, (int)((Gdx.graphics.getHeight()-screenRect.height) - screenRect.y), (int)screenRect.width, (int)screenRect.height);
+        ((WgSpriteBatch) batch).setScissorRect((int) screenRect.x,
+                (int) ((Gdx.graphics.getHeight() - screenRect.height) - screenRect.y), (int) screenRect.width,
+                (int) screenRect.height);
 
         // now draw the children
         drawChildren(batch, parentAlpha);
@@ -60,7 +62,7 @@ public class WgScrollPane extends ScrollPane {
         resetTransform(batch);
 
         // reset scissor to show full screen
-        ((WgSpriteBatch)batch).setScissorRect(0,0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        ((WgSpriteBatch) batch).setScissorRect(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
 
 }

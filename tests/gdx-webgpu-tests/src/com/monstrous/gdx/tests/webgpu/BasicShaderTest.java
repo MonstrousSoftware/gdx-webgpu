@@ -18,8 +18,7 @@ import com.monstrous.gdx.webgpu.graphics.utils.WgMeshBuilder;
     todo requires to load a Model
  */
 
-
-public class BasicShaderTest  implements ApplicationListener {
+public class BasicShaderTest implements ApplicationListener {
     public PerspectiveCamera cam;
     public CameraInputController camController;
     public Shader shader;
@@ -29,18 +28,15 @@ public class BasicShaderTest  implements ApplicationListener {
     public Renderable renderable;
     public ModelInstance instance;
 
-
-
-
     @Override
-    public void create () {
+    public void create() {
         environment = new Environment();
         environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1f));
         environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
 
         cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         cam.position.set(2f, 2f, 2f);
-        cam.lookAt(0,0,0);
+        cam.lookAt(0, 0, 0);
         cam.near = 1f;
         cam.far = 300f;
         cam.update();
@@ -48,11 +44,12 @@ public class BasicShaderTest  implements ApplicationListener {
         camController = new CameraInputController(cam);
         Gdx.input.setInputProcessor(camController);
 
-        VertexAttributes vertAttribs = new VertexAttributes(VertexAttribute.Position(), VertexAttribute.ColorPacked(), VertexAttribute.TexCoords(0), VertexAttribute.Normal());
+        VertexAttributes vertAttribs = new VertexAttributes(VertexAttribute.Position(), VertexAttribute.ColorPacked(),
+                VertexAttribute.TexCoords(0), VertexAttribute.Normal());
         WgMeshBuilder builder = new WgMeshBuilder();
         builder.begin(vertAttribs);
         WgMeshPart part = builder.part("box", GL20.GL_TRIANGLES);
-        builder.box(1, 1,1);
+        builder.box(1, 1, 1);
         WgMesh mesh = builder.end();
 
         Material mat = new Material(ColorAttribute.createDiffuse(Color.GREEN));
@@ -65,13 +62,13 @@ public class BasicShaderTest  implements ApplicationListener {
         renderable.environment = environment;
         renderable.worldTransform.idt();
 
-        renderContext = null; //new RenderContext(new DefaultTextureBinder(DefaultTextureBinder.ROUNDROBIN, 1));
+        renderContext = null; // new RenderContext(new DefaultTextureBinder(DefaultTextureBinder.ROUNDROBIN, 1));
         shader = new DefaultShader(renderable);
         shader.init();
     }
 
     @Override
-    public void render () {
+    public void render() {
         camController.update();
 
         ScreenUtils.clear(Color.TEAL);
@@ -84,12 +81,20 @@ public class BasicShaderTest  implements ApplicationListener {
     }
 
     @Override
-    public void dispose () {
+    public void dispose() {
         shader.dispose();
         model.dispose();
     }
 
-    @Override public void resume () {}
-    @Override public void resize (int width, int height) {}
-    @Override public void pause () {}
+    @Override
+    public void resume() {
+    }
+
+    @Override
+    public void resize(int width, int height) {
+    }
+
+    @Override
+    public void pause() {
+    }
 }

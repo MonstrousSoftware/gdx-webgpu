@@ -39,10 +39,11 @@ public class WgTeaPreloadApplicationListener extends TeaPreloadApplicationListen
     protected void setupPreloadAssets() {
         super.setupPreloadAssets();
         addQueue();
-        assetLoader.loadAsset("shaders/spritebatch.wgsl", AssetType.Binary, Files.FileType.Classpath, new AssetLoaderListener<TeaBlob>() {
-            public void onSuccess(String url, TeaBlob result) {
-                subtractQueue();
-            }
-        });
+        assetLoader.loadAsset("shaders/spritebatch.wgsl", AssetType.Binary, Files.FileType.Classpath,
+                new AssetLoaderListener<TeaBlob>() {
+                    public void onSuccess(String url, TeaBlob result) {
+                        subtractQueue();
+                    }
+                });
     }
 }

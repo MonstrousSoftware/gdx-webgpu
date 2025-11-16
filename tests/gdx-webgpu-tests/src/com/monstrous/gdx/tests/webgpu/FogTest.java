@@ -40,60 +40,60 @@ import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 import com.monstrous.gdx.webgpu.wrappers.GammaCorrection;
 
-/** Test fog
- *  We can set the fog color via the environment, this should normally be the same as the background color.
- *  Fog strength is determined by distance to the camera.  At the camera's far plane the fog reaches 100%.
- * */
+/**
+ * Test fog We can set the fog color via the environment, this should normally be the same as the background color. Fog
+ * strength is determined by distance to the camera. At the camera's far plane the fog reaches 100%.
+ */
 public class FogTest extends GdxTest {
 
-	WgModelBatch modelBatch;
-	PerspectiveCamera cam;
+    WgModelBatch modelBatch;
+    PerspectiveCamera cam;
     CameraInputController controller;
     Model box;
     ModelInstance instance;
     Environment environment;
-	Color fogColor = Color.DARK_GRAY;
+    Color fogColor = Color.DARK_GRAY;
 
-	public void create () {
-		modelBatch = new WgModelBatch();
-		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		cam.position.set(30,10,30);
-        cam.lookAt(0,0,0);
-		cam.near = 0.1f;
+    public void create() {
+        modelBatch = new WgModelBatch();
+        cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        cam.position.set(30, 10, 30);
+        cam.lookAt(0, 0, 0);
+        cam.near = 0.1f;
         cam.far = 45f;
 
         controller = new CameraInputController(cam);
-		Gdx.input.setInputProcessor(controller);
+        Gdx.input.setInputProcessor(controller);
 
-		//
-		// Create some model instances
-		//
+        //
+        // Create some model instances
+        //
         ModelBuilder modelBuilder = new WgModelBuilder();
         Material mat = new Material(ColorAttribute.createDiffuse(Color.GREEN));
-        long attribs = VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal ;
+        long attribs = VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal;
         box = modelBuilder.createBox(5, 5, 5, mat, attribs);
 
         environment = new Environment();
         environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1.f));
-		environment.set(new ColorAttribute(ColorAttribute.Fog,fogColor));
+        environment.set(new ColorAttribute(ColorAttribute.Fog, fogColor));
         environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -0.3f, -1f, -0.2f));
 
-        instance = new ModelInstance(box, 0,0,0);
-	}
+        instance = new ModelInstance(box, 0, 0, 0);
+    }
 
-	public void render () {
-		animate();
+    public void render() {
+        animate();
 
-		WgScreenUtils.clear(fogColor, true);
-		cam.update();
-		modelBatch.begin(cam);
-		modelBatch.render(instance, environment);
-		modelBatch.end();
-	}
+        WgScreenUtils.clear(fogColor, true);
+        cam.update();
+        modelBatch.begin(cam);
+        modelBatch.render(instance, environment);
+        modelBatch.end();
+    }
 
     float dir = 1;
 
-    private void animate () {
+    private void animate() {
 
         float delta = Gdx.graphics.getDeltaTime();
 
@@ -104,18 +104,18 @@ public class FogTest extends GdxTest {
         }
     }
 
-	@Override
-	public void resize(int width, int height) {
-		cam.viewportWidth = width;
-		cam.viewportHeight = height;
-		cam.update();
+    @Override
+    public void resize(int width, int height) {
+        cam.viewportWidth = width;
+        cam.viewportHeight = height;
+        cam.update();
 
-	}
+    }
 
-	@Override
-	public void dispose () {
-		modelBatch.dispose();
-		box.dispose();
-	}
+    @Override
+    public void dispose() {
+        modelBatch.dispose();
+        box.dispose();
+    }
 
 }

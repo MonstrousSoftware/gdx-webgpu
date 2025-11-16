@@ -41,135 +41,128 @@ import com.monstrous.gdx.webgpu.graphics.WgTexture;
 
 /** Demonstrate compatibility with a RenderableProvider */
 
-
 public class ModelBatchRPTest extends GdxTest {
 
-	WgModelBatch modelBatch;
-	PerspectiveCamera cam;
-	PerspectiveCamController controller;
-	WgSpriteBatch batch;
-	WgBitmapFont font;
-	MyRenderableProvider renderableProvider;
+    WgModelBatch modelBatch;
+    PerspectiveCamera cam;
+    PerspectiveCamController controller;
+    WgSpriteBatch batch;
+    WgBitmapFont font;
+    MyRenderableProvider renderableProvider;
 
-	// application
-	public void create () {
-		modelBatch = new WgModelBatch();
-		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		cam.position.set(0, 0, 2);
-		cam.near = 0.1f;
+    // application
+    public void create() {
+        modelBatch = new WgModelBatch();
+        cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        cam.position.set(0, 0, 2);
+        cam.near = 0.1f;
 
+        controller = new PerspectiveCamController(cam);
+        Gdx.input.setInputProcessor(controller);
+        batch = new WgSpriteBatch();
+        font = new WgBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
 
-		controller = new PerspectiveCamController(cam);
-		Gdx.input.setInputProcessor(controller);
-		batch = new WgSpriteBatch();
-		font = new WgBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
+        renderableProvider = new MyRenderableProvider();
 
-		renderableProvider = new MyRenderableProvider();
+    }
 
-	}
+    public void render() {
+        float delta = Gdx.graphics.getDeltaTime();
+        renderableProvider.update(delta);
 
-	public void render () {
-		float delta = Gdx.graphics.getDeltaTime();
-		renderableProvider.update(delta);
+        WgScreenUtils.clear(Color.TEAL, true);
 
+        cam.update();
+        modelBatch.begin(cam);
 
-		WgScreenUtils.clear(Color.TEAL, true);
+        modelBatch.render(renderableProvider);
 
-		cam.update();
-		modelBatch.begin(cam);
+        // modelBatch.render(renderable);
 
-		modelBatch.render(renderableProvider);
+        modelBatch.end();
 
-		//modelBatch.render(renderable);
+        batch.begin();
+        font.draw(batch, "fps: " + Gdx.graphics.getFramesPerSecond(), 0, 20);
+        batch.end();
+    }
 
-		modelBatch.end();
+    @Override
+    public void resize(int width, int height) {
+        cam.viewportWidth = width;
+        cam.viewportHeight = height;
+        cam.update();
 
+    }
 
-		batch.begin();
-		font.draw(batch, "fps: " + Gdx.graphics.getFramesPerSecond(), 0, 20);
-		batch.end();
-	}
+    @Override
+    public void dispose() {
+        batch.dispose();
+        font.dispose();
+        modelBatch.dispose();
+        renderableProvider.dispose();
+    }
 
-	@Override
-	public void resize(int width, int height) {
-		cam.viewportWidth = width;
-		cam.viewportHeight = height;
-		cam.update();
+    /** artificial implementation of a renderable provider just for testing */
+    public static class MyRenderableProvider implements RenderableProvider, Disposable {
+        WgMesh mesh;
+        final WgMeshPart meshPart;
+        final Material mat1, mat2;
+        float angle;
 
-	}
+        public MyRenderableProvider() {
+            //
+            // Create some renderables
+            //
 
-	@Override
-	public void dispose () {
-		batch.dispose();
-		font.dispose();
-		modelBatch.dispose();
-		renderableProvider.dispose();
-	}
+            WgTexture texture1 = new WgTexture(Gdx.files.internal("data/planet_earth.png"), true);
+            texture1.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear);
+            mat1 = new Material(TextureAttribute.createDiffuse(texture1));
+            WgTexture texture2 = new WgTexture(Gdx.files.internal("data/badlogic.jpg"), true);
+            texture2.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear);
+            mat2 = new Material(TextureAttribute.createDiffuse(texture2));
 
+            meshPart = createMeshPart();
+        }
 
+        public void update(float deltaTime) {
+            angle += 15f * deltaTime;
+        }
 
-	/** artificial implementation of a renderable provider just for testing */
-	public static class MyRenderableProvider implements RenderableProvider, Disposable {
-		WgMesh mesh;
-		final WgMeshPart meshPart;
-		final Material mat1, mat2;
-		float angle;
+        @Override
+        public void getRenderables(Array<Renderable> renderables, Pool<Renderable> pool) {
+            Renderable renderable = pool.obtain();
+            renderable.meshPart.set(meshPart);
+            renderable.worldTransform.idt().trn(0, -2, -3).rotate(Vector3.Y, angle);
+            renderable.material = mat1;
+            renderables.add(renderable);
 
+            renderable = pool.obtain();
+            renderable.meshPart.set(meshPart);
+            renderable.worldTransform.idt().trn(0, 0, -1).rotate(Vector3.Y, -angle);
+            renderable.material = mat2;
+            renderables.add(renderable);
+        }
 
-		public MyRenderableProvider() {
-			//
-			// Create some renderables
-			//
+        private WgMeshPart createMeshPart() {
+            WgMeshBuilder mb = new WgMeshBuilder();
 
-			WgTexture texture1 = new WgTexture(Gdx.files.internal("data/planet_earth.png"), true);
-			texture1.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear);
-			mat1 = new Material(TextureAttribute.createDiffuse(texture1));
-			WgTexture texture2 = new WgTexture(Gdx.files.internal("data/badlogic.jpg"), true);
-			texture2.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear);
-			mat2 = new Material(TextureAttribute.createDiffuse(texture2));
+            VertexAttributes attr = WgMeshBuilder.createAttributes(VertexAttributes.Usage.Position
+                    | VertexAttributes.Usage.TextureCoordinates | VertexAttributes.Usage.ColorUnpacked);
 
+            mb.begin(attr);
 
-			meshPart = createMeshPart();
-		}
+            WgMeshPart part = mb.part("block", GL20.GL_TRIANGLES);
+            // rotate unit cube by 90 degrees to get the textures the right way up.
+            Matrix4 transform = new Matrix4().rotate(Vector3.Z, 90);
+            BoxShapeBuilder.build(mb, transform); // create unit cube
+            mesh = mb.end(); // keep this for disposal
 
-		public void update(float deltaTime){
-			angle += 15f*deltaTime;
-		}
+            return part;
+        }
 
-		@Override
-		public void getRenderables(Array<Renderable> renderables, Pool<Renderable> pool) {
-			Renderable renderable = pool.obtain();
-			renderable.meshPart.set(meshPart);
-			renderable.worldTransform.idt().trn(0,-2,-3).rotate(Vector3.Y, angle);
-			renderable.material = mat1;
-			renderables.add(renderable);
-
-			renderable = pool.obtain();
-			renderable.meshPart.set(meshPart);
-			renderable.worldTransform.idt().trn(0,0,-1).rotate(Vector3.Y, -angle);
-			renderable.material = mat2;
-			renderables.add(renderable);
-		}
-
-		private WgMeshPart createMeshPart() {
-			WgMeshBuilder mb = new WgMeshBuilder();
-
-			VertexAttributes attr = WgMeshBuilder.createAttributes(VertexAttributes.Usage.Position | VertexAttributes.Usage.TextureCoordinates| VertexAttributes.Usage.ColorUnpacked);
-
-			mb.begin(attr);
-
-			WgMeshPart part = mb.part("block", GL20.GL_TRIANGLES);
-			// rotate unit cube by 90 degrees to get the textures the right way up.
-			Matrix4 transform = new Matrix4().rotate(Vector3.Z, 90);
-			BoxShapeBuilder.build(mb, transform);	// create unit cube
-			mesh = mb.end();	// keep this for disposal
-
-			return part;
-		}
-
-		@Override
-		public void dispose() {
-			mesh.dispose();
-		}
-	}
+        @Override
+        public void dispose() {
+            mesh.dispose();
+        }
+    }
 }

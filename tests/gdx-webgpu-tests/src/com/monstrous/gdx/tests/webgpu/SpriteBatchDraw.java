@@ -1,6 +1,5 @@
 package com.monstrous.gdx.tests.webgpu;
 
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Sprite;
@@ -32,7 +31,7 @@ public class SpriteBatchDraw extends GdxTest {
     }
 
     @Override
-    public void render(  ){
+    public void render() {
         float delta = Gdx.graphics.getDeltaTime();
         angleDegrees += 30 * delta;
 
@@ -44,46 +43,44 @@ public class SpriteBatchDraw extends GdxTest {
 
         // pass a clear color to batch begin
         batch.begin(Color.WHITE);
-        batch.draw(texture, 0, 0);  // bottom left, full texture size
+        batch.draw(texture, 0, 0); // bottom left, full texture size
 
         batch.draw(texture, 0, 320, 32, 32); // resized
 
         // set tint to use from now on
         batch.setColor(Color.YELLOW);
         // smaller size at right bottom corner
-        batch.draw(texture, Gdx.graphics.getWidth()-64, 0, 64, 64);
+        batch.draw(texture, Gdx.graphics.getWidth() - 64, 0, 64, 64);
 
         // set tint to white with 50% transparency
         // note: blending is on by default
-        batch.setColor(1,1,1,0.5f);
+        batch.setColor(1, 1, 1, 0.5f);
         // smaller size at top right corner, should appear semi-transparent
-        batch.draw(texture, Gdx.graphics.getWidth()-64, Gdx.graphics.getHeight()-64, 64, 64);
+        batch.draw(texture, Gdx.graphics.getWidth() - 64, Gdx.graphics.getHeight() - 64, 64, 64);
 
         // now disable blending. tint still has 50% alpha
         batch.disableBlending();
         // smaller size at top right, should appear opaque
-        batch.draw(texture, Gdx.graphics.getWidth()-128, Gdx.graphics.getHeight()-64, 64, 64);
+        batch.draw(texture, Gdx.graphics.getWidth() - 128, Gdx.graphics.getHeight() - 64, 64, 64);
 
-//
-//
-//        sprite.draw(batch);
+        //
+        //
+        // sprite.draw(batch);
 
         batch.end();
     }
 
     @Override
-    public void resize (int width, int height) {
+    public void resize(int width, int height) {
         Gdx.app.log("resize", "");
         viewport.update(width, height, true);
     }
 
     @Override
-    public void dispose(){
+    public void dispose() {
         // cleanup
         texture.dispose();
         batch.dispose();
     }
-
-
 
 }

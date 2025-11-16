@@ -20,77 +20,71 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Very basic preprocessor for shader code.
- * Supports:
- *      #define NAME
- *      #define NAME VALUE
- *      #ifdef / #ifndef
- *      #else
- *      #endif
+ * Very basic preprocessor for shader code. Supports: #define NAME #define NAME VALUE #ifdef / #ifndef #else #endif
  *
  */
 
 public class Preprocessor {
 
-    private static final Map<String,String> defineMap = new HashMap<>();
-    private static final Map<String,String> defineSubstitutions = new HashMap<>();
+    private static final Map<String, String> defineMap = new HashMap<>();
+    private static final Map<String, String> defineSubstitutions = new HashMap<>();
 
-    public static String process(String input){
+    public static String process(String input) {
         defineMap.clear();
         StringBuilder output = new StringBuilder();
         int nestDepth = 0;
         int ignoreLevel = 0;
 
         String[] lines = input.split("\n");
-        for(String line : lines){
+        for (String line : lines) {
             String trimmed = line.trim();
 
-            if(trimmed.startsWith("#ifdef")){
+            if (trimmed.startsWith("#ifdef")) {
                 nestDepth++;
-                if(ignoreLevel == 0) {
+                if (ignoreLevel == 0) {
                     String[] words = trimmed.split("[ \t]");
-                    if(!defined(words[1]))
+                    if (!defined(words[1]))
                         ignoreLevel = nestDepth;
                 }
-            } else if(trimmed.startsWith("#ifndef")){
+            } else if (trimmed.startsWith("#ifndef")) {
                 nestDepth++;
-                if(ignoreLevel == 0) {
+                if (ignoreLevel == 0) {
                     String[] words = trimmed.split("[ \t]");
-                    if(defined(words[1]))
+                    if (defined(words[1]))
                         ignoreLevel = nestDepth;
                 }
-            } else if(trimmed.startsWith("#else")){
+            } else if (trimmed.startsWith("#else")) {
                 if (ignoreLevel == nestDepth)
                     ignoreLevel = 0;
                 else if (ignoreLevel == 0)
                     ignoreLevel = nestDepth;
 
-            } else if(trimmed.startsWith("#endif")){
-                if(ignoreLevel == nestDepth)
+            } else if (trimmed.startsWith("#endif")) {
+                if (ignoreLevel == nestDepth)
                     ignoreLevel = 0;
                 nestDepth--;
-            }
-            else if(ignoreLevel == 0) {
+            } else if (ignoreLevel == 0) {
                 if (trimmed.startsWith("#define")) {
                     String[] words = trimmed.split("[ \t]");
-                    if(words.length == 2)
+                    if (words.length == 2)
                         define(words[1], null);
                     else
                         define(words[1], words[2]);
-                }
-                else
+                } else
                     process(output, line);
             }
-            //output.append(nestDepth).append(':').append(branchTaken).append(line).append('\n');
+            // output.append(nestDepth).append(':').append(branchTaken).append(line).append('\n');
 
         }
         return output.toString();
     }
 
-    // substitute #defined keys by their value, e.g. if you used #define ABC 123 every instance of ABC will be substituted with 123.
-    // note that the input is not tokenized and key will also be substituted if it is a substring, e.g. FLABCORE will become FL123ORE
-    private static void process(StringBuilder output, String line){
-        for(String key : defineSubstitutions.keySet()){
+    // substitute #defined keys by their value, e.g. if you used #define ABC 123 every instance of ABC will be
+    // substituted with 123.
+    // note that the input is not tokenized and key will also be substituted if it is a substring, e.g. FLABCORE will
+    // become FL123ORE
+    private static void process(StringBuilder output, String line) {
+        for (String key : defineSubstitutions.keySet()) {
             String value = defineSubstitutions.get(key);
             line = line.replace(key, value);
         }
@@ -99,17 +93,17 @@ public class Preprocessor {
 
     // b may be null, e.g. #define DEBUG
     // note: b is a simple string, not an expression.
-    private static void define(String a, String b){
+    private static void define(String a, String b) {
         defineMap.put(a, b);
-        if(b != null)
+        if (b != null)
             defineSubstitutions.put(a, b);
     }
 
-    private static boolean defined(String name){
+    private static boolean defined(String name) {
         return defineMap.containsKey(name);
     }
 
-    private static boolean evaluate(String expr){
-        return expr.contentEquals("true");      // placeholder implementation
+    private static boolean evaluate(String expr) {
+        return expr.contentEquals("true"); // placeholder implementation
     }
 }

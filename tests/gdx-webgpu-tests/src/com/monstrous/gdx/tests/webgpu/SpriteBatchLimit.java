@@ -1,6 +1,5 @@
 package com.monstrous.gdx.tests.webgpu;
 
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Sprite;
@@ -28,7 +27,7 @@ public class SpriteBatchLimit extends GdxTest {
     }
 
     @Override
-    public void render(  ){
+    public void render() {
 
         viewport.apply();
         batch.setProjectionMatrix(viewport.getCamera().combined);
@@ -37,7 +36,7 @@ public class SpriteBatchLimit extends GdxTest {
 
         // pass a clear color to batch begin
         batch.begin(Color.WHITE);
-        for(int i = 0; i < 21; i++) {
+        for (int i = 0; i < 21; i++) {
             int x = MathUtils.random(Gdx.graphics.getWidth() - 32);
             int y = MathUtils.random(Gdx.graphics.getHeight() - 32);
             batch.draw(texture, x, y, 32, 32);
@@ -46,18 +45,16 @@ public class SpriteBatchLimit extends GdxTest {
     }
 
     @Override
-    public void resize (int width, int height) {
+    public void resize(int width, int height) {
         Gdx.app.log("resize", "");
         viewport.update(width, height, true);
     }
 
     @Override
-    public void dispose(){
+    public void dispose() {
         // cleanup
         texture.dispose();
         batch.dispose();
     }
-
-
 
 }

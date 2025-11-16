@@ -17,90 +17,89 @@ import com.monstrous.gdx.webgpu.graphics.WgTexture;
 // shows texture from file, texture from pixmap, texture region, sprite
 //
 public class StageTest extends GdxTest {
-		private WgSpriteBatch batch;
-		private ScreenViewport viewport;
-		private WgStage stage;
-		private WgSkin skin;
-		private WgTexture texture;
+    private WgSpriteBatch batch;
+    private ScreenViewport viewport;
+    private WgStage stage;
+    private WgSkin skin;
+    private WgTexture texture;
 
+    public void create() {
+        Matrix4 mat = new Matrix4();
+        int w = Gdx.graphics.getWidth();
+        int h = Gdx.graphics.getHeight();
+        mat.setToOrtho(0, w, 0, h, 1, -1);
+        System.out.println(mat.toString());
 
-		public void create () {
-			Matrix4 mat = new Matrix4();
-			int w = Gdx.graphics.getWidth();
-			int h =  Gdx.graphics.getHeight();
-			mat.setToOrtho(0, w, 0, h, 1, -1);
-			System.out.println(mat.toString());
+        viewport = new ScreenViewport();
+        batch = new WgSpriteBatch();
 
-			viewport = new ScreenViewport();
-			batch = new WgSpriteBatch();
+        stage = new WgStage(viewport);
+        // stage.enableDebug(false);
+        stage.setDebugAll(true);
+        Gdx.input.setInputProcessor(stage);
 
-			stage = new WgStage(viewport);
-			//stage.enableDebug(false);
-			stage.setDebugAll(true);
-			Gdx.input.setInputProcessor(stage);
+        skin = new WgSkin(Gdx.files.internal("data/uiskin.json"));
 
-			skin = new WgSkin(Gdx.files.internal("data/uiskin.json"));
+        Button button = new Button(skin);
 
-			Button button = new Button(skin);
+        Label label = new Label("Label text", skin);
+        TextButton textButton = new TextButton("Text Button", skin);
+        // Add a listener to the button. ChangeListener is fired when the button's checked state changes, eg when
+        // clicked,
+        // Button#setChecked() is called, via a key press, etc. If the event.cancel() is called, the checked state will
+        // be reverted.
+        // ClickListener could have been used, but would only fire when clicked. Also, canceling a ClickListener event
+        // won't
+        // revert the checked state.
+        textButton.addListener(new ChangeListener() {
+            public void changed(ChangeEvent event, Actor actor) {
+                System.out.println("Clicked! Is checked: " + button.isChecked());
+                textButton.setText("Good job!");
+            }
+        });
+        texture = new WgTexture(Gdx.files.internal("data/badlogic.jpg"));
+        Image image = new Image(texture);
+        Slider slider = new Slider(0, 100, 20, false, skin);
+        slider.debug();
 
+        Table table = new Table();
+        table.setFillParent(true);
 
-			Label label = new Label("Label text", skin);
-			TextButton textButton = new TextButton("Text Button", skin);
-			// Add a listener to the button. ChangeListener is fired when the button's checked state changes, eg when clicked,
-			// Button#setChecked() is called, via a key press, etc. If the event.cancel() is called, the checked state will be reverted.
-			// ClickListener could have been used, but would only fire when clicked. Also, canceling a ClickListener event won't
-			// revert the checked state.
-			textButton.addListener(new ChangeListener() {
-				public void changed (ChangeEvent event, Actor actor) {
-					System.out.println("Clicked! Is checked: " + button.isChecked());
-					textButton.setText("Good job!");
-				}
-			});
-			texture = new WgTexture(Gdx.files.internal("data/badlogic.jpg"));
-			Image image = new Image(texture);
-			Slider slider = new Slider(0, 100, 20, false, skin);
-			slider.debug();
+        table.add(label);
+        table.row();
+        table.add(button).width(100);
+        table.row();
+        table.add(textButton);
+        table.row();
+        table.add(image);
+        table.row();
+        table.add(slider);
+        table.debug();
 
-			Table table = new Table();
-			table.setFillParent(true);
+        stage.addActor(table);
 
-			table.add(label);
-			table.row();
-			table.add(button).width(100);
-			table.row();
-			table.add(textButton);
-			table.row();
-			table.add(image);
-			table.row();
-			table.add(slider);
-			table.debug();
+    }
 
-			stage.addActor(table);
+    @Override
+    public void render() {
 
+        stage.act();
+        stage.draw();
+    }
 
-		}
+    @Override
+    public void resize(int width, int height) {
+        Gdx.app.log("resize", "");
+        stage.getViewport().update(width, height, true);
 
-		@Override
-		public void render () {
+    }
 
-			stage.act();
-			stage.draw();
-		}
+    @Override
+    public void dispose() {
 
+        stage.dispose();
+        texture.dispose();
 
-		@Override
-		public void resize (int width, int height) {
-			Gdx.app.log("resize", "");
-			stage.getViewport().update(width, height, true);
-
-		}
-
-		@Override
-		public void dispose () {
-
-			stage.dispose();
-			texture.dispose();
-
-		}
+    }
 
 }

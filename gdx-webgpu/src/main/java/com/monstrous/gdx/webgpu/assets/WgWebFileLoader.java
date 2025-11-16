@@ -25,8 +25,8 @@ import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.utils.Array;
 
 /**
- * A lightweight loader designed exclusively for web use.
- * When there is FileHandle dependency, gdx-team will download the file first.
+ * A lightweight loader designed exclusively for web use. When there is FileHandle dependency, gdx-team will download
+ * the file first.
  */
 public class WgWebFileLoader extends AsynchronousAssetLoader<FileHandle, WgWebFileLoader.WebFileParameter> {
 

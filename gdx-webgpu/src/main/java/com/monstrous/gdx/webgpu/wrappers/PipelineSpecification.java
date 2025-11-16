@@ -23,7 +23,6 @@ import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
 
-
 import java.util.Objects;
 
 // todo Environment
@@ -60,8 +59,7 @@ public class PipelineSpecification {
     public int maxPointLights;
     public boolean usePBR;
     private int hash;
-    private boolean dirty;  // does hash need to be recalculated?
-
+    private boolean dirty; // does hash need to be recalculated?
 
     public PipelineSpecification() {
         this.name = "pipeline";
@@ -76,11 +74,11 @@ public class PipelineSpecification {
         disableBlending();
         setCullMode(WGPUCullMode.None);
         indexFormat = WGPUIndexFormat.Uint16;
-        topology =  WGPUPrimitiveTopology.TriangleList;
+        topology = WGPUPrimitiveTopology.TriangleList;
         isDepthPass = false;
         WgGraphics gfx = (WgGraphics) Gdx.graphics;
         colorFormat = gfx.getContext().getSurfaceFormat();
-        depthFormat = WGPUTextureFormat.Depth24Plus;       // todo get from adapter?
+        depthFormat = WGPUTextureFormat.Depth24Plus; // todo get from adapter?
         numSamples = 1;
         isSkyBox = false;
         afterDepthPrepass = false;
@@ -102,14 +100,14 @@ public class PipelineSpecification {
     }
 
     public PipelineSpecification(PipelineSpecification spec) {
-        this.name  = spec.name;
-        this.vertexAttributes = spec.vertexAttributes;       // should be deep copy
+        this.name = spec.name;
+        this.vertexAttributes = spec.vertexAttributes; // should be deep copy
         this.environment = spec.environment;
         this.shaderSource = spec.shaderSource;
         this.shader = spec.shader;
         this.useDepthTest = spec.useDepthTest;
         this.noDepthAttachment = spec.noDepthAttachment;
-        this.isDepthPass= spec.isDepthPass;
+        this.isDepthPass = spec.isDepthPass;
         this.blendingEnabled = spec.blendingEnabled;
         this.blendSrcColor = spec.blendSrcColor;
         this.blendDstColor = spec.blendDstColor;
@@ -135,36 +133,36 @@ public class PipelineSpecification {
     }
 
     /** call this whenever changing a field directly to force a recalculation of the hash code. */
-    public void invalidateHashCode(){
+    public void invalidateHashCode() {
         dirty = true;
     }
 
-    public void enableDepthTest(){
+    public void enableDepthTest() {
         useDepthTest = true;
         dirty = true;
     }
 
-    public void disableDepthTest(){
+    public void disableDepthTest() {
         useDepthTest = false;
         dirty = true;
     }
 
-    public void setCullMode(WGPUCullMode cullMode){
+    public void setCullMode(WGPUCullMode cullMode) {
         this.cullMode = cullMode;
         dirty = true;
     }
 
-    public void enableBlending(){
+    public void enableBlending() {
         blendingEnabled = true;
         dirty = true;
     }
 
-    public void disableBlending(){
+    public void disableBlending() {
         blendingEnabled = false;
         dirty = true;
     }
 
-    public boolean isBlendingEnabled(){
+    public boolean isBlendingEnabled() {
         return blendingEnabled;
     }
 
@@ -173,7 +171,8 @@ public class PipelineSpecification {
     }
 
     /** note:is only effective if blendingEnabled */
-    public void setBlendFactorSeparate(WGPUBlendFactor srcFuncColor, WGPUBlendFactor dstFuncColor, WGPUBlendFactor srcFuncAlpha, WGPUBlendFactor dstFuncAlpha) {
+    public void setBlendFactorSeparate(WGPUBlendFactor srcFuncColor, WGPUBlendFactor dstFuncColor,
+            WGPUBlendFactor srcFuncAlpha, WGPUBlendFactor dstFuncAlpha) {
         blendSrcColor = srcFuncColor;
         blendDstColor = dstFuncColor;
         blendSrcAlpha = srcFuncAlpha;
@@ -200,23 +199,26 @@ public class PipelineSpecification {
     // used?
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         return hash == ((PipelineSpecification) o).hash;
     }
 
     @Override
     public int hashCode() {
-        if(dirty)
+        if (dirty)
             recalcHash();
         return hash;
     }
 
-    /** to be called whenever relevant content changes (to avoid doing this in hashCode which is called a lot).
-     * Also: avoid Objects.hash() to avoid lots of little allocations.
+    /**
+     * to be called whenever relevant content changes (to avoid doing this in hashCode which is called a lot). Also:
+     * avoid Objects.hash() to avoid lots of little allocations.
      */
     private void recalcHash() {
-        //System.out.println("Recalc pipe spec hash "+((WgGraphics)Gdx.graphics).getFrameId());
+        // System.out.println("Recalc pipe spec hash "+((WgGraphics)Gdx.graphics).getFrameId());
         hash = 1;
         hash = 31 * hash + (vertexAttributes == null ? 0 : vertexAttributes.hashCode());
         hash = 31 * hash + (shaderSource == null ? 0 : shaderSource.hashCode());
@@ -244,26 +246,26 @@ public class PipelineSpecification {
         hash = 31 * hash + maxPointLights;
         hash = 31 * hash + (usePBR ? 1231 : 1237);
 
-//
-//        hash = Objects.hash(
-//            vertexAttributes == null ? 0 : vertexAttributes.hashCode(),
-//            shaderSource,
-//            isDepthPass, afterDepthPrepass,
-//            useDepthTest, noDepthAttachment,
-//            topology, indexFormat,
-//            blendingEnabled,
-//            // blend factors should be ignored when !blendingEnabled
-//            blendingEnabled ? blendSrcColor : 0,
-//            blendingEnabled ? blendDstColor : 0,
-//            blendingEnabled ? blendOpColor : 0,
-//            blendingEnabled ? blendSrcAlpha: 0,
-//            blendingEnabled ? blendDstAlpha: 0,
-//            blendingEnabled ? blendOpAlpha : 0,
-//            numSamples, cullMode, isSkyBox, depthFormat, numSamples
-//        );
+        //
+        // hash = Objects.hash(
+        // vertexAttributes == null ? 0 : vertexAttributes.hashCode(),
+        // shaderSource,
+        // isDepthPass, afterDepthPrepass,
+        // useDepthTest, noDepthAttachment,
+        // topology, indexFormat,
+        // blendingEnabled,
+        // // blend factors should be ignored when !blendingEnabled
+        // blendingEnabled ? blendSrcColor : 0,
+        // blendingEnabled ? blendDstColor : 0,
+        // blendingEnabled ? blendOpColor : 0,
+        // blendingEnabled ? blendSrcAlpha: 0,
+        // blendingEnabled ? blendDstAlpha: 0,
+        // blendingEnabled ? blendOpAlpha : 0,
+        // numSamples, cullMode, isSkyBox, depthFormat, numSamples
+        // );
     }
 
-
-    // note: don't include compiled shader in the hash because this would force new compiles every frame since a spec of an uncompiled shader <> compiled shader
+    // note: don't include compiled shader in the hash because this would force new compiles every frame since a spec of
+    // an uncompiled shader <> compiled shader
 
 }

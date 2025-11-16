@@ -28,12 +28,12 @@ public class WgDesktopClipboard implements Clipboard {
     }
 
     @Override
-    public String getContents () {
-        return GLFW.glfwGetClipboardString(((WgDesktopGraphics)Gdx.graphics).getWindow().getWindowHandle());
+    public String getContents() {
+        return GLFW.glfwGetClipboardString(((WgDesktopGraphics) Gdx.graphics).getWindow().getWindowHandle());
     }
 
     @Override
-    public void setContents (String content) {
-        GLFW.glfwSetClipboardString(((WgDesktopGraphics)Gdx.graphics).getWindow().getWindowHandle(), content);
+    public void setContents(String content) {
+        GLFW.glfwSetClipboardString(((WgDesktopGraphics) Gdx.graphics).getWindow().getWindowHandle(), content);
     }
 }

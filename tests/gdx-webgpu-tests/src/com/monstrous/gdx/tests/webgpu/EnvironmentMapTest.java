@@ -40,78 +40,80 @@ import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 import static com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute.EnvironmentMap;
 
 public class EnvironmentMapTest extends GdxTest {
-	public PerspectiveCamera cam;
-	public CameraInputController inputController;
-	public WgModelBatch modelBatch;
-	public Model model;
-	public ModelInstance instance;
-	public Environment environment;
+    public PerspectiveCamera cam;
+    public CameraInputController inputController;
+    public WgModelBatch modelBatch;
+    public Model model;
+    public ModelInstance instance;
+    public Environment environment;
     private WgCubemap cubemap;
 
     @Override
-	public void create () {
-		modelBatch = new WgModelBatch();
+    public void create() {
+        modelBatch = new WgModelBatch();
 
-		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		cam.position.set(5f, 5f, 5f);
-		cam.lookAt(0, 0, 0);
-		cam.near = 0.1f;
-		cam.far = 150f;
-		cam.update();
+        cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        cam.position.set(5f, 5f, 5f);
+        cam.lookAt(0, 0, 0);
+        cam.near = 0.1f;
+        cam.far = 150f;
+        cam.update();
 
         WgTexture texture = new WgTexture(Gdx.files.internal("data/webgpu.png"));
 
         Material mat = new Material(ColorAttribute.createDiffuse(Color.YELLOW));
         ModelBuilder modelBuilder = new WgModelBuilder();
-		model = modelBuilder.createBox(5f, 5f, 5f, new Material(TextureAttribute.createDiffuse(texture)),
-			VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal| VertexAttributes.Usage.TextureCoordinates);
-		instance = new ModelInstance(model);
+        model = modelBuilder.createBox(5f, 5f, 5f, new Material(TextureAttribute.createDiffuse(texture)),
+                VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal
+                        | VertexAttributes.Usage.TextureCoordinates);
+        instance = new ModelInstance(model);
 
-		Gdx.input.setInputProcessor(new InputMultiplexer(this, inputController = new CameraInputController(cam)));
+        Gdx.input.setInputProcessor(new InputMultiplexer(this, inputController = new CameraInputController(cam)));
 
-//          String[] sides = { "PX.png","NX.png", "PY.png", "NY.png", "PZ.png", "NZ.png"  };
-//       String prefix = "data/g3d/environment/environment_01_";
-//        String prefix = "data/g3d/environment/debug_";
-//
-         String[] sides = {  "pos-x.jpg","neg-x.jpg", "pos-y.jpg","neg-y.jpg", "pos-z.jpg", "neg-z.jpg"   };
+        // String[] sides = { "PX.png","NX.png", "PY.png", "NY.png", "PZ.png", "NZ.png" };
+        // String prefix = "data/g3d/environment/environment_01_";
+        // String prefix = "data/g3d/environment/debug_";
+        //
+        String[] sides = {"pos-x.jpg", "neg-x.jpg", "pos-y.jpg", "neg-y.jpg", "pos-z.jpg", "neg-z.jpg"};
         String prefix = "data/g3d/environment/leadenhall/";
 
         FileHandle[] fileHandles = new FileHandle[6];
-        for(int i = 0; i < sides.length; i++){
+        for (int i = 0; i < sides.length; i++) {
             fileHandles[i] = Gdx.files.internal(prefix + sides[i]);
         }
 
-        cubemap = new WgCubemap(fileHandles[0], fileHandles[1], fileHandles[2], fileHandles[3], fileHandles[4], fileHandles[5], true);
+        cubemap = new WgCubemap(fileHandles[0], fileHandles[1], fileHandles[2], fileHandles[3], fileHandles[4],
+                fileHandles[5], true);
 
         environment = new Environment();
         environment.set(new ColorAttribute(ColorAttribute.AmbientLight, .4f, .4f, .4f, 1f));
         environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
-        environment.set(new WgCubemapAttribute(EnvironmentMap, cubemap));    // add cube map attribute
-	}
+        environment.set(new WgCubemapAttribute(EnvironmentMap, cubemap)); // add cube map attribute
+    }
 
-	@Override
-	public void render () {
-		inputController.update();
+    @Override
+    public void render() {
+        inputController.update();
 
         WgScreenUtils.clear(Color.TEAL, true);
 
-		modelBatch.begin(cam);
-		modelBatch.render(instance, environment);
-		modelBatch.end();
-	}
-
-	@Override
-	public void dispose () {
-		modelBatch.dispose();
-		model.dispose();
-        cubemap.dispose();
-	}
+        modelBatch.begin(cam);
+        modelBatch.render(instance, environment);
+        modelBatch.end();
+    }
 
     @Override
-	public void resize (int width, int height) {
+    public void dispose() {
+        modelBatch.dispose();
+        model.dispose();
+        cubemap.dispose();
+    }
+
+    @Override
+    public void resize(int width, int height) {
         cam.viewportWidth = width;
         cam.viewportHeight = height;
         cam.update();
-	}
+    }
 
 }

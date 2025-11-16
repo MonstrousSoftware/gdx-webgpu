@@ -26,33 +26,26 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Encapsulated bind group layout.
- * Example:
- *      WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("my layout");
- *      layout.begin();
- *      layout.addBuffer(0, ...);
- *      layout.addTexture(1, .... );
- *      layout.addSampler(2, ...);
- *      layout.end();
+ * Encapsulated bind group layout. Example: WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("my layout");
+ * layout.begin(); layout.addBuffer(0, ...); layout.addTexture(1, .... ); layout.addSampler(2, ...); layout.end();
  */
 public class WebGPUBindGroupLayout implements Disposable {
     private final WgGraphics gfx = (WgGraphics) Gdx.graphics;
     private final WebGPUContext webgpu = gfx.getContext();
     private WGPUBindGroupLayout layout = null;
     private final String label;
-    private final Map<Integer, WGPUBindGroupLayoutEntry> entries;   // map from bindingId
-
+    private final Map<Integer, WGPUBindGroupLayoutEntry> entries; // map from bindingId
 
     public WebGPUBindGroupLayout() {
         this("bind group layout");
     }
 
-    public WebGPUBindGroupLayout(String label ) {
+    public WebGPUBindGroupLayout(String label) {
         this.label = label;
         entries = new HashMap<>();
     }
 
-    public void begin(){
+    public void begin() {
         entries.clear();
         layout = null;
     }
@@ -60,28 +53,32 @@ public class WebGPUBindGroupLayout implements Disposable {
     /**
      * Add binding layout for a buffer.
      *
-     * @param bindingId integer as in the shader, 0, 1, 2, ...  they don't have to be sequential or in order!
+     * @param bindingId integer as in the shader, 0, 1, 2, ... they don't have to be sequential or in order!
      * @param visibility e.g. WGPUShaderStage.Fragment (or combination using OR operator)
      * @param bufferBindingType e.g. WGPUBufferBindingType.ReadOnlyStorage
      */
-    public void addBuffer(int bindingId, WGPUShaderStage visibility, WGPUBufferBindingType bufferBindingType, int minBindingSize, boolean hasDynamicOffset ){
+    public void addBuffer(int bindingId, WGPUShaderStage visibility, WGPUBufferBindingType bufferBindingType,
+            int minBindingSize, boolean hasDynamicOffset) {
         WGPUBindGroupLayoutEntry bindingLayout = addBinding(bindingId, visibility);
         bindingLayout.getBuffer().setType(bufferBindingType);
         bindingLayout.getBuffer().setMinBindingSize(minBindingSize);
-        bindingLayout.getBuffer().setHasDynamicOffset(hasDynamicOffset? 1 : 0);
+        bindingLayout.getBuffer().setHasDynamicOffset(hasDynamicOffset ? 1 : 0);
 
         entries.put(bindingId, bindingLayout);
     }
 
-    public void addTexture(int bindingId, WGPUShaderStage visibility, WGPUTextureSampleType sampleType, WGPUTextureViewDimension viewDimension, boolean multiSampled ){
+    public void addTexture(int bindingId, WGPUShaderStage visibility, WGPUTextureSampleType sampleType,
+            WGPUTextureViewDimension viewDimension, boolean multiSampled) {
         WGPUBindGroupLayoutEntry bindingLayout = addBinding(bindingId, visibility);
-        bindingLayout.getTexture().setMultisampled(multiSampled? 1 : 0);
+        bindingLayout.getTexture().setMultisampled(multiSampled ? 1 : 0);
         bindingLayout.getTexture().setSampleType(sampleType);
         bindingLayout.getTexture().setViewDimension(viewDimension);
-        //bindingLayout.getTexture().setViewDimension(WGPUTextureViewDimension._2D);
+        // bindingLayout.getTexture().setViewDimension(WGPUTextureViewDimension._2D);
         entries.put(bindingId, bindingLayout);
     }
-    public void addStorageTexture(int bindingId, WGPUShaderStage visibility, WGPUStorageTextureAccess access, WGPUTextureFormat format, WGPUTextureViewDimension viewDimension ){
+
+    public void addStorageTexture(int bindingId, WGPUShaderStage visibility, WGPUStorageTextureAccess access,
+            WGPUTextureFormat format, WGPUTextureViewDimension viewDimension) {
         WGPUBindGroupLayoutEntry bindingLayout = addBinding(bindingId, visibility);
         bindingLayout.getStorageTexture().setAccess(access);
         bindingLayout.getStorageTexture().setFormat(format);
@@ -89,18 +86,17 @@ public class WebGPUBindGroupLayout implements Disposable {
         entries.put(bindingId, bindingLayout);
     }
 
-    public void addSampler(int bindingId, WGPUShaderStage visibility, WGPUSamplerBindingType samplerType ){
+    public void addSampler(int bindingId, WGPUShaderStage visibility, WGPUSamplerBindingType samplerType) {
         WGPUBindGroupLayoutEntry bindingLayout = addBinding(bindingId, visibility);
         bindingLayout.getSampler().setType(samplerType);
         entries.put(bindingId, bindingLayout);
     }
 
-
-    /** addBinding
-     *  common part of binding layouts
+    /**
+     * addBinding common part of binding layouts
      */
-    private WGPUBindGroupLayoutEntry addBinding(int bindingId, WGPUShaderStage visibility ){
-        WGPUBindGroupLayoutEntry bindingLayout =  new WGPUBindGroupLayoutEntry();
+    private WGPUBindGroupLayoutEntry addBinding(int bindingId, WGPUShaderStage visibility) {
+        WGPUBindGroupLayoutEntry bindingLayout = new WGPUBindGroupLayoutEntry();
         bindingLayout.setNextInChain(WGPUChainedStruct.NULL);
         setDefaultLayout(bindingLayout);
         bindingLayout.setBinding(bindingId);
@@ -108,62 +104,60 @@ public class WebGPUBindGroupLayout implements Disposable {
         return bindingLayout;
     }
 
-    public void end(){
+    public void end() {
         // Create a bind group layout
         WGPUBindGroupLayoutDescriptor bindGroupLayoutDesc = WGPUBindGroupLayoutDescriptor.obtain();
         bindGroupLayoutDesc.setNextInChain(WGPUChainedStruct.NULL);
         bindGroupLayoutDesc.setLabel(label);
         WGPUVectorBindGroupLayoutEntry entryVector = WGPUVectorBindGroupLayoutEntry.obtain();
-        for(WGPUBindGroupLayoutEntry entry : entries.values())
+        for (WGPUBindGroupLayoutEntry entry : entries.values())
             entryVector.push_back(entry);
-        bindGroupLayoutDesc.setEntries( entryVector );
+        bindGroupLayoutDesc.setEntries(entryVector);
 
-        //System.out.println("Create binding layout : "+entries.size() + "  "+label);
+        // System.out.println("Create binding layout : "+entries.size() + " "+label);
         layout = new WGPUBindGroupLayout();
         webgpu.device.createBindGroupLayout(bindGroupLayoutDesc, layout);
 
     }
 
-    public int getEntryCount(){
-        if(layout == null) throw new RuntimeException("Call after end()");
+    public int getEntryCount() {
+        if (layout == null)
+            throw new RuntimeException("Call after end()");
         return entries.size();
     }
 
-    public WGPUBindGroupLayout getLayout(){
-        if(layout == null)
+    public WGPUBindGroupLayout getLayout() {
+        if (layout == null)
             throw new RuntimeException("BindGroupLayout not defined, did you forget to call end()?");
         return layout;
     }
 
-
     private void setDefaultLayout(WGPUBindGroupLayoutEntry bindingLayout) {
         bindingLayout.setNextInChain(WGPUChainedStruct.NULL);
 
-
-
-//        bindingLayout.getBuffer().setNextInChain(WGPUChainedStruct.NULL);
-//        bindingLayout.getBuffer().setType(WGPUBufferBindingType.Undefined);
-//        bindingLayout.getBuffer().setHasDynamicOffset(0);
-//
-//        bindingLayout.getSampler().setNextInChain(WGPUChainedStruct.NULL);
-//        bindingLayout.getSampler().setType(WGPUSamplerBindingType.Undefined);
-//
-//        bindingLayout.getStorageTexture().setNextInChain(WGPUChainedStruct.NULL);
-//        bindingLayout.getStorageTexture().setAccess(WGPUStorageTextureAccess.Undefined);
-//        bindingLayout.getStorageTexture().setFormat(WGPUTextureFormat.Undefined);
-//        bindingLayout.getStorageTexture().setViewDimension(WGPUTextureViewDimension.Undefined);
-//
-//        bindingLayout.getTexture().setNextInChain(WGPUChainedStruct.NULL);
-//        bindingLayout.getTexture().setMultisampled(0);
-//        bindingLayout.getTexture().setSampleType(WGPUTextureSampleType.Undefined);
-//        bindingLayout.getTexture().setViewDimension(WGPUTextureViewDimension.Undefined);
+        // bindingLayout.getBuffer().setNextInChain(WGPUChainedStruct.NULL);
+        // bindingLayout.getBuffer().setType(WGPUBufferBindingType.Undefined);
+        // bindingLayout.getBuffer().setHasDynamicOffset(0);
+        //
+        // bindingLayout.getSampler().setNextInChain(WGPUChainedStruct.NULL);
+        // bindingLayout.getSampler().setType(WGPUSamplerBindingType.Undefined);
+        //
+        // bindingLayout.getStorageTexture().setNextInChain(WGPUChainedStruct.NULL);
+        // bindingLayout.getStorageTexture().setAccess(WGPUStorageTextureAccess.Undefined);
+        // bindingLayout.getStorageTexture().setFormat(WGPUTextureFormat.Undefined);
+        // bindingLayout.getStorageTexture().setViewDimension(WGPUTextureViewDimension.Undefined);
+        //
+        // bindingLayout.getTexture().setNextInChain(WGPUChainedStruct.NULL);
+        // bindingLayout.getTexture().setMultisampled(0);
+        // bindingLayout.getTexture().setSampleType(WGPUTextureSampleType.Undefined);
+        // bindingLayout.getTexture().setViewDimension(WGPUTextureViewDimension.Undefined);
 
     }
 
     @Override
     public void dispose() {
         // dispose after use
-        for(WGPUBindGroupLayoutEntry entry : entries.values())
+        for (WGPUBindGroupLayoutEntry entry : entries.values())
             entry.dispose();
         entries.clear();
         layout.release();
@@ -171,6 +165,3 @@ public class WebGPUBindGroupLayout implements Disposable {
         layout = null;
     }
 }
-
-
-

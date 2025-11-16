@@ -21,12 +21,11 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 
-
 public class WgParticleEffect extends ParticleEffect {
 
     @Override
-	protected Texture loadTexture (FileHandle file) {
-		return new WgTexture(file, false);
-	}
+    protected Texture loadTexture(FileHandle file) {
+        return new WgTexture(file, false);
+    }
 
 }

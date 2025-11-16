@@ -35,93 +35,97 @@ import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 
 public abstract class BaseG3dTest extends GdxTest {
-	public AssetManager assets;
+    public AssetManager assets;
 
-	public PerspectiveCamera cam;
-	public CameraInputController inputController;
-	public WgModelBatch modelBatch;
-	public Model axesModel;
-	public ModelInstance axesInstance;
-	public boolean showAxes = true;
-	public Array<ModelInstance> instances = new Array<ModelInstance>();
-	public final Color bgColor = new Color(0, 0, 0, 1);
+    public PerspectiveCamera cam;
+    public CameraInputController inputController;
+    public WgModelBatch modelBatch;
+    public Model axesModel;
+    public ModelInstance axesInstance;
+    public boolean showAxes = true;
+    public Array<ModelInstance> instances = new Array<ModelInstance>();
+    public final Color bgColor = new Color(0, 0, 0, 1);
 
-	@Override
-	public void create () {
-		if (assets == null) assets = new AssetManager();
+    @Override
+    public void create() {
+        if (assets == null)
+            assets = new AssetManager();
 
-		modelBatch = new WgModelBatch();
+        modelBatch = new WgModelBatch();
 
-		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		cam.position.set(10f, 10f, 10f);
-		cam.lookAt(0, 0, 0);
-		cam.near = 0.1f;
-		cam.far = 1000f;
-		cam.update();
+        cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        cam.position.set(10f, 10f, 10f);
+        cam.lookAt(0, 0, 0);
+        cam.near = 0.1f;
+        cam.far = 1000f;
+        cam.update();
 
-		createAxes();
+        createAxes();
 
-		Gdx.input.setInputProcessor(inputController = new CameraInputController(cam));
-	}
+        Gdx.input.setInputProcessor(inputController = new CameraInputController(cam));
+    }
 
-	final float GRID_MIN = -10f;
-	final float GRID_MAX = 10f;
-	final float GRID_STEP = 1f;
+    final float GRID_MIN = -10f;
+    final float GRID_MAX = 10f;
+    final float GRID_STEP = 1f;
 
-	private void createAxes () {
-		WgModelBuilder modelBuilder = new WgModelBuilder();
-		modelBuilder.begin();
-		MeshPartBuilder builder = modelBuilder.part("grid", GL20.GL_LINES, Usage.Position | Usage.ColorUnpacked, new Material());
-		builder.setColor(Color.LIGHT_GRAY);
-		for (float t = GRID_MIN; t <= GRID_MAX; t += GRID_STEP) {
-			builder.line(t, 0, GRID_MIN, t, 0, GRID_MAX);
-			builder.line(GRID_MIN, 0, t, GRID_MAX, 0, t);
-		}
-		builder = modelBuilder.part("axes", GL20.GL_LINES, Usage.Position | Usage.ColorUnpacked, new Material());
-		builder.setColor(Color.RED);
-		builder.line(0, 0, 0, 100, 0, 0);
-		builder.setColor(Color.GREEN);
-		builder.line(0, 0, 0, 0, 100, 0);
-		builder.setColor(Color.BLUE);
-		builder.line(0, 0, 0, 0, 0, 100);
-		axesModel = modelBuilder.end();
-		axesInstance = new ModelInstance(axesModel);
-	}
+    private void createAxes() {
+        WgModelBuilder modelBuilder = new WgModelBuilder();
+        modelBuilder.begin();
+        MeshPartBuilder builder = modelBuilder.part("grid", GL20.GL_LINES, Usage.Position | Usage.ColorUnpacked,
+                new Material());
+        builder.setColor(Color.LIGHT_GRAY);
+        for (float t = GRID_MIN; t <= GRID_MAX; t += GRID_STEP) {
+            builder.line(t, 0, GRID_MIN, t, 0, GRID_MAX);
+            builder.line(GRID_MIN, 0, t, GRID_MAX, 0, t);
+        }
+        builder = modelBuilder.part("axes", GL20.GL_LINES, Usage.Position | Usage.ColorUnpacked, new Material());
+        builder.setColor(Color.RED);
+        builder.line(0, 0, 0, 100, 0, 0);
+        builder.setColor(Color.GREEN);
+        builder.line(0, 0, 0, 0, 100, 0);
+        builder.setColor(Color.BLUE);
+        builder.line(0, 0, 0, 0, 0, 100);
+        axesModel = modelBuilder.end();
+        axesInstance = new ModelInstance(axesModel);
+    }
 
-	protected abstract void render (final WgModelBatch batch, final Array<ModelInstance> instances);
+    protected abstract void render(final WgModelBatch batch, final Array<ModelInstance> instances);
 
-	protected boolean loading = false;
+    protected boolean loading = false;
 
-	protected void onLoaded () {
-	}
+    protected void onLoaded() {
+    }
 
-	public void render (final Array<ModelInstance> instances) {
-		modelBatch.begin(cam);
-		if (showAxes) modelBatch.render(axesInstance);
-		if (instances != null) render(modelBatch, instances);
-		modelBatch.end();
-	}
+    public void render(final Array<ModelInstance> instances) {
+        modelBatch.begin(cam);
+        if (showAxes)
+            modelBatch.render(axesInstance);
+        if (instances != null)
+            render(modelBatch, instances);
+        modelBatch.end();
+    }
 
-	@Override
-	public void render () {
-		if (loading && assets.update(16)) {
-			loading = false;
-			onLoaded();
-		}
+    @Override
+    public void render() {
+        if (loading && assets.update(16)) {
+            loading = false;
+            onLoaded();
+        }
 
-		inputController.update();
+        inputController.update();
 
-		WgScreenUtils.clear(bgColor, true);
+        WgScreenUtils.clear(bgColor, true);
 
-		render(instances);
-	}
+        render(instances);
+    }
 
-	@Override
-	public void dispose () {
-		modelBatch.dispose();
-		assets.dispose();
-		assets = null;
-		axesModel.dispose();
-		axesModel = null;
-	}
+    @Override
+    public void dispose() {
+        modelBatch.dispose();
+        assets.dispose();
+        assets = null;
+        axesModel.dispose();
+        axesModel = null;
+    }
 }

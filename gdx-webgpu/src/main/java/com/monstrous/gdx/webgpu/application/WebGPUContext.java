@@ -7,15 +7,7 @@ import com.monstrous.gdx.webgpu.wrappers.GPUTimer;
 
 public abstract class WebGPUContext {
     public static enum Backend {
-        DEFAULT,
-        D3D11,
-        D3D12,
-        METAL,
-        OPENGL,
-        OPENGL_ES,
-        VULKAN,
-        WEBGPU,
-        HEADLESS
+        DEFAULT, D3D11, D3D12, METAL, OPENGL, OPENGL_ES, VULKAN, WEBGPU, HEADLESS
     }
 
     static public class RenderOutputState {
@@ -25,7 +17,8 @@ public abstract class WebGPUContext {
         Rectangle viewport;
         int numSamples;
 
-        public RenderOutputState(WGPUTextureView targetView, WGPUTextureFormat surfaceFormat, WgTexture depthTexture, Rectangle viewport, int numSamples) {
+        public RenderOutputState(WGPUTextureView targetView, WGPUTextureFormat surfaceFormat, WgTexture depthTexture,
+                Rectangle viewport, int numSamples) {
             this.targetView = targetView;
             this.surfaceFormat = surfaceFormat;
             this.depthTexture = depthTexture;
@@ -44,45 +37,57 @@ public abstract class WebGPUContext {
     public WgTexture depthTexture;
     public int frameNumber;
 
+    abstract WGPUDevice getDevice();
 
+    abstract WGPUQueue getQueue();
 
-    abstract WGPUDevice getDevice ();
-    abstract WGPUQueue getQueue ();
     public abstract WGPUTextureFormat getSurfaceFormat();
+
     public abstract boolean hasLinearOutput();
 
     public abstract WGPUTextureView getTargetView();
 
-    /** Use provided texture for output (must have usage RenderAttachment).
+    /**
+     * Use provided texture for output (must have usage RenderAttachment).
      *
      * @return Render output state, to restore current output state with popTargetView().
      */
-    //public abstract RenderOutputState pushTargetView(WgTexture texture, WgTexture depthTexture);
-    public abstract RenderOutputState pushTargetView(WGPUTextureView textureView, WGPUTextureFormat textureFormat, int width, int height, WgTexture depthTexture);
-    /** Restore previous output target.
+    // public abstract RenderOutputState pushTargetView(WgTexture texture, WgTexture depthTexture);
+    public abstract RenderOutputState pushTargetView(WGPUTextureView textureView, WGPUTextureFormat textureFormat,
+            int width, int height, WgTexture depthTexture);
+
+    /**
+     * Restore previous output target.
      *
      */
     public abstract void popTargetView(RenderOutputState prevState);
 
-    abstract WGPUCommandEncoder getCommandEncoder ();
-    public abstract WgTexture getDepthTexture ();
-//    public abstract WgTexture pushDepthTexture(WgTexture depth);
-//    public abstract void popDepthTexture(WgTexture prevDepth);
-    //abstract WGPUBackendType getRequestedBackendType();
-    public abstract  int getSamples();
+    abstract WGPUCommandEncoder getCommandEncoder();
+
+    public abstract WgTexture getDepthTexture();
+
+    // public abstract WgTexture pushDepthTexture(WgTexture depth);
+    // public abstract void popDepthTexture(WgTexture prevDepth);
+    // abstract WGPUBackendType getRequestedBackendType();
+    public abstract int getSamples();
+
     public abstract WgTexture getMultiSamplingTexture();
 
     public abstract void setViewportRectangle(int x, int y, int w, int h);
+
     public abstract Rectangle getViewportRectangle();
 
     public abstract void enableScissor(boolean mode);
+
     public abstract boolean isScissorEnabled();
+
     public abstract void setScissor(int x, int y, int w, int h);
+
     public abstract Rectangle getScissor();
 
     public abstract GPUTimer getGPUTimer();
-    public abstract float getAverageGPUtime(int pass);
 
+    public abstract float getAverageGPUtime(int pass);
 
     public abstract void resize(int width, int height);
 

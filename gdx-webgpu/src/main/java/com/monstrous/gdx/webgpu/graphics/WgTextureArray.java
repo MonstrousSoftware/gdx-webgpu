@@ -6,7 +6,7 @@ import com.badlogic.gdx.graphics.*;
 import com.github.xpenatan.webgpu.WGPUTextureUsage;
 
 /** Version of TextureArray that uses WgTexture */
-public class WgTextureArray  extends WgTexture {
+public class WgTextureArray extends WgTexture {
 
     private WgTextureArrayData data;
 
@@ -34,7 +34,8 @@ public class WgTextureArray  extends WgTexture {
         // at this point we don't know if we use mipmapping yet
         // should we create texture instead in consumeTextureArrayData ?
         //
-        super("texture array", data.getWidth(), data.getHeight(), data.getDepth(), data.useMipMaps(), WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst), isColor);
+        super("texture array", data.getWidth(), data.getHeight(), data.getDepth(), data.useMipMaps(),
+                WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst), isColor);
         // create a texture with layers
         // let texture data consume() fill each layer
         load(data, "texture array");
@@ -42,17 +43,17 @@ public class WgTextureArray  extends WgTexture {
 
     /** Sets the sides of this cubemap to the specified {@link CubemapData}. */
     public void load(WgTextureArrayData data, String label) {
-        //System.out.println("Loading texture array: "+label);
+        // System.out.println("Loading texture array: "+label);
         this.data = data;
         this.label = label;
-        if (!data.isPrepared()) data.prepare();
+        if (!data.isPrepared())
+            data.prepare();
 
         setFilter(TextureFilter.Linear, TextureFilter.Linear);
         setWrap(TextureWrap.ClampToEdge, TextureWrap.ClampToEdge);
 
         data.consumeTextureArrayData(this);
     }
-
 
     private static FileHandle[] getInternalHandles(String... internalPaths) {
         FileHandle[] handles = new FileHandle[internalPaths.length];

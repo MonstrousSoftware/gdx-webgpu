@@ -13,20 +13,18 @@ import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.wrappers.*;
 
-
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-
 /**
- * Demonstration of using a compute shader: performs a simple function on the array of input floats.
- * Follows example from https://eliemichel.github.io/LearnWebGPU/basic-compute/compute-pipeline.html#
- * Uses some comfort classes to encapsulate WebGPU concepts.
+ * Demonstration of using a compute shader: performs a simple function on the array of input floats. Follows example
+ * from https://eliemichel.github.io/LearnWebGPU/basic-compute/compute-pipeline.html# Uses some comfort classes to
+ * encapsulate WebGPU concepts.
  */
 
 public class TestCompute extends GdxTest {
 
-    private static final int BUFFER_SIZE = 64*Float.BYTES;    // bytes
+    private static final int BUFFER_SIZE = 64 * Float.BYTES; // bytes
 
     private WgSpriteBatch batch;
     private WgBitmapFont font;
@@ -34,8 +32,8 @@ public class TestCompute extends GdxTest {
     private WebGPUContext webgpu;
     private WebGPUComputePipeline pipeline;
     private ByteBuffer buf;
-    float[] inputData = new float[BUFFER_SIZE/Float.BYTES];
-    float[] outputData = new float[BUFFER_SIZE/Float.BYTES];
+    float[] inputData = new float[BUFFER_SIZE / Float.BYTES];
+    float[] outputData = new float[BUFFER_SIZE / Float.BYTES];
 
     @Override
     public void create() {
@@ -54,15 +52,18 @@ public class TestCompute extends GdxTest {
     private void onCompute() {
 
         // Create input and output buffers
-        WebGPUUniformBuffer inputBuffer = new WebGPUUniformBuffer("Input storage buffer",BUFFER_SIZE, WGPUBufferUsage.CopyDst.or( WGPUBufferUsage.Storage), 1 );
-        WebGPUBuffer outputBuffer = new WebGPUBuffer("Output storage buffer", WGPUBufferUsage.CopySrc.or(WGPUBufferUsage.Storage), BUFFER_SIZE );
+        WebGPUUniformBuffer inputBuffer = new WebGPUUniformBuffer("Input storage buffer", BUFFER_SIZE,
+                WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Storage), 1);
+        WebGPUBuffer outputBuffer = new WebGPUBuffer("Output storage buffer",
+                WGPUBufferUsage.CopySrc.or(WGPUBufferUsage.Storage), BUFFER_SIZE);
 
         // Create an intermediary buffer to which we copy the output and that can be
         // used for reading into the CPU memory (because Storage is incompatible with MapRead).
-        WebGPUBuffer mapBuffer = new WebGPUBuffer("Map buffer",  WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.MapRead), BUFFER_SIZE );
+        WebGPUBuffer mapBuffer = new WebGPUBuffer("Map buffer", WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.MapRead),
+                BUFFER_SIZE);
 
-        WgShaderProgram shader = new WgShaderProgram(Gdx.files.internal("data/wgsl/computeBasic.wgsl")); // from assets folder
-
+        WgShaderProgram shader = new WgShaderProgram(Gdx.files.internal("data/wgsl/computeBasic.wgsl")); // from assets
+                                                                                                         // folder
 
         // make a pipeline
         WebGPUBindGroupLayout bindGroupLayout = makeBindGroupLayout();
@@ -87,8 +88,8 @@ public class TestCompute extends GdxTest {
         // the callback will dispose it.
     }
 
-
-    private void compute(WebGPUBindGroup bindGroup, WebGPUUniformBuffer inputBuffer, WebGPUBuffer outputBuffer, WebGPUBuffer mapBuffer) {
+    private void compute(WebGPUBindGroup bindGroup, WebGPUUniformBuffer inputBuffer, WebGPUBuffer outputBuffer,
+            WebGPUBuffer mapBuffer) {
 
         // create a queue
         WGPUQueue queue = webgpu.device.getQueue();
@@ -98,7 +99,7 @@ public class TestCompute extends GdxTest {
         int numFloats = BUFFER_SIZE / Float.BYTES;
         for (int i = 0; i < numFloats; i++) {
             inputData[i] = 0.1f * i;
-            inputBuffer.set(i * Float.BYTES,  inputData[i]);
+            inputBuffer.set(i * Float.BYTES, inputData[i]);
         }
         inputBuffer.flush();
 
@@ -115,16 +116,15 @@ public class TestCompute extends GdxTest {
         passDescriptor.setTimestampWrites(WGPUComputePassTimestampWrites.NULL);
         encoder.beginComputePass(passDescriptor, pass);
 
+        // set pipeline & bind group 0
+        pass.setPipeline(pipeline.getPipeline());
+        pass.setBindGroup(0, bindGroup.getBindGroup(), WGPUVectorInt.NULL);
 
-            // set pipeline & bind group 0
-            pass.setPipeline(pipeline.getPipeline());
-            pass.setBindGroup(0, bindGroup.getBindGroup(), WGPUVectorInt.NULL);
-
-            int workGroupSize = 32;
-            int invocationCount = BUFFER_SIZE / Float.BYTES;    // nr of input values
-            // This ceils invocationCount / workgroupSize
-            int workgroupCount = (invocationCount + workGroupSize - 1) / workGroupSize;
-            pass.setDispatchWorkgroups( workgroupCount, 1, 1);
+        int workGroupSize = 32;
+        int invocationCount = BUFFER_SIZE / Float.BYTES; // nr of input values
+        // This ceils invocationCount / workgroupSize
+        int workgroupCount = (invocationCount + workGroupSize - 1) / workGroupSize;
+        pass.setDispatchWorkgroups(workgroupCount, 1, 1);
 
         pass.end();
 
@@ -140,22 +140,23 @@ public class TestCompute extends GdxTest {
         queue.submit(commandBuffer);
 
         WGPUBuffer map = mapBuffer.getBuffer();
-        WGPUFuture webGPUFuture = map.mapAsync(WGPUMapMode.Read, 0, BUFFER_SIZE, WGPUCallbackMode.AllowProcessEvents, new WGPUBufferMapCallback() {
-            @Override
-            protected void onCallback(WGPUMapAsyncStatus status, String message) {
-                System.out.println("Callback: " + status+ " "+message);
-                if (status == WGPUMapAsyncStatus.Success) {
-                    buf.position(0);
-                    map.getConstMappedRange(0, BUFFER_SIZE, buf);
-                    for (int i = 0; i < BUFFER_SIZE / Float.BYTES; i++) {
-                        outputData[i] = buf.getFloat();
+        WGPUFuture webGPUFuture = map.mapAsync(WGPUMapMode.Read, 0, BUFFER_SIZE, WGPUCallbackMode.AllowProcessEvents,
+                new WGPUBufferMapCallback() {
+                    @Override
+                    protected void onCallback(WGPUMapAsyncStatus status, String message) {
+                        System.out.println("Callback: " + status + " " + message);
+                        if (status == WGPUMapAsyncStatus.Success) {
+                            buf.position(0);
+                            map.getConstMappedRange(0, BUFFER_SIZE, buf);
+                            for (int i = 0; i < BUFFER_SIZE / Float.BYTES; i++) {
+                                outputData[i] = buf.getFloat();
+                            }
+                            map.unmap();
+                        } else
+                            Gdx.app.error("mapAsync", "Buffer map async error: " + status);
+                        mapBuffer.dispose();
                     }
-                    map.unmap();
-                } else
-                    Gdx.app.error("mapAsync", "Buffer map async error: " + status);
-                mapBuffer.dispose();
-            }
-        });
+                });
         // don't wait for the async to complete
         // just enter the render loop which will at some point
         // show the new outputData[] values
@@ -164,10 +165,9 @@ public class TestCompute extends GdxTest {
         pass.dispose();
     }
 
-
     @Override
-    public void render(){
-        if(Gdx.input.isKeyPressed(Input.Keys.ESCAPE)){
+    public void render() {
+        if (Gdx.input.isKeyPressed(Input.Keys.ESCAPE)) {
             Gdx.app.exit();
             return;
         }
@@ -175,19 +175,19 @@ public class TestCompute extends GdxTest {
         batch.begin(Color.TEAL);
         int y = 300;
         font.draw(batch, "Compute Shader", 10, y);
-        y-=30;
+        y -= 30;
         font.draw(batch, "Input", 10, y);
-        for(int i = 0; i < 9; i++)
-            font.draw(batch, " "+inputData[i], 100+30*i, y);
-        y-=30;
+        for (int i = 0; i < 9; i++)
+            font.draw(batch, " " + inputData[i], 100 + 30 * i, y);
+        y -= 30;
         font.draw(batch, "Output", 10, y);
-        for(int i = 0; i < 9; i++)
-            font.draw(batch, " "+outputData[i], 100+30*i, y);
+        for (int i = 0; i < 9; i++)
+            font.draw(batch, " " + outputData[i], 100 + 30 * i, y);
         batch.end();
     }
 
     @Override
-    public void dispose(){
+    public void dispose() {
         // cleanup
         batch.dispose();
         font.dispose();
@@ -199,16 +199,18 @@ public class TestCompute extends GdxTest {
         batch.getProjectionMatrix().setToOrtho2D(0, 0, width, height);
     }
 
-    private WebGPUBindGroupLayout makeBindGroupLayout(){
+    private WebGPUBindGroupLayout makeBindGroupLayout() {
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout();
         layout.begin();
-        layout.addBuffer(0, WGPUShaderStage.Compute, WGPUBufferBindingType.ReadOnlyStorage, BUFFER_SIZE, false);// input buffer
+        layout.addBuffer(0, WGPUShaderStage.Compute, WGPUBufferBindingType.ReadOnlyStorage, BUFFER_SIZE, false);// input
+                                                                                                                // buffer
         layout.addBuffer(1, WGPUShaderStage.Compute, WGPUBufferBindingType.Storage, BUFFER_SIZE, false);// output buffer
         layout.end();
         return layout;
     }
 
-    private WebGPUBindGroup makeBindGroup(WebGPUBindGroupLayout bindGroupLayout, WebGPUBuffer inputBuffer, WebGPUBuffer outputBuffer){
+    private WebGPUBindGroup makeBindGroup(WebGPUBindGroupLayout bindGroupLayout, WebGPUBuffer inputBuffer,
+            WebGPUBuffer outputBuffer) {
         WebGPUBindGroup bg = new WebGPUBindGroup(bindGroupLayout);
         bg.begin();
         bg.setBuffer(0, inputBuffer);
@@ -216,6 +218,5 @@ public class TestCompute extends GdxTest {
         bg.end();
         return bg;
     }
-
 
 }

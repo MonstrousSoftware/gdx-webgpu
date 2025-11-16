@@ -1,6 +1,5 @@
 package com.monstrous.gdx.tests.webgpu;
 
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.audio.Music;
@@ -32,8 +31,6 @@ public class ASimpleGame extends GdxTest {
     float dropTimer;
     Rectangle bucketRectangle;
     Rectangle dropRectangle;
-
-
 
     @Override
     public void create() {
@@ -103,7 +100,8 @@ public class ASimpleGame extends GdxTest {
             dropSprite.translateY(-2f * delta);
             dropRectangle.set(dropSprite.getX(), dropSprite.getY(), dropWidth, dropHeight);
 
-            if (dropSprite.getY() < -dropHeight) dropSprites.removeIndex(i);
+            if (dropSprite.getY() < -dropHeight)
+                dropSprites.removeIndex(i);
             else if (bucketRectangle.overlaps(dropRectangle)) {
                 dropSprites.removeIndex(i);
                 dropSound.play();

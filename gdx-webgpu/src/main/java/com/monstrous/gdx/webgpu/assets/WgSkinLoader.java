@@ -22,18 +22,19 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.monstrous.gdx.webgpu.scene2d.WgSkin;
 
-
 public class WgSkinLoader extends SkinLoader {
-	public WgSkinLoader(FileHandleResolver resolver) {
-		super(resolver);
-	}
+    public WgSkinLoader(FileHandleResolver resolver) {
+        super(resolver);
+    }
 
-	/** Override to allow subclasses of Skin to be loaded or the skin instance to be configured.
-	 * @param atlas The TextureAtlas that the skin will use.
-	 * @return A new Skin (or subclass of Skin) instance based on the provided TextureAtlas. */
-	protected Skin newSkin (TextureAtlas atlas) {
-		return new WgSkin(atlas);
-	}
-
+    /**
+     * Override to allow subclasses of Skin to be loaded or the skin instance to be configured.
+     * 
+     * @param atlas The TextureAtlas that the skin will use.
+     * @return A new Skin (or subclass of Skin) instance based on the provided TextureAtlas.
+     */
+    protected Skin newSkin(TextureAtlas atlas) {
+        return new WgSkin(atlas);
+    }
 
 }

@@ -51,20 +51,18 @@ import com.monstrous.gdx.webgpu.scene2d.WgSkin;
 import com.monstrous.gdx.webgpu.scene2d.WgStage;
 import com.monstrous.gdx.webgpu.wrappers.SkyBox;
 
-
-/** Test IBL
- * Generates environment cube map from equirectangular texture.
- * Shows a model, control metallic & roughness with sliders
+/**
+ * Test IBL Generates environment cube map from equirectangular texture. Shows a model, control metallic & roughness
+ * with sliders
  *
- * */
-
+ */
 
 public class IBL_GenerateOutdoor extends GdxTest {
     CameraInputController controller;
     PerspectiveCamera cam;
     SkyBox skyBox;
 
-    //WgTexture equiRectangular;
+    // WgTexture equiRectangular;
     Model model;
     private ModelInstance instance;
     WgModelBatch modelBatch;
@@ -75,23 +73,21 @@ public class IBL_GenerateOutdoor extends GdxTest {
     private float roughness = 0.0f;
     private WgSpriteBatch batch;
 
-
     public void create() {
 
         cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         cam.position.set(0, 0, -3f);
         cam.direction.set(0, 0, 1);
-        cam.near = 0.01f;       // avoid zero
+        cam.near = 0.01f; // avoid zero
         cam.far = 100f;
         cam.update();
-
 
         controller = new CameraInputController(cam);
         controller.scrollFactor = -0.01f;
 
         DirectionalLight sun = new DirectionalLight();
         sun.setColor(Color.WHITE);
-        sun.setDirection( -.5f, -.5f, -.0f);
+        sun.setDirection(-.5f, -.5f, -.0f);
 
         // Create an outdoor environment map
         WgCubemap envMap = IBLGenerator.createOutdoor(sun, 128);
@@ -113,46 +109,44 @@ public class IBL_GenerateOutdoor extends GdxTest {
         modelBatch = new WgModelBatch(config);
 
         environment = new Environment();
-        environment.set( WgCubemapAttribute.createDiffuseCubeMap(irradianceMap));   // add irradiance map
-        environment.set( WgCubemapAttribute.createSpecularCubeMap(radianceMap));    // add radiance map
+        environment.set(WgCubemapAttribute.createDiffuseCubeMap(irradianceMap)); // add irradiance map
+        environment.set(WgCubemapAttribute.createSpecularCubeMap(radianceMap)); // add radiance map
 
         // Add lighting
         float intensity = 25f;
-//        environment.add( new PointLight().setColor(Color.WHITE).setPosition(-10f,10f,10).setIntensity(intensity));
-//        environment.add( new PointLight().setColor(Color.WHITE).setPosition(10f,10f,10).setIntensity(intensity));
-//        environment.add( new PointLight().setColor(Color.WHITE).setPosition(10f,-10f,10).setIntensity(intensity));
-//        environment.add( new PointLight().setColor(Color.WHITE).setPosition(-10f,-10f,10).setIntensity(intensity));
+        // environment.add( new PointLight().setColor(Color.WHITE).setPosition(-10f,10f,10).setIntensity(intensity));
+        // environment.add( new PointLight().setColor(Color.WHITE).setPosition(10f,10f,10).setIntensity(intensity));
+        // environment.add( new PointLight().setColor(Color.WHITE).setPosition(10f,-10f,10).setIntensity(intensity));
+        // environment.add( new PointLight().setColor(Color.WHITE).setPosition(-10f,-10f,10).setIntensity(intensity));
 
         // Model
         //
 
-//        String modelFileName = "data/g3d/gltf/DamagedHelmet/DamagedHelmet.gltf";
-//
-//        WgModelLoader.ModelParameters params = new WgModelLoader.ModelParameters();
-//        params.textureParameter.genMipMaps = true;
-//
-//        System.out.println("Start loading");
-//        FileHandle file = Gdx.files.internal(modelFileName);
-//        if (file.extension().contentEquals("gltf"))
-//            model = new WgGLTFModelLoader().loadModel(file, params);
-//        else if (file.extension().contentEquals("glb"))
-//            model = new WgGLBModelLoader().loadModel(file, params);
-//        else
-//            System.out.println("File extension not supported: " + modelFileName);
+        // String modelFileName = "data/g3d/gltf/DamagedHelmet/DamagedHelmet.gltf";
+        //
+        // WgModelLoader.ModelParameters params = new WgModelLoader.ModelParameters();
+        // params.textureParameter.genMipMaps = true;
+        //
+        // System.out.println("Start loading");
+        // FileHandle file = Gdx.files.internal(modelFileName);
+        // if (file.extension().contentEquals("gltf"))
+        // model = new WgGLTFModelLoader().loadModel(file, params);
+        // else if (file.extension().contentEquals("glb"))
+        // model = new WgGLBModelLoader().loadModel(file, params);
+        // else
+        // System.out.println("File extension not supported: " + modelFileName);
 
         model = buildSphere(Color.WHITE, 0.5f, 0.5f);
 
         instance = new ModelInstance(model);
 
-        //instance.materials.get(0).set(new ColorAttribute(ColorAttribute.Diffuse, Color.WHITE));
-
+        // instance.materials.get(0).set(new ColorAttribute(ColorAttribute.Diffuse, Color.WHITE));
 
         Gdx.input.setInputProcessor(controller);
 
         stage = new WgStage(new ScreenViewport());
         skin = new WgSkin(Gdx.files.internal("data/uiskin.json"));
         rebuildStage();
-
 
         InputMultiplexer im = new InputMultiplexer();
         im.addProcessor(stage);
@@ -163,13 +157,12 @@ public class IBL_GenerateOutdoor extends GdxTest {
 
     }
 
-    private int[] face = { 0, 5, 1, 4, 2, 3 };
+    private int[] face = {0, 5, 1, 4, 2, 3};
 
     public void render() {
         controller.update();
         float delta = Gdx.graphics.getDeltaTime();
-        instance.transform.rotate(Vector3.Y, 15f*delta);
-
+        instance.transform.rotate(Vector3.Y, 15f * delta);
 
         modelBatch.begin(cam, Color.BLACK, true);
         modelBatch.render(instance, environment);
@@ -180,7 +173,7 @@ public class IBL_GenerateOutdoor extends GdxTest {
         stage.act();
         stage.draw();
 
-        if(IBLGenerator.debugTextures != null) {
+        if (IBLGenerator.debugTextures != null) {
             batch.begin();
             for (int i = 0; i < 6; i++) {
                 batch.draw(IBLGenerator.debugTextures[face[i]], 128 * i, 0, 128, 128);
@@ -189,14 +182,12 @@ public class IBL_GenerateOutdoor extends GdxTest {
         }
     }
 
-
-
     @Override
     public void resize(int width, int height) {
         cam.viewportWidth = width;
         cam.viewportHeight = height;
         cam.update();
-        //viewport.update(width, height, true);
+        // viewport.update(width, height, true);
         stage.getViewport().update(width, height, true);
         rebuildStage();
 
@@ -214,7 +205,6 @@ public class IBL_GenerateOutdoor extends GdxTest {
         Label roughnessValue = new Label("", skin);
         roughnessValue.setText(String.format("roughness: %.2f", roughness));
         instance.materials.get(0).set(new PBRFloatAttribute(PBRFloatAttribute.Roughness, roughness));
-
 
         Table sliderTable = new Table();
         Slider slider = new Slider(0, 1, 0.01f, false, skin);
@@ -237,7 +227,6 @@ public class IBL_GenerateOutdoor extends GdxTest {
             }
         });
 
-
         sliderTable.add(slider);
         sliderTable.row();
         sliderTable.add(metallicValue);
@@ -250,20 +239,22 @@ public class IBL_GenerateOutdoor extends GdxTest {
         screenTable.add(sliderTable).align(Align.topRight).expand();
         stage.addActor(screenTable);
     }
-    private Model buildSphere(Color albedo, float metallic, float roughness){
+
+    private Model buildSphere(Color albedo, float metallic, float roughness) {
         long usage = VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal;
-        Material mat = new Material(ColorAttribute.createDiffuse(albedo), PBRFloatAttribute.createMetallic(metallic), PBRFloatAttribute.createRoughness(roughness) );
+        Material mat = new Material(ColorAttribute.createDiffuse(albedo), PBRFloatAttribute.createMetallic(metallic),
+                PBRFloatAttribute.createRoughness(roughness));
 
         WgModelBuilder modelBuilder = new WgModelBuilder();
         return modelBuilder.createSphere(2f, 2f, 2f, 32, 32, mat, usage);
     }
 
-	@Override
-	public void dispose () {
+    @Override
+    public void dispose() {
         skyBox.dispose();
-        //equiRectangular.dispose();
+        // equiRectangular.dispose();
         model.dispose();
 
-	}
+    }
 
 }

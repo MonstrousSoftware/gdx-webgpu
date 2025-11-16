@@ -34,52 +34,54 @@ public class WgFrameBuffer implements Disposable {
     private final WgTexture depthTexture;
     private WebGPUContext.RenderOutputState prevState;
 
-
-    public WgFrameBuffer( int width, int height, boolean hasDepth) {
+    public WgFrameBuffer(int width, int height, boolean hasDepth) {
         this(WGPUTextureFormat.RGBA8UnormSrgb, width, height, hasDepth);
     }
 
-    /** note: requires WGPUTextureFormat instead of Pixmap.Format.  */
+    /** note: requires WGPUTextureFormat instead of Pixmap.Format. */
     public WgFrameBuffer(WGPUTextureFormat format, int width, int height, boolean hasDepth) {
         WgGraphics gfx = (WgGraphics) Gdx.graphics;
         webgpu = gfx.getContext();
 
-        final WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or( WGPUTextureUsage.CopyDst).or(WGPUTextureUsage.RenderAttachment).or( WGPUTextureUsage.CopySrc);
+        final WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst)
+                .or(WGPUTextureUsage.RenderAttachment).or(WGPUTextureUsage.CopySrc);
         colorTexture = new WgTexture("fbo color", width, height, false, textureUsage, format, 1, format);
-        if(hasDepth)
-            depthTexture = new WgTexture("fbo depth", width, height, false, textureUsage, WGPUTextureFormat.Depth24Plus, 1, WGPUTextureFormat.Depth24Plus);
+        if (hasDepth)
+            depthTexture = new WgTexture("fbo depth", width, height, false, textureUsage, WGPUTextureFormat.Depth24Plus,
+                    1, WGPUTextureFormat.Depth24Plus);
         else
             depthTexture = null;
     }
 
-    public void begin(){
-        prevState = webgpu.pushTargetView(colorTexture.getTextureView(), colorTexture.getFormat(), colorTexture.getWidth(), colorTexture.getHeight(), depthTexture);
+    public void begin() {
+        prevState = webgpu.pushTargetView(colorTexture.getTextureView(), colorTexture.getFormat(),
+                colorTexture.getWidth(), colorTexture.getHeight(), depthTexture);
     }
 
     public void end() {
         webgpu.popTargetView(prevState);
     }
 
-    public Texture getColorBufferTexture(){
+    public Texture getColorBufferTexture() {
         return colorTexture;
     }
 
-    public Texture getDepthTexture(){
+    public Texture getDepthTexture() {
         return depthTexture;
     }
 
-    public int getWidth(){
+    public int getWidth() {
         return colorTexture.getWidth();
     }
 
-    public int getHeight(){
+    public int getHeight() {
         return colorTexture.getHeight();
     }
 
     @Override
     public void dispose() {
         colorTexture.dispose();
-        if(depthTexture != null)
+        if (depthTexture != null)
             depthTexture.dispose();
     }
 }

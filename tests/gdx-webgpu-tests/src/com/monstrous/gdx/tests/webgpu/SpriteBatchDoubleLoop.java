@@ -1,6 +1,5 @@
 package com.monstrous.gdx.tests.webgpu;
 
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
@@ -10,7 +9,6 @@ import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 
 // Test you can use sprite batch multiple times in a render frame
 // without the last loop overwriting the earlier ones.
-
 
 public class SpriteBatchDoubleLoop extends GdxTest {
 
@@ -27,7 +25,7 @@ public class SpriteBatchDoubleLoop extends GdxTest {
     }
 
     @Override
-    public void render(  ){
+    public void render() {
 
         viewport.apply();
         batch.setProjectionMatrix(viewport.getCamera().combined);
@@ -45,18 +43,16 @@ public class SpriteBatchDoubleLoop extends GdxTest {
     }
 
     @Override
-    public void resize (int width, int height) {
+    public void resize(int width, int height) {
         Gdx.app.log("resize", "");
         viewport.update(width, height, true);
     }
 
     @Override
-    public void dispose(){
+    public void dispose() {
         // cleanup
         texture.dispose();
         batch.dispose();
     }
-
-
 
 }

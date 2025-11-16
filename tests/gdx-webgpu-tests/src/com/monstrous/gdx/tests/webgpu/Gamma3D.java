@@ -16,7 +16,6 @@
 
 package com.monstrous.gdx.tests.webgpu;
 
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.graphics.Color;
@@ -37,62 +36,60 @@ import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 
-
 // Test of gamma correction in 3d scenes.
 // The ambient lighting is 100%
 // The texture colors on the cube should match the official colors as close as possible.
 
 public class Gamma3D extends GdxTest {
-	public PerspectiveCamera cam;
-	public CameraInputController inputController;
-	public WgModelBatch modelBatch;
-	public Model model;
-	public ModelInstance instance;
-	public Environment environment;
-    public WgTexture  texture;
+    public PerspectiveCamera cam;
+    public CameraInputController inputController;
+    public WgModelBatch modelBatch;
+    public Model model;
+    public ModelInstance instance;
+    public Environment environment;
+    public WgTexture texture;
 
+    @Override
+    public void create() {
+        modelBatch = new WgModelBatch();
 
-	@Override
-	public void create () {
-		modelBatch = new WgModelBatch();
+        environment = new Environment();
+        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, Color.WHITE));
+        // environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
 
-		environment = new Environment();
-		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, Color.WHITE));
-		//environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
-
-		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		cam.position.set(5f, 5f, 5f);
-		cam.lookAt(0, 0, 0);
-		cam.near = 0.1f;
-		cam.far = 150f;
-		cam.update();
+        cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        cam.position.set(5f, 5f, 5f);
+        cam.lookAt(0, 0, 0);
+        cam.near = 0.1f;
+        cam.far = 150f;
+        cam.update();
 
         texture = new WgTexture("data/webgpu.png", true);
 
         ModelBuilder modelBuilder = new WgModelBuilder();
-		model = modelBuilder.createBox(5f, 5f, 5f, new Material(TextureAttribute.createDiffuse(texture)),
-			VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal| VertexAttributes.Usage.TextureCoordinates);
-		instance = new ModelInstance(model);
+        model = modelBuilder.createBox(5f, 5f, 5f, new Material(TextureAttribute.createDiffuse(texture)),
+                VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal
+                        | VertexAttributes.Usage.TextureCoordinates);
+        instance = new ModelInstance(model);
 
-		Gdx.input.setInputProcessor(new InputMultiplexer(this, inputController = new CameraInputController(cam)));
-	}
+        Gdx.input.setInputProcessor(new InputMultiplexer(this, inputController = new CameraInputController(cam)));
+    }
 
-	@Override
-	public void render () {
-		inputController.update();
-
+    @Override
+    public void render() {
+        inputController.update();
 
         WgScreenUtils.clear(0.5f, 0.5f, 0.5f, 1.0f, true);
 
-		modelBatch.begin(cam);
-		modelBatch.render(instance, environment);
-		modelBatch.end();
-	}
+        modelBatch.begin(cam);
+        modelBatch.render(instance, environment);
+        modelBatch.end();
+    }
 
-	@Override
-	public void dispose () {
-		modelBatch.dispose();
-		model.dispose();
+    @Override
+    public void dispose() {
+        modelBatch.dispose();
+        model.dispose();
         texture.dispose();
-	}
+    }
 }

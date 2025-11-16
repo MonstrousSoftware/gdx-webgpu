@@ -34,85 +34,77 @@ import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 
 /** Test OBJ loading and ModelInstance rendering */
 
-
 public class LoadObjTest extends GdxTest {
 
-	WgModelBatch modelBatch;
-	PerspectiveCamera cam;
-	PerspectiveCamController controller;
-	WgSpriteBatch batch;
-	WgBitmapFont font;
-	Model model;
-	ModelInstance instance;
+    WgModelBatch modelBatch;
+    PerspectiveCamera cam;
+    PerspectiveCamController controller;
+    WgSpriteBatch batch;
+    WgBitmapFont font;
+    Model model;
+    ModelInstance instance;
 
-
-	// application
-	public void create () {
-		modelBatch = new WgModelBatch();
-		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		cam.position.set(0, 2, 4);
-		cam.lookAt(0,0,0);
-		cam.near = 0.1f;
-
+    // application
+    public void create() {
+        modelBatch = new WgModelBatch();
+        cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        cam.position.set(0, 2, 4);
+        cam.lookAt(0, 0, 0);
+        cam.near = 0.1f;
 
         String file = "data/g3d/ship.obj";
-        //String file = "data/g3d/ducky.obj";
+        // String file = "data/g3d/ducky.obj";
         boolean flip = false;
-
 
         WgAssetManager assets = new WgAssetManager();
         assets.load(file, Model.class);
         assets.finishLoading();
         model = assets.get(file, Model.class);
 
-//		WgObjLoader loader = new WgObjLoader();
-//		model = loader.loadModel(Gdx.files.internal(file));
+        // WgObjLoader loader = new WgObjLoader();
+        // model = loader.loadModel(Gdx.files.internal(file));
 
-		instance = new ModelInstance(model);
+        instance = new ModelInstance(model);
 
+        controller = new PerspectiveCamController(cam);
+        Gdx.input.setInputProcessor(controller);
+        batch = new WgSpriteBatch();
+        font = new WgBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
 
-		controller = new PerspectiveCamController(cam);
-		Gdx.input.setInputProcessor(controller);
-		batch = new WgSpriteBatch();
-		font = new WgBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
+    }
 
+    public void render() {
+        float delta = Gdx.graphics.getDeltaTime();
+        instance.transform.rotate(Vector3.Y, 15f * delta);
 
-	}
+        WgScreenUtils.clear(Color.TEAL, true);
 
-	public void render () {
-		float delta = Gdx.graphics.getDeltaTime();
-		instance.transform.rotate(Vector3.Y, 15f*delta);
+        cam.update();
+        modelBatch.begin(cam);
 
-		WgScreenUtils.clear(Color.TEAL, true);
+        modelBatch.render(instance);
 
-		cam.update();
-		modelBatch.begin(cam);
+        modelBatch.end();
 
-		modelBatch.render(instance);
+        batch.begin();
+        font.draw(batch, "Model loaded from OBJ file", 0, 20);
+        batch.end();
+    }
 
-		modelBatch.end();
+    @Override
+    public void resize(int width, int height) {
+        cam.viewportWidth = width;
+        cam.viewportHeight = height;
+        cam.update();
 
+    }
 
-		batch.begin();
-		font.draw(batch, "Model loaded from OBJ file" , 0, 20);
-		batch.end();
-	}
-
-	@Override
-	public void resize(int width, int height) {
-		cam.viewportWidth = width;
-		cam.viewportHeight = height;
-		cam.update();
-
-	}
-
-	@Override
-	public void dispose () {
-		batch.dispose();
-		font.dispose();
-		modelBatch.dispose();
-		model.dispose();
-	}
-
+    @Override
+    public void dispose() {
+        batch.dispose();
+        font.dispose();
+        modelBatch.dispose();
+        model.dispose();
+    }
 
 }

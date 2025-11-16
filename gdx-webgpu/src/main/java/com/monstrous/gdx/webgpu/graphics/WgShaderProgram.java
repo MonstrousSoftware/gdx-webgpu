@@ -40,18 +40,18 @@ public class WgShaderProgram implements Disposable {
 
     public WgShaderProgram(FileHandle fileHandle, String prefix) {
         String source = fileHandle.readString();
-        compile(fileHandle.name(), prefix+source);
+        compile(fileHandle.name(), prefix + source);
     }
 
-    public WgShaderProgram(String name, String shaderSource, String prefix){
-        compile(name, prefix+shaderSource);
+    public WgShaderProgram(String name, String shaderSource, String prefix) {
+        compile(name, prefix + shaderSource);
     }
 
-    private void compile(String name, String shaderSource){
+    private void compile(String name, String shaderSource) {
         this.name = name;
 
         String processedSource = Preprocessor.process(shaderSource);
-        //System.out.println("Preprocessed source:\n"+processedSource);
+        // System.out.println("Preprocessed source:\n"+processedSource);
 
         // Create Shader Module
         WGPUShaderModuleDescriptor shaderDesc = WGPUShaderModuleDescriptor.obtain();
@@ -67,7 +67,7 @@ public class WgShaderProgram implements Disposable {
         webgpu.device.createShaderModule(shaderDesc, shaderModule);
         // compile errors will invoke the error callback
 
-        //System.out.println(name+": "+processedSource);
+        // System.out.println(name+": "+processedSource);
     }
 
     public WGPUShaderModule getShaderModule() {
@@ -79,7 +79,7 @@ public class WgShaderProgram implements Disposable {
     }
 
     @Override
-    public void dispose(){
+    public void dispose() {
         shaderModule.release();
         shaderModule.dispose();
         shaderModule = null;

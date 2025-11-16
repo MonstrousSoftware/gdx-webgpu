@@ -1,6 +1,5 @@
 package com.monstrous.gdx.webgpu.wrappers;
 
-
 import com.badlogic.gdx.utils.BufferUtils;
 import com.github.xpenatan.webgpu.WGPUBufferUsage;
 import java.nio.ByteBuffer;
@@ -23,19 +22,21 @@ public class WebGPUVertexBuffer extends WebGPUBuffer {
     public void setVertices(float[] vertexData) {
         // Create vertex buffer
         int size = vertexData.length * Float.BYTES;
-        if(size > getSize()) throw new IllegalArgumentException("VertexBuffer.setVertices: data set too large.");
+        if (size > getSize())
+            throw new IllegalArgumentException("VertexBuffer.setVertices: data set too large.");
         ByteBuffer dataBuf = BufferUtils.newUnsafeByteBuffer(size);
         dataBuf.order(ByteOrder.LITTLE_ENDIAN);
         FloatBuffer floatBuf = dataBuf.asFloatBuffer();
-        for(float f : vertexData)
+        for (float f : vertexData)
             floatBuf.put(f);
         // Upload geometry data to the buffer
         write(0, dataBuf, size);
     }
 
     public void setVertices(ArrayList<Float> floats) {
-        int size = floats.size()*Float.BYTES;
-        if(size > getSize()) throw new IllegalArgumentException("VertexBuffer.setVertices: data set too large.");
+        int size = floats.size() * Float.BYTES;
+        if (size > getSize())
+            throw new IllegalArgumentException("VertexBuffer.setVertices: data set too large.");
 
         ByteBuffer dataBuf = BufferUtils.newUnsafeByteBuffer(size);
         dataBuf.order(ByteOrder.LITTLE_ENDIAN);
@@ -50,26 +51,27 @@ public class WebGPUVertexBuffer extends WebGPUBuffer {
     }
 
     public void setVertices(ByteBuffer byteData, int targetOffset, int sizeInBytes) {
-//        for(int i = 0; i < byteData.limit()/Float.BYTES; i++){
-//            System.out.println("vertex "+i+" : "+byteData.getFloat());
-//        }
-//        byteData.position(0);
+        // for(int i = 0; i < byteData.limit()/Float.BYTES; i++){
+        // System.out.println("vertex "+i+" : "+byteData.getFloat());
+        // }
+        // byteData.position(0);
 
         sizeInBytes = (sizeInBytes + 3) & ~3; // round up to multiple of 4 for writeBuffer
-        if(sizeInBytes > getSize()) throw new IllegalArgumentException("VertexBuffer.setVertices: ByteBuffer contents too large.");
+        if (sizeInBytes > getSize())
+            throw new IllegalArgumentException("VertexBuffer.setVertices: ByteBuffer contents too large.");
 
         // Upload data to the buffer
-        //System.out.println("write buffer in setVertices: size:"+sizeInBytes+" byteData: "+byteData.getLimit());
+        // System.out.println("write buffer in setVertices: size:"+sizeInBytes+" byteData: "+byteData.getLimit());
         write(targetOffset, byteData, sizeInBytes);
     }
 
     public void setVertices(ByteBuffer byteData) {
-//        sizeInBytes = (sizeInBytes + 3) & ~3; // round up to multiple of 4 for writeBuffer
-//        if (sizeInBytes > getSize())
-//            throw new IllegalArgumentException("VertexBuffer.setVertices: ByteBuffer contents too large.");
+        // sizeInBytes = (sizeInBytes + 3) & ~3; // round up to multiple of 4 for writeBuffer
+        // if (sizeInBytes > getSize())
+        // throw new IllegalArgumentException("VertexBuffer.setVertices: ByteBuffer contents too large.");
 
         // Upload data to the buffer
-        //System.out.println("write buffer in setVertices: size:"+sizeInBytes+" byteData: "+byteData.getLimit());
+        // System.out.println("write buffer in setVertices: size:"+sizeInBytes+" byteData: "+byteData.getLimit());
         write(0, byteData);
     }
 

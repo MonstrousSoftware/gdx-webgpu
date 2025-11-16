@@ -28,11 +28,11 @@ public class BuildTeaVM {
         TeaVMTool tool = new TeaVMTool();
 
         // Uncomment for debugging
-//        tool.addSourceFileProvider(new DirectorySourceFileProvider(new File("../gdx-webgpu-tests/src/")));
-//        tool.addSourceFileProvider(new DirectorySourceFileProvider(new File("../../gdx-webgpu/src/main/java")));
-//        tool.setDebugInformationGenerated(true);
-//        tool.setSourceMapsFileGenerated(true);
-//        tool.setSourceFilePolicy(TeaVMSourceFilePolicy.COPY);
+        // tool.addSourceFileProvider(new DirectorySourceFileProvider(new File("../gdx-webgpu-tests/src/")));
+        // tool.addSourceFileProvider(new DirectorySourceFileProvider(new File("../../gdx-webgpu/src/main/java")));
+        // tool.setDebugInformationGenerated(true);
+        // tool.setSourceMapsFileGenerated(true);
+        // tool.setSourceFilePolicy(TeaVMSourceFilePolicy.COPY);
 
         tool.setObfuscated(false);
         tool.setOptimizationLevel(TeaVMOptimizationLevel.SIMPLE);

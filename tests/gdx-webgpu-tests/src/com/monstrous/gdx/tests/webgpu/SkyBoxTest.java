@@ -48,80 +48,80 @@ import com.monstrous.gdx.webgpu.wrappers.WebGPURenderPass;
 import static com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute.EnvironmentMap;
 
 public class SkyBoxTest extends GdxTest {
-	public PerspectiveCamera cam;
-	public CameraInputController inputController;
-	public WgModelBatch modelBatch;
-	public Model model;
-	public ModelInstance instance;
-	public Environment environment;
+    public PerspectiveCamera cam;
+    public CameraInputController inputController;
+    public WgModelBatch modelBatch;
+    public Model model;
+    public ModelInstance instance;
+    public Environment environment;
     private WgCubemap cubemap;
-	private SkyBox skybox;
+    private SkyBox skybox;
 
     @Override
-	public void create () {
-		modelBatch = new WgModelBatch();
+    public void create() {
+        modelBatch = new WgModelBatch();
 
-		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		cam.position.set(5f, 5f, 5f);
-		cam.lookAt(0, 0, 0);
-		cam.near = 0.1f;
-		cam.far = 150f;
-		cam.update();
+        cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        cam.position.set(5f, 5f, 5f);
+        cam.lookAt(0, 0, 0);
+        cam.near = 0.1f;
+        cam.far = 150f;
+        cam.update();
 
         String modelFileName = "data/g3d/teapot.g3db";
         FileHandle file = Gdx.files.internal(modelFileName);
         model = new WgG3dModelLoader(new UBJsonReader()).loadModel(file);
         instance = new ModelInstance(model);
 
+        Gdx.input.setInputProcessor(new InputMultiplexer(this, inputController = new CameraInputController(cam)));
 
-		Gdx.input.setInputProcessor(new InputMultiplexer(this, inputController = new CameraInputController(cam)));
-
-        String[] sides = {  "pos-x.jpg","neg-x.jpg", "pos-y.jpg","neg-y.jpg", "pos-z.jpg", "neg-z.jpg"   };
+        String[] sides = {"pos-x.jpg", "neg-x.jpg", "pos-y.jpg", "neg-y.jpg", "pos-z.jpg", "neg-z.jpg"};
         String prefix = "data/g3d/environment/leadenhall/";
 
         FileHandle[] fileHandles = new FileHandle[6];
-        for(int i = 0; i < sides.length; i++){
+        for (int i = 0; i < sides.length; i++) {
             fileHandles[i] = Gdx.files.internal(prefix + sides[i]);
         }
 
-        cubemap = new WgCubemap(fileHandles[0], fileHandles[1], fileHandles[2], fileHandles[3], fileHandles[4], fileHandles[5], true);
+        cubemap = new WgCubemap(fileHandles[0], fileHandles[1], fileHandles[2], fileHandles[3], fileHandles[4],
+                fileHandles[5], true);
 
         // use in this case the same cube map as environment map for reflections of shiny objects and as sky box
 
         environment = new Environment();
         environment.set(new ColorAttribute(ColorAttribute.AmbientLight, .4f, .4f, .4f, 1f));
         environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
-        environment.set(new WgCubemapAttribute(EnvironmentMap, cubemap));    // add cube map attribute
+        environment.set(new WgCubemapAttribute(EnvironmentMap, cubemap)); // add cube map attribute
 
-		skybox = new SkyBox(cubemap);
-	}
+        skybox = new SkyBox(cubemap);
+    }
 
-	@Override
-	public void render () {
-		inputController.update();
+    @Override
+    public void render() {
+        inputController.update();
 
         WgScreenUtils.clear(Color.TEAL, true);
 
-		modelBatch.begin(cam);
-		modelBatch.render(instance, environment);
-		modelBatch.end();
+        modelBatch.begin(cam);
+        modelBatch.render(instance, environment);
+        modelBatch.end();
 
-		skybox.renderPass(cam);
+        skybox.renderPass(cam);
 
-	}
-
-	@Override
-	public void dispose () {
-		modelBatch.dispose();
-		model.dispose();
-        cubemap.dispose();
-	}
+    }
 
     @Override
-	public void resize (int width, int height) {
+    public void dispose() {
+        modelBatch.dispose();
+        model.dispose();
+        cubemap.dispose();
+    }
+
+    @Override
+    public void resize(int width, int height) {
         cam.viewportWidth = width;
         cam.viewportHeight = height;
         cam.update();
-	}
+    }
 
 }

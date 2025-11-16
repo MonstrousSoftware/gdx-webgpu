@@ -26,30 +26,24 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Encapsulated bind group.  Used to bind values to a shader.
+ * Encapsulated bind group. Used to bind values to a shader.
  *
- * Example:
- *      WebGPUBindGroup bg = new WebGPUBindGroup(bindGroupLayout);
- *      bg.setBuffer(0, buffer);
- *      bg.setTexture(1, textureView);
- *      bg.setSampler(2, sampler);
- *      bg.create();
+ * Example: WebGPUBindGroup bg = new WebGPUBindGroup(bindGroupLayout); bg.setBuffer(0, buffer); bg.setTexture(1,
+ * textureView); bg.setSampler(2, sampler); bg.create();
  *
- *      Note the sequence and types must correspond to what is defined in the
- *      BindGroupLayout.
+ * Note the sequence and types must correspond to what is defined in the BindGroupLayout.
  *
- *      This allows also to only update specific bindings.
- *      create() is implied by getHandle().
+ * This allows also to only update specific bindings. create() is implied by getHandle().
  */
 public class WebGPUBindGroup implements Disposable {
     private WGPUBindGroup bindGroup = null;
     private final WebGPUContext webgpu;
 
     private final WGPUBindGroupDescriptor bindGroupDescriptor;
-    private final Map<Integer, Integer> bindingIndex;       // array index per bindingId (bindingId's can skip numbers)
+    private final Map<Integer, Integer> bindingIndex; // array index per bindingId (bindingId's can skip numbers)
     private final WGPUBindGroupEntry[] entryArray;
     private final int numEntries;
-    private boolean dirty;  // has an entry changed? Then we need to rebuild the bind group
+    private boolean dirty; // has an entry changed? Then we need to rebuild the bind group
 
     public WebGPUBindGroup(WebGPUBindGroupLayout layout) {
         WgGraphics gfx = (WgGraphics) Gdx.graphics;
@@ -72,7 +66,6 @@ public class WebGPUBindGroup implements Disposable {
         bindGroupDescriptor.setNextInChain(WGPUChainedStruct.NULL);
         bindGroupDescriptor.setLayout(layout.getLayout());
 
-
         bindingIndex = new HashMap<>();
     }
 
@@ -80,24 +73,24 @@ public class WebGPUBindGroup implements Disposable {
         bindGroup = null;
     }
 
-
     /** creates the bind group */
     public WGPUBindGroup end() {
         return create();
     }
 
     /** bind a buffer. */
-    public void setBuffer( int bindingId, WebGPUBuffer buffer) {
-        setBuffer( bindingId, buffer, 0, buffer.getSize());
+    public void setBuffer(int bindingId, WebGPUBuffer buffer) {
+        setBuffer(bindingId, buffer, 0, buffer.getSize());
     }
 
     /** find index of bindingId or create a new index of this is a new bindingId */
-    private int findIndex(int bindingId){
+    private int findIndex(int bindingId) {
         // should we check against the binding id's from the layout?
         Integer index = bindingIndex.get(bindingId);
-        if(index == null){
+        if (index == null) {
             index = bindingIndex.size();
-            if(index >= numEntries) throw new ArrayIndexOutOfBoundsException("Too many entries. See BindGroupLayout");
+            if (index >= numEntries)
+                throw new ArrayIndexOutOfBoundsException("Too many entries. See BindGroupLayout");
             bindingIndex.put(bindingId, index);
         }
         return index;
@@ -131,24 +124,23 @@ public class WebGPUBindGroup implements Disposable {
         dirty = true;
     }
 
-    private void setDefault(WGPUBindGroupEntry entry){
+    private void setDefault(WGPUBindGroupEntry entry) {
         entry.setBuffer(WGPUBuffer.NULL);
         entry.setSampler(WGPUSampler.NULL);
         entry.setTextureView(WGPUTextureView.NULL);
     }
 
-
     /** creates the bind group. (also implicitly called by getHandle()) */
     public WGPUBindGroup create() {
-        if(dirty) {
-            if(bindGroup != null) {
-                //System.out.println("Releasing bind group");
+        if (dirty) {
+            if (bindGroup != null) {
+                // System.out.println("Releasing bind group");
                 bindGroup.release();
                 // don't dispose, because we will reuse the object.
             }
-            if(bindGroup == null){  // lazy allocation
+            if (bindGroup == null) { // lazy allocation
                 bindGroup = new WGPUBindGroup();
-                //System.out.println("Creating bind group wrapper");
+                // System.out.println("Creating bind group wrapper");
             }
 
             WGPUVectorBindGroupEntry entryVector = WGPUVectorBindGroupEntry.obtain();
@@ -164,15 +156,15 @@ public class WebGPUBindGroup implements Disposable {
     }
 
     public WGPUBindGroup getBindGroup() {
-        if(dirty)
+        if (dirty)
             create();
         return bindGroup;
     }
 
     @Override
     public void dispose() {
-        if(bindGroup != null) {
-            //System.out.println("Releasing bind group");
+        if (bindGroup != null) {
+            // System.out.println("Releasing bind group");
             bindGroup.release();
             bindGroup.dispose();
             bindGroup = null;
@@ -184,6 +176,3 @@ public class WebGPUBindGroup implements Disposable {
     }
 
 }
-
-
-

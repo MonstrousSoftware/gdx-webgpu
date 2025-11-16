@@ -2,7 +2,6 @@ package com.monstrous.gdx.webgpu.graphics.g3d.loaders;
 
 // TEMP to be merged with standard one....
 
-
 // Storage of data from MTL file or from material in GLTF file. Not all options are supported.
 
 import com.badlogic.gdx.graphics.Color;
@@ -19,11 +18,11 @@ public class MaterialData {
     public float transparency;
     public Color opticalDensity;
     public int illuminationModel;
-//    public String diffuseMapFilePath;
-//    public String normalMapFilePath;
-//    public String metallicRoughnessMapFilePath;
-//    public String emissiveMapFilePath;
-//    public String occlusionMapFilePath;
+    // public String diffuseMapFilePath;
+    // public String normalMapFilePath;
+    // public String metallicRoughnessMapFilePath;
+    // public String emissiveMapFilePath;
+    // public String occlusionMapFilePath;
 
     // image data, e.g. the content of a .png file
     public byte[] diffuseMapData;

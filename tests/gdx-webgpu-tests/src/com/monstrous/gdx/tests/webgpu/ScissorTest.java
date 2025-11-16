@@ -1,6 +1,5 @@
 package com.monstrous.gdx.tests.webgpu;
 
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
@@ -15,9 +14,8 @@ public class ScissorTest extends GdxTest {
     private WgSpriteBatch batch;
     private WgTexture background;
     private WgBitmapFont font;
-    private int x,y;
+    private int x, y;
     private int dx, dy;
-
 
     @Override
     public void create() {
@@ -34,38 +32,38 @@ public class ScissorTest extends GdxTest {
     }
 
     @Override
-    public void render(  ){
-        if(Gdx.input.isKeyPressed(Input.Keys.ESCAPE)){
+    public void render() {
+        if (Gdx.input.isKeyPressed(Input.Keys.ESCAPE)) {
             Gdx.app.exit();
             return;
         }
 
         Gdx.gl.glEnable(GL20.GL_SCISSOR_TEST);
-        Gdx.gl.glScissor(x,y, 300, 200);    // fake GL call
-        //Gdx.gl.glViewport(x,y, 300, 200);    // fake GL call
+        Gdx.gl.glScissor(x, y, 300, 200); // fake GL call
+        // Gdx.gl.glViewport(x,y, 300, 200); // fake GL call
 
         x += dx;
         y += dy;
-        if(x == 0){
+        if (x == 0) {
             dx = 1;
-        } else if (x +300 >= Gdx.graphics.getWidth() ){
+        } else if (x + 300 >= Gdx.graphics.getWidth()) {
             dx = -1;
         }
-        if(y == 0){
+        if (y == 0) {
             dy = 1;
-        } else if (y + 200 >= Gdx.graphics.getHeight() ){
+        } else if (y + 200 >= Gdx.graphics.getHeight()) {
             dy = -1;
         }
 
         batch.begin(Color.BLUE);
-        batch.draw(background, 0,0);
+        batch.draw(background, 0, 0);
 
         font.draw(batch, "ESCAPE to quit.", 50, 30);
         batch.end();
     }
 
     @Override
-    public void dispose(){
+    public void dispose() {
         // cleanup
         background.dispose();
         batch.dispose();
@@ -76,6 +74,5 @@ public class ScissorTest extends GdxTest {
     public void resize(int width, int height) {
         // todo
     }
-
 
 }

@@ -37,11 +37,13 @@ public class PBRTextureAttribute extends TextureAttribute {
         super(type, textureDescription);
     }
 
-    public <T extends Texture> PBRTextureAttribute(long type, TextureDescriptor<T> textureDescription, float offsetU, float offsetV, float scaleU, float scaleV, int uvIndex) {
+    public <T extends Texture> PBRTextureAttribute(long type, TextureDescriptor<T> textureDescription, float offsetU,
+            float offsetV, float scaleU, float scaleV, int uvIndex) {
         super(type, textureDescription, offsetU, offsetV, scaleU, scaleV, uvIndex);
     }
 
-    public <T extends Texture> PBRTextureAttribute(long type, TextureDescriptor<T> textureDescription, float offsetU, float offsetV, float scaleU, float scaleV) {
+    public <T extends Texture> PBRTextureAttribute(long type, TextureDescriptor<T> textureDescription, float offsetU,
+            float offsetV, float scaleU, float scaleV) {
         super(type, textureDescription, offsetU, offsetV, scaleU, scaleV);
     }
 
@@ -57,13 +59,12 @@ public class PBRTextureAttribute extends TextureAttribute {
         super(copyFrom);
     }
 
+    public static TextureAttribute createMetallicRoughness(final Texture texture) {
+        return new TextureAttribute(MetallicRoughness, texture);
+    }
 
-    public static TextureAttribute createMetallicRoughness (final Texture texture) {
-		return new TextureAttribute(MetallicRoughness, texture);
-	}
-
-	public static TextureAttribute createMetallicRoughness (final TextureRegion region) {
-		return new TextureAttribute(MetallicRoughness, region);
-	}
+    public static TextureAttribute createMetallicRoughness(final TextureRegion region) {
+        return new TextureAttribute(MetallicRoughness, region);
+    }
 
 }

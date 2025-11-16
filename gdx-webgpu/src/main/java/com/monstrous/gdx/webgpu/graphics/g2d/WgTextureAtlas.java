@@ -21,23 +21,27 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 
-/** Loads images from texture atlases created by TexturePacker.<br>
+/**
+ * Loads images from texture atlases created by TexturePacker.<br>
  * <br>
  * A TextureAtlas must be disposed to free up the resources consumed by the backing textures.
- * @author Nathan Sweet */
+ * 
+ * @author Nathan Sweet
+ */
 public class WgTextureAtlas extends TextureAtlas {
 
-	public WgTextureAtlas(FileHandle packFile) {
-		super(packFile, packFile.parent());
-	}
+    public WgTextureAtlas(FileHandle packFile) {
+        super(packFile, packFile.parent());
+    }
 
-	/** Adds the textures and regions from the specified texture atlas data. */
-	@Override
-	public void load (TextureAtlasData data) {
-		for (Page page : data.getPages()) {
-			if (page.texture == null) page.texture = new WgTexture(page.textureFile, page.format, page.useMipMaps);
-		}
-		super.load(data);
-	}
+    /** Adds the textures and regions from the specified texture atlas data. */
+    @Override
+    public void load(TextureAtlasData data) {
+        for (Page page : data.getPages()) {
+            if (page.texture == null)
+                page.texture = new WgTexture(page.textureFile, page.format, page.useMipMaps);
+        }
+        super.load(data);
+    }
 
 }

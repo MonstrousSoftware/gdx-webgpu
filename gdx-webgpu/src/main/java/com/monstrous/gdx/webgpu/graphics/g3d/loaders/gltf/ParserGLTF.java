@@ -16,8 +16,6 @@
 
 package com.monstrous.gdx.webgpu.graphics.g3d.loaders.gltf;
 
-
-
 // JSON parser of the GLTF file format into a set of GLTF class objects
 
 import com.badlogic.gdx.graphics.Color;
@@ -29,7 +27,8 @@ import com.badlogic.gdx.utils.JsonValue;
 
 public class ParserGLTF {
 
-    /** Creates a GLTF object from a JSON file. Uses path to find additional resources.
+    /**
+     * Creates a GLTF object from a JSON file. Uses path to find additional resources.
      *
      */
     public static GLTF parseJSON(String json, String path) {
@@ -48,17 +47,17 @@ public class ParserGLTF {
                     String imagepath = image.get("uri").asString();
                     // texture file
                     im.uri = path + imagepath;
-                    //System.out.println("image path: " + imagepath);
+                    // System.out.println("image path: " + imagepath);
                 } else {
                     // section in binary buffer
                     im.mimeType = image.get("mimeType").asString();
                     Long view = image.get("bufferView").asLong();
                     im.bufferView = view.intValue();
-                    if(image.has("name"))
+                    if (image.has("name"))
                         im.name = image.get("name").asString();
                     else
                         im.name = "anon";
-                    //System.out.println("image : " + im.mimeType+" "+im.name);
+                    // System.out.println("image : " + im.mimeType+" "+im.name);
                 }
 
                 gltf.images.add(im);
@@ -66,18 +65,18 @@ public class ParserGLTF {
         }
 
         JsonValue.JsonIterator sampls = fromJson.iterator("images");
-        if(sampls != null) {
+        if (sampls != null) {
             while (sampls.hasNext()) {
                 GLTFSampler sampler = new GLTFSampler();
 
                 JsonValue smpl = sampls.next();
-                if(smpl.has("name"))
+                if (smpl.has("name"))
                     sampler.name = smpl.get("name").asString();
-                if(smpl.has("wrapS"))
+                if (smpl.has("wrapS"))
                     sampler.wrapS = smpl.get("wrapS").asInt();
                 else
                     sampler.wrapS = 10497;
-                if(smpl.has("wrapT"))
+                if (smpl.has("wrapT"))
                     sampler.wrapT = smpl.get("wrapT").asInt();
                 else
                     sampler.wrapT = 10497;
@@ -87,62 +86,62 @@ public class ParserGLTF {
         }
 
         JsonValue.JsonIterator textures = fromJson.iterator("textures");
-        if(textures != null) {
+        if (textures != null) {
             while (textures.hasNext()) {
                 GLTFTexture texture = new GLTFTexture();
 
                 JsonValue tex = textures.next();
-                if(tex.has("name"))
+                if (tex.has("name"))
                     texture.name = tex.get("name").asString();
-                if(tex.has("source"))
+                if (tex.has("source"))
                     texture.source = tex.get("source").asInt();
-                if(tex.has("sampler"))
+                if (tex.has("sampler"))
                     texture.sampler = tex.get("sampler").asInt();
                 gltf.textures.add(texture);
             }
         }
 
         JsonValue.JsonIterator materials = fromJson.iterator("materials");
-        if(materials != null) {
+        if (materials != null) {
             while (materials.hasNext()) {
                 GLTFMaterialPBR pbr = new GLTFMaterialPBR();
                 GLTFMaterial material = new GLTFMaterial();
                 material.pbrMetallicRoughness = pbr;
 
                 JsonValue mat = materials.next();
-                if(mat.has("name"))
+                if (mat.has("name"))
                     material.name = mat.get("name").asString();
                 JsonValue pbrMR = mat.get("pbrMetallicRoughness");
-                if(pbrMR.has("baseColorTexture")) {
+                if (pbrMR.has("baseColorTexture")) {
                     JsonValue base = pbrMR.get("baseColorTexture");
                     pbr.baseColorTexture = base.get("index").asInt();
                 }
-                if(pbrMR.has("baseColorFactor")) {
+                if (pbrMR.has("baseColorFactor")) {
                     float[] bc = pbrMR.get("baseColorFactor").asFloatArray();
                     pbr.baseColorFactor = new Color(bc[0], bc[1], bc[2], bc[3]);
                 } else
                     pbr.baseColorFactor = Color.WHITE;
 
-                if(pbrMR.has("roughnessFactor")) {
+                if (pbrMR.has("roughnessFactor")) {
                     pbr.roughnessFactor = pbrMR.get("roughnessFactor").asFloat();
                 }
-                if(pbrMR.has("metallicFactor")) {
+                if (pbrMR.has("metallicFactor")) {
                     pbr.metallicFactor = pbrMR.get("metallicFactor").asFloat();
                 }
-                if(pbrMR.has("metallicRoughnessTexture")) {
+                if (pbrMR.has("metallicRoughnessTexture")) {
                     JsonValue mrTex = pbrMR.get("metallicRoughnessTexture");
                     pbr.metallicRoughnessTexture = mrTex.get("index").asInt();
-                    //mat.getInt("metallicRoughnessTexture", -1);
+                    // mat.getInt("metallicRoughnessTexture", -1);
                 }
-                if(mat.has("normalTexture")){
+                if (mat.has("normalTexture")) {
                     JsonValue tex = mat.get("normalTexture");
                     material.normalTexture = tex.get("index").asInt();
                 }
-                if(mat.has("emissiveTexture")){
+                if (mat.has("emissiveTexture")) {
                     JsonValue tex = mat.get("emissiveTexture");
                     material.emissiveTexture = tex.get("index").asInt();
                 }
-                if(mat.has("occlusionTexture")){
+                if (mat.has("occlusionTexture")) {
                     JsonValue tex = mat.get("occlusionTexture");
                     material.occlusionTexture = tex.get("index").asInt();
                 }
@@ -152,15 +151,15 @@ public class ParserGLTF {
         }
 
         JsonValue.JsonIterator meshes = fromJson.iterator("meshes");
-        if(meshes != null) {
+        if (meshes != null) {
             while (meshes.hasNext()) {
                 GLTFMesh mesh = new GLTFMesh();
                 JsonValue m = meshes.next();
-                if(m.has("name"))
+                if (m.has("name"))
                     mesh.name = m.get("name").asString();
 
                 JsonValue.JsonIterator primitives = m.iterator("primitives");
-                if(primitives != null) {
+                if (primitives != null) {
                     while (primitives.hasNext()) {
                         GLTFPrimitive primitive = new GLTFPrimitive();
                         JsonValue p = primitives.next();
@@ -171,8 +170,8 @@ public class ParserGLTF {
 
                         JsonValue attribs = p.get("attributes");
                         JsonValue attrib = attribs.child;
-                        while(attrib != null){
-                            //System.out.println("GLTF attribute: " + attrib.name);
+                        while (attrib != null) {
+                            // System.out.println("GLTF attribute: " + attrib.name);
                             GLTFAttribute attribute = new GLTFAttribute(attrib.name, attrib.asInt());
                             primitive.attributes.add(attribute);
                             attrib = attrib.next;
@@ -185,7 +184,7 @@ public class ParserGLTF {
         }
 
         JsonValue.JsonIterator buffers = fromJson.iterator("buffers");
-        if(buffers != null) {
+        if (buffers != null) {
             while (buffers.hasNext()) {
                 GLTFBuffer buffer = new GLTFBuffer();
                 JsonValue buf = buffers.next();
@@ -193,11 +192,11 @@ public class ParserGLTF {
                     buffer.name = buf.get("name").asString();
                 if (buf.has("uri")) {
                     String uri = buf.getString("uri");
-                    if(!uri.startsWith("data:"))
+                    if (!uri.startsWith("data:"))
                         uri = path + uri;
                     buffer.uri = uri;
                 }
-                //buffer.uri = path + buf.getString("uri");
+                // buffer.uri = path + buf.getString("uri");
                 buffer.byteLength = buf.getInt("byteLength");
 
                 gltf.buffers.add(buffer);
@@ -205,7 +204,7 @@ public class ParserGLTF {
         }
 
         JsonValue.JsonIterator bufferViews = fromJson.iterator("bufferViews");
-        if(bufferViews != null) {
+        if (bufferViews != null) {
             while (bufferViews.hasNext()) {
                 GLTFBufferView bufferView = new GLTFBufferView();
                 JsonValue bufView = bufferViews.next();
@@ -222,7 +221,7 @@ public class ParserGLTF {
         }
 
         JsonValue.JsonIterator accessors = fromJson.iterator("accessors");
-        if(accessors != null) {
+        if (accessors != null) {
             while (accessors.hasNext()) {
                 GLTFAccessor accessor = new GLTFAccessor();
                 JsonValue ac = accessors.next();
@@ -235,13 +234,12 @@ public class ParserGLTF {
                 accessor.type = ac.getString("type");
                 accessor.normalized = (ac.getString("normalized", "false").contentEquals("true"));
 
-
                 gltf.accessors.add(accessor);
             }
         }
 
         JsonValue.JsonIterator nodes = fromJson.iterator("nodes");
-        if(nodes != null) {
+        if (nodes != null) {
             while (nodes.hasNext()) {
                 GLTFNode node = new GLTFNode();
                 JsonValue nd = nodes.next();
@@ -251,25 +249,25 @@ public class ParserGLTF {
                 node.skin = nd.getInt("skin", -1);
                 node.mesh = nd.getInt("mesh", -1);
 
-                if(nd.has("translation")){
+                if (nd.has("translation")) {
                     float[] tr = nd.get("translation").asFloatArray();
                     node.translation = new Vector3(tr);
                 }
-                if(nd.has("scale")){
+                if (nd.has("scale")) {
                     float[] tr = nd.get("scale").asFloatArray();
                     node.scale = new Vector3(tr);
                 }
-                if(nd.has("rotation")){
+                if (nd.has("rotation")) {
                     float[] tr = nd.get("rotation").asFloatArray();
                     node.rotation = new Quaternion(tr[0], tr[1], tr[2], tr[3]);
                 }
-                if(nd.has("matrix")){
+                if (nd.has("matrix")) {
                     float[] tr = nd.get("matrix").asFloatArray();
                     node.matrix = new Matrix4(tr);
                 }
-                if(nd.has("children")){
+                if (nd.has("children")) {
                     int[] ch = nd.get("children").asIntArray();
-                    for(int i = 0; i < ch.length; i++)
+                    for (int i = 0; i < ch.length; i++)
                         node.children.add(ch[i]);
                 }
 
@@ -278,15 +276,15 @@ public class ParserGLTF {
         }
 
         JsonValue.JsonIterator scenes = fromJson.iterator("scenes");
-        if(scenes != null) {
+        if (scenes != null) {
             while (scenes.hasNext()) {
                 GLTFScene scene = new GLTFScene();
                 JsonValue sc = scenes.next();
                 if (sc.has("name"))
                     scene.name = sc.get("name").asString();
-                if(sc.has("nodes")){
+                if (sc.has("nodes")) {
                     int[] ch = sc.get("nodes").asIntArray();
-                    for(int i = 0; i < ch.length; i++)
+                    for (int i = 0; i < ch.length; i++)
                         scene.nodes.add(ch[i]);
                 }
 
@@ -296,7 +294,7 @@ public class ParserGLTF {
         gltf.scene = fromJson.getInt("scene", 0);
 
         JsonValue.JsonIterator skins = fromJson.iterator("skins");
-        if(skins != null) {
+        if (skins != null) {
             while (skins.hasNext()) {
                 GLTFSkin skin = new GLTFSkin();
                 JsonValue sk = skins.next();
@@ -309,9 +307,9 @@ public class ParserGLTF {
                 if (sk.has("skeleton"))
                     skin.skeleton = sk.get("skeleton").asInt();
 
-                if(sk.has("joints")){
+                if (sk.has("joints")) {
                     int[] jnt = sk.get("joints").asIntArray();
-                    for(int i = 0; i < jnt.length; i++)
+                    for (int i = 0; i < jnt.length; i++)
                         skin.joints.add(jnt[i]);
                 }
 
@@ -320,46 +318,46 @@ public class ParserGLTF {
         }
 
         JsonValue.JsonIterator animations = fromJson.iterator("animations");
-        if(animations != null) {
+        if (animations != null) {
             while (animations.hasNext()) {
                 GLTFAnimation animation = new GLTFAnimation();
                 JsonValue an = animations.next();
                 if (an.has("name")) {
                     animation.name = an.get("name").asString();
-                    //System.out.println("animation name: " + animation.name);
+                    // System.out.println("animation name: " + animation.name);
                 }
                 JsonValue.JsonIterator channels = an.iterator("channels");
-                if(channels != null) {
+                if (channels != null) {
                     while (channels.hasNext()) {
                         GLTFAnimationChannel channel = new GLTFAnimationChannel();
                         JsonValue ch = channels.next();
 
                         channel.sampler = ch.get("sampler").asInt();
-                        //System.out.println("sampler: " + channel.sampler);
+                        // System.out.println("sampler: " + channel.sampler);
 
                         JsonValue tgt = ch.get("target");
                         channel.node = tgt.get("node").asInt();
                         channel.path = tgt.get("path").asString();
-                        //System.out.println("target: " + channel.node+" "+channel.path);
+                        // System.out.println("target: " + channel.node+" "+channel.path);
 
                         animation.channels.add(channel);
                     }
                 }
 
                 JsonValue.JsonIterator samplers = an.iterator("samplers");
-                if(samplers != null) {
+                if (samplers != null) {
                     while (samplers.hasNext()) {
                         GLTFAnimationSampler sampler = new GLTFAnimationSampler();
                         JsonValue sam = samplers.next();
 
                         sampler.input = sam.get("input").asInt();
                         sampler.output = sam.get("output").asInt();
-                        if(sam.has("interpolation"))
+                        if (sam.has("interpolation"))
                             sampler.interpolation = sam.get("interpolation").asString();
                         else
                             sampler.interpolation = "LINEAR";
 
-                        //System.out.println("sampler: " + sampler.input+" "+sampler.interpolation+" "+sampler.output);
+                        // System.out.println("sampler: " + sampler.input+" "+sampler.interpolation+" "+sampler.output);
 
                         animation.samplers.add(sampler);
                     }

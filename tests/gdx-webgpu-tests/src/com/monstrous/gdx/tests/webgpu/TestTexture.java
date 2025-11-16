@@ -1,6 +1,5 @@
 package com.monstrous.gdx.tests.webgpu;
 
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
@@ -24,7 +23,7 @@ public class TestTexture extends GdxTest {
     }
 
     @Override
-    public void render(  ){
+    public void render() {
 
         viewport.apply();
         batch.setProjectionMatrix(viewport.getCamera().combined);
@@ -35,18 +34,16 @@ public class TestTexture extends GdxTest {
     }
 
     @Override
-    public void resize (int width, int height) {
+    public void resize(int width, int height) {
         Gdx.app.log("resize", "");
         viewport.update(width, height, true);
     }
 
     @Override
-    public void dispose(){
+    public void dispose() {
         // cleanup
         texture.dispose();
         batch.dispose();
     }
-
-
 
 }

@@ -16,60 +16,59 @@ import com.monstrous.gdx.webgpu.graphics.WgTexture;
 //
 public class WebGPUTestScene2d {
 
-	// application
-	static class TestApp extends ApplicationAdapter {
-		private WgSpriteBatch batch;
-		private WgTexture texture;
-		private WgStage stage;
-		private Image image;
-		private TextureRegion region;
-		private TextureRegionDrawable drawable;
+    // application
+    static class TestApp extends ApplicationAdapter {
+        private WgSpriteBatch batch;
+        private WgTexture texture;
+        private WgStage stage;
+        private Image image;
+        private TextureRegion region;
+        private TextureRegionDrawable drawable;
 
-		public void create () {
-			batch = new WgSpriteBatch();
-			texture = new WgTexture(Gdx.files.internal("data/badlogic.jpg"));
+        public void create() {
+            batch = new WgSpriteBatch();
+            texture = new WgTexture(Gdx.files.internal("data/badlogic.jpg"));
 
-			stage = new WgStage();
+            stage = new WgStage();
 
-			region = new TextureRegion(texture, 0, 0, 0.5f, 0.5f);
-			drawable = new TextureRegionDrawable(region);
-			image = new Image(drawable);
-			image.setPosition(10,10);	// position goes from bottom left of the screen and related to the bottom left of the image
-			stage.addActor(image);
+            region = new TextureRegion(texture, 0, 0, 0.5f, 0.5f);
+            drawable = new TextureRegionDrawable(region);
+            image = new Image(drawable);
+            image.setPosition(10, 10); // position goes from bottom left of the screen and related to the bottom left of
+                                       // the image
+            stage.addActor(image);
 
-		}
+        }
 
-		@Override
-		public void render () {
-			batch.begin(Color.FOREST);
-			batch.draw(region, 300, 400, 100, 100);
+        @Override
+        public void render() {
+            batch.begin(Color.FOREST);
+            batch.draw(region, 300, 400, 100, 100);
 
-			// this should show the top left quadrant, but upside down
-			batch.draw(texture, 300, 10, 128, 128, 0, 0, 0.5f, 0.5f);
+            // this should show the top left quadrant, but upside down
+            batch.draw(texture, 300, 10, 128, 128, 0, 0, 0.5f, 0.5f);
 
-			// this should show the top left quadrant, and the right way round
-			batch.draw(region, 300, 300);
+            // this should show the top left quadrant, and the right way round
+            batch.draw(region, 300, 300);
 
-			//image.getDrawable().draw(batch, 0,0,120, 120);
-			batch.end();
+            // image.getDrawable().draw(batch, 0,0,120, 120);
+            batch.end();
 
-			stage.act();
-			stage.draw();
-		}
+            stage.act();
+            stage.draw();
+        }
 
+        @Override
+        public void resize(int width, int height) {
+            batch.getProjectionMatrix().setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        }
 
-		@Override
-		public void resize (int width, int height) {
-			batch.getProjectionMatrix().setToOrtho2D(0,0,Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		}
+        @Override
+        public void dispose() {
+            batch.dispose();
+            texture.dispose();
+            stage.dispose();
+        }
 
-		@Override
-		public void dispose () {
-			batch.dispose();
-			texture.dispose();
-			stage.dispose();
-		}
-
-
-	}
+    }
 }

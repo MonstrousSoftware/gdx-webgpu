@@ -27,51 +27,50 @@ import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 
 public class ImmediateModeRendererTest extends GdxTest {
-	Matrix4 projMatrix = new Matrix4();
-	WgImmediateModeRenderer renderer;
-	WgTexture texture;
+    Matrix4 projMatrix = new Matrix4();
+    WgImmediateModeRenderer renderer;
+    WgTexture texture;
 
+    @Override
+    public void create() {
+        renderer = new WgImmediateModeRenderer(false, true, 1);
+        texture = new WgTexture(Gdx.files.internal("data/badlogic.jpg"));
+    }
 
-	@Override
-	public void create () {
-		renderer = new WgImmediateModeRenderer(false, true, 1);
-		texture = new WgTexture(Gdx.files.internal("data/badlogic.jpg"));
-	}
-	@Override
-	public void dispose () {
-		texture.dispose();
-	}
+    @Override
+    public void dispose() {
+        texture.dispose();
+    }
 
-	@Override
-	public void render () {
+    @Override
+    public void render() {
         WgScreenUtils.clear(Color.TEAL, true);
 
-		renderer.begin(projMatrix, GL20.GL_TRIANGLES);
-		renderer.setTexture(texture);
-		renderer.texCoord(0, 0);
-		renderer.color(1, 0, 0, 1);
-		renderer.vertex(-0.5f, -0.5f, 0);
-		renderer.texCoord(1, 0);
-		renderer.color(0, 1, 0, 1);
-		renderer.vertex(0.5f, -0.5f, 0);
-		renderer.texCoord(0.5f, 1);
-		renderer.color(0, 0, 1, 1);
-		renderer.vertex(0f, 0.5f, 0);
-		renderer.end();
+        renderer.begin(projMatrix, GL20.GL_TRIANGLES);
+        renderer.setTexture(texture);
+        renderer.texCoord(0, 0);
+        renderer.color(1, 0, 0, 1);
+        renderer.vertex(-0.5f, -0.5f, 0);
+        renderer.texCoord(1, 0);
+        renderer.color(0, 1, 0, 1);
+        renderer.vertex(0.5f, -0.5f, 0);
+        renderer.texCoord(0.5f, 1);
+        renderer.color(0, 0, 1, 1);
+        renderer.vertex(0f, 0.5f, 0);
+        renderer.end();
 
-//		renderer.begin(projMatrix, GL20.GL_TRIANGLES);
-//		renderer.setTexture(texture);
-//		renderer.texCoord(0, 0);
-//		renderer.color(1, 0, 0, 1);
-//		renderer.vertex(-0.8f, -0.2f, 0);
-//		renderer.texCoord(1, 0);
-//		renderer.color(0, 1, 0, 1);
-//		renderer.vertex(0.2f, -0.8f, 0);
-//		renderer.texCoord(0.5f, 1);
-//		renderer.color(0, 0, 1, 1);
-//		renderer.vertex(0f, 0.8f, 0);
-//		renderer.end();
-	}
-
+        // renderer.begin(projMatrix, GL20.GL_TRIANGLES);
+        // renderer.setTexture(texture);
+        // renderer.texCoord(0, 0);
+        // renderer.color(1, 0, 0, 1);
+        // renderer.vertex(-0.8f, -0.2f, 0);
+        // renderer.texCoord(1, 0);
+        // renderer.color(0, 1, 0, 1);
+        // renderer.vertex(0.2f, -0.8f, 0);
+        // renderer.texCoord(0.5f, 1);
+        // renderer.color(0, 0, 1, 1);
+        // renderer.vertex(0f, 0.8f, 0);
+        // renderer.end();
+    }
 
 }

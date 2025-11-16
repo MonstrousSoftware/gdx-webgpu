@@ -28,14 +28,14 @@ public class TestChooser extends ApplicationAdapter {
     private ApplicationListener test;
     boolean dispose = false;
 
-    public void create () {
+    public void create() {
         final Preferences prefs = Gdx.app.getPreferences("webgpu-tests");
 
         stage = new WgStage(new ScreenViewport());
 
         Gdx.input = new InputWrapper(Gdx.input) {
             @Override
-            public boolean keyUp (int keycode) {
+            public boolean keyUp(int keycode) {
                 if (keycode == Input.Keys.ESCAPE) {
                     if (test != null) {
                         Gdx.app.log("GdxTestTeaVM", "Exiting current test.");
@@ -46,7 +46,7 @@ public class TestChooser extends ApplicationAdapter {
             }
         };
 
-        ((InputWrapper)Gdx.input).multiplexer.addProcessor(stage);
+        ((InputWrapper) Gdx.input).multiplexer.addProcessor(stage);
 
         skin = new WgSkin(Gdx.files.internal("data/uiskin.json"));
 
@@ -70,8 +70,8 @@ public class TestChooser extends ApplicationAdapter {
             table.row();
             testButton.addListener(new ChangeListener() {
                 @Override
-                public void changed (ChangeEvent event, Actor actor) {
-                    ((InputWrapper)Gdx.input).multiplexer.removeProcessor(stage);
+                public void changed(ChangeEvent event, Actor actor) {
+                    ((InputWrapper) Gdx.input).multiplexer.removeProcessor(stage);
                     test = WebGPUTests.newTest(testName);
                     test.create();
                     test.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -92,12 +92,12 @@ public class TestChooser extends ApplicationAdapter {
         container.add(scroll).grow();
         container.row();
 
-        lastClickedTestButton = (TextButton)table.findActor(prefs.getString("LastTest"));
+        lastClickedTestButton = (TextButton) table.findActor(prefs.getString("LastTest"));
         if (lastClickedTestButton != null) {
             lastClickedTestButton.setColor(Color.CYAN);
             scroll.layout();
-            float scrollY = lastClickedTestButton.getY() + scroll.getScrollHeight() / 2 + lastClickedTestButton.getHeight() / 2
-                + tableSpace * 2 + 20;
+            float scrollY = lastClickedTestButton.getY() + scroll.getScrollHeight() / 2
+                    + lastClickedTestButton.getHeight() / 2 + tableSpace * 2 + 20;
             scroll.scrollTo(0, scrollY, 0, 0, false, false);
             stage.act(1f);
             stage.act(1f);
@@ -105,19 +105,18 @@ public class TestChooser extends ApplicationAdapter {
     }
 
     @Override
-    public void render () {
+    public void render() {
         if (test == null) {
             stage.act();
             stage.draw();
-        }
-        else {
+        } else {
             if (dispose) {
                 test.pause();
                 test.dispose();
                 test = null;
                 stage.getViewport().update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
                 Gdx.graphics.setVSync(true);
-                InputWrapper wrapper = ((InputWrapper)Gdx.input);
+                InputWrapper wrapper = ((InputWrapper) Gdx.input);
                 wrapper.multiplexer.addProcessor(stage);
                 wrapper.multiplexer.removeProcessor(wrapper.lastProcessor);
                 wrapper.lastProcessor = null;
@@ -129,12 +128,12 @@ public class TestChooser extends ApplicationAdapter {
     }
 
     @Override
-    public void resize (int width, int height) {
+    public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
     }
 
     @Override
-    public void dispose () {
+    public void dispose() {
         skin.dispose();
         stage.dispose();
     }
@@ -144,7 +143,7 @@ public class TestChooser extends ApplicationAdapter {
         InputProcessor lastProcessor;
         InputMultiplexer multiplexer;
 
-        public InputWrapper (Input input) {
+        public InputWrapper(Input input) {
             this.input = input;
             this.multiplexer = new InputMultiplexer();
             this.multiplexer.addProcessor(this);
@@ -152,254 +151,255 @@ public class TestChooser extends ApplicationAdapter {
         }
 
         @Override
-        public float getAccelerometerX () {
+        public float getAccelerometerX() {
             return input.getAccelerometerX();
         }
 
         @Override
-        public float getAccelerometerY () {
+        public float getAccelerometerY() {
             return input.getAccelerometerY();
         }
 
         @Override
-        public float getAccelerometerZ () {
+        public float getAccelerometerZ() {
             return input.getAccelerometerZ();
         }
 
         @Override
-        public float getGyroscopeX () {
+        public float getGyroscopeX() {
             return input.getGyroscopeX();
         }
 
         @Override
-        public float getGyroscopeY () {
+        public float getGyroscopeY() {
             return input.getGyroscopeY();
         }
 
         @Override
-        public float getGyroscopeZ () {
+        public float getGyroscopeZ() {
             return input.getGyroscopeZ();
         }
 
         @Override
-        public int getMaxPointers () {
+        public int getMaxPointers() {
             return input.getMaxPointers();
         }
 
         @Override
-        public int getX () {
+        public int getX() {
             return input.getX();
         }
 
         @Override
-        public int getX (int pointer) {
+        public int getX(int pointer) {
             return input.getX(pointer);
         }
 
         @Override
-        public int getDeltaX () {
+        public int getDeltaX() {
             return input.getDeltaX();
         }
 
         @Override
-        public int getDeltaX (int pointer) {
+        public int getDeltaX(int pointer) {
             return input.getDeltaX(pointer);
         }
 
         @Override
-        public int getY () {
+        public int getY() {
             return input.getY();
         }
 
         @Override
-        public int getY (int pointer) {
+        public int getY(int pointer) {
             return input.getY(pointer);
         }
 
         @Override
-        public int getDeltaY () {
+        public int getDeltaY() {
             return input.getDeltaY();
         }
 
         @Override
-        public int getDeltaY (int pointer) {
+        public int getDeltaY(int pointer) {
             return input.getDeltaY(pointer);
         }
 
         @Override
-        public boolean isTouched () {
+        public boolean isTouched() {
             return input.isTouched();
         }
 
         @Override
-        public boolean justTouched () {
+        public boolean justTouched() {
             return input.justTouched();
         }
 
         @Override
-        public boolean isTouched (int pointer) {
+        public boolean isTouched(int pointer) {
             return input.isTouched(pointer);
         }
 
         @Override
-        public float getPressure () {
+        public float getPressure() {
             return input.getPressure();
         }
 
         @Override
-        public float getPressure (int pointer) {
+        public float getPressure(int pointer) {
             return input.getPressure(pointer);
         }
 
         @Override
-        public boolean isButtonPressed (int button) {
+        public boolean isButtonPressed(int button) {
             return input.isButtonPressed(button);
         }
 
         @Override
-        public boolean isKeyPressed (int key) {
+        public boolean isKeyPressed(int key) {
             return input.isKeyPressed(key);
         }
 
         @Override
-        public boolean isKeyJustPressed (int key) {
+        public boolean isKeyJustPressed(int key) {
             return input.isKeyJustPressed(key);
         }
 
         @Override
-        public boolean isButtonJustPressed (int button) {
+        public boolean isButtonJustPressed(int button) {
             return input.isButtonJustPressed(button);
         }
 
         @Override
-        public void getTextInput (TextInputListener listener, String title, String text, String hint) {
+        public void getTextInput(TextInputListener listener, String title, String text, String hint) {
             input.getTextInput(listener, title, text, hint);
         }
 
         @Override
-        public void getTextInput (TextInputListener listener, String title, String text, String hint, OnscreenKeyboardType type) {
+        public void getTextInput(TextInputListener listener, String title, String text, String hint,
+                OnscreenKeyboardType type) {
             input.getTextInput(listener, title, text, hint, type);
         }
 
         @Override
-        public void setOnscreenKeyboardVisible (boolean visible) {
+        public void setOnscreenKeyboardVisible(boolean visible) {
             input.setOnscreenKeyboardVisible(visible);
         }
 
         @Override
-        public void setOnscreenKeyboardVisible (boolean visible, OnscreenKeyboardType type) {
+        public void setOnscreenKeyboardVisible(boolean visible, OnscreenKeyboardType type) {
             input.setOnscreenKeyboardVisible(visible, type);
         }
 
         @Override
-        public void openTextInputField (NativeInputConfiguration configuration) {
+        public void openTextInputField(NativeInputConfiguration configuration) {
             input.openTextInputField(configuration);
         }
 
         @Override
-        public void closeTextInputField (boolean sendReturn) {
+        public void closeTextInputField(boolean sendReturn) {
             input.closeTextInputField(sendReturn);
         }
 
         @Override
-        public void setKeyboardHeightObserver (KeyboardHeightObserver observer) {
+        public void setKeyboardHeightObserver(KeyboardHeightObserver observer) {
             input.setKeyboardHeightObserver(observer);
         }
 
         @Override
-        public void vibrate (int milliseconds) {
+        public void vibrate(int milliseconds) {
             input.vibrate(milliseconds);
         }
 
         @Override
-        public void vibrate (int milliseconds, boolean fallback) {
+        public void vibrate(int milliseconds, boolean fallback) {
             input.vibrate(milliseconds, fallback);
         }
 
         @Override
-        public void vibrate (int milliseconds, int amplitude, boolean fallback) {
+        public void vibrate(int milliseconds, int amplitude, boolean fallback) {
             input.vibrate(milliseconds, amplitude, fallback);
         }
 
         @Override
-        public void vibrate (VibrationType vibrationType) {
+        public void vibrate(VibrationType vibrationType) {
             input.vibrate(vibrationType);
         }
 
         @Override
-        public float getAzimuth () {
+        public float getAzimuth() {
             return input.getAzimuth();
         }
 
         @Override
-        public float getPitch () {
+        public float getPitch() {
             return input.getPitch();
         }
 
         @Override
-        public float getRoll () {
+        public float getRoll() {
             return input.getRoll();
         }
 
         @Override
-        public void getRotationMatrix (float[] matrix) {
+        public void getRotationMatrix(float[] matrix) {
             input.getRotationMatrix(matrix);
         }
 
         @Override
-        public long getCurrentEventTime () {
+        public long getCurrentEventTime() {
             return input.getCurrentEventTime();
         }
 
         @Override
-        public void setCatchKey (int keycode, boolean catchKey) {
+        public void setCatchKey(int keycode, boolean catchKey) {
             input.setCatchKey(keycode, catchKey);
         }
 
         @Override
-        public boolean isCatchKey (int keycode) {
+        public boolean isCatchKey(int keycode) {
             return input.isCatchKey(keycode);
         }
 
         @Override
-        public void setInputProcessor (InputProcessor processor) {
+        public void setInputProcessor(InputProcessor processor) {
             multiplexer.removeProcessor(lastProcessor);
             multiplexer.addProcessor(processor);
             lastProcessor = processor;
         }
 
         @Override
-        public InputProcessor getInputProcessor () {
+        public InputProcessor getInputProcessor() {
             return input.getInputProcessor();
         }
 
         @Override
-        public boolean isPeripheralAvailable (Peripheral peripheral) {
+        public boolean isPeripheralAvailable(Peripheral peripheral) {
             return input.isPeripheralAvailable(peripheral);
         }
 
         @Override
-        public int getRotation () {
+        public int getRotation() {
             return input.getRotation();
         }
 
         @Override
-        public Orientation getNativeOrientation () {
+        public Orientation getNativeOrientation() {
             return input.getNativeOrientation();
         }
 
         @Override
-        public void setCursorCatched (boolean catched) {
+        public void setCursorCatched(boolean catched) {
             input.setCursorCatched(catched);
         }
 
         @Override
-        public boolean isCursorCatched () {
+        public boolean isCursorCatched() {
             return input.isCursorCatched();
         }
 
         @Override
-        public void setCursorPosition (int x, int y) {
+        public void setCursorPosition(int x, int y) {
             input.setCursorPosition(x, y);
         }
     }

@@ -25,14 +25,13 @@ import com.github.xpenatan.webgpu.WGPUVectorBindGroupLayout;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 
-
 public class WebGPUPipelineLayout implements Disposable {
     private final WGPUPipelineLayout layout;
 
-    public WebGPUPipelineLayout(String label, WebGPUBindGroupLayout... bindGroupLayouts ) {
+    public WebGPUPipelineLayout(String label, WebGPUBindGroupLayout... bindGroupLayouts) {
         WGPUVectorBindGroupLayout layouts = WGPUVectorBindGroupLayout.obtain();
         for (int i = 0; i < bindGroupLayouts.length; i++)
-            layouts.push_back( bindGroupLayouts[i].getLayout());
+            layouts.push_back(bindGroupLayouts[i].getLayout());
 
         WGPUPipelineLayoutDescriptor pipelineLayoutDesc = WGPUPipelineLayoutDescriptor.obtain();
         pipelineLayoutDesc.setNextInChain(WGPUChainedStruct.NULL);

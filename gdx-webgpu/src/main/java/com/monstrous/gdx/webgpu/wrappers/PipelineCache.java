@@ -20,34 +20,34 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import com.github.xpenatan.webgpu.WGPUPipelineLayout;
 
-
-/** Cache for pipelines
+/**
+ * Cache for pipelines
  *
  */
 
 public class PipelineCache implements Disposable {
-    public Array<WebGPUPipeline> pipelines;      // todo or use map? using spec hash code as key
+    public Array<WebGPUPipeline> pipelines; // todo or use map? using spec hash code as key
 
     public PipelineCache() {
         pipelines = new Array<>();
     }
 
-    public WebGPUPipeline findPipeline(WGPUPipelineLayout pipelineLayout, PipelineSpecification spec){
+    public WebGPUPipeline findPipeline(WGPUPipelineLayout pipelineLayout, PipelineSpecification spec) {
         // try to find suitable pipeline from the cache
-        for(WebGPUPipeline pipeline : pipelines){
-            if(pipeline.canRender(spec))
+        for (WebGPUPipeline pipeline : pipelines) {
+            if (pipeline.canRender(spec))
                 return pipeline;
         }
         // if not found, create a new pipeline
         WebGPUPipeline pipeline = new WebGPUPipeline(pipelineLayout, spec);
-        pipelines.add(pipeline);    // add to cache
-        //System.out.println("Added pipeline to the cache, count: "+pipelines.size);
+        pipelines.add(pipeline); // add to cache
+        // System.out.println("Added pipeline to the cache, count: "+pipelines.size);
 
         return pipeline;
     }
 
     // may be useful to hot-load shaders, forces all pipelines to be rebuilt
-    public void clear(){
+    public void clear() {
         dispose();
         pipelines.clear();
     }
@@ -59,7 +59,7 @@ public class PipelineCache implements Disposable {
 
     @Override
     public void dispose() {
-        for(WebGPUPipeline pipeline : pipelines)
+        for (WebGPUPipeline pipeline : pipelines)
             pipeline.dispose();
     }
 }

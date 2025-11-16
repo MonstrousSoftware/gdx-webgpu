@@ -16,31 +16,29 @@
 
 package com.monstrous.gdx.webgpu.maps.tiled.renderers;
 
-
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.renderers.BatchTiledMapRenderer;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 
-
 // Ensures that we use WgSpriteBatch instead of SpriteBatch
 
 public abstract class WgBatchTiledMapRenderer extends BatchTiledMapRenderer {
 
+    public WgBatchTiledMapRenderer(TiledMap map) {
+        this(map, 1.0f);
+    }
 
-	public WgBatchTiledMapRenderer(TiledMap map) {
-		this(map, 1.0f);
-	}
-
-	public WgBatchTiledMapRenderer(TiledMap map, float unitScale) {
+    public WgBatchTiledMapRenderer(TiledMap map, float unitScale) {
         super(map, unitScale, new WgSpriteBatch());
-		this.ownsBatch = true;
-	}
-    public WgBatchTiledMapRenderer (TiledMap map, Batch batch) {
+        this.ownsBatch = true;
+    }
+
+    public WgBatchTiledMapRenderer(TiledMap map, Batch batch) {
         this(map, 1.0f, batch);
     }
 
-    public WgBatchTiledMapRenderer (TiledMap map, float unitScale, Batch batch) {
+    public WgBatchTiledMapRenderer(TiledMap map, float unitScale, Batch batch) {
         super(map, unitScale, batch);
     }
 

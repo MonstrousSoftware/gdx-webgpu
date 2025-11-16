@@ -31,24 +31,24 @@ import com.monstrous.gdx.webgpu.graphics.utils.WgShapeRenderer;
 
 public class ShapeRendererTest extends GdxTest {
 
-	WgShapeRenderer renderer;
-	PerspectiveCamera cam;
-	PerspectiveCamController controller;
-	WgSpriteBatch batch;
-	WgBitmapFont font;
+    WgShapeRenderer renderer;
+    PerspectiveCamera cam;
+    PerspectiveCamController controller;
+    WgSpriteBatch batch;
+    WgBitmapFont font;
 
-	public void create () {
-		renderer = new WgShapeRenderer();
-		cam = new PerspectiveCamera(47, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		cam.position.set(0, 0, 2);
-		cam.near = 0.1f;
-		controller = new PerspectiveCamController(cam);
-		Gdx.input.setInputProcessor(controller);
-		batch = new WgSpriteBatch();
-		font = new WgBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
-	}
+    public void create() {
+        renderer = new WgShapeRenderer();
+        cam = new PerspectiveCamera(47, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        cam.position.set(0, 0, 2);
+        cam.near = 0.1f;
+        controller = new PerspectiveCamController(cam);
+        Gdx.input.setInputProcessor(controller);
+        batch = new WgSpriteBatch();
+        font = new WgBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
+    }
 
-	public void render () {
+    public void render() {
 
         WgScreenUtils.clear(Color.BLACK, true);
         cam.update();
@@ -121,15 +121,15 @@ public class ShapeRendererTest extends GdxTest {
             renderer.end();
         }
 
-		batch.begin();
-		font.draw(batch, "fps: " + Gdx.graphics.getFramesPerSecond()+" (hold F for filled)", 0, 20);
-		batch.end();
-	}
+        batch.begin();
+        font.draw(batch, "fps: " + Gdx.graphics.getFramesPerSecond() + " (hold F for filled)", 0, 20);
+        batch.end();
+    }
 
-	@Override
-	public void dispose () {
-		batch.dispose();
-		font.dispose();
-		renderer.dispose();
-	}
+    @Override
+    public void dispose() {
+        batch.dispose();
+        font.dispose();
+        renderer.dispose();
+    }
 }

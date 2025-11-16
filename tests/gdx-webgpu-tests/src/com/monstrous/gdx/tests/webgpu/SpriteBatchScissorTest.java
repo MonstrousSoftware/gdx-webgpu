@@ -25,10 +25,9 @@ public class SpriteBatchScissorTest extends GdxTest {
     float SCALE_SPEED = -1;
     WebGPUContext webgpu;
 
-
     @Override
     public void create() {
-        WgGraphics gfx = (WgGraphics)Gdx.graphics;
+        WgGraphics gfx = (WgGraphics) Gdx.graphics;
         webgpu = gfx.getContext();
 
         viewport = new ScreenViewport();
@@ -36,14 +35,14 @@ public class SpriteBatchScissorTest extends GdxTest {
         texture = new WgTexture(Gdx.files.internal("data/badlogicsmall.jpg"));
     }
 
-    private void generateSprites(int screenWidth, int screenHeight){
+    private void generateSprites(int screenWidth, int screenHeight) {
         int width = 32;
         int height = 32;
 
         for (int i = 0; i < SPRITES; i++) {
             int x = (int) (Math.random() * screenWidth);
             int y = (int) (Math.random() * screenHeight);
-            if(sprites[i] == null) {
+            if (sprites[i] == null) {
                 sprites[i] = new Sprite(texture, width, height);
                 sprites[i].setOrigin(width * 0.5f, height * 0.5f);
             }
@@ -55,15 +54,13 @@ public class SpriteBatchScissorTest extends GdxTest {
     @Override
     public void resize(int width, int height) {
         viewport.update(width, height, true);
-        generateSprites(width,height);
+        generateSprites(width, height);
     }
 
     @Override
     public void render() {
 
         viewport.apply();
-
-
 
         float angleInc = ROTATION_SPEED * Gdx.graphics.getDeltaTime();
         scale += SCALE_SPEED * Gdx.graphics.getDeltaTime();
@@ -80,27 +77,31 @@ public class SpriteBatchScissorTest extends GdxTest {
         spriteBatch.begin();
 
         spriteBatch.setScissorRect(100, 100, 200, 200);
-        for (int i = 0; i < SPRITES/4; i++) {
-            if (angleInc != 0) sprites[i].rotate(angleInc);
-            if (scale != 1) sprites[i].setScale(scale);
+        for (int i = 0; i < SPRITES / 4; i++) {
+            if (angleInc != 0)
+                sprites[i].rotate(angleInc);
+            if (scale != 1)
+                sprites[i].setScale(scale);
             sprites[i].draw(spriteBatch);
         }
 
-
         spriteBatch.setScissorRect(300, 200, 200, 200);
-        for (int i = 0; i < SPRITES/4; i++) {
-            if (angleInc != 0) sprites[i].rotate(angleInc);
-            if (scale != 1) sprites[i].setScale(scale);
+        for (int i = 0; i < SPRITES / 4; i++) {
+            if (angleInc != 0)
+                sprites[i].rotate(angleInc);
+            if (scale != 1)
+                sprites[i].setScale(scale);
             sprites[i].draw(spriteBatch);
         }
 
         spriteBatch.setScissorRect(0, 0, 50, 50);
-        for (int i = 0; i < SPRITES/4; i++) {
-            if (angleInc != 0) sprites[i].rotate(angleInc);
-            if (scale != 1) sprites[i].setScale(scale);
+        for (int i = 0; i < SPRITES / 4; i++) {
+            if (angleInc != 0)
+                sprites[i].rotate(angleInc);
+            if (scale != 1)
+                sprites[i].setScale(scale);
             sprites[i].draw(spriteBatch);
         }
-
 
         spriteBatch.end();
 

@@ -14,7 +14,7 @@ public class PBRModelTexture extends ModelTexture {
 
     // texture data loaded from binary file
     public Pixmap texture;
-    //public WgTexture texture;
+    // public WgTexture texture;
 
     // sampler values
     public Texture.TextureFilter magFilter;

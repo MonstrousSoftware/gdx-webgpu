@@ -27,108 +27,109 @@ import com.badlogic.gdx.utils.Array;
 
 import java.util.Comparator;
 
-
-/** Sort renderables, based on DefaultRenderableSorter.
- *  But tries to keep equivalent mesh parts together to encourage instanced draw calls.
+/**
+ * Sort renderables, based on DefaultRenderableSorter. But tries to keep equivalent mesh parts together to encourage
+ * instanced draw calls.
  *
- * todo sort renderables to reduce shader switches and to render front to back for opaque and back to front for transparent
+ * todo sort renderables to reduce shader switches and to render front to back for opaque and back to front for
+ * transparent
  */
 public class WgDefaultRenderableSorter implements RenderableSorter, Comparator<Renderable> {
-	private Camera camera;
-	private final Vector3 tmpV1 = new Vector3();
-	private final Vector3 tmpV2 = new Vector3();
+    private Camera camera;
+    private final Vector3 tmpV1 = new Vector3();
+    private final Vector3 tmpV2 = new Vector3();
 
-	@Override
-	public void sort (final Camera camera, final Array<Renderable> renderables) {
-		this.camera = camera;
-//        if(renderables.size > 590){
-//            System.out.println("Big array!");
-//            verifyTransitivity(renderables);
-//        }
-		renderables.sort(this);
-	}
+    @Override
+    public void sort(final Camera camera, final Array<Renderable> renderables) {
+        this.camera = camera;
+        // if(renderables.size > 590){
+        // System.out.println("Big array!");
+        // verifyTransitivity(renderables);
+        // }
+        renderables.sort(this);
+    }
 
-//    private void verifyTransitivity(final Array<Renderable> renderables)
-//    {
-//        for (int i = 0; i < renderables.size; i++)
-//        {
-//            Renderable first = renderables.get(i);
-//            for (int j = 0; j < renderables.size; j++)
-//            {
-//                Renderable second = renderables.get(j);
-//                int result1 = compare(first, second);
-//                int result2 = compare(second, first);
-//                if (result1 != -result2)
-//                {
-//                    // Uncomment the following line to step through the failed case
-//                    //comparator.compare(first, second);
-//                    throw new AssertionError("compare(" + first + ", " + second + ") == " + result1 +
-//                        " but swapping the parameters returns " + result2);
-//                }
-//            }
-//        }
-//        System.out.println("Pairs are okay");
-//        for (int i = 0; i < renderables.size; i++)
-//        {
-//            Renderable first = renderables.get(i);
-//            for (int j = 0; j < renderables.size; j++)
-//            {
-//                Renderable second = renderables.get(j);
-//                int firstGreaterThanSecond = compare(first, second);
-//                if (firstGreaterThanSecond <= 0)
-//                    continue;
-//                for (int k = 0; k < renderables.size; k++)
-//                {
-//                    Renderable third = renderables.get(k);
-//                    int secondGreaterThanThird = compare(second, third);
-//                    if (secondGreaterThanThird <= 0)
-//                        continue;
-//                    int firstGreaterThanThird = compare(first, third);
-//                    if (firstGreaterThanThird <= 0)
-//                    {
-//                        // Uncomment the following line to step through the failed case
-//                        //comparator.compare(first, third);
-//                        System.out.println("ijk "+i+" "+j+" "+k);
-//                        print(first);
-//                        print(second);
-//                        print(third);
-//
-//                        throw new AssertionError("compare(" + first + ", " + second + ") > 0, " +
-//                            "compare(" + second + ", " + third + ") > 0, but compare(" + first + ", " + third + ") == " +
-//                            firstGreaterThanThird);
-//                    }
-//                }
-//            }
-//        }
-//    }
+    // private void verifyTransitivity(final Array<Renderable> renderables)
+    // {
+    // for (int i = 0; i < renderables.size; i++)
+    // {
+    // Renderable first = renderables.get(i);
+    // for (int j = 0; j < renderables.size; j++)
+    // {
+    // Renderable second = renderables.get(j);
+    // int result1 = compare(first, second);
+    // int result2 = compare(second, first);
+    // if (result1 != -result2)
+    // {
+    // // Uncomment the following line to step through the failed case
+    // //comparator.compare(first, second);
+    // throw new AssertionError("compare(" + first + ", " + second + ") == " + result1 +
+    // " but swapping the parameters returns " + result2);
+    // }
+    // }
+    // }
+    // System.out.println("Pairs are okay");
+    // for (int i = 0; i < renderables.size; i++)
+    // {
+    // Renderable first = renderables.get(i);
+    // for (int j = 0; j < renderables.size; j++)
+    // {
+    // Renderable second = renderables.get(j);
+    // int firstGreaterThanSecond = compare(first, second);
+    // if (firstGreaterThanSecond <= 0)
+    // continue;
+    // for (int k = 0; k < renderables.size; k++)
+    // {
+    // Renderable third = renderables.get(k);
+    // int secondGreaterThanThird = compare(second, third);
+    // if (secondGreaterThanThird <= 0)
+    // continue;
+    // int firstGreaterThanThird = compare(first, third);
+    // if (firstGreaterThanThird <= 0)
+    // {
+    // // Uncomment the following line to step through the failed case
+    // //comparator.compare(first, third);
+    // System.out.println("ijk "+i+" "+j+" "+k);
+    // print(first);
+    // print(second);
+    // print(third);
+    //
+    // throw new AssertionError("compare(" + first + ", " + second + ") > 0, " +
+    // "compare(" + second + ", " + third + ") > 0, but compare(" + first + ", " + third + ") == " +
+    // firstGreaterThanThird);
+    // }
+    // }
+    // }
+    // }
+    // }
 
+    private Vector3 getTranslation(Matrix4 worldTransform, Vector3 center, Vector3 output) {
+        if (center.isZero())
+            worldTransform.getTranslation(output);
+        else if (!worldTransform.hasRotationOrScaling())
+            worldTransform.getTranslation(output).add(center);
+        else
+            output.set(center).mul(worldTransform);
+        return output;
+    }
 
-    private Vector3 getTranslation (Matrix4 worldTransform, Vector3 center, Vector3 output) {
-		if (center.isZero())
-			worldTransform.getTranslation(output);
-		else if (!worldTransform.hasRotationOrScaling())
-			worldTransform.getTranslation(output).add(center);
-		else
-			output.set(center).mul(worldTransform);
-		return output;
-	}
+    // private void print(Renderable renderable){
+    // System.out.println("shader hashcode: "+renderable.shader.hashCode());
+    // System.out.println("mat attr hash: "+renderable.material.attributesHash());
+    // System.out.println("mesh part: "+hashCode(renderable.meshPart));
+    // }
 
-//    private void print(Renderable renderable){
-//        System.out.println("shader hashcode: "+renderable.shader.hashCode());
-//        System.out.println("mat attr hash: "+renderable.material.attributesHash());
-//        System.out.println("mesh part: "+hashCode(renderable.meshPart));
-//    }
-
-	@Override
-	public int compare (final Renderable o1, final Renderable o2) {
+    @Override
+    public int compare(final Renderable o1, final Renderable o2) {
         // if one renderable is opaque and the other is blended, put the blended last
-		final boolean b1 = o1.material.has(BlendingAttribute.Type)
-			&& ((BlendingAttribute)o1.material.get(BlendingAttribute.Type)).blended;
-		final boolean b2 = o2.material.has(BlendingAttribute.Type)
-			&& ((BlendingAttribute)o2.material.get(BlendingAttribute.Type)).blended;
-		if (b1 != b2) return b1 ? 1 : -1;		// blended goes after opaque
+        final boolean b1 = o1.material.has(BlendingAttribute.Type)
+                && ((BlendingAttribute) o1.material.get(BlendingAttribute.Type)).blended;
+        final boolean b2 = o2.material.has(BlendingAttribute.Type)
+                && ((BlendingAttribute) o2.material.get(BlendingAttribute.Type)).blended;
+        if (b1 != b2)
+            return b1 ? 1 : -1; // blended goes after opaque
 
-        if(b1){ // renderables are blended, need to be depth sorted, back to front
+        if (b1) { // renderables are blended, need to be depth sorted, back to front
             getTranslation(o1.worldTransform, o1.meshPart.center, tmpV1);
             getTranslation(o2.worldTransform, o2.meshPart.center, tmpV2);
             // changed to dst against overflow, even though dst2 is faster
@@ -158,11 +159,11 @@ public class WgDefaultRenderableSorter implements RenderableSorter, Comparator<R
             int h1 = hashCode(o1.meshPart);
             int h2 = hashCode(o2.meshPart);
 
-            return h1 - h2;    // sort by mesh part to cluster the same mesh parts together
+            return h1 - h2; // sort by mesh part to cluster the same mesh parts together
         }
-	}
+    }
 
-	private int hashCode(MeshPart meshPart) {
-		return meshPart.mesh.hashCode() + 31 * (meshPart.offset + 31 * (meshPart.size + 31*meshPart.primitiveType));
-	}
+    private int hashCode(MeshPart meshPart) {
+        return meshPart.mesh.hashCode() + 31 * (meshPart.offset + 31 * (meshPart.size + 31 * meshPart.primitiveType));
+    }
 }

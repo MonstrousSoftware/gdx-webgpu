@@ -28,7 +28,6 @@
 
 package com.monstrous.gdx.tests.webgpu;
 
-
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.badlogic.gdx.utils.ObjectMap;
 import com.badlogic.gdx.utils.StreamUtils;
@@ -41,102 +40,60 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-/** List of GdxTest classes. To be used by the test launchers. If you write your own test, add it in here!
+/**
+ * List of GdxTest classes. To be used by the test launchers. If you write your own test, add it in here!
  *
- * @author badlogicgames@gmail.com */
+ * @author badlogicgames@gmail.com
+ */
 public class WebGPUTests {
-    public static final List<Class<? extends GdxTest>> tests = new ArrayList<Class<? extends GdxTest>>(Arrays.<Class<? extends GdxTest>>asList(
-        // @off
-        AssetManagerTest.class,
-        ClearScreen.class,
-        SpriteBatchTest.class,
-        StageTest.class,
-        ColorTest.class,
-        FontTest.class,
-        Scene2dTest.class,
-        ImmediateModeRendererTest.class,
-        ShapeRendererTest.class,
-        ShapeRenderer2DTest.class,
-        NinePatchTest.class,
-        ModelBatchTest.class,
-        WrapAndFilterTest.class,
-        LoadObjTest.class,
-        LoadG3DJTest.class,
-        LoadModelTest.class,
-        LoadGLTFTest.class,
-        LightingTest.class,
-        InstancingTest.class,
-        ViewportTest.class,
-        ScissorTest.class,
-        ASimpleGame.class,
-        ParticleEmitterTest.class,
-        ParticleEmittersTest.class,
-        HeightMapTest.class,
-        FullScreenTest.class,
-        GPUTimerTest.class,
-        FrameBufferTest.class,
-        PostProcessing.class,
-        SuperKoalio.class,
-        DistanceFontTest.class,
-        DepthClearTest.class,
-        FogTest.class,
-        ShadowTest.class,
-        TextureAtlasTest.class,
-        TestTextureMipMap.class,
-        Basic3DTest.class,
-        TestMesh.class,
-        TestMeshNoIndices.class,
-        TestMeshBuilder.class,
-        TestTexture.class,
-        SpriteBatchDoubleLoop.class,
-        TransparencyTest.class,
-        TestCompute.class,
-        ComputeMoldSlime.class,
-        SpriteBatchBasic.class,
-        SpriteBatchClear.class,
-        SpriteBatchDraw.class,
-        SpriteBatchLimit.class,
-        SpriteBatchTextures.class,
-        SpriteBatchCount.class,
-        EnvironmentMapTest.class,
-        Gamma3D.class,
-        TextureArrayTest.class,
-        SkyBoxTest.class,
-        DuckField.class,
-        IBL_Sliders.class,
-        IBL_Spheres.class,
-        IBL_GenerateOutdoor.class,
-        GLTFAnimation.class,
-        GLTFSkinning.class,
-        Scene2dTestScrollPane.class,
-        GLTFSkinningMultiple.class,
-        GLTFSkinningShadow.class
+    public static final List<Class<? extends GdxTest>> tests = new ArrayList<Class<? extends GdxTest>>(
+            Arrays.<Class<? extends GdxTest>>asList(
+                    // @off
+                    AssetManagerTest.class, ClearScreen.class, SpriteBatchTest.class, StageTest.class, ColorTest.class,
+                    FontTest.class, Scene2dTest.class, ImmediateModeRendererTest.class, ShapeRendererTest.class,
+                    ShapeRenderer2DTest.class, NinePatchTest.class, ModelBatchTest.class, WrapAndFilterTest.class,
+                    LoadObjTest.class, LoadG3DJTest.class, LoadModelTest.class, LoadGLTFTest.class, LightingTest.class,
+                    InstancingTest.class, ViewportTest.class, ScissorTest.class, ASimpleGame.class,
+                    ParticleEmitterTest.class, ParticleEmittersTest.class, HeightMapTest.class, FullScreenTest.class,
+                    GPUTimerTest.class, FrameBufferTest.class, PostProcessing.class, SuperKoalio.class,
+                    DistanceFontTest.class, DepthClearTest.class, FogTest.class, ShadowTest.class,
+                    TextureAtlasTest.class, TestTextureMipMap.class, Basic3DTest.class, TestMesh.class,
+                    TestMeshNoIndices.class, TestMeshBuilder.class, TestTexture.class, SpriteBatchDoubleLoop.class,
+                    TransparencyTest.class, TestCompute.class, ComputeMoldSlime.class, SpriteBatchBasic.class,
+                    SpriteBatchClear.class, SpriteBatchDraw.class, SpriteBatchLimit.class, SpriteBatchTextures.class,
+                    SpriteBatchCount.class, EnvironmentMapTest.class, Gamma3D.class, TextureArrayTest.class,
+                    SkyBoxTest.class, DuckField.class, IBL_Sliders.class, IBL_Spheres.class, IBL_GenerateOutdoor.class,
+                    GLTFAnimation.class, GLTFSkinning.class, Scene2dTestScrollPane.class, GLTFSkinningMultiple.class,
+                    GLTFSkinningShadow.class
 
-        // @on
+            // @on
 
-    ));
+            ));
 
     static final ObjectMap<String, String> obfuscatedToOriginal = new ObjectMap();
     static final ObjectMap<String, String> originalToObfuscated = new ObjectMap();
 
     static {
         InputStream mappingInput = WebGPUTests.class.getResourceAsStream("/mapping.txt");
-        if(mappingInput != null) {
+        if (mappingInput != null) {
             BufferedReader reader = null;
             try {
                 reader = new BufferedReader(new InputStreamReader(mappingInput), 512);
-                while(true) {
+                while (true) {
                     String line = reader.readLine();
-                    if(line == null) break;
-                    if(line.startsWith("    ")) continue;
+                    if (line == null)
+                        break;
+                    if (line.startsWith("    "))
+                        continue;
                     String[] split = line.replace(":", "").split(" -> ");
                     String original = split[0];
-                    if(original.indexOf('.') != -1) original = original.substring(original.lastIndexOf('.') + 1);
+                    if (original.indexOf('.') != -1)
+                        original = original.substring(original.lastIndexOf('.') + 1);
                     originalToObfuscated.put(original, split[1]);
                     obfuscatedToOriginal.put(split[1], original);
                 }
                 reader.close();
-            } catch(Exception ex) {
+            } catch (Exception ex) {
                 System.out.println("GdxTests: Error reading mapping file: mapping.txt");
                 ex.printStackTrace();
             } finally {
@@ -147,7 +104,7 @@ public class WebGPUTests {
 
     public static List<String> getNames() {
         List<String> names = new ArrayList<String>(tests.size());
-        for(Class clazz : tests)
+        for (Class clazz : tests)
             names.add(obfuscatedToOriginal.get(clazz.getSimpleName(), clazz.getSimpleName()));
         Collections.sort(names);
         return names;
@@ -155,8 +112,9 @@ public class WebGPUTests {
 
     public static Class<? extends GdxTest> forName(String name) {
         name = originalToObfuscated.get(name, name);
-        for(Class clazz : tests)
-            if(clazz.getSimpleName().equals(name)) return clazz;
+        for (Class clazz : tests)
+            if (clazz.getSimpleName().equals(name))
+                return clazz;
         return null;
     }
 
@@ -164,9 +122,9 @@ public class WebGPUTests {
         testName = originalToObfuscated.get(testName, testName);
         try {
             return forName(testName).newInstance();
-        } catch(InstantiationException e) {
+        } catch (InstantiationException e) {
             e.printStackTrace();
-        } catch(IllegalAccessException e) {
+        } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
         return null;

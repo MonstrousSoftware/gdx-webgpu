@@ -38,49 +38,50 @@ import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLBModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLTFModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgObjLoader;
 
-
-/** Replacement for AssetManager which has some new default loaders for:
- * Texture, Model
- * todo: others, e.g. BitMapFont, Skin, etc?
+/**
+ * Replacement for AssetManager which has some new default loaders for: Texture, Model todo: others, e.g. BitMapFont,
+ * Skin, etc?
  */
 public class WgAssetManager extends AssetManager {
 
-	public WgAssetManager() {
-		this(new InternalFileHandleResolver());
-	}
+    public WgAssetManager() {
+        this(new InternalFileHandleResolver());
+    }
 
-	public WgAssetManager(FileHandleResolver resolver) {
-		this(resolver, true);
-	}
+    public WgAssetManager(FileHandleResolver resolver) {
+        this(resolver, true);
+    }
 
-	/** Creates a new AssetManager with optionally all default loaders. If you don't add the default loaders then you do have to
-	 * manually add the loaders you need, including any loaders they might depend on.
-	 * @param defaultLoaders whether to add the default loaders */
-	public WgAssetManager(FileHandleResolver resolver, boolean defaultLoaders) {
-		super(resolver, false);
-		if (defaultLoaders) {
-			setLoader(FileHandle.class, new WgWebFileLoader(resolver));
-			setLoader(WgBitmapFont.class, new WgBitmapFontLoader(resolver));
-			setLoader(Music.class, new MusicLoader(resolver));
-			setLoader(Pixmap.class, new PixmapLoader(resolver));
-			setLoader(Sound.class, new SoundLoader(resolver));
-			setLoader(TextureAtlas.class, new TextureAtlasLoader(resolver));
-			setLoader(Texture.class, new WgTextureLoader( resolver));           // loads WgTexture
-			setLoader(Skin.class, new WgSkinLoader(resolver));
-			setLoader(ParticleEffect.class, new ParticleEffectLoader(resolver));
-			setLoader(com.badlogic.gdx.graphics.g3d.particles.ParticleEffect.class,
-				new com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader(resolver));
-			setLoader(PolygonRegion.class, new PolygonRegionLoader(resolver));
-			setLoader(I18NBundle.class, new I18NBundleLoader(resolver));
-			setLoader(Model.class, ".g3dj", new WgG3dModelLoader(new JsonReader(), resolver));
-			setLoader(Model.class, ".g3db", new WgG3dModelLoader(new UBJsonReader(), resolver));
-			setLoader(Model.class, ".obj", new WgObjLoader(resolver));
+    /**
+     * Creates a new AssetManager with optionally all default loaders. If you don't add the default loaders then you do
+     * have to manually add the loaders you need, including any loaders they might depend on.
+     * 
+     * @param defaultLoaders whether to add the default loaders
+     */
+    public WgAssetManager(FileHandleResolver resolver, boolean defaultLoaders) {
+        super(resolver, false);
+        if (defaultLoaders) {
+            setLoader(FileHandle.class, new WgWebFileLoader(resolver));
+            setLoader(WgBitmapFont.class, new WgBitmapFontLoader(resolver));
+            setLoader(Music.class, new MusicLoader(resolver));
+            setLoader(Pixmap.class, new PixmapLoader(resolver));
+            setLoader(Sound.class, new SoundLoader(resolver));
+            setLoader(TextureAtlas.class, new TextureAtlasLoader(resolver));
+            setLoader(Texture.class, new WgTextureLoader(resolver)); // loads WgTexture
+            setLoader(Skin.class, new WgSkinLoader(resolver));
+            setLoader(ParticleEffect.class, new ParticleEffectLoader(resolver));
+            setLoader(com.badlogic.gdx.graphics.g3d.particles.ParticleEffect.class,
+                    new com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader(resolver));
+            setLoader(PolygonRegion.class, new PolygonRegionLoader(resolver));
+            setLoader(I18NBundle.class, new I18NBundleLoader(resolver));
+            setLoader(Model.class, ".g3dj", new WgG3dModelLoader(new JsonReader(), resolver));
+            setLoader(Model.class, ".g3db", new WgG3dModelLoader(new UBJsonReader(), resolver));
+            setLoader(Model.class, ".obj", new WgObjLoader(resolver));
             setLoader(Model.class, ".gltf", new WgGLTFModelLoader(resolver));
             setLoader(Model.class, ".glb", new WgGLBModelLoader(resolver));
             setLoader(ShaderProgram.class, new ShaderProgramLoader(resolver));
-			setLoader(Cubemap.class, new CubemapLoader(resolver));
-		}
-	}
-
+            setLoader(Cubemap.class, new CubemapLoader(resolver));
+        }
+    }
 
 }

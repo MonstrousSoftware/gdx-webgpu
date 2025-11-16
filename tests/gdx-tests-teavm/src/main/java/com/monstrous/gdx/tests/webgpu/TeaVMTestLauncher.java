@@ -8,7 +8,6 @@ import com.monstrous.gdx.tests.webgpu.LoadModelTest;
 import com.monstrous.gdx.webgpu.backends.teavm.WgTeaApplication;
 import com.monstrous.gdx.webgpu.backends.teavm.WgTeaPreloadApplicationListener;
 
-
 public class TeaVMTestLauncher {
 
     public static String startupLogo = "webgpu-preload.png";
@@ -23,9 +22,9 @@ public class TeaVMTestLauncher {
         WgTeaPreloadApplicationListener preloadAppListener = new WgTeaPreloadApplicationListener();
         preloadAppListener.startupLogo = startupLogo;
 
-//        new WgTeaApplication(new ComputeMoldSlime(), config);
-        new WgTeaApplication(new TestChooser(),  preloadAppListener, config);
-//        new WgTeaApplication(new LoadModelTest(), config);
-//        new WgTeaApplication(new HelloTexture(), config);
+        // new WgTeaApplication(new ComputeMoldSlime(), config);
+        new WgTeaApplication(new TestChooser(), preloadAppListener, config);
+        // new WgTeaApplication(new LoadModelTest(), config);
+        // new WgTeaApplication(new HelloTexture(), config);
     }
 }

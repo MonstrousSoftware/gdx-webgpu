@@ -10,42 +10,41 @@ import java.nio.Buffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
-/** Fake implementation of GL20
- * The principal purpose is to prevent crashes if some low-level code calls GL functions, e.g. ScissorStack which is called by ScrollPane.
- * Generally the GL functions will just be ignored, because we are not trying to emulate OpenGL.
+/**
+ * Fake implementation of GL20 The principal purpose is to prevent crashes if some low-level code calls GL functions,
+ * e.g. ScissorStack which is called by ScrollPane. Generally the GL functions will just be ignored, because we are not
+ * trying to emulate OpenGL.
  */
 public class WgGL20 implements GL20 {
 
-
-
     @Override
     public void glViewport(int x, int y, int width, int height) {
-        WgGraphics gfx = (WgGraphics)Gdx.graphics;
+        WgGraphics gfx = (WgGraphics) Gdx.graphics;
         WebGPUContext webgpu = gfx.getContext();
         Rectangle view = webgpu.getViewportRectangle();
-        if(x != view.x || y != view.y || width != view.width || height != view.height){
-            //Gdx.app.log("glViewport", "x=" + x + " y=" + y + " w=" + width + " h=" + height);
-            webgpu.setViewportRectangle(x,y,width, height);
+        if (x != view.x || y != view.y || width != view.width || height != view.height) {
+            // Gdx.app.log("glViewport", "x=" + x + " y=" + y + " w=" + width + " h=" + height);
+            webgpu.setViewportRectangle(x, y, width, height);
         }
     }
 
     @Override
     public void glScissor(int x, int y, int width, int height) {
-        WgGraphics gfx = (WgGraphics)Gdx.graphics;
+        WgGraphics gfx = (WgGraphics) Gdx.graphics;
         WebGPUContext webgpu = gfx.getContext();
         // note: we are not testing for glEnable(GL_SCISSOR_TEST)/glDisable(GL_SCISSOR_TEST)
 
         Rectangle scissor = webgpu.getScissor();
-        if(x != scissor.x || y != scissor.y || width != scissor.width || height != scissor.height){
-            //Gdx.app.log("glScissor", "x=" + x + " y=" + y + " w=" + width + " h=" + height);
-            webgpu.setScissor(x,y,width, height);
+        if (x != scissor.x || y != scissor.y || width != scissor.width || height != scissor.height) {
+            // Gdx.app.log("glScissor", "x=" + x + " y=" + y + " w=" + width + " h=" + height);
+            webgpu.setScissor(x, y, width, height);
         }
     }
 
     @Override
     public void glEnable(int cap) {
-        if(cap == GL20.GL_SCISSOR_TEST){
-            WgGraphics gfx = (WgGraphics)Gdx.graphics;
+        if (cap == GL20.GL_SCISSOR_TEST) {
+            WgGraphics gfx = (WgGraphics) Gdx.graphics;
             WebGPUContext webgpu = gfx.getContext();
             webgpu.enableScissor(true);
         }
@@ -53,8 +52,8 @@ public class WgGL20 implements GL20 {
 
     @Override
     public void glDisable(int cap) {
-        if(cap == GL20.GL_SCISSOR_TEST){
-            WgGraphics gfx = (WgGraphics)Gdx.graphics;
+        if (cap == GL20.GL_SCISSOR_TEST) {
+            WgGraphics gfx = (WgGraphics) Gdx.graphics;
             WebGPUContext webgpu = gfx.getContext();
             webgpu.enableScissor(false);
         }
@@ -106,22 +105,26 @@ public class WgGL20 implements GL20 {
     }
 
     @Override
-    public void glCompressedTexImage2D(int target, int level, int internalformat, int width, int height, int border, int imageSize, Buffer data) {
+    public void glCompressedTexImage2D(int target, int level, int internalformat, int width, int height, int border,
+            int imageSize, Buffer data) {
         error();
     }
 
     @Override
-    public void glCompressedTexSubImage2D(int target, int level, int xoffset, int yoffset, int width, int height, int format, int imageSize, Buffer data) {
+    public void glCompressedTexSubImage2D(int target, int level, int xoffset, int yoffset, int width, int height,
+            int format, int imageSize, Buffer data) {
         error();
     }
 
     @Override
-    public void glCopyTexImage2D(int target, int level, int internalformat, int x, int y, int width, int height, int border) {
+    public void glCopyTexImage2D(int target, int level, int internalformat, int x, int y, int width, int height,
+            int border) {
         error();
     }
 
     @Override
-    public void glCopyTexSubImage2D(int target, int level, int xoffset, int yoffset, int x, int y, int width, int height) {
+    public void glCopyTexSubImage2D(int target, int level, int xoffset, int yoffset, int x, int y, int width,
+            int height) {
         error();
     }
 
@@ -155,8 +158,6 @@ public class WgGL20 implements GL20 {
         error();
     }
 
-
-
     @Override
     public void glDrawArrays(int mode, int first, int count) {
         error();
@@ -166,8 +167,6 @@ public class WgGL20 implements GL20 {
     public void glDrawElements(int mode, int count, int type, Buffer indices) {
         error();
     }
-
-
 
     @Override
     public void glFinish() {
@@ -191,12 +190,14 @@ public class WgGL20 implements GL20 {
 
     @Override
     public int glGenTexture() {
-        error();return 0;
+        error();
+        return 0;
     }
 
     @Override
     public int glGetError() {
-        error();return 0;
+        error();
+        return 0;
     }
 
     @Override
@@ -206,7 +207,8 @@ public class WgGL20 implements GL20 {
 
     @Override
     public String glGetString(int name) {
-        error();return "";
+        error();
+        return "";
     }
 
     @Override
@@ -234,8 +236,6 @@ public class WgGL20 implements GL20 {
         error();
     }
 
-
-
     @Override
     public void glStencilFunc(int func, int ref, int mask) {
         error();
@@ -252,7 +252,8 @@ public class WgGL20 implements GL20 {
     }
 
     @Override
-    public void glTexImage2D(int target, int level, int internalformat, int width, int height, int border, int format, int type, Buffer pixels) {
+    public void glTexImage2D(int target, int level, int internalformat, int width, int height, int border, int format,
+            int type, Buffer pixels) {
         error();
     }
 
@@ -262,11 +263,10 @@ public class WgGL20 implements GL20 {
     }
 
     @Override
-    public void glTexSubImage2D(int target, int level, int xoffset, int yoffset, int width, int height, int format, int type, Buffer pixels) {
+    public void glTexSubImage2D(int target, int level, int xoffset, int yoffset, int width, int height, int format,
+            int type, Buffer pixels) {
         error();
     }
-
-
 
     @Override
     public void glAttachShader(int program, int shader) {
@@ -578,32 +578,38 @@ public class WgGL20 implements GL20 {
 
     @Override
     public boolean glIsEnabled(int cap) {
-        error();return false;
+        error();
+        return false;
     }
 
     @Override
     public boolean glIsFramebuffer(int framebuffer) {
-        error();return false;
+        error();
+        return false;
     }
 
     @Override
     public boolean glIsProgram(int program) {
-        error();return false;
+        error();
+        return false;
     }
 
     @Override
     public boolean glIsRenderbuffer(int renderbuffer) {
-        error();return false;
+        error();
+        return false;
     }
 
     @Override
     public boolean glIsShader(int shader) {
-        error();return false;
+        error();
+        return false;
     }
 
     @Override
     public boolean glIsTexture(int texture) {
-        error();return false;
+        error();
+        return false;
     }
 
     @Override

@@ -43,11 +43,9 @@ import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLTFModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgModelLoader;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 
-
 /**
  * Test GLTF loading and ModelInstance rendering
  */
-
 
 public class AssetManagerTest extends GdxTest {
 
@@ -79,16 +77,16 @@ public class AssetManagerTest extends GdxTest {
         cam.far = 100f;
 
         modelFileName = "data/g3d/gltf/DamagedHelmet/DamagedHelmet.gltf";
-        //modelFileName = "data/g3d/gltf/Cube/Cube.gltf";
-        //modelFileName = "data/g3d/gltf/StanfordDragon/stanfordDragon.gltf";
-        //modelFileName = "data/g3d/gltf/Cubes/cubes.gltf";
-        //modelFileName = "data/g3d/gltf/AntiqueCamera/AntiqueCamera.gltf";
-        //modelFileName = "data/g3d/gltf/torus.gltf";
-        //modelFileName = "data/g3d/gltf/Sponza/Sponza.gltf";
-        //modelFileName = "data/g3d/gltf/waterbottle/waterbottle.glb";
-        //modelFileName = "data/g3d/gltf/Buggy/Buggy.gltf";
-        //modelFileName = "data/g3d/gltf/triangle.gltf";
-        //modelFileName = "data/g3d/gltf/Avocado.glb";
+        // modelFileName = "data/g3d/gltf/Cube/Cube.gltf";
+        // modelFileName = "data/g3d/gltf/StanfordDragon/stanfordDragon.gltf";
+        // modelFileName = "data/g3d/gltf/Cubes/cubes.gltf";
+        // modelFileName = "data/g3d/gltf/AntiqueCamera/AntiqueCamera.gltf";
+        // modelFileName = "data/g3d/gltf/torus.gltf";
+        // modelFileName = "data/g3d/gltf/Sponza/Sponza.gltf";
+        // modelFileName = "data/g3d/gltf/waterbottle/waterbottle.glb";
+        // modelFileName = "data/g3d/gltf/Buggy/Buggy.gltf";
+        // modelFileName = "data/g3d/gltf/triangle.gltf";
+        // modelFileName = "data/g3d/gltf/Avocado.glb";
 
         fontFileName = "data/lsans-15.fnt";
 
@@ -121,19 +119,19 @@ public class AssetManagerTest extends GdxTest {
 
         float delta = Gdx.graphics.getDeltaTime();
 
-        if(assetManager.update()) {
+        if (assetManager.update()) {
             loadModel();
             loadFont();
         }
 
-        if(instance != null) {
+        if (instance != null) {
             instance.transform.rotate(Vector3.Y, 15f * delta);
             modelBatch.begin(cam);
             modelBatch.render(instance, environment);
             modelBatch.end();
         }
 
-        if(font != null) {
+        if (font != null) {
             batch.setProjectionMatrix(viewport.getCamera().combined);
             batch.begin();
             int y = 200;
@@ -142,7 +140,9 @@ public class AssetManagerTest extends GdxTest {
             font.draw(batch, "Vertices: " + numVerts, 0, y -= 20);
             font.draw(batch, "Indices: " + numIndices, 0, y -= 20);
             font.draw(batch, "FPS: " + Gdx.graphics.getFramesPerSecond(), 0, y -= 20);
-            font.draw(batch, "delta time: " + (int)(1000000 / (Gdx.graphics.getFramesPerSecond() + 0.001f)) + " microseconds", 0, y -= 20);
+            font.draw(batch,
+                    "delta time: " + (int) (1000000 / (Gdx.graphics.getFramesPerSecond() + 0.001f)) + " microseconds",
+                    0, y -= 20);
             batch.end();
         }
     }
@@ -163,11 +163,11 @@ public class AssetManagerTest extends GdxTest {
     }
 
     private void loadModel() {
-        if(instance == null && assetManager.isLoaded(modelFileName)) {
+        if (instance == null && assetManager.isLoaded(modelFileName)) {
             model = assetManager.get(modelFileName, Model.class);
             instance = new ModelInstance(model);
             numMeshes = instance.model.meshes.size;
-            for(int i = 0; i < numMeshes; i++) {
+            for (int i = 0; i < numMeshes; i++) {
                 numVerts += instance.model.meshes.get(i).getNumVertices();
                 numIndices += instance.model.meshes.get(i).getNumIndices();
             }
@@ -175,7 +175,7 @@ public class AssetManagerTest extends GdxTest {
     }
 
     private void loadFont() {
-        if(font == null && assetManager.isLoaded(fontFileName)) {
+        if (font == null && assetManager.isLoaded(fontFileName)) {
             font = assetManager.get(fontFileName, WgBitmapFont.class);
         }
     }

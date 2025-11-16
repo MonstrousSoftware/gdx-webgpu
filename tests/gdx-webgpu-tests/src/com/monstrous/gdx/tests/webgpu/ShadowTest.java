@@ -42,16 +42,17 @@ import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 
 import com.monstrous.gdx.webgpu.wrappers.RenderPassType;
 
-/** Shadow demo.
- * */
+/**
+ * Shadow demo.
+ */
 public class ShadowTest extends GdxTest {
 
-	WgModelBatch modelBatch;
+    WgModelBatch modelBatch;
     WgModelBatch shadowBatch;
-	PerspectiveCamera cam;
-	CameraInputController controller;
-	WgSpriteBatch batch;
-	WgBitmapFont font;
+    PerspectiveCamera cam;
+    CameraInputController controller;
+    WgSpriteBatch batch;
+    WgBitmapFont font;
     WgTexture texture;
     Model box;
     Model ground;
@@ -64,60 +65,58 @@ public class ShadowTest extends GdxTest {
     Vector3 lightPos;
     WebGPUContext webgpu;
 
-
-
-	public void create () {
+    public void create() {
         WgGraphics gfx = (WgGraphics) Gdx.graphics;
         webgpu = gfx.getContext();
 
-		modelBatch = new WgModelBatch();
-		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		cam.position.set(0, 1, 5);
-		cam.near = 0.1f;
-        cam.lookAt(0,0,0);
+        modelBatch = new WgModelBatch();
+        cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        cam.position.set(0, 1, 5);
+        cam.near = 0.1f;
+        cam.lookAt(0, 0, 0);
 
-		controller = new CameraInputController(cam);
-		Gdx.input.setInputProcessor(controller);
-		batch = new WgSpriteBatch();
-		font = new WgBitmapFont();
+        controller = new CameraInputController(cam);
+        Gdx.input.setInputProcessor(controller);
+        batch = new WgSpriteBatch();
+        font = new WgBitmapFont();
 
-		//
-		// Create some renderables
-		//
+        //
+        // Create some renderables
+        //
         instances = new Array<>();
 
         ModelBuilder modelBuilder = new WgModelBuilder();
         texture = new WgTexture(Gdx.files.internal("data/badlogic.jpg"), true);
         texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear);
         Material mat = new Material(TextureAttribute.createDiffuse(texture));
-        long attribs = VertexAttributes.Usage.Position | VertexAttributes.Usage.TextureCoordinates | VertexAttributes.Usage.Normal ;
+        long attribs = VertexAttributes.Usage.Position | VertexAttributes.Usage.TextureCoordinates
+                | VertexAttributes.Usage.Normal;
         box = modelBuilder.createBox(1, 1, 1, mat, attribs);
 
         Material mat2 = new Material(ColorAttribute.createDiffuse(Color.OLIVE));
-        long attribs2 = VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.ColorPacked;
+        long attribs2 = VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal
+                | VertexAttributes.Usage.ColorPacked;
         ground = modelBuilder.createBox(8, 0.1f, 9, mat2, attribs2);
 
         lightPos = new Vector3(-.75f, 2f, -0.25f);
         Vector3 vec = new Vector3(lightPos).nor();
 
-        lightModel = modelBuilder.createArrow( vec, Vector3.Zero,
-            new Material(ColorAttribute.createDiffuse(Color.BLUE)),  VertexAttributes.Usage.Position | VertexAttributes.Usage.ColorPacked);
+        lightModel = modelBuilder.createArrow(vec, Vector3.Zero, new Material(ColorAttribute.createDiffuse(Color.BLUE)),
+                VertexAttributes.Usage.Position | VertexAttributes.Usage.ColorPacked);
 
+        lightInstance = new ModelInstance(lightModel, lightPos);
 
-        lightInstance = new ModelInstance(lightModel,lightPos);
-
-        instances.add(new ModelInstance(box,0,1.0f,0));
-        instances.add(new ModelInstance(box,2,0.5f,0));
-        instances.add(new ModelInstance(box,0,1.0f,-2));
-        instances.add(new ModelInstance(box,-2,1.0f,0));
-        instances.add(new ModelInstance(ground,0,0,0));
-
+        instances.add(new ModelInstance(box, 0, 1.0f, 0));
+        instances.add(new ModelInstance(box, 2, 0.5f, 0));
+        instances.add(new ModelInstance(box, 0, 1.0f, -2));
+        instances.add(new ModelInstance(box, -2, 1.0f, 0));
+        instances.add(new ModelInstance(ground, 0, 0, 0));
 
         environment = new Environment();
         emptyEnvironment = new Environment();
 
         float level = 0.3f;
-        ColorAttribute ambient =  ColorAttribute.createAmbientLight(level, level, 0, 1f);
+        ColorAttribute ambient = ColorAttribute.createAmbientLight(level, level, 0, 1f);
         environment.set(ambient);
 
         DirectionalLight dirLight1 = new DirectionalLight();
@@ -125,62 +124,63 @@ public class ShadowTest extends GdxTest {
         dirLight1.setColor(2f, 2f, 4f, 1f);// color * intensity
         environment.add(dirLight1);
 
-
-        final int MAP = 1024;   // resolution of shadow map texture (may affect frame rate)
+        final int MAP = 1024; // resolution of shadow map texture (may affect frame rate)
         final int VIEWPORT = 8; // depth and width of shadow volume in world units
         final float DEPTH = 20f; // length of shadow volume in world units along light direction
-        shadowLight = new com.monstrous.gdx.webgpu.graphics.g3d.attributes.environment.WgDirectionalShadowLight(MAP, MAP, VIEWPORT, VIEWPORT, 0f, DEPTH);
+        shadowLight = new com.monstrous.gdx.webgpu.graphics.g3d.attributes.environment.WgDirectionalShadowLight(MAP,
+                MAP, VIEWPORT, VIEWPORT, 0f, DEPTH);
         shadowLight.setDirection(dirLight1.direction);
         shadowLight.set(dirLight1);
         environment.shadowMap = shadowLight;
 
         shadowBatch = new WgModelBatch(new WgDepthShaderProvider());
-	}
+    }
 
-	public void render () {
-		float delta = Gdx.graphics.getDeltaTime();
-        instances.get(0).transform.rotate(Vector3.Y, 15f*delta);
-		cam.update();
+    public void render() {
+        float delta = Gdx.graphics.getDeltaTime();
+        instances.get(0).transform.rotate(Vector3.Y, 15f * delta);
+        cam.update();
 
-        Vector3 focalPoint = new Vector3(0, 0, 0);  // central position for shadow volume
+        Vector3 focalPoint = new Vector3(0, 0, 0); // central position for shadow volume
 
         shadowLight.begin(focalPoint, Vector3.Zero);
-		shadowBatch.begin(shadowLight.getCamera(), Color.BLUE, true, RenderPassType.DEPTH_ONLY);
+        shadowBatch.begin(shadowLight.getCamera(), Color.BLUE, true, RenderPassType.DEPTH_ONLY);
         shadowBatch.render(instances);
         shadowBatch.end();
         shadowLight.end();
 
-        //WgScreenUtils.clear(Color.TEAL, true);
-        modelBatch.begin(cam,Color.TEAL, true);
+        // WgScreenUtils.clear(Color.TEAL, true);
+        modelBatch.begin(cam, Color.TEAL, true);
         modelBatch.render(instances, environment);
-//        modelBatch.render(lightInstance, environment);
+        // modelBatch.render(lightInstance, environment);
         modelBatch.end();
 
-		batch.begin();
+        batch.begin();
         float y = 200;
-		font.draw(batch, "fps: " + Gdx.graphics.getFramesPerSecond(), 0, y -= 20);
-        for(int pass = 0; pass < webgpu.getGPUTimer().getNumPasses(); pass++)
-            font.draw(batch, "GPU time (pass "+pass+" "+webgpu.getGPUTimer().getPassName(pass)+") : "+(int)webgpu.getAverageGPUtime(pass)+ " microseconds" ,0, y -= 20);
+        font.draw(batch, "fps: " + Gdx.graphics.getFramesPerSecond(), 0, y -= 20);
+        for (int pass = 0; pass < webgpu.getGPUTimer().getNumPasses(); pass++)
+            font.draw(batch, "GPU time (pass " + pass + " " + webgpu.getGPUTimer().getPassName(pass) + ") : "
+                    + (int) webgpu.getAverageGPUtime(pass) + " microseconds", 0, y -= 20);
 
         batch.end();
-	}
+    }
 
-	@Override
-	public void resize(int width, int height) {
-		cam.viewportWidth = width;
-		cam.viewportHeight = height;
-		cam.update();
-        batch.getProjectionMatrix().setToOrtho2D(0,0, width, height);
-	}
+    @Override
+    public void resize(int width, int height) {
+        cam.viewportWidth = width;
+        cam.viewportHeight = height;
+        cam.update();
+        batch.getProjectionMatrix().setToOrtho2D(0, 0, width, height);
+    }
 
-	@Override
-	public void dispose () {
-		batch.dispose();
-		font.dispose();
-		modelBatch.dispose();
+    @Override
+    public void dispose() {
+        batch.dispose();
+        font.dispose();
+        modelBatch.dispose();
         box.dispose();
         ground.dispose();
         texture.dispose();
-	}
+    }
 
 }

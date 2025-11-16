@@ -21,61 +21,62 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g3d.utils.TextureProvider;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 
-/** Derived from TextureProvider to provide only WebGPUTexture instances
+/**
+ * Derived from TextureProvider to provide only WebGPUTexture instances
  *
  */
 public interface WgTextureProvider extends TextureProvider {
-	public Texture load (String fileName);
+    public Texture load(String fileName);
 
     Texture load(String fileName, boolean color);
 
     public static class FileTextureProvider implements WgTextureProvider {
-		private Texture.TextureFilter minFilter, magFilter;
-		private Texture.TextureWrap uWrap, vWrap;
-		private boolean useMipMaps;
+        private Texture.TextureFilter minFilter, magFilter;
+        private Texture.TextureWrap uWrap, vWrap;
+        private boolean useMipMaps;
 
-		public FileTextureProvider () {
-			minFilter = magFilter = Texture.TextureFilter.Linear;
-			uWrap = vWrap = Texture.TextureWrap.Repeat;
-			useMipMaps = true;
-		}
+        public FileTextureProvider() {
+            minFilter = magFilter = Texture.TextureFilter.Linear;
+            uWrap = vWrap = Texture.TextureWrap.Repeat;
+            useMipMaps = true;
+        }
 
-		public FileTextureProvider (Texture.TextureFilter minFilter, Texture.TextureFilter magFilter, Texture.TextureWrap uWrap,
-			Texture.TextureWrap vWrap, boolean useMipMaps) {
-			this.minFilter = minFilter;
-			this.magFilter = magFilter;
-			this.uWrap = uWrap;
-			this.vWrap = vWrap;
-			this.useMipMaps = useMipMaps;
-		}
-
-		@Override
-		public Texture load (String fileName) {
-			Texture result = new WgTexture(Gdx.files.internal(fileName), useMipMaps, true);
-			result.setFilter(minFilter, magFilter);
-			result.setWrap(uWrap, vWrap);
-			return result;
-		}
+        public FileTextureProvider(Texture.TextureFilter minFilter, Texture.TextureFilter magFilter,
+                Texture.TextureWrap uWrap, Texture.TextureWrap vWrap, boolean useMipMaps) {
+            this.minFilter = minFilter;
+            this.magFilter = magFilter;
+            this.uWrap = uWrap;
+            this.vWrap = vWrap;
+            this.useMipMaps = useMipMaps;
+        }
 
         @Override
-        public Texture load (String fileName, boolean isColor) {
+        public Texture load(String fileName) {
+            Texture result = new WgTexture(Gdx.files.internal(fileName), useMipMaps, true);
+            result.setFilter(minFilter, magFilter);
+            result.setWrap(uWrap, vWrap);
+            return result;
+        }
+
+        @Override
+        public Texture load(String fileName, boolean isColor) {
             Texture result = new WgTexture(Gdx.files.internal(fileName), useMipMaps, isColor);
             result.setFilter(minFilter, magFilter);
             result.setWrap(uWrap, vWrap);
             return result;
         }
-	}
+    }
 
-//	public static class AssetTextureProvider implements WebGPUTextureProvider {
-//		public final AssetManager assetManager;
-//
-//		public AssetTextureProvider (final AssetManager assetManager) {
-//			this.assetManager = assetManager;
-//		}
-//
-//		@Override
-//		public Texture load (String fileName) {
-//			return assetManager.get(fileName, Texture.class);
-//		}
-//	}
+    // public static class AssetTextureProvider implements WebGPUTextureProvider {
+    // public final AssetManager assetManager;
+    //
+    // public AssetTextureProvider (final AssetManager assetManager) {
+    // this.assetManager = assetManager;
+    // }
+    //
+    // @Override
+    // public Texture load (String fileName) {
+    // return assetManager.get(fileName, Texture.class);
+    // }
+    // }
 }

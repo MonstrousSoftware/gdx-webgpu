@@ -11,7 +11,8 @@ public class WgTeaApplication extends TeaApplication {
         super(appListener, config);
     }
 
-    public WgTeaApplication(ApplicationListener appListener, ApplicationListener preloadApplication, TeaApplicationConfiguration config) {
+    public WgTeaApplication(ApplicationListener appListener, ApplicationListener preloadApplication,
+            TeaApplicationConfiguration config) {
         super(appListener, preloadApplication, config);
     }
 
@@ -30,12 +31,11 @@ public class WgTeaApplication extends TeaApplication {
         addInitQueue();
         super.init();
         JWebGPULoader.init((isSuccess, e) -> {
-            if(isSuccess) {
-                WgTeaGraphics graphics = (WgTeaGraphics)getGraphics();
+            if (isSuccess) {
+                WgTeaGraphics graphics = (WgTeaGraphics) getGraphics();
                 graphics.init(getConfig());
                 subtractInitQueue();
-            }
-            else {
+            } else {
                 e.printStackTrace();
             }
         });

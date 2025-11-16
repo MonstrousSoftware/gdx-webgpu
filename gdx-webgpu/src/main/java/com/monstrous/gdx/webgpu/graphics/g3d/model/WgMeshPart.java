@@ -22,38 +22,36 @@ import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.monstrous.gdx.webgpu.graphics.WgMesh;
 import com.monstrous.gdx.webgpu.wrappers.WebGPURenderPass;
 
-
-
 public class WgMeshPart extends MeshPart {
 
-	// mesh must be a WebGPUMesh
-	// note primitive type is a GL constant, e.g. GL_TRIANGLES
-	public WgMeshPart(final String id, final Mesh mesh, final int offset, final int size, final int type) {
-		if (!(mesh instanceof WgMesh))
-			throw new RuntimeException("WebGPUMeshPart supports only WebGPUMesh");
-		set(id, mesh, offset, size, type);
-	}
+    // mesh must be a WebGPUMesh
+    // note primitive type is a GL constant, e.g. GL_TRIANGLES
+    public WgMeshPart(final String id, final Mesh mesh, final int offset, final int size, final int type) {
+        if (!(mesh instanceof WgMesh))
+            throw new RuntimeException("WebGPUMeshPart supports only WebGPUMesh");
+        set(id, mesh, offset, size, type);
+    }
 
-	public WgMeshPart() {
-		super();
-	}
+    public WgMeshPart() {
+        super();
+    }
 
-	// catch invalid use
-	@Override
-	public void render (ShaderProgram shader, boolean autoBind) {
-		throw new IllegalArgumentException("WebGPUMeshPart: call render with a render pass");
-	}
+    // catch invalid use
+    @Override
+    public void render(ShaderProgram shader, boolean autoBind) {
+        throw new IllegalArgumentException("WebGPUMeshPart: call render with a render pass");
+    }
 
-	// catch invalid use
-	@Override
-	public void render (ShaderProgram shader) {
-		throw new IllegalArgumentException("WebGPUMeshPart: call render with a render pass");
-	}
+    // catch invalid use
+    @Override
+    public void render(ShaderProgram shader) {
+        throw new IllegalArgumentException("WebGPUMeshPart: call render with a render pass");
+    }
 
-	/** this is a new method w.r.t. MeshPart */
-	public void render (WebGPURenderPass renderPass) {
-		if (!(mesh instanceof WgMesh))
-			throw new RuntimeException("WebGPUMeshPart supports only WebGPUMesh");
-		((WgMesh)mesh).render(renderPass, primitiveType, offset, size, 1, 0);
-	}
+    /** this is a new method w.r.t. MeshPart */
+    public void render(WebGPURenderPass renderPass) {
+        if (!(mesh instanceof WgMesh))
+            throw new RuntimeException("WebGPUMeshPart supports only WebGPUMesh");
+        ((WgMesh) mesh).render(renderPass, primitiveType, offset, size, 1, 0);
+    }
 }

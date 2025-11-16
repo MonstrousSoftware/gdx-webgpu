@@ -34,96 +34,90 @@ import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgObjLoader;
 import com.monstrous.gdx.webgpu.graphics.utils.WgFrameBuffer;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 
-/** Demonstrate post-processing with screen shader
- * */
-
+/**
+ * Demonstrate post-processing with screen shader
+ */
 
 public class PostProcessing extends GdxTest {
 
-	WgModelBatch modelBatch;
-	PerspectiveCamera cam;
-	PerspectiveCamController controller;
-	WgSpriteBatch batch;
-	WgBitmapFont font;
-	Model model;
-	ModelInstance instance;
+    WgModelBatch modelBatch;
+    PerspectiveCamera cam;
+    PerspectiveCamController controller;
+    WgSpriteBatch batch;
+    WgBitmapFont font;
+    Model model;
+    ModelInstance instance;
     WgGraphics gfx;
     WebGPUContext webgpu;
     WgFrameBuffer fbo;
     WgShaderProgram shader;
 
-
-
-	// application
-	public void create () {
-        gfx = (WgGraphics)Gdx.graphics;
+    // application
+    public void create() {
+        gfx = (WgGraphics) Gdx.graphics;
         webgpu = gfx.getContext();
 
-		modelBatch = new WgModelBatch();
-		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		cam.position.set(0, 1, 2);
-		cam.lookAt(0,1,0);
-		cam.near = 0.1f;
+        modelBatch = new WgModelBatch();
+        cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        cam.position.set(0, 1, 2);
+        cam.lookAt(0, 1, 0);
+        cam.near = 0.1f;
 
-		WgObjLoader loader = new WgObjLoader();
-		// these assets need to be put in the class path...
-		model = loader.loadModel(Gdx.files.internal("data/g3d/ducky.obj"), true);
-		instance = new ModelInstance(model);
+        WgObjLoader loader = new WgObjLoader();
+        // these assets need to be put in the class path...
+        model = loader.loadModel(Gdx.files.internal("data/g3d/ducky.obj"), true);
+        instance = new ModelInstance(model);
 
-
-		controller = new PerspectiveCamController(cam);
-		Gdx.input.setInputProcessor(controller);
-		batch = new WgSpriteBatch();
-		font = new WgBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
+        controller = new PerspectiveCamController(cam);
+        Gdx.input.setInputProcessor(controller);
+        batch = new WgSpriteBatch();
+        font = new WgBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
 
         fbo = new WgFrameBuffer(640, 480, true);
 
         shader = new WgShaderProgram(Gdx.files.internal("data/wgsl/sprite-greyscale.wgsl"));
-	}
+    }
 
-	public void render () {
-		float delta = Gdx.graphics.getDeltaTime();
-		instance.transform.rotate(Vector3.Y, 15f*delta);
-
+    public void render() {
+        float delta = Gdx.graphics.getDeltaTime();
+        instance.transform.rotate(Vector3.Y, 15f * delta);
 
         fbo.begin();
 
-            WgScreenUtils.clear(Color.TEAL, true);
+        WgScreenUtils.clear(Color.TEAL, true);
 
-            cam.update();
-            modelBatch.begin(cam);
-            modelBatch.render(instance);
-            modelBatch.end();
+        cam.update();
+        modelBatch.begin(cam);
+        modelBatch.render(instance);
+        modelBatch.end();
 
         fbo.end();
 
-
-		batch.begin();
+        batch.begin();
         batch.draw(fbo.getColorBufferTexture(), 20, 100, 256, 256);
         batch.setShader(shader);
-        batch.draw(fbo.getColorBufferTexture(), 320+20, 100, 256, 256);
-        batch.setShader((WgShaderProgram)null);
-		font.draw(batch, "Post-Processing shader" , 0, 20);
-		batch.end();
-	}
+        batch.draw(fbo.getColorBufferTexture(), 320 + 20, 100, 256, 256);
+        batch.setShader((WgShaderProgram) null);
+        font.draw(batch, "Post-Processing shader", 0, 20);
+        batch.end();
+    }
 
-	@Override
-	public void resize(int width, int height) {
-		cam.viewportWidth = width;
-		cam.viewportHeight = height;
-		cam.update();
+    @Override
+    public void resize(int width, int height) {
+        cam.viewportWidth = width;
+        cam.viewportHeight = height;
+        cam.update();
 
-	}
+    }
 
-	@Override
-	public void dispose () {
-		batch.dispose();
-		font.dispose();
-		modelBatch.dispose();
-		model.dispose();
+    @Override
+    public void dispose() {
+        batch.dispose();
+        font.dispose();
+        modelBatch.dispose();
+        model.dispose();
         fbo.dispose();
         shader.dispose();
-	}
-
+    }
 
 }

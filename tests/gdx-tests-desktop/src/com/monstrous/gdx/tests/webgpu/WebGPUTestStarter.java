@@ -37,121 +37,122 @@ import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopWindowConfiguration;
 import com.monstrous.gdx.webgpu.scene2d.WgSkin;
 import com.monstrous.gdx.webgpu.scene2d.WgStage;
 
-
 // test starter
 public class WebGPUTestStarter {
-	/** Runs libgdx tests.
-	 *
+    /**
+     * Runs libgdx tests.
+     *
+     *
+     * 
+     * @param argv command line arguments
+     */
+    public static void main(String[] argv) {
 
-	 *
-	 * @param argv command line arguments */
-	public static void main (String[] argv) {
-
-		WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
-		config.setWindowedMode(320, 640);
+        WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
+        config.setWindowedMode(320, 640);
         config.enableGPUtiming = true;
         config.backend = WebGPUContext.Backend.DEFAULT;
-        config.backendWebGPU = JWebGPUBackend.DAWN;  // WGPU or DAWN
+        config.backendWebGPU = JWebGPUBackend.DAWN; // WGPU or DAWN
 
-		new WgDesktopApplication(new TestChooser(), config);
-	}
+        new WgDesktopApplication(new TestChooser(), config);
+    }
 
-	static class TestChooser extends ApplicationAdapter {
-		private Stage stage;
-		private Skin skin;
-		TextButton lastClickedTestButton;
+    static class TestChooser extends ApplicationAdapter {
+        private Stage stage;
+        private Skin skin;
+        TextButton lastClickedTestButton;
 
-		public void create () {
+        public void create() {
 
-			final Preferences prefs = Gdx.app.getPreferences("webgpu-tests");
+            final Preferences prefs = Gdx.app.getPreferences("webgpu-tests");
 
-			stage = new WgStage(new ScreenViewport());
-			Gdx.input.setInputProcessor(stage);
-			skin = new WgSkin(Gdx.files.internal("data/uiskin.json"));
+            stage = new WgStage(new ScreenViewport());
+            Gdx.input.setInputProcessor(stage);
+            skin = new WgSkin(Gdx.files.internal("data/uiskin.json"));
 
-			Table container = new Table();
-			stage.addActor(container);
-			container.setFillParent(true);
+            Table container = new Table();
+            stage.addActor(container);
+            container.setFillParent(true);
 
-			Table table = new Table();
+            Table table = new Table();
 
-			ScrollPane scroll = new ScrollPane(table, skin);
-			scroll.setSmoothScrolling(false);
-			scroll.setFadeScrollBars(false);
-			stage.setScrollFocus(scroll);
+            ScrollPane scroll = new ScrollPane(table, skin);
+            scroll.setSmoothScrolling(false);
+            scroll.setFadeScrollBars(false);
+            stage.setScrollFocus(scroll);
 
-//			stage.addActor(table);
-//			table.setFillParent(true);
+            // stage.addActor(table);
+            // table.setFillParent(true);
 
-			int tableSpace = 4;
-			table.pad(10).defaults().expandX().space(tableSpace);
-			for (final String testName : WebGPUTests.getNames()) {
-				final TextButton testButton = new TextButton(testName, skin);
-				//testButton.setDisabled(!options.isTestCompatible(testName));
-				testButton.setName(testName);
-				table.add(testButton).fillX();
-				table.row();
-				testButton.addListener(new ChangeListener() {
-					@Override
-					public void changed (ChangeEvent event, Actor actor) {
-						ApplicationListener test = WebGPUTests.newTest(testName);
-						WgDesktopWindowConfiguration winConfig = new WgDesktopWindowConfiguration();
-						winConfig.setTitle(testName);
-						winConfig.setWindowedMode(640, 480);
-						winConfig.setWindowPosition(((WgDesktopGraphics)Gdx.graphics).getWindow().getPositionX() + 40,
-							((WgDesktopGraphics)Gdx.graphics).getWindow().getPositionY() + 40);
-						winConfig.useVsync(false);
-						Gdx.app.setLogLevel(Application.LOG_DEBUG);
-						((WgDesktopApplication)Gdx.app).newWindow(test, winConfig);
-						System.out.println("Started test: " + testName);
-						prefs.putString("LastTest", testName);
-						prefs.flush();
-						if (testButton != lastClickedTestButton) {
-							testButton.setColor(Color.CYAN);
-							if (lastClickedTestButton != null) {
-								lastClickedTestButton.setColor(Color.WHITE);
-							}
-							lastClickedTestButton = testButton;
-						}
-					}
-				});
-			}
+            int tableSpace = 4;
+            table.pad(10).defaults().expandX().space(tableSpace);
+            for (final String testName : WebGPUTests.getNames()) {
+                final TextButton testButton = new TextButton(testName, skin);
+                // testButton.setDisabled(!options.isTestCompatible(testName));
+                testButton.setName(testName);
+                table.add(testButton).fillX();
+                table.row();
+                testButton.addListener(new ChangeListener() {
+                    @Override
+                    public void changed(ChangeEvent event, Actor actor) {
+                        ApplicationListener test = WebGPUTests.newTest(testName);
+                        WgDesktopWindowConfiguration winConfig = new WgDesktopWindowConfiguration();
+                        winConfig.setTitle(testName);
+                        winConfig.setWindowedMode(640, 480);
+                        winConfig.setWindowPosition(((WgDesktopGraphics) Gdx.graphics).getWindow().getPositionX() + 40,
+                                ((WgDesktopGraphics) Gdx.graphics).getWindow().getPositionY() + 40);
+                        winConfig.useVsync(false);
+                        Gdx.app.setLogLevel(Application.LOG_DEBUG);
+                        ((WgDesktopApplication) Gdx.app).newWindow(test, winConfig);
+                        System.out.println("Started test: " + testName);
+                        prefs.putString("LastTest", testName);
+                        prefs.flush();
+                        if (testButton != lastClickedTestButton) {
+                            testButton.setColor(Color.CYAN);
+                            if (lastClickedTestButton != null) {
+                                lastClickedTestButton.setColor(Color.WHITE);
+                            }
+                            lastClickedTestButton = testButton;
+                        }
+                    }
+                });
+            }
 
-			container.add(scroll).grow();
-			container.row();
+            container.add(scroll).grow();
+            container.row();
 
-			lastClickedTestButton = (TextButton)table.findActor(prefs.getString("LastTest"));
-			if (lastClickedTestButton != null) {
-				lastClickedTestButton.setColor(Color.CYAN);
-				scroll.layout();
-				float scrollY = lastClickedTestButton.getY() + scroll.getScrollHeight() / 2 + lastClickedTestButton.getHeight() / 2
-					+ tableSpace * 2 + 20;
-				scroll.scrollTo(0, scrollY, 0, 0, false, false);
+            lastClickedTestButton = (TextButton) table.findActor(prefs.getString("LastTest"));
+            if (lastClickedTestButton != null) {
+                lastClickedTestButton.setColor(Color.CYAN);
+                scroll.layout();
+                float scrollY = lastClickedTestButton.getY() + scroll.getScrollHeight() / 2
+                        + lastClickedTestButton.getHeight() / 2 + tableSpace * 2 + 20;
+                scroll.scrollTo(0, scrollY, 0, 0, false, false);
 
-				// Since ScrollPane takes some time for scrolling to a position, we just "fake" time
-				stage.act(1f);
-				stage.act(1f);
-				// context not ready outside render()
-				//stage.draw();
-			}
-		}
+                // Since ScrollPane takes some time for scrolling to a position, we just "fake" time
+                stage.act(1f);
+                stage.act(1f);
+                // context not ready outside render()
+                // stage.draw();
+            }
+        }
 
-		@Override
-		public void render () {
-			///ScreenUtils.clear(0, 0, 0, 1);
-			stage.act();
-			stage.draw();
-		}
+        @Override
+        public void render() {
+            /// ScreenUtils.clear(0, 0, 0, 1);
+            stage.act();
+            stage.draw();
+        }
 
-		@Override
-		public void resize (int width, int height) {
-			stage.getViewport().update(width, height, true);
-		}
+        @Override
+        public void resize(int width, int height) {
+            stage.getViewport().update(width, height, true);
+        }
 
-		@Override
-		public void dispose () {
-			skin.dispose();
-			stage.dispose();
-		}
-	}
+        @Override
+        public void dispose() {
+            skin.dispose();
+            stage.dispose();
+        }
+    }
 }

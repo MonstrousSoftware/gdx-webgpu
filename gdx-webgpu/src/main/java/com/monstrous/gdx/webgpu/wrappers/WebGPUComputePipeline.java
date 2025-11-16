@@ -24,16 +24,12 @@ import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
 
-
 // TO BE COMPLETED
 
 public class WebGPUComputePipeline implements Disposable {
     private final WgGraphics gfx;
     private final WebGPUContext webgpu;
-    private  WGPUComputePipeline pipeline;
-
-
-
+    private WGPUComputePipeline pipeline;
 
     public WebGPUComputePipeline(WgShaderProgram shader, String entryPoint, WebGPUPipelineLayout layout) {
         gfx = (WgGraphics) Gdx.graphics;
@@ -46,16 +42,15 @@ public class WebGPUComputePipeline implements Disposable {
         pipelineDesc.getCompute().setModule(shader.getShaderModule());
         pipelineDesc.getCompute().setEntryPoint(entryPoint);
         WGPUVectorConstantEntry constants = WGPUVectorConstantEntry.obtain();
-        pipelineDesc.getCompute().setConstants(constants);       // can you also pass null instead of an empty vector?
+        pipelineDesc.getCompute().setConstants(constants); // can you also pass null instead of an empty vector?
 
         pipelineDesc.setLayout(layout.getLayout());
 
-        pipeline =  new WGPUComputePipeline();
+        pipeline = new WGPUComputePipeline();
         webgpu.device.createComputePipeline(pipelineDesc, pipeline);
     }
 
-
-    public WGPUComputePipeline getPipeline(){
+    public WGPUComputePipeline getPipeline() {
         return pipeline;
     }
 

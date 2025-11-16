@@ -7,40 +7,37 @@ import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 
-
 // demonstrates use of WebPUBitmapFont
 //
 public class FontTest extends GdxTest {
-		private WgSpriteBatch batch;
-		private BitmapFont font;
-
+    private WgSpriteBatch batch;
+    private BitmapFont font;
 
     @Override
-    public void create () {
+    public void create() {
         batch = new WgSpriteBatch();
         font = new WgBitmapFont();
 
-        //font = new WgBitmapFont(Gdx.files.classpath("com/badlogic/gdx/utils/lsans-15.fnt"));
+        // font = new WgBitmapFont(Gdx.files.classpath("com/badlogic/gdx/utils/lsans-15.fnt"));
     }
 
-		@Override
-		public void render () {
+    @Override
+    public void render() {
 
-			batch.begin();
-			font.draw(batch, "Hello, world!", 200, 200);
-			batch.end();
-		}
+        batch.begin();
+        font.draw(batch, "Hello, world!", 200, 200);
+        batch.end();
+    }
 
+    @Override
+    public void resize(int width, int height) {
+        Gdx.app.log("resize", "");
+    }
 
-		@Override
-		public void resize (int width, int height) {
-			Gdx.app.log("resize", "");
-		}
-
-		@Override
-		public void dispose () {
-			batch.dispose();
-			font.dispose();
-		}
+    @Override
+    public void dispose() {
+        batch.dispose();
+        font.dispose();
+    }
 
 }

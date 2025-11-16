@@ -29,7 +29,7 @@ public class WgTeaGraphics extends TeaGraphics implements WgGraphics {
         TeaWindow window = new TeaWindow();
         HTMLDocumentExt document = window.getDocument();
         HTMLElement elementID = document.getElementById(config.canvasID);
-        this.canvas = (HTMLCanvasElement)elementID;
+        this.canvas = (HTMLCanvasElement) elementID;
         canvas.setId(canvasName);
         this.gl20 = new WgGL20();
     }
@@ -38,11 +38,10 @@ public class WgTeaGraphics extends TeaGraphics implements WgGraphics {
         TeaApplication teaApplication = WgTeaApplication.get();
         teaApplication.addInitQueue();
 
-        if(config.width >= 0 || config.height >= 0) {
-            if(config.isFixedSizeApplication()) {
+        if (config.width >= 0 || config.height >= 0) {
+            if (config.isFixedSizeApplication()) {
                 setCanvasSize(config.width, config.height, false);
-            }
-            else {
+            } else {
                 TeaWindow currentWindow = TeaWindow.get();
                 int width = currentWindow.getClientWidth() - config.padHorizontal;
                 int height = currentWindow.getClientHeight() - config.padVertical;
@@ -50,20 +49,17 @@ public class WgTeaGraphics extends TeaGraphics implements WgGraphics {
             }
         }
 
-        WebGPUApplication.Configuration configg = new WebGPUApplication.Configuration(
-            1,
-            true,
-            false,
-            WebGPUContext.Backend.WEBGPU);
+        WebGPUApplication.Configuration configg = new WebGPUApplication.Configuration(1, true, false,
+                WebGPUContext.Backend.WEBGPU);
 
         System.out.println("Creating instance");
         instance = WGPU.setupInstance();
-        if(!instance.isValid()) {
+        if (!instance.isValid()) {
             throw new RuntimeException("WebGPU: cannot get instance");
         }
         System.out.println("Creating surface");
         WGPUSurface surface = instance.createWebSurface(canvasWGPU);
-        if(surface ==null) {
+        if (surface == null) {
             throw new RuntimeException("WebGPU: cannot get surface");
         }
 
@@ -94,11 +90,12 @@ public class WgTeaGraphics extends TeaGraphics implements WgGraphics {
 
     @Override
     public void update() {
-        if(context != null) {
+        if (context != null) {
             context.update();
-            if(!webGPUReady && context.isReady()) {
+            if (!webGPUReady && context.isReady()) {
                 TeaApplication teaApplication = WgTeaApplication.get();
-                teaApplication.subtractInitQueue();;
+                teaApplication.subtractInitQueue();
+                ;
                 webGPUReady = true;
             }
         }

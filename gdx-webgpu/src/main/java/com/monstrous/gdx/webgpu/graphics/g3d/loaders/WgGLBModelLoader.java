@@ -29,25 +29,26 @@ import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
-/** Loader for glb model format (binary GLTF).
+/**
+ * Loader for glb model format (binary GLTF).
  *
  */
 public class WgGLBModelLoader extends WgModelLoader<WgModelLoader.ModelParameters> {
 
-	public WgGLBModelLoader() {
-		this(null);
-	}
+    public WgGLBModelLoader() {
+        this(null);
+    }
 
-	public WgGLBModelLoader(FileHandleResolver resolver) {
-		super(resolver);
-	}
+    public WgGLBModelLoader(FileHandleResolver resolver) {
+        super(resolver);
+    }
 
-	@Override
-	public ModelData loadModelData (FileHandle fileHandle, ModelParameters parameters) {
-		return parseModel(fileHandle);
-	}
+    @Override
+    public ModelData loadModelData(FileHandle fileHandle, ModelParameters parameters) {
+        return parseModel(fileHandle);
+    }
 
-	public ModelData parseModel (FileHandle handle) {
+    public ModelData parseModel(FileHandle handle) {
         // create path to find additional resources
         int lastSlashPos = handle.path().lastIndexOf('/');
         String path = handle.path().substring(0, lastSlashPos + 1);
@@ -57,11 +58,11 @@ public class WgGLBModelLoader extends WgModelLoader<WgModelLoader.ModelParameter
         GLTF gltf = parseBinaryFile(handle.name(), path, contents);
 
         /* Then convert it to ModelData. */
-		return new WgGLTFModelLoader().load(gltf);
-	}
+        return new WgGLTFModelLoader().load(gltf);
+    }
 
-    private static GLTF parseBinaryFile( String name, String path, byte[] contents ){
-        ByteBuffer bb = ByteBuffer.wrap( contents );
+    private static GLTF parseBinaryFile(String name, String path, byte[] contents) {
+        ByteBuffer bb = ByteBuffer.wrap(contents);
         bb.order(ByteOrder.LITTLE_ENDIAN);
 
         bb.rewind();
@@ -71,25 +72,24 @@ public class WgGLBModelLoader extends WgModelLoader<WgModelLoader.ModelParameter
         int version = bb.getInt();
         int len = bb.getInt();
 
-//        System.out.println("Magic: "+Integer.toHexString(magic)); //  0x46546C67
-//        System.out.println("Version: "+version);
-//        System.out.println("Length: "+len);
+        // System.out.println("Magic: "+Integer.toHexString(magic)); // 0x46546C67
+        // System.out.println("Version: "+version);
+        // System.out.println("Length: "+len);
 
-        if(magic != 0x46546C67)
-            throw new RuntimeException("GLB file invalid: "+name);
-        if(version != 2)
-            System.out.println("Warning: GLB version unsupported (!=2) : "+name);
-        if(len != contents.length)
-            throw new RuntimeException("GLB file length invalid: "+name);
+        if (magic != 0x46546C67)
+            throw new RuntimeException("GLB file invalid: " + name);
+        if (version != 2)
+            System.out.println("Warning: GLB version unsupported (!=2) : " + name);
+        if (len != contents.length)
+            throw new RuntimeException("GLB file length invalid: " + name);
 
         // read JSON chunk
         int chunkLength = bb.getInt();
         int chunkType = bb.getInt();
 
-//        System.out.println("Chunk length: "+chunkLength+" type: "+Integer.toHexString(chunkType));
-        if(chunkType != 0x4e4f534a) // "JSON"
-            throw new RuntimeException("GLB file invalid, first chunk must be type JSON: "+name);
-
+        // System.out.println("Chunk length: "+chunkLength+" type: "+Integer.toHexString(chunkType));
+        if (chunkType != 0x4e4f534a) // "JSON"
+            throw new RuntimeException("GLB file invalid, first chunk must be type JSON: " + name);
 
         Charset charset = StandardCharsets.US_ASCII;
         ByteBuffer chunkData = bb.slice();
@@ -99,7 +99,7 @@ public class WgGLBModelLoader extends WgModelLoader<WgModelLoader.ModelParameter
         charBuffer.get(jsonArray);
         String json = new String(jsonArray);
 
-        //System.out.println("JSON ["+json+"]");
+        // System.out.println("JSON ["+json+"]");
 
         bb.position(bb.position() + chunkLength);
 
@@ -107,16 +107,16 @@ public class WgGLBModelLoader extends WgModelLoader<WgModelLoader.ModelParameter
         // todo the BIN chunk is optional
         chunkLength = bb.getInt();
         chunkType = bb.getInt();
-        if(chunkType != 0x4E4942) // "BIN"
-            throw new RuntimeException("GLB file invalid, second chunk must be type BIN: "+name);
+        if (chunkType != 0x4E4942) // "BIN"
+            throw new RuntimeException("GLB file invalid, second chunk must be type BIN: " + name);
 
-        //System.out.println("Chunk length: "+chunkLength+" type: "+Integer.toHexString(chunkType));
+        // System.out.println("Chunk length: "+chunkLength+" type: "+Integer.toHexString(chunkType));
 
         ByteBuffer chunkBinaryData = bb.slice();
         chunkBinaryData.limit(chunkLength);
 
         GLTF gltf = ParserGLTF.parseJSON(json, path);
-        gltf.rawBuffers.add( new GLTFRawBuffer(chunkBinaryData));
+        gltf.rawBuffers.add(new GLTFRawBuffer(chunkBinaryData));
         return gltf;
     }
 

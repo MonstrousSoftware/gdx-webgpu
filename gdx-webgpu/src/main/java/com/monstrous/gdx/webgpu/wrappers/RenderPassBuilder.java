@@ -25,59 +25,61 @@ import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 
-/** Factory class to create WebGPURenderPass objects.
- *  use setCommandEncoder() before creating passes.
- *  use create() to create a pass (at least once per frame)
+/**
+ * Factory class to create WebGPURenderPass objects. use setCommandEncoder() before creating passes. use create() to
+ * create a pass (at least once per frame)
  */
 public class RenderPassBuilder {
 
     public static WebGPURenderPass create(String name) {
-        return create( name, null);
+        return create(name, null);
     }
 
     public static WebGPURenderPass create(String name, Color clearColor) {
-        return create(name,clearColor,  1);
+        return create(name, clearColor, 1);
     }
 
     public static WebGPURenderPass create(String name, Color clearColor, int sampleCount) {
-        WgGraphics gfx = (WgGraphics)Gdx.graphics;
-        return create(name,clearColor, false, null, gfx.getContext().getDepthTexture(), sampleCount);
+        WgGraphics gfx = (WgGraphics) Gdx.graphics;
+        return create(name, clearColor, false, null, gfx.getContext().getDepthTexture(), sampleCount);
     }
 
     public static WebGPURenderPass create(String name, Color clearColor, boolean clearDepth) {
-        WgGraphics gfx = (WgGraphics)Gdx.graphics;
-        return create(name,clearColor, clearDepth,null,  gfx.getContext().getDepthTexture(), 1);
+        WgGraphics gfx = (WgGraphics) Gdx.graphics;
+        return create(name, clearColor, clearDepth, null, gfx.getContext().getDepthTexture(), 1);
     }
 
     public static WebGPURenderPass create(String name, Color clearColor, boolean clearDepth, int sampleCount) {
-        WgGraphics gfx = (WgGraphics)Gdx.graphics;
-        return create(name,clearColor, clearDepth,null,  gfx.getContext().getDepthTexture(), sampleCount);
+        WgGraphics gfx = (WgGraphics) Gdx.graphics;
+        return create(name, clearColor, clearDepth, null, gfx.getContext().getDepthTexture(), sampleCount);
     }
 
-    public static WebGPURenderPass create(String name, Color clearColor, boolean clearDepth, int sampleCount, RenderPassType passType) {
-        WgGraphics gfx = (WgGraphics)Gdx.graphics;
-        return create(name,clearColor, clearDepth,null,  gfx.getContext().getDepthTexture(), sampleCount, passType);
+    public static WebGPURenderPass create(String name, Color clearColor, boolean clearDepth, int sampleCount,
+            RenderPassType passType) {
+        WgGraphics gfx = (WgGraphics) Gdx.graphics;
+        return create(name, clearColor, clearDepth, null, gfx.getContext().getDepthTexture(), sampleCount, passType);
     }
 
-    public static WebGPURenderPass create(String name, Color clearColor, boolean clearDepth, WgTexture colorTexture, WgTexture depthTexture, int sampleCount){
-        return create(name, clearColor, clearDepth, colorTexture, depthTexture, sampleCount, RenderPassType.COLOR_AND_DEPTH);
+    public static WebGPURenderPass create(String name, Color clearColor, boolean clearDepth, WgTexture colorTexture,
+            WgTexture depthTexture, int sampleCount) {
+        return create(name, clearColor, clearDepth, colorTexture, depthTexture, sampleCount,
+                RenderPassType.COLOR_AND_DEPTH);
     }
-
 
     /**
      * Create a render pass
      *
-     * @param clearColor    background color, null to not clear the screen, e.g. for a UI
-     * @param clearDepth    clear depth buffer?
-     * @param outTexture    output texture, null to render to the screen
-     * @param depthTexture   output depth texture, can be null
-     * @param sampleCount       samples per pixel: 1 or 4
+     * @param clearColor background color, null to not clear the screen, e.g. for a UI
+     * @param clearDepth clear depth buffer?
+     * @param outTexture output texture, null to render to the screen
+     * @param depthTexture output depth texture, can be null
+     * @param sampleCount samples per pixel: 1 or 4
      * @param passType
      * @return
      */
     public static WebGPURenderPass create(String name, Color clearColor, boolean clearDepth, WgTexture outTexture,
-                                          WgTexture depthTexture, int sampleCount, RenderPassType passType) {
-        //System.out.println("RenderPassBuilder: create");
+            WgTexture depthTexture, int sampleCount, RenderPassType passType) {
+        // System.out.println("RenderPassBuilder: create");
         WgGraphics gfx = (WgGraphics) Gdx.graphics;
         WebGPUContext webgpu = gfx.getContext();
 
@@ -93,14 +95,11 @@ public class RenderPassBuilder {
         renderPassDescriptor.setOcclusionQuerySet(WGPUQuerySet.NULL);
         renderPassDescriptor.setLabel(name);
 
-
         WGPUVectorRenderPassColorAttachment colorAttachments = WGPUVectorRenderPassColorAttachment.obtain();
 
-        if (passType == RenderPassType.COLOR_AND_DEPTH ||
-            passType == RenderPassType.COLOR_PASS ||
-            passType == RenderPassType.COLOR_PASS_AFTER_DEPTH_PREPASS ||
-            passType == RenderPassType.SHADOW_PASS ||
-            passType == RenderPassType.NO_DEPTH) {
+        if (passType == RenderPassType.COLOR_AND_DEPTH || passType == RenderPassType.COLOR_PASS
+                || passType == RenderPassType.COLOR_PASS_AFTER_DEPTH_PREPASS || passType == RenderPassType.SHADOW_PASS
+                || passType == RenderPassType.NO_DEPTH) {
 
             WGPURenderPassColorAttachment renderPassColorAttachment = WGPURenderPassColorAttachment.obtain();
             renderPassColorAttachment.setNextInChain(WGPUChainedStruct.NULL);
@@ -108,11 +107,10 @@ public class RenderPassBuilder {
 
             renderPassColorAttachment.setDepthSlice(-1);
 
-
             if (clearColor != null) {
-                if(!webgpu.hasLinearOutput())
-                    GammaCorrection.fromLinear(clearColor);      // inverse gamma correction
-                renderPassColorAttachment.setLoadOp( WGPULoadOp.Clear);
+                if (!webgpu.hasLinearOutput())
+                    GammaCorrection.fromLinear(clearColor); // inverse gamma correction
+                renderPassColorAttachment.setLoadOp(WGPULoadOp.Clear);
 
                 renderPassColorAttachment.getClearValue().setR(clearColor.r);
                 renderPassColorAttachment.getClearValue().setG(clearColor.g);
@@ -149,8 +147,9 @@ public class RenderPassBuilder {
             WGPURenderPassDepthStencilAttachment depthStencilAttachment = WGPURenderPassDepthStencilAttachment.obtain();
 
             depthStencilAttachment.setDepthClearValue(1.0f);
-            depthStencilAttachment.setDepthLoadOp( clearDepth ? WGPULoadOp.Clear : WGPULoadOp.Load);
-            //depthStencilAttachment.setDepthLoadOp(passType == RenderPassType.COLOR_PASS_AFTER_DEPTH_PREPASS ? WGPULoadOp.Load : WGPULoadOp.Clear);
+            depthStencilAttachment.setDepthLoadOp(clearDepth ? WGPULoadOp.Clear : WGPULoadOp.Load);
+            // depthStencilAttachment.setDepthLoadOp(passType == RenderPassType.COLOR_PASS_AFTER_DEPTH_PREPASS ?
+            // WGPULoadOp.Load : WGPULoadOp.Clear);
             depthStencilAttachment.setDepthStoreOp(WGPUStoreOp.Store);
             depthStencilAttachment.setDepthReadOnly(false);
             depthStencilAttachment.setStencilClearValue(0);
@@ -165,11 +164,11 @@ public class RenderPassBuilder {
 
         GPUTimer timer = gfx.getContext().getGPUTimer();
         if (timer.isEnabled()) {
-            timer.addPass(name);  // announce a new render pass for this frame (this determines the index values)
+            timer.addPass(name); // announce a new render pass for this frame (this determines the index values)
             // create a query
-            //System.out.println("Timer for "+name+ " indices: "+timer.getStartIndex()+" "+timer.getStopIndex());
+            // System.out.println("Timer for "+name+ " indices: "+timer.getStartIndex()+" "+timer.getStopIndex());
             WGPURenderPassTimestampWrites query = WGPURenderPassTimestampWrites.obtain();
-            query.setBeginningOfPassWriteIndex(timer.getStartIndex());  // get offset for this render pass's start time
+            query.setBeginningOfPassWriteIndex(timer.getStartIndex()); // get offset for this render pass's start time
             query.setEndOfPassWriteIndex(timer.getStopIndex());
             query.setQuerySet(timer.getQuerySet());
             renderPassDescriptor.setTimestampWrites(query);
@@ -177,17 +176,15 @@ public class RenderPassBuilder {
 
         WebGPURenderPass pass = WebGPURenderPass.obtain(); // Reuse render pass
 
-        Rectangle view = webgpu.getViewportRectangle();         // todo may change over time
-        WGPUTextureFormat format = WGPUTextureFormat.RGBA8UnormSrgb;        // TMP
+        Rectangle view = webgpu.getViewportRectangle(); // todo may change over time
+        WGPUTextureFormat format = WGPUTextureFormat.RGBA8UnormSrgb; // TMP
         pass.begin(webgpu.encoder, renderPassDescriptor, passType, format, depthTexture.getFormat(), sampleCount,
-            outTexture == null ? (int)view.width : outTexture.getWidth(),
-            outTexture == null ? (int)view.height : outTexture.getHeight());
-
-
+                outTexture == null ? (int) view.width : outTexture.getWidth(),
+                outTexture == null ? (int) view.height : outTexture.getHeight());
 
         pass.setViewport(view.x, view.y, view.width, view.height, 0, 1);
 
-        if(webgpu.isScissorEnabled()) {
+        if (webgpu.isScissorEnabled()) {
             Rectangle scissor = webgpu.getScissor();
             pass.setScissorRect((int) scissor.x, (int) scissor.y, (int) scissor.width, (int) scissor.height);
         }

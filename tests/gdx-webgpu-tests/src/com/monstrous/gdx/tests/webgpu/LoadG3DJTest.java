@@ -34,75 +34,69 @@ import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 
 /** Test G3DJ loading and ModelInstance rendering */
 
-
 public class LoadG3DJTest extends GdxTest {
 
-	WgModelBatch modelBatch;
-	PerspectiveCamera cam;
-	PerspectiveCamController controller;
-	WgSpriteBatch batch;
-	WgBitmapFont font;
-	Model model;
-	ModelInstance instance;
+    WgModelBatch modelBatch;
+    PerspectiveCamera cam;
+    PerspectiveCamController controller;
+    WgSpriteBatch batch;
+    WgBitmapFont font;
+    Model model;
+    ModelInstance instance;
 
+    // application
+    public void create() {
+        modelBatch = new WgModelBatch();
+        cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        cam.position.set(0, 2, 4);
+        cam.lookAt(0, 0, 0);
+        cam.near = 0.1f;
+        cam.far = 1000f; // extend far distance to avoid clipping the skybox
 
+        String modelFileName = "data/g3d/invaders.g3dj";
+        FileHandle file = Gdx.files.internal(modelFileName);
+        model = new WgG3dModelLoader(new JsonReader()).loadModel(file);
+        instance = new ModelInstance(model);
 
-	// application
-	public void create () {
-		modelBatch = new WgModelBatch();
-		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		cam.position.set(0, 2, 4);
-		cam.lookAt(0,0,0);
-		cam.near = 0.1f;
-		cam.far = 1000f;		// extend far distance to avoid clipping the skybox
+        controller = new PerspectiveCamController(cam);
+        Gdx.input.setInputProcessor(controller);
+        batch = new WgSpriteBatch();
+        font = new WgBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
 
-		String modelFileName = "data/g3d/invaders.g3dj";
-		FileHandle file = Gdx.files.internal(modelFileName);
-		model = new WgG3dModelLoader(new JsonReader()).loadModel(file);
-		instance = new ModelInstance(model);
+    }
 
+    public void render() {
+        float delta = Gdx.graphics.getDeltaTime();
+        instance.transform.rotate(Vector3.Y, 15f * delta);
 
-		controller = new PerspectiveCamController(cam);
-		Gdx.input.setInputProcessor(controller);
-		batch = new WgSpriteBatch();
-		font = new WgBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
+        WgScreenUtils.clear(Color.TEAL, true);
 
-	}
+        cam.update();
+        modelBatch.begin(cam);
 
-	public void render () {
-		float delta = Gdx.graphics.getDeltaTime();
-		instance.transform.rotate(Vector3.Y, 15f*delta);
+        modelBatch.render(instance);
 
-		WgScreenUtils.clear(Color.TEAL, true);
+        modelBatch.end();
 
-		cam.update();
-		modelBatch.begin(cam);
+        batch.begin();
+        font.draw(batch, "Model loaded from G3DJ file", 0, 20);
+        batch.end();
+    }
 
-		modelBatch.render(instance);
+    @Override
+    public void resize(int width, int height) {
+        cam.viewportWidth = width;
+        cam.viewportHeight = height;
+        cam.update();
 
-		modelBatch.end();
+    }
 
-
-		batch.begin();
-		font.draw(batch, "Model loaded from G3DJ file" , 0, 20);
-		batch.end();
-	}
-
-	@Override
-	public void resize(int width, int height) {
-		cam.viewportWidth = width;
-		cam.viewportHeight = height;
-		cam.update();
-
-	}
-
-	@Override
-	public void dispose () {
-		batch.dispose();
-		font.dispose();
-		modelBatch.dispose();
-		model.dispose();
-	}
-
+    @Override
+    public void dispose() {
+        batch.dispose();
+        font.dispose();
+        modelBatch.dispose();
+        model.dispose();
+    }
 
 }

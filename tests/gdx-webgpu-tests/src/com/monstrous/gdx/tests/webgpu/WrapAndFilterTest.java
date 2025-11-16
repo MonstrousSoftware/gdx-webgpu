@@ -21,9 +21,9 @@ import com.monstrous.gdx.webgpu.scene2d.WgSkin;
 import com.monstrous.gdx.webgpu.scene2d.WgStage;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 
-/** Test of texture wrap and filter methods.
- * todo: select box has a visual issue.
- * todo: doesn't work if called from TestStarter
+/**
+ * Test of texture wrap and filter methods. todo: select box has a visual issue. todo: doesn't work if called from
+ * TestStarter
  */
 public class WrapAndFilterTest extends GdxTest {
 
@@ -38,17 +38,15 @@ public class WrapAndFilterTest extends GdxTest {
     private Texture.TextureFilter minFilter = Texture.TextureFilter.Nearest;
     private Texture.TextureFilter magFilter = Texture.TextureFilter.Nearest;
 
-
-    public void create () {
+    public void create() {
         batch = new WgSpriteBatch();
 
         texture = new WgTexture(Gdx.files.internal("data/badlogic.jpg"));
 
-//			texture.setWrap(Texture.TextureWrap.MirroredRepeat, Texture.TextureWrap.MirroredRepeat);
-//			texture.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
+        // texture.setWrap(Texture.TextureWrap.MirroredRepeat, Texture.TextureWrap.MirroredRepeat);
+        // texture.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
 
-
-        region = new TextureRegion(texture, 0f,0f,2f,2f);		// uv outside 1.0 range to show off wrap mode
+        region = new TextureRegion(texture, 0f, 0f, 2f, 2f); // uv outside 1.0 range to show off wrap mode
 
         font = new WgBitmapFont();
 
@@ -61,49 +59,57 @@ public class WrapAndFilterTest extends GdxTest {
 
         skin = new WgSkin(Gdx.files.internal("data/uiskin.json"));
         SelectBox<String> selectBox = new SelectBox<>(skin);
-        // Add a listener to the button. ChangeListener is fired when the button's checked state changes, eg when clicked,
-        // Button#setChecked() is called, via a key press, etc. If the event.cancel() is called, the checked state will be reverted.
-        // ClickListener could have been used, but would only fire when clicked. Also, canceling a ClickListener event won't
+        // Add a listener to the button. ChangeListener is fired when the button's checked state changes, eg when
+        // clicked,
+        // Button#setChecked() is called, via a key press, etc. If the event.cancel() is called, the checked state will
+        // be reverted.
+        // ClickListener could have been used, but would only fire when clicked. Also, canceling a ClickListener event
+        // won't
         // revert the checked state.
         selectBox.addListener(new ChangeListener() {
-            public void changed (ChangeEvent event, Actor actor) {
+            public void changed(ChangeEvent event, Actor actor) {
                 System.out.println("Clicked! Is checked: " + selectBox.getSelected());
                 handleWrap(selectBox.getSelected());
             }
         });
 
-        selectBox.setItems(new String[]{"Repeat", "ClampToEdge", "MirroredRepeat"} );
+        selectBox.setItems(new String[] {"Repeat", "ClampToEdge", "MirroredRepeat"});
 
         SelectBox<String> filterBox = new SelectBox<>(skin);
-        // Add a listener to the button. ChangeListener is fired when the button's checked state changes, eg when clicked,
-        // Button#setChecked() is called, via a key press, etc. If the event.cancel() is called, the checked state will be reverted.
-        // ClickListener could have been used, but would only fire when clicked. Also, canceling a ClickListener event won't
+        // Add a listener to the button. ChangeListener is fired when the button's checked state changes, eg when
+        // clicked,
+        // Button#setChecked() is called, via a key press, etc. If the event.cancel() is called, the checked state will
+        // be reverted.
+        // ClickListener could have been used, but would only fire when clicked. Also, canceling a ClickListener event
+        // won't
         // revert the checked state.
         filterBox.addListener(new ChangeListener() {
-            public void changed (ChangeEvent event, Actor actor) {
+            public void changed(ChangeEvent event, Actor actor) {
                 System.out.println("Clicked! Is checked: " + filterBox.getSelected());
                 handleMinFilter(filterBox.getSelected());
                 texture.setFilter(minFilter, magFilter);
             }
         });
 
-        filterBox.setItems(new String[]{"Nearest", "Linear"} );
+        filterBox.setItems(new String[] {"Nearest", "Linear"});
 
         SelectBox<String> filterMagBox = new SelectBox<>(skin);
-        // Add a listener to the button. ChangeListener is fired when the button's checked state changes, eg when clicked,
-        // Button#setChecked() is called, via a key press, etc. If the event.cancel() is called, the checked state will be reverted.
-        // ClickListener could have been used, but would only fire when clicked. Also, canceling a ClickListener event won't
+        // Add a listener to the button. ChangeListener is fired when the button's checked state changes, eg when
+        // clicked,
+        // Button#setChecked() is called, via a key press, etc. If the event.cancel() is called, the checked state will
+        // be reverted.
+        // ClickListener could have been used, but would only fire when clicked. Also, canceling a ClickListener event
+        // won't
         // revert the checked state.
         filterMagBox.addListener(new ChangeListener() {
-            public void changed (ChangeEvent event, Actor actor) {
+            public void changed(ChangeEvent event, Actor actor) {
                 System.out.println("Clicked! Is checked: " + filterMagBox.getSelected());
                 handleMagFilter(filterMagBox.getSelected());
                 texture.setFilter(minFilter, magFilter);
             }
         });
 
-        filterMagBox.setItems(new String[]{"Nearest", "Linear"} );
-
+        filterMagBox.setItems(new String[] {"Nearest", "Linear"});
 
         Table table = new Table();
         table.setFillParent(true);
@@ -119,36 +125,35 @@ public class WrapAndFilterTest extends GdxTest {
 
         stage.addActor(table);
 
-
     }
 
-    private void handleWrap(String wrap){
-        if(wrap.contentEquals("Repeat"))
+    private void handleWrap(String wrap) {
+        if (wrap.contentEquals("Repeat"))
             texture.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
-        else if(wrap.contentEquals("ClampToEdge"))
+        else if (wrap.contentEquals("ClampToEdge"))
             texture.setWrap(Texture.TextureWrap.ClampToEdge, Texture.TextureWrap.ClampToEdge);
-        else if(wrap.contentEquals("MirroredRepeat"))
+        else if (wrap.contentEquals("MirroredRepeat"))
             texture.setWrap(Texture.TextureWrap.MirroredRepeat, Texture.TextureWrap.MirroredRepeat);
     }
 
-    private void handleMinFilter(String filter){
-        if(filter.contentEquals("Nearest"))
+    private void handleMinFilter(String filter) {
+        if (filter.contentEquals("Nearest"))
             minFilter = Texture.TextureFilter.Nearest;
-        else if(filter.contentEquals("Linear"))
+        else if (filter.contentEquals("Linear"))
             minFilter = Texture.TextureFilter.Linear;
 
     }
 
-    private void handleMagFilter(String filter){
-        if(filter.contentEquals("Nearest"))
+    private void handleMagFilter(String filter) {
+        if (filter.contentEquals("Nearest"))
             magFilter = Texture.TextureFilter.Nearest;
-        else if(filter.contentEquals("Linear"))
+        else if (filter.contentEquals("Linear"))
             magFilter = Texture.TextureFilter.Linear;
 
     }
 
     @Override
-    public void render () {
+    public void render() {
 
         batch.begin(Color.FOREST);
         batch.draw(region, 100, 100, 200, 200);
@@ -167,20 +172,17 @@ public class WrapAndFilterTest extends GdxTest {
         stage.draw();
     }
 
-
     @Override
-    public void resize (int width, int height) {
+    public void resize(int width, int height) {
         Gdx.app.log("resize", "");
-        batch.getProjectionMatrix().setToOrtho2D(0,0,Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        batch.getProjectionMatrix().setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
 
     @Override
-    public void dispose () {
+    public void dispose() {
         batch.dispose();
         texture.dispose();
         stage.dispose();
     }
 
-
 }
-

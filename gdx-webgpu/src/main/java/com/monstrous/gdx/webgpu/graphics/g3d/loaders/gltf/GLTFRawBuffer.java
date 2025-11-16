@@ -7,7 +7,6 @@ import com.badlogic.gdx.utils.Base64Coder;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-
 // to load a bin file
 public class GLTFRawBuffer {
     public String path;
@@ -15,10 +14,11 @@ public class GLTFRawBuffer {
 
     public GLTFRawBuffer(String uri) {
         byte[] data;
-        if(uri.startsWith("data:")){
-            this.path = "data uri"; // e.g.  "data:application/octet-stream;base64,AAABAAIAAAAAAAAAAAAAAAAAAAAAAIA/AAAAAAAAAAAAAAAAAACAPwAAAAA="
+        if (uri.startsWith("data:")) {
+            this.path = "data uri"; // e.g.
+                                    // "data:application/octet-stream;base64,AAABAAIAAAAAAAAAAAAAAAAAAAAAAIA/AAAAAAAAAAAAAAAAAACAPwAAAAA="
             int commaPosition = uri.indexOf(',');
-            String base64 = uri.substring(commaPosition+1);
+            String base64 = uri.substring(commaPosition + 1);
             data = Base64Coder.decode(base64);
         } else {
             this.path = uri;

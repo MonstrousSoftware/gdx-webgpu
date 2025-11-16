@@ -12,7 +12,6 @@ import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 
-
 public class FullScreenTest extends GdxTest {
     private WgSpriteBatch batch;
     private BitmapFont font;
@@ -20,9 +19,8 @@ public class FullScreenTest extends GdxTest {
     private Viewport viewport;
     private int savedWidth, savedHeight;
 
-
     @Override
-    public void create () {
+    public void create() {
         batch = new WgSpriteBatch();
         font = new WgBitmapFont();
         texture = new WgTexture("data/badlogic.jpg");
@@ -30,12 +28,12 @@ public class FullScreenTest extends GdxTest {
     }
 
     @Override
-    public void render () {
+    public void render() {
 
-        if(Gdx.input.isKeyPressed(Input.Keys.ESCAPE)){
+        if (Gdx.input.isKeyPressed(Input.Keys.ESCAPE)) {
             Gdx.app.exit();
         }
-        if(Gdx.input.isKeyJustPressed(Input.Keys.F11)){
+        if (Gdx.input.isKeyJustPressed(Input.Keys.F11)) {
             boolean fullScreen = Gdx.graphics.isFullscreen();
             WgGraphics.DisplayMode currentMode = Gdx.graphics.getDisplayMode();
             if (fullScreen)
@@ -57,15 +55,14 @@ public class FullScreenTest extends GdxTest {
         batch.end();
     }
 
-
     @Override
-    public void resize (int width, int height) {
-       Gdx.app.log("resize", "");
-       viewport.update(width, height, true);
+    public void resize(int width, int height) {
+        Gdx.app.log("resize", "");
+        viewport.update(width, height, true);
     }
 
     @Override
-    public void dispose () {
+    public void dispose() {
         batch.dispose();
         font.dispose();
         texture.dispose();

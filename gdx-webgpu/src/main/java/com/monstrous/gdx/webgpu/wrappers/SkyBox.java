@@ -16,7 +16,6 @@
 
 package com.monstrous.gdx.webgpu.wrappers;
 
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.math.Matrix4;
@@ -30,18 +29,16 @@ import com.monstrous.gdx.webgpu.graphics.WgCubemap;
 import static com.badlogic.gdx.math.Matrix4.M33;
 
 /**
- * SkyBox
- * Following the approach from https://webgpufundamentals.org/webgpu/lessons/webgpu-skybox.html
- * This uses a dedicated shader that renders one screen filling triangle using a cube map.
- *  The camera projection view matrix is inverted and use to look up screen pixels in the cube map.
- *  The sky box should be rendered after all opaque renderables.
+ * SkyBox Following the approach from https://webgpufundamentals.org/webgpu/lessons/webgpu-skybox.html This uses a
+ * dedicated shader that renders one screen filling triangle using a cube map. The camera projection view matrix is
+ * inverted and use to look up screen pixels in the cube map. The sky box should be rendered after all opaque
+ * renderables.
  *
-  */
-
+ */
 
 public class SkyBox implements Disposable {
 
-    protected final int FRAME_UB_SIZE = 16 * Float.BYTES;   // to hold one 4x4 matrix
+    protected final int FRAME_UB_SIZE = 16 * Float.BYTES; // to hold one 4x4 matrix
 
     protected final WgCubemap cubeMap;
     protected final WebGPUUniformBuffer uniformBuffer;
@@ -83,7 +80,8 @@ public class SkyBox implements Disposable {
         invertedProjectionView = new Matrix4();
     }
 
-    /** execute a render pass to show the sky box.  Use this at the end of the 3d scene.
+    /**
+     * execute a render pass to show the sky box. Use this at the end of the 3d scene.
      *
      * @param cam camera
      */
@@ -91,26 +89,26 @@ public class SkyBox implements Disposable {
         renderPass(cam, false);
     }
 
-    /** execute a render pass to show the sky box.
+    /**
+     * execute a render pass to show the sky box.
      *
      * @param cam camera
      * @param clearDepth true to clear the depth buffer
      */
     public void renderPass(Camera cam, boolean clearDepth) {
         WebGPURenderPass pass = RenderPassBuilder.create("skybox", null, clearDepth);
-        render(cam,pass);
+        render(cam, pass);
         pass.end();
     }
 
     /** Render skybox within a render pass. */
-    public void render(Camera camera, WebGPURenderPass pass){
+    public void render(Camera camera, WebGPURenderPass pass) {
         writeUniforms(uniformBuffer, camera);
 
         pass.setPipeline(pipeline.getPipeline());
         pass.setBindGroup(0, bindGroup.getBindGroup());
-        pass.draw(3);   // one triangle covering the full screen
+        pass.draw(3); // one triangle covering the full screen
     }
-
 
     @Override
     public void dispose() {
@@ -120,25 +118,26 @@ public class SkyBox implements Disposable {
         uniformBuffer.dispose();
     }
 
-
     // Bind Group Layout:
-    //  0 uniforms,
-    //  1 cube map texture,
-    //  2 sampler
+    // 0 uniforms,
+    // 1 cube map texture,
+    // 2 sampler
 
-    protected WebGPUBindGroupLayout createBindGroupLayout(){
+    protected WebGPUBindGroupLayout createBindGroupLayout() {
 
         // Define binding layout
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout();
         layout.begin();
-        layout.addBuffer(0, WGPUShaderStage.Fragment, WGPUBufferBindingType.Uniform, FRAME_UB_SIZE, false);    // uniform buffer
-        layout.addTexture(1, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float,WGPUTextureViewDimension.Cube, false );  // cube map texture
-        layout.addSampler(2, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering);  // cube map sampler
+        layout.addBuffer(0, WGPUShaderStage.Fragment, WGPUBufferBindingType.Uniform, FRAME_UB_SIZE, false); // uniform
+                                                                                                            // buffer
+        layout.addTexture(1, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension.Cube,
+                false); // cube map texture
+        layout.addSampler(2, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering); // cube map sampler
         layout.end();
         return layout;
     }
 
-    //  bind group
+    // bind group
     protected WebGPUBindGroup makeBindGroup(WebGPUBindGroupLayout bindGroupLayout, WebGPUBuffer uniformBuffer) {
         WebGPUBindGroup bg = new WebGPUBindGroup(bindGroupLayout);
         bg.begin();
@@ -149,15 +148,14 @@ public class SkyBox implements Disposable {
         return bg;
     }
 
-
-    protected void writeUniforms( WebGPUUniformBuffer uniformBuffer, Camera camera ){
+    protected void writeUniforms(WebGPUUniformBuffer uniformBuffer, Camera camera) {
         invertedProjectionView.set(camera.combined);
         invertedProjectionView.setTranslation(Vector3.Zero);
         invertedProjectionView.val[M33] = 1.0f;
 
         try {
             invertedProjectionView.inv();
-        } catch(RuntimeException e){        // don't crash on non-invertible matrix, just skip the update
+        } catch (RuntimeException e) { // don't crash on non-invertible matrix, just skip the update
             Gdx.app.error("Skybox", "camera matrix not invertible");
             return;
         }

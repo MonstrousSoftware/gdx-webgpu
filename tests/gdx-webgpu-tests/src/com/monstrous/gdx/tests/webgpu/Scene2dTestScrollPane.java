@@ -41,22 +41,21 @@ import com.monstrous.gdx.webgpu.scene2d.WgStage;
 import static com.badlogic.gdx.scenes.scene2d.actions.Actions.*;
 
 public class Scene2dTestScrollPane extends GdxTest {
-	WgStage stage;
-	private final FloatAction meow = new FloatAction(10, 5);
-	private TiledDrawable patch;
-	private TextureRegion region;
+    WgStage stage;
+    private final FloatAction meow = new FloatAction(10, 5);
+    private TiledDrawable patch;
+    private TextureRegion region;
 
+    public void create() {
+        stage = new WgStage();
+        // stage.setDebugAll(true);
+        Gdx.input.setInputProcessor(stage);
 
-	public void create () {
-		stage = new WgStage();
-		//stage.setDebugAll(true);
-		Gdx.input.setInputProcessor(stage);
+        Skin skin = new WgSkin(Gdx.files.internal("data/uiskin.json"));
 
-		Skin skin = new WgSkin(Gdx.files.internal("data/uiskin.json"));
-
-		Table screenTable = new Table();
+        Table screenTable = new Table();
         screenTable.setFillParent(true);
-        //screenTable.align(Align.top);
+        // screenTable.align(Align.top);
 
         TextButton button1 = new TextButton("HELLO", skin);
         screenTable.add(button1).pad(10).row();
@@ -69,7 +68,6 @@ public class Scene2dTestScrollPane extends GdxTest {
 
         screenTable.add(scrollPane).size(435, 120);
 
-
         screenTable.row();
         Label otherLabel = new Label("WgScrollPane test", skin);
         screenTable.add(otherLabel).pad(10).row();
@@ -80,35 +78,34 @@ public class Scene2dTestScrollPane extends GdxTest {
 
         stage.addActor(screenTable);
 
-	}
-
-    private String introText() {
-        return "dfdf afsdf asd f fasdfa sdfa sdf adfkasdfkaskldfkla sdfla sdflasdfl asdfk asdklfaskl dfkl asdfkl asdkl fakl sdfakl df" +
-            "jjkfsdf  fsdf sdf sdf f sd fs df sdfa sdfa sdf asdfkasd fasdfk asdk fask dfk asdfask dfak sd"+
-            "ueuruwensdfj  we r wf w efwefwioefwfkdfjksjkfiowe ef w,kflwelfwl fwl fwlfl wfl wfl wf"+
-            "dfdf afsdf asd f fasdfa sdfa sdf adfkasdfkaskldfkla sdfla sdflasdfl asdfk asdklfaskl dfkl asdfkl asdkl fakl sdfakl df" +
-            "jjkfsdf  fsdf sdf sdf f sd fs df sdfa sdfa sdf asdfkasd fasdfk asdk fask dfk asdfask dfak sd"+
-            "ueuruwensdfj  we r wf w efwefwioefwfkdfjksjkfiowe ef w,kflwelfwl fwl fwlfl wfl wfl wf"+
-            "dfdf afsdf asd f fasdfa sdfa sdf adfkasdfkaskldfkla sdfla sdflasdfl asdfk asdklfaskl dfkl asdfkl asdkl fakl sdfakl df" +
-            "jjkfsdf  fsdf sdf sdf f sd fs df sdfa sdfa sdf asdfkasd fasdfk asdk fask dfk asdfask dfak sd"+
-            "ueuruwensdfj  we r wf w efwefwioefwfkdfjksjkfiowe ef w,kflwelfwl fwl fwlfl wfl wfl wf"+
-            "dfdf afsdf asd f fasdfa sdfa sdf adfkasdfkaskldfkla sdfla sdflasdfl asdfk asdklfaskl dfkl asdfkl asdkl fakl sdfakl df" +
-            "jjkfsdf  fsdf sdf sdf f sd fs df sdfa sdfa sdf asdfkasd fasdfk asdk fask dfk asdfask dfak sd"+
-            "ueuruwensdfj  we r wf w efwefwioefwfkdfjksjkfiowe ef w,kflwelfwl fwl fwlfl wfl wfl wf";
     }
 
+    private String introText() {
+        return "dfdf afsdf asd f fasdfa sdfa sdf adfkasdfkaskldfkla sdfla sdflasdfl asdfk asdklfaskl dfkl asdfkl asdkl fakl sdfakl df"
+                + "jjkfsdf  fsdf sdf sdf f sd fs df sdfa sdfa sdf asdfkasd fasdfk asdk fask dfk asdfask dfak sd"
+                + "ueuruwensdfj  we r wf w efwefwioefwfkdfjksjkfiowe ef w,kflwelfwl fwl fwlfl wfl wfl wf"
+                + "dfdf afsdf asd f fasdfa sdfa sdf adfkasdfkaskldfkla sdfla sdflasdfl asdfk asdklfaskl dfkl asdfkl asdkl fakl sdfakl df"
+                + "jjkfsdf  fsdf sdf sdf f sd fs df sdfa sdfa sdf asdfkasd fasdfk asdk fask dfk asdfask dfak sd"
+                + "ueuruwensdfj  we r wf w efwefwioefwfkdfjksjkfiowe ef w,kflwelfwl fwl fwlfl wfl wfl wf"
+                + "dfdf afsdf asd f fasdfa sdfa sdf adfkasdfkaskldfkla sdfla sdflasdfl asdfk asdklfaskl dfkl asdfkl asdkl fakl sdfakl df"
+                + "jjkfsdf  fsdf sdf sdf f sd fs df sdfa sdfa sdf asdfkasd fasdfk asdk fask dfk asdfask dfak sd"
+                + "ueuruwensdfj  we r wf w efwefwioefwfkdfjksjkfiowe ef w,kflwelfwl fwl fwlfl wfl wfl wf"
+                + "dfdf afsdf asd f fasdfa sdfa sdf adfkasdfkaskldfkla sdfla sdflasdfl asdfk asdklfaskl dfkl asdfkl asdkl fakl sdfakl df"
+                + "jjkfsdf  fsdf sdf sdf f sd fs df sdfa sdfa sdf asdfkasd fasdfk asdk fask dfk asdfask dfak sd"
+                + "ueuruwensdfj  we r wf w efwefwioefwfkdfjksjkfiowe ef w,kflwelfwl fwl fwlfl wfl wfl wf";
+    }
 
-	public void render () {
+    public void render() {
         WgScreenUtils.clear(Color.TEAL);
-		stage.act(Gdx.graphics.getDeltaTime());
-		stage.draw();
-	}
+        stage.act(Gdx.graphics.getDeltaTime());
+        stage.draw();
+    }
 
-	public void resize (int width, int height) {
-		stage.getViewport().update(width, height, true);
-	}
+    public void resize(int width, int height) {
+        stage.getViewport().update(width, height, true);
+    }
 
-	public void dispose () {
-		stage.dispose();
-	}
+    public void dispose() {
+        stage.dispose();
+    }
 }

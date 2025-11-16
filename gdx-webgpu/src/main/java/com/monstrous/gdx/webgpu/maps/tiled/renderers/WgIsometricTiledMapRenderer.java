@@ -23,20 +23,20 @@ import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 
 public class WgIsometricTiledMapRenderer extends IsometricTiledMapRenderer {
 
-	public WgIsometricTiledMapRenderer(TiledMap map) {
-		this(map, 1.0f);
-	}
+    public WgIsometricTiledMapRenderer(TiledMap map) {
+        this(map, 1.0f);
+    }
 
-	public WgIsometricTiledMapRenderer(TiledMap map, Batch batch) {
-		super(map, batch);
-	}
+    public WgIsometricTiledMapRenderer(TiledMap map, Batch batch) {
+        super(map, batch);
+    }
 
-	public WgIsometricTiledMapRenderer(TiledMap map, float unitScale) {
-		super(map, unitScale, new WgSpriteBatch());
+    public WgIsometricTiledMapRenderer(TiledMap map, float unitScale) {
+        super(map, unitScale, new WgSpriteBatch());
         this.ownsBatch = true;
-	}
+    }
 
-	public WgIsometricTiledMapRenderer(TiledMap map, float unitScale, Batch batch) {
-		super(map, unitScale, batch);
-	}
+    public WgIsometricTiledMapRenderer(TiledMap map, float unitScale, Batch batch) {
+        super(map, unitScale, batch);
+    }
 }

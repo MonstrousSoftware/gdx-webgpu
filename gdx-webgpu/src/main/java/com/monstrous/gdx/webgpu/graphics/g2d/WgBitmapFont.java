@@ -29,98 +29,118 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.Array;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 
-/** WebGPU version of BitmapFont.
- * This intercepts the creation of Texture in the constructor and uses WebGPUTexture instead.
+/**
+ * WebGPU version of BitmapFont. This intercepts the creation of Texture in the constructor and uses WebGPUTexture
+ * instead.
  */
 public class WgBitmapFont extends BitmapFont {
 
+    /**
+     * Creates a BitmapFont using the default 15pt Liberation Sans font included in the libgdx JAR file. This is
+     * convenient to easily display text without bothering without generating a bitmap font yourself.
+     */
+    public WgBitmapFont() {
+        this(Gdx.files.classpath("com/badlogic/gdx/utils/lsans-15.fnt"),
+                Gdx.files.classpath("com/badlogic/gdx/utils/lsans-15.png"), false, true);
+    }
 
-	/** Creates a BitmapFont using the default 15pt Liberation Sans font included in the libgdx JAR file. This is convenient to
-	 * easily display text without bothering without generating a bitmap font yourself. */
-	public WgBitmapFont() {
-		this(Gdx.files.classpath("com/badlogic/gdx/utils/lsans-15.fnt"), Gdx.files.classpath("com/badlogic/gdx/utils/lsans-15.png"),
-				false, true);
-	}
+    /**
+     * Creates a BitmapFont using the default 15pt Liberation Sans font included in the libgdx JAR file. This is
+     * convenient to easily display text without bothering without generating a bitmap font yourself.
+     * 
+     * @param flip If true, the glyphs will be flipped for use with a perspective where 0,0 is the upper left corner.
+     */
+    public WgBitmapFont(boolean flip) {
+        this(Gdx.files.classpath("com/badlogic/gdx/utils/lsans-15.fnt"),
+                Gdx.files.classpath("com/badlogic/gdx/utils/lsans-15.png"), flip, true);
+    }
 
-	/** Creates a BitmapFont using the default 15pt Liberation Sans font included in the libgdx JAR file. This is convenient to
-	 * easily display text without bothering without generating a bitmap font yourself.
-	 * @param flip If true, the glyphs will be flipped for use with a perspective where 0,0 is the upper left corner. */
-	public WgBitmapFont(boolean flip) {
-		this(Gdx.files.classpath("com/badlogic/gdx/utils/lsans-15.fnt"), Gdx.files.classpath("com/badlogic/gdx/utils/lsans-15.png"),
-				flip, true);
-	}
+    /**
+     * Creates a BitmapFont from a BMFont file. The image file name is read from the BMFont file and the image is loaded
+     * from the same directory. The font data is not flipped.
+     */
+    public WgBitmapFont(FileHandle fontFile) {
+        this(fontFile, false);
+    }
 
-	/** Creates a BitmapFont from a BMFont file. The image file name is read from the BMFont file and the image is loaded from the
-	 * same directory. The font data is not flipped. */
-	public WgBitmapFont(FileHandle fontFile) {
-		this(fontFile, false);
-	}
+    /**
+     * Creates a BitmapFont from a BMFont file. The image file name is read from the BMFont file and the image is loaded
+     * from the same directory.
+     * 
+     * @param flip If true, the glyphs will be flipped for use with a perspective where 0,0 is the upper left corner.
+     */
+    public WgBitmapFont(FileHandle fontFile, boolean flip) {
+        this(new BitmapFontData(fontFile, flip), (TextureRegion) null, true);
+    }
 
-	/** Creates a BitmapFont from a BMFont file. The image file name is read from the BMFont file and the image is loaded from the
-	 * same directory.
-	 * @param flip If true, the glyphs will be flipped for use with a perspective where 0,0 is the upper left corner. */
-	public WgBitmapFont(FileHandle fontFile, boolean flip) {
-		this(new BitmapFontData(fontFile, flip), (TextureRegion)null, true);
-	}
-
-    /** Creates a BitmapFont with the glyphs relative to the specified region. If the region is null, the glyph textures are loaded
-     * from the image file given in the font file. The {@link #dispose()} method will not dispose the region's texture in this
-     * case!
+    /**
+     * Creates a BitmapFont with the glyphs relative to the specified region. If the region is null, the glyph textures
+     * are loaded from the image file given in the font file. The {@link #dispose()} method will not dispose the
+     * region's texture in this case!
      * <p>
      * The font data is not flipped.
+     * 
      * @param fontFile the font definition file
-     * @param region The texture region containing the glyphs. The glyphs must be relative to the lower left corner (ie, the region
-     *           should not be flipped). If the region is null the glyph images are loaded from the image path in the font file. */
+     * @param region The texture region containing the glyphs. The glyphs must be relative to the lower left corner (ie,
+     *            the region should not be flipped). If the region is null the glyph images are loaded from the image
+     *            path in the font file.
+     */
     public WgBitmapFont(FileHandle fontFile, TextureRegion region) {
         this(fontFile, region, false);
     }
 
-	/** Creates a BitmapFont from a BMFont file, using the specified image for glyphs. Any image specified in the BMFont file is
-	 * ignored.
-	 * @param flip If true, the glyphs will be flipped for use with a perspective where 0,0 is the upper left corner. */
-	public WgBitmapFont(FileHandle fontFile, FileHandle imageFile, boolean flip) {
-		this(fontFile, imageFile, flip, true);
-	}
+    /**
+     * Creates a BitmapFont from a BMFont file, using the specified image for glyphs. Any image specified in the BMFont
+     * file is ignored.
+     * 
+     * @param flip If true, the glyphs will be flipped for use with a perspective where 0,0 is the upper left corner.
+     */
+    public WgBitmapFont(FileHandle fontFile, FileHandle imageFile, boolean flip) {
+        this(fontFile, imageFile, flip, true);
+    }
 
-	/** Creates a BitmapFont from a BMFont file, using the specified image for glyphs. Any image specified in the BMFont file is
-	 * ignored.
-	 * @param flip If true, the glyphs will be flipped for use with a perspective where 0,0 is the upper left corner.
-	 * @param integer If true, rendering positions will be at integer values to avoid filtering artifacts. */
-	public WgBitmapFont(FileHandle fontFile, FileHandle imageFile, boolean flip, boolean integer) {
-		super(new BitmapFontData(fontFile, flip), new TextureRegion(new WgTexture(imageFile, false)), integer);
-	}
+    /**
+     * Creates a BitmapFont from a BMFont file, using the specified image for glyphs. Any image specified in the BMFont
+     * file is ignored.
+     * 
+     * @param flip If true, the glyphs will be flipped for use with a perspective where 0,0 is the upper left corner.
+     * @param integer If true, rendering positions will be at integer values to avoid filtering artifacts.
+     */
+    public WgBitmapFont(FileHandle fontFile, FileHandle imageFile, boolean flip, boolean integer) {
+        super(new BitmapFontData(fontFile, flip), new TextureRegion(new WgTexture(imageFile, false)), integer);
+    }
 
-	public WgBitmapFont(BitmapFontData data, TextureRegion region, boolean integer) {
-		this(data, region != null ? Array.with(region) : null, integer);
-	}
+    public WgBitmapFont(BitmapFontData data, TextureRegion region, boolean integer) {
+        this(data, region != null ? Array.with(region) : null, integer);
+    }
 
-	public WgBitmapFont(BitmapFontData data, Array<TextureRegion> pageRegions, boolean integer) {
-		super(data, buildRegions(data, pageRegions), integer);
-		setOwnsTexture(pageRegions == null || pageRegions.size == 0);
-	}
+    public WgBitmapFont(BitmapFontData data, Array<TextureRegion> pageRegions, boolean integer) {
+        super(data, buildRegions(data, pageRegions), integer);
+        setOwnsTexture(pageRegions == null || pageRegions.size == 0);
+    }
 
-    public WgBitmapFont (FileHandle fontFile, TextureRegion region, boolean flip) {
+    public WgBitmapFont(FileHandle fontFile, TextureRegion region, boolean flip) {
         this(new BitmapFontData(fontFile, flip), region, true);
     }
 
-	// intercept the creation of Textures
-	private static Array<TextureRegion> buildRegions(BitmapFontData data, Array<TextureRegion> pageRegions){
-		if(pageRegions != null && pageRegions.size > 0)
-			return pageRegions;
+    // intercept the creation of Textures
+    private static Array<TextureRegion> buildRegions(BitmapFontData data, Array<TextureRegion> pageRegions) {
+        if (pageRegions != null && pageRegions.size > 0)
+            return pageRegions;
 
-		if (data.imagePaths == null)
-				throw new IllegalArgumentException("If no regions are specified, the font data must have an images path.");
-		// Load each path.
-		int n = data.imagePaths.length;
-		Array<TextureRegion> regions = new Array(n);
-		for (int i = 0; i < n; i++) {
-			FileHandle file;
-			if (data.fontFile == null)
-				file = Gdx.files.internal(data.imagePaths[i]);
-			else
-				file = Gdx.files.getFileHandle(data.imagePaths[i], data.fontFile.type());
-			regions.add(new TextureRegion(new WgTexture(file, false)));
-		}
-		return regions;
-	}
+        if (data.imagePaths == null)
+            throw new IllegalArgumentException("If no regions are specified, the font data must have an images path.");
+        // Load each path.
+        int n = data.imagePaths.length;
+        Array<TextureRegion> regions = new Array(n);
+        for (int i = 0; i < n; i++) {
+            FileHandle file;
+            if (data.fontFile == null)
+                file = Gdx.files.internal(data.imagePaths[i]);
+            else
+                file = Gdx.files.getFileHandle(data.imagePaths[i], data.fontFile.type());
+            regions.add(new TextureRegion(new WgTexture(file, false)));
+        }
+        return regions;
+    }
 }

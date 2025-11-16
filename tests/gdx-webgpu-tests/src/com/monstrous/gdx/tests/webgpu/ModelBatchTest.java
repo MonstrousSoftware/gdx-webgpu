@@ -36,135 +36,129 @@ import com.monstrous.gdx.webgpu.graphics.utils.WgMeshBuilder;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 
-/** Test WebGPUModelBatch with single Renderables.
- * */
+/**
+ * Test WebGPUModelBatch with single Renderables.
+ */
 public class ModelBatchTest extends GdxTest {
 
-	WgModelBatch modelBatch;
-	PerspectiveCamera cam;
-	PerspectiveCamController controller;
-	WgSpriteBatch batch;
-	WgBitmapFont font;
-	WgMesh mesh;
-	Renderable renderable;
-	Renderable renderable2;
+    WgModelBatch modelBatch;
+    PerspectiveCamera cam;
+    PerspectiveCamController controller;
+    WgSpriteBatch batch;
+    WgBitmapFont font;
+    WgMesh mesh;
+    Renderable renderable;
+    Renderable renderable2;
 
-	public void create () {
-		modelBatch = new WgModelBatch();
-		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		cam.position.set(0, 0, 2);
-		cam.near = 0.1f;
+    public void create() {
+        modelBatch = new WgModelBatch();
+        cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        cam.position.set(0, 0, 2);
+        cam.near = 0.1f;
         cam.far = 30f;
 
+        controller = new PerspectiveCamController(cam);
+        Gdx.input.setInputProcessor(controller);
+        batch = new WgSpriteBatch();
+        font = new WgBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
 
-		controller = new PerspectiveCamController(cam);
-		Gdx.input.setInputProcessor(controller);
-		batch = new WgSpriteBatch();
-		font = new WgBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
+        //
+        // Create some renderables
+        //
 
-		//
-		// Create some renderables
-		//
+        WgTexture texture1 = new WgTexture(Gdx.files.internal("data/planet_earth.png"), true);
+        texture1.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear);
+        Material mat1 = new Material(TextureAttribute.createDiffuse(texture1));
+        // Material mat1 = new Material(ColorAttribute.createDiffuse(Color.ROYAL));
 
-		WgTexture texture1 = new WgTexture(Gdx.files.internal("data/planet_earth.png"), true);
-		texture1.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear);
-		Material mat1 = new Material(TextureAttribute.createDiffuse(texture1));
-        //Material mat1 = new Material(ColorAttribute.createDiffuse(Color.ROYAL));
+        WgTexture texture2 = new WgTexture(Gdx.files.internal("data/badlogic.jpg"), true);
+        texture2.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear);
+        Material mat2 = new Material(TextureAttribute.createDiffuse(texture2));
 
-		WgTexture texture2 = new WgTexture(Gdx.files.internal("data/badlogic.jpg"), true);
-		texture2.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear);
-		Material mat2 = new Material(TextureAttribute.createDiffuse(texture2));
+        final WgMeshPart meshPart = createMeshPart();
+        renderable = new Renderable();
+        renderable.meshPart.set(meshPart);
+        renderable.worldTransform.idt().trn(0, -2, -3);
+        renderable.material = mat1;
 
+        renderable2 = new Renderable();
+        renderable2.meshPart.set(meshPart);
+        renderable2.worldTransform.idt().trn(0, 0, -1);
+        renderable2.material = mat2;
 
-		final WgMeshPart meshPart = createMeshPart();
-		renderable = new Renderable();
-		renderable.meshPart.set(meshPart);
-		renderable.worldTransform.idt().trn(0,-2,-3);
-		renderable.material = mat1;
+    }
 
-		renderable2 = new Renderable();
-		renderable2.meshPart.set(meshPart);
-		renderable2.worldTransform.idt().trn(0,0,-1);
-		renderable2.material = mat2;
+    public void render() {
+        float delta = Gdx.graphics.getDeltaTime();
+        renderable.worldTransform.rotate(Vector3.Y, delta * 15f);
+        renderable2.worldTransform.rotate(Vector3.Y, -delta * 15f);
 
-	}
+        WgScreenUtils.clear(Color.TEAL, true);
 
-	public void render () {
-		float delta = Gdx.graphics.getDeltaTime();
-		renderable.worldTransform.rotate(Vector3.Y, delta*15f);
-		renderable2.worldTransform.rotate(Vector3.Y, -delta*15f);
+        cam.update();
+        modelBatch.begin(cam);
 
-		WgScreenUtils.clear(Color.TEAL, true);
+        modelBatch.render(renderable2);
 
-		cam.update();
-		modelBatch.begin(cam);
+        modelBatch.render(renderable);
 
-		modelBatch.render(renderable2);
+        modelBatch.end();
 
-		modelBatch.render(renderable);
+        batch.begin();
+        font.draw(batch, "fps: " + Gdx.graphics.getFramesPerSecond(), 0, 20);
+        batch.end();
+    }
 
-		modelBatch.end();
+    @Override
+    public void resize(int width, int height) {
+        cam.viewportWidth = width;
+        cam.viewportHeight = height;
+        cam.update();
 
+    }
 
-		batch.begin();
-		font.draw(batch, "fps: " + Gdx.graphics.getFramesPerSecond(), 0, 20);
-		batch.end();
-	}
+    @Override
+    public void dispose() {
+        batch.dispose();
+        font.dispose();
+        modelBatch.dispose();
+        mesh.dispose();
 
-	@Override
-	public void resize(int width, int height) {
-		cam.viewportWidth = width;
-		cam.viewportHeight = height;
-		cam.update();
+    }
 
-	}
+    public WgMeshPart createMeshPart() {
+        WgMeshBuilder mb = new WgMeshBuilder();
 
-	@Override
-	public void dispose () {
-		batch.dispose();
-		font.dispose();
-		modelBatch.dispose();
-		mesh.dispose();
+        VertexAttributes attr = WgMeshBuilder.createAttributes(VertexAttributes.Usage.Position
+                | VertexAttributes.Usage.TextureCoordinates | VertexAttributes.Usage.ColorUnpacked);
 
-	}
+        mb.begin(attr);
 
-	public WgMeshPart createMeshPart() {
-		WgMeshBuilder mb = new WgMeshBuilder();
+        WgMeshPart part = mb.part("block", GL20.GL_TRIANGLES);
+        // rotate unit cube by 90 degrees to get the textures the right way up.
+        Matrix4 transform = new Matrix4().rotate(Vector3.Z, 90);
+        BoxShapeBuilder.build(mb, transform); // create unit cube
+        mesh = mb.end(); // keep this for disposal
 
-		VertexAttributes attr = WgMeshBuilder.createAttributes(VertexAttributes.Usage.Position | VertexAttributes.Usage.TextureCoordinates| VertexAttributes.Usage.ColorUnpacked);
+        return part;
+    }
 
-		mb.begin(attr);
+    public WgMeshPart createMeshPartOri() {
+        VertexAttributes vattr = new VertexAttributes(VertexAttribute.Position(), VertexAttribute.TexCoords(0),
+                VertexAttribute.ColorUnpacked());
 
-		WgMeshPart part = mb.part("block", GL20.GL_TRIANGLES);
-		// rotate unit cube by 90 degrees to get the textures the right way up.
-		Matrix4 transform = new Matrix4().rotate(Vector3.Z, 90);
-		BoxShapeBuilder.build(mb, transform);	// create unit cube
-		mesh = mb.end();	// keep this for disposal
+        mesh = new WgMesh(true, 8, 12, vattr);
+        mesh.setVertices(new float[] {-0.5f, -0.5f, 0.5f, 0, 1, 1, 0, 1, 1, 0.5f, -0.5f, 0.5f, 1, 1, 0, 1, 1, 1, 0.5f,
+                0.5f, 0.5f, 1, 0, 1, 1, 0, 1, -0.5f, 0.5f, 0.5f, 0, 0, 0, 1, 0, 1,
 
-		return part;
-	}
+                -0.5f, -0.5f, -0.5f, 0, 1, 1, 0, 1, 1, 0.5f, -0.5f, -0.5f, 1, 1, 0, 1, 1, 1, 0.5f, 0.5f, -0.5f, 1, 0, 1,
+                1, 0, 1, -0.5f, 0.5f, -0.5f, 0, 0, 0, 1, 0, 1,});
 
-	public WgMeshPart createMeshPartOri() {
-		VertexAttributes vattr = new VertexAttributes(VertexAttribute.Position(),  VertexAttribute.TexCoords(0), VertexAttribute.ColorUnpacked());
+        mesh.setIndices(new short[] {0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4});
 
-		mesh = new WgMesh(true, 8, 12, vattr);
-		mesh.setVertices(new float[]{
-				-0.5f, -0.5f, 0.5f, 	0, 1, 	1,0,1,1,
-				0.5f, -0.5f, 0.5f, 	1,1,	0,1,1,1,
-				0.5f, 0.5f, 0.5f, 		1,0,	1,1,0,1,
-				-0.5f, 0.5f, 0.5f, 	0,0,	0,1,0,1,
-
-				-0.5f, -0.5f, -0.5f, 	0, 1, 	1,0,1,1,
-				0.5f, -0.5f, -0.5f, 	1,1,	0,1,1,1,
-				0.5f, 0.5f, -0.5f, 		1,0,	1,1,0,1,
-				-0.5f, 0.5f, -0.5f, 	0,0,	0,1,0,1,
-		});
-
-		mesh.setIndices(new short[] {0, 1, 2, 	2, 3, 0, 	4, 5, 6,  6, 7, 4});
-
-		int offset = 0;	// offset in the indices array, since the mesh is indexed
-		int size = 12;	// nr of indices, since the mesh is indexed
-		int type = GL20.GL_TRIANGLES;	// primitive type using GL constant
-		return new WgMeshPart("part", mesh, offset, size, type);
-	}
+        int offset = 0; // offset in the indices array, since the mesh is indexed
+        int size = 12; // nr of indices, since the mesh is indexed
+        int type = GL20.GL_TRIANGLES; // primitive type using GL constant
+        return new WgMeshPart("part", mesh, offset, size, type);
+    }
 }

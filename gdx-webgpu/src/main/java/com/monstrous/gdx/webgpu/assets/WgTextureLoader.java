@@ -28,68 +28,71 @@ import com.badlogic.gdx.graphics.TextureData;
 import com.badlogic.gdx.utils.Array;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 
-
-
 public class WgTextureLoader extends AsynchronousAssetLoader<Texture, TextureLoader.TextureParameter> {
-	// subclass copied from TextureLoader because members are package private
-	static public class TextureLoaderInfo {
-		String filename;
-		TextureData data;
-		Texture texture;
-	};
+    // subclass copied from TextureLoader because members are package private
+    static public class TextureLoaderInfo {
+        String filename;
+        TextureData data;
+        Texture texture;
+    };
 
-	TextureLoaderInfo info = new TextureLoaderInfo();
+    TextureLoaderInfo info = new TextureLoaderInfo();
 
-	public WgTextureLoader(FileHandleResolver resolver) {
-		super(resolver);
-	}
+    public WgTextureLoader(FileHandleResolver resolver) {
+        super(resolver);
+    }
 
-	@Override
-	public void loadAsync (AssetManager manager, String fileName, FileHandle file, TextureLoader.TextureParameter parameter) {
-        //System.out.println("loadAsync: "+fileName);
+    @Override
+    public void loadAsync(AssetManager manager, String fileName, FileHandle file,
+            TextureLoader.TextureParameter parameter) {
+        // System.out.println("loadAsync: "+fileName);
 
-		info.filename = fileName;
-		if (parameter == null || parameter.textureData == null) {
-			Format format = null;
-			boolean genMipMaps = true;
-			info.texture = null;
+        info.filename = fileName;
+        if (parameter == null || parameter.textureData == null) {
+            Format format = null;
+            boolean genMipMaps = true;
+            info.texture = null;
 
-			if (parameter != null) {
-				format = parameter.format;
-				genMipMaps = parameter.genMipMaps;
-				info.texture = parameter.texture;
-			}
+            if (parameter != null) {
+                format = parameter.format;
+                genMipMaps = parameter.genMipMaps;
+                info.texture = parameter.texture;
+            }
 
-            //format = Format.RGBA8888; // force 4 byte format
+            // format = Format.RGBA8888; // force 4 byte format
 
-			info.data = TextureData.Factory.loadFromFile(file, format, genMipMaps);
-		} else {
-			info.data = parameter.textureData;
-			info.texture = parameter.texture;
-		}
-		if (!info.data.isPrepared()) info.data.prepare();
-	}
+            info.data = TextureData.Factory.loadFromFile(file, format, genMipMaps);
+        } else {
+            info.data = parameter.textureData;
+            info.texture = parameter.texture;
+        }
+        if (!info.data.isPrepared())
+            info.data.prepare();
+    }
 
-	@Override
-	public Texture loadSync (AssetManager manager, String fileName, FileHandle file, TextureLoader.TextureParameter parameter) {
-       // System.out.println("loadSync: "+fileName);
-        if (info == null) return null;
-		Texture texture = info.texture;
-		if (texture != null) {
-			texture.load(info.data);
-		} else {
-			texture = new WgTexture(info.data, fileName);
-		}
-		if (parameter != null) {
-			texture.setFilter(parameter.minFilter, parameter.magFilter);
-			texture.setWrap(parameter.wrapU, parameter.wrapV);
-		}
-		return texture;
-	}
+    @Override
+    public Texture loadSync(AssetManager manager, String fileName, FileHandle file,
+            TextureLoader.TextureParameter parameter) {
+        // System.out.println("loadSync: "+fileName);
+        if (info == null)
+            return null;
+        Texture texture = info.texture;
+        if (texture != null) {
+            texture.load(info.data);
+        } else {
+            texture = new WgTexture(info.data, fileName);
+        }
+        if (parameter != null) {
+            texture.setFilter(parameter.minFilter, parameter.magFilter);
+            texture.setWrap(parameter.wrapU, parameter.wrapV);
+        }
+        return texture;
+    }
 
-	@Override
-	public Array<AssetDescriptor> getDependencies (String fileName, FileHandle file, TextureLoader.TextureParameter parameter) {
-		return null;
-	}
+    @Override
+    public Array<AssetDescriptor> getDependencies(String fileName, FileHandle file,
+            TextureLoader.TextureParameter parameter) {
+        return null;
+    }
 
 }

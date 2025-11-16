@@ -40,19 +40,17 @@ import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLTFModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgModelLoader;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 
-
 /** Test GLTF loading and ModelInstance rendering */
-
 
 public class LoadGLTFTest extends GdxTest {
 
-	WgModelBatch modelBatch;
-	PerspectiveCamera cam;
+    WgModelBatch modelBatch;
+    PerspectiveCamera cam;
     CameraInputController controller;
-	WgSpriteBatch batch;
-	WgBitmapFont font;
-	Model model;
-	ModelInstance instance;
+    WgSpriteBatch batch;
+    WgBitmapFont font;
+    Model model;
+    ModelInstance instance;
     String modelFileName;
     Environment environment;
     int numMeshes;
@@ -62,32 +60,30 @@ public class LoadGLTFTest extends GdxTest {
     WebGPUContext webgpu;
     private Viewport viewport;
 
-
-
-	// application
-	public void create () {
+    // application
+    public void create() {
         gfx = (WgGraphics) Gdx.graphics;
         webgpu = gfx.getContext();
 
-		modelBatch = new WgModelBatch();
-		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		cam.position.set(0, 0, 3f);
-		cam.lookAt(0,0,0);
-		cam.near = 0.001f;
-		cam.far = 100f;
+        modelBatch = new WgModelBatch();
+        cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        cam.position.set(0, 0, 3f);
+        cam.lookAt(0, 0, 0);
+        cam.near = 0.001f;
+        cam.far = 100f;
 
-        //modelFileName = "data/g3d/gltf/BendyBox/test.gltf";
-       modelFileName = "data/g3d/gltf/DamagedHelmet/DamagedHelmet.gltf";
-		//modelFileName = "data/g3d/gltf/Cube/Cube.gltf";
-        //modelFileName = "data/g3d/gltf/StanfordDragon/stanfordDragon.gltf";
-        //modelFileName = "data/g3d/gltf/Cubes/cubes.gltf";
-        //modelFileName = "data/g3d/gltf/AntiqueCamera/AntiqueCamera.gltf";
-        //modelFileName = "data/g3d/gltf/torus.gltf";
-        //modelFileName = "data/g3d/gltf/Sponza/Sponza.gltf";
-        //modelFileName = "data/g3d/gltf/waterbottle/waterbottle.glb";
-        //modelFileName = "data/g3d/gltf/Buggy/Buggy.gltf";
-        //modelFileName = "data/g3d/gltf/triangle.gltf";
-        //modelFileName = "data/g3d/gltf/Avocado.glb";
+        // modelFileName = "data/g3d/gltf/BendyBox/test.gltf";
+        modelFileName = "data/g3d/gltf/DamagedHelmet/DamagedHelmet.gltf";
+        // modelFileName = "data/g3d/gltf/Cube/Cube.gltf";
+        // modelFileName = "data/g3d/gltf/StanfordDragon/stanfordDragon.gltf";
+        // modelFileName = "data/g3d/gltf/Cubes/cubes.gltf";
+        // modelFileName = "data/g3d/gltf/AntiqueCamera/AntiqueCamera.gltf";
+        // modelFileName = "data/g3d/gltf/torus.gltf";
+        // modelFileName = "data/g3d/gltf/Sponza/Sponza.gltf";
+        // modelFileName = "data/g3d/gltf/waterbottle/waterbottle.glb";
+        // modelFileName = "data/g3d/gltf/Buggy/Buggy.gltf";
+        // modelFileName = "data/g3d/gltf/triangle.gltf";
+        // modelFileName = "data/g3d/gltf/Avocado.glb";
 
         WgModelLoader.ModelParameters params = new WgModelLoader.ModelParameters();
         params.textureParameter.genMipMaps = true;
@@ -95,40 +91,40 @@ public class LoadGLTFTest extends GdxTest {
         System.out.println("Start loading");
         long startLoad = System.currentTimeMillis();
         FileHandle file = Gdx.files.internal(modelFileName);
-        if(file.extension().contentEquals("gltf"))
+        if (file.extension().contentEquals("gltf"))
             model = new WgGLTFModelLoader().loadModel(file, params);
-        else if(file.extension().contentEquals("glb"))
+        else if (file.extension().contentEquals("glb"))
             model = new WgGLBModelLoader().loadModel(file, params);
         else
-            System.out.println("File extension not supported: "+modelFileName);
+            System.out.println("File extension not supported: " + modelFileName);
         long endLoad = System.currentTimeMillis();
-        System.out.println("Model loading time (ms): "+(endLoad - startLoad));
+        System.out.println("Model loading time (ms): " + (endLoad - startLoad));
 
-		instance = new ModelInstance(model);
+        instance = new ModelInstance(model);
 
-//        BoundingBox bbox = new BoundingBox();
-//        model.calculateBoundingBox(bbox);
-//        cam.position.z = bbox.getHeight();
-//        cam.position.y = bbox.getHeight() ;
-//        cam.lookAt(0, bbox.getHeight() / 2f,0);
-//        cam.update();
+        // BoundingBox bbox = new BoundingBox();
+        // model.calculateBoundingBox(bbox);
+        // cam.position.z = bbox.getHeight();
+        // cam.position.y = bbox.getHeight() ;
+        // cam.lookAt(0, bbox.getHeight() / 2f,0);
+        // cam.update();
 
         numMeshes = instance.model.meshes.size;
-        for(int i = 0; i < numMeshes; i++){
+        for (int i = 0; i < numMeshes; i++) {
             numVerts += instance.model.meshes.get(i).getNumVertices();
             numIndices += instance.model.meshes.get(i).getNumIndices();
         }
 
-		controller = new CameraInputController(cam);
+        controller = new CameraInputController(cam);
 
-		Gdx.input.setInputProcessor(controller);
+        Gdx.input.setInputProcessor(controller);
         viewport = new ScreenViewport();
-		batch = new WgSpriteBatch();
-		font = new WgBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
+        batch = new WgSpriteBatch();
+        font = new WgBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
 
         environment = new Environment();
         float amb = 0.0f;
-        ColorAttribute ambient =  ColorAttribute.createAmbientLight(amb, amb, amb, 1f);
+        ColorAttribute ambient = ColorAttribute.createAmbientLight(amb, amb, amb, 1f);
         environment.set(ambient);
 
         DirectionalLight dirLight1 = new DirectionalLight();
@@ -136,54 +132,56 @@ public class LoadGLTFTest extends GdxTest {
         dirLight1.setColor(Color.WHITE);
         environment.add(dirLight1);
 
-	}
+    }
 
-	public void render () {
-		float delta = Gdx.graphics.getDeltaTime();
-		instance.transform.rotate(Vector3.Y, 15f*delta);
+    public void render() {
+        float delta = Gdx.graphics.getDeltaTime();
+        instance.transform.rotate(Vector3.Y, 15f * delta);
 
-		WgScreenUtils.clear(Color.DARK_GRAY, true);
+        WgScreenUtils.clear(Color.DARK_GRAY, true);
 
-		cam.update();
-		modelBatch.begin(cam);
+        cam.update();
+        modelBatch.begin(cam);
 
-		modelBatch.render(instance, environment);
+        modelBatch.render(instance, environment);
 
-		modelBatch.end();
+        modelBatch.end();
 
         viewport.apply();
         batch.setProjectionMatrix(viewport.getCamera().combined);
-		batch.begin();
+        batch.begin();
         int y = 200;
-		font.draw(batch, "Model loaded: "+modelFileName , 0, y-=20);
-        font.draw(batch, "Meshes: "+numMeshes , 0, y-=20);
-        font.draw(batch, "Vertices: "+numVerts , 0, y-=20);
-        font.draw(batch, "Indices: "+numIndices , 0, y-=20);
-        font.draw(batch, "FPS: "+Gdx.graphics.getFramesPerSecond() ,0, y -= 20);
-        font.draw(batch, "delta time: "+(int)(1000000/(Gdx.graphics.getFramesPerSecond()+0.001f))+" microseconds",0, y -= 20);
+        font.draw(batch, "Model loaded: " + modelFileName, 0, y -= 20);
+        font.draw(batch, "Meshes: " + numMeshes, 0, y -= 20);
+        font.draw(batch, "Vertices: " + numVerts, 0, y -= 20);
+        font.draw(batch, "Indices: " + numIndices, 0, y -= 20);
+        font.draw(batch, "FPS: " + Gdx.graphics.getFramesPerSecond(), 0, y -= 20);
+        font.draw(batch,
+                "delta time: " + (int) (1000000 / (Gdx.graphics.getFramesPerSecond() + 0.001f)) + " microseconds", 0,
+                y -= 20);
 
-        for(int pass = 0; pass < webgpu.getGPUTimer().getNumPasses(); pass++)
-            font.draw(batch, "GPU time (pass "+pass+" "+webgpu.getGPUTimer().getPassName(pass)+") : "+(int)webgpu.getAverageGPUtime(pass)+ " microseconds" ,0, y -= 20);
+        for (int pass = 0; pass < webgpu.getGPUTimer().getNumPasses(); pass++)
+            font.draw(batch, "GPU time (pass " + pass + " " + webgpu.getGPUTimer().getPassName(pass) + ") : "
+                    + (int) webgpu.getAverageGPUtime(pass) + " microseconds", 0, y -= 20);
         batch.end();
 
-	}
+    }
 
-	@Override
-	public void resize(int width, int height) {
-		cam.viewportWidth = width;
-		cam.viewportHeight = height;
-		cam.update();
+    @Override
+    public void resize(int width, int height) {
+        cam.viewportWidth = width;
+        cam.viewportHeight = height;
+        cam.update();
         viewport.update(width, height, true);
 
-	}
+    }
 
-	@Override
-	public void dispose () {
-		batch.dispose();
-		font.dispose();
-		modelBatch.dispose();
-		model.dispose();
-	}
-
+    @Override
+    public void dispose() {
+        batch.dispose();
+        font.dispose();
+        modelBatch.dispose();
+        model.dispose();
+    }
 
 }

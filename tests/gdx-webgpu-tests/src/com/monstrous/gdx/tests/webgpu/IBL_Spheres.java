@@ -43,13 +43,11 @@ import com.monstrous.gdx.webgpu.wrappers.SkyBox;
 
 import static com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute.*;
 
-
-/** Test IBL
- * Generates environment cube map from equirectangular texture.
- * Shows a number of spheres with different metallic/roughness values.
+/**
+ * Test IBL Generates environment cube map from equirectangular texture. Shows a number of spheres with different
+ * metallic/roughness values.
  *
- * */
-
+ */
 
 public class IBL_Spheres extends GdxTest {
     CameraInputController controller;
@@ -71,14 +69,13 @@ public class IBL_Spheres extends GdxTest {
         cam.far = 100f;
         cam.update();
 
-
         controller = new CameraInputController(cam);
         controller.scrollFactor = -0.01f;
         Gdx.input.setInputProcessor(controller);
 
         // load equirectangular texture from HDR file format
         equiRectangular = HDRLoader.loadHDR(Gdx.files.internal("data/hdr/leadenhall_market_2k.hdr"), true);
-        //equiRectangular = HDRLoader.loadHDR(Gdx.files.internal("data/hdr/brown_photostudio_02_1k.hdr"), true);
+        // equiRectangular = HDRLoader.loadHDR(Gdx.files.internal("data/hdr/brown_photostudio_02_1k.hdr"), true);
 
         // Generate environment map from equirectangular texture
         WgCubemap envMap = IBLGenerator.buildCubeMapFromEquirectangularTexture(equiRectangular, 1024);
@@ -86,7 +83,6 @@ public class IBL_Spheres extends GdxTest {
         // Diffuse cube map (irradiance map)
         //
         WgCubemap irradianceMap = IBLGenerator.buildIrradianceMap(envMap, 64);
-
 
         // Specular cube map (radiance map)
         //
@@ -98,14 +94,14 @@ public class IBL_Spheres extends GdxTest {
         modelBatch = new WgModelBatch();
 
         environment = new Environment();
-        environment.set(new WgCubemapAttribute(DiffuseCubeMap, irradianceMap));   // add irradiance map
-        environment.set(new WgCubemapAttribute(SpecularCubeMap, radianceMap));    // add radiance map
+        environment.set(new WgCubemapAttribute(DiffuseCubeMap, irradianceMap)); // add irradiance map
+        environment.set(new WgCubemapAttribute(SpecularCubeMap, radianceMap)); // add radiance map
 
         // Add lighting (a few point lights)
         float intensity = 25f;
-        environment.add( new PointLight().setColor(Color.WHITE).setPosition(-10f,10f,10).setIntensity(intensity));
-        environment.add( new PointLight().setColor(Color.WHITE).setPosition(10f,10f,10).setIntensity(intensity));
-        environment.add( new PointLight().setColor(Color.WHITE).setPosition(10f,-10f,10).setIntensity(intensity));
+        environment.add(new PointLight().setColor(Color.WHITE).setPosition(-10f, 10f, 10).setIntensity(intensity));
+        environment.add(new PointLight().setColor(Color.WHITE).setPosition(10f, 10f, 10).setIntensity(intensity));
+        environment.add(new PointLight().setColor(Color.WHITE).setPosition(10f, -10f, 10).setIntensity(intensity));
 
         // Models
         //
@@ -114,15 +110,14 @@ public class IBL_Spheres extends GdxTest {
 
         // create some spheres
         Model sphere;
-        for(int y = 0; y <= 1; y++) {
+        for (int y = 0; y <= 1; y++) {
             for (int x = 0; x <= 5; x++) {
-                sphere = buildSphere((y == 0 ? Color.RED : Color.GRAY), y, 0.2f*x);
-                instances.add(new ModelInstance(sphere, 3 * (x - 2.5f), 3*y-1.5f, 0));
+                sphere = buildSphere((y == 0 ? Color.RED : Color.GRAY), y, 0.2f * x);
+                instances.add(new ModelInstance(sphere, 3 * (x - 2.5f), 3 * y - 1.5f, 0));
                 disposables.add(sphere);
             }
         }
     }
-
 
     public void render() {
         controller.update();
@@ -141,21 +136,21 @@ public class IBL_Spheres extends GdxTest {
         cam.update();
     }
 
-
-    private Model buildSphere(Color albedo, float metallic, float roughness){
+    private Model buildSphere(Color albedo, float metallic, float roughness) {
         long usage = VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal;
-        Material mat = new Material(ColorAttribute.createDiffuse(albedo), PBRFloatAttribute.createMetallic(metallic), PBRFloatAttribute.createRoughness(roughness) );
+        Material mat = new Material(ColorAttribute.createDiffuse(albedo), PBRFloatAttribute.createMetallic(metallic),
+                PBRFloatAttribute.createRoughness(roughness));
 
         WgModelBuilder modelBuilder = new WgModelBuilder();
         return modelBuilder.createSphere(2f, 2f, 2f, 16, 16, mat, usage);
     }
 
-	@Override
-	public void dispose () {
+    @Override
+    public void dispose() {
         skyBox.dispose();
         equiRectangular.dispose();
-        for(Disposable disposable : disposables)
+        for (Disposable disposable : disposables)
             disposable.dispose();
-	}
+    }
 
 }

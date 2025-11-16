@@ -16,7 +16,6 @@
 
 package com.monstrous.gdx.tests.webgpu;
 
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputMultiplexer;
@@ -45,137 +44,136 @@ import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 
-
-/** Testing efficient use of materials.  Rendering should be done with a minimum number of bindings
- * of the material bind group by identifying equivalent materials and grouping them together.
+/**
+ * Testing efficient use of materials. Rendering should be done with a minimum number of bindings of the material bind
+ * group by identifying equivalent materials and grouping them together.
  */
 
 public class MaterialsTest extends GdxTest {
-	public PerspectiveCamera cam;
-	public CameraInputController inputController;
-	public WgModelBatch modelBatch;
+    public PerspectiveCamera cam;
+    public CameraInputController inputController;
+    public WgModelBatch modelBatch;
     private ModelBuilder modelBuilder;
-	public Model model;
-	public Array<ModelInstance> instances;
-	public Environment environment;
+    public Model model;
+    public Array<ModelInstance> instances;
+    public Environment environment;
     private WgSpriteBatch batch;
     private BitmapFont font;
     private Texture texture1, texture2;
 
-
-	@Override
-	public void create () {
+    @Override
+    public void create() {
         WgModelBatch.Config config = new WgModelBatch.Config();
         config.maxMaterials = 2048;
         config.maxInstances = 2048;
-		modelBatch = new WgModelBatch(config);
+        modelBatch = new WgModelBatch(config);
 
-		environment = new Environment();
-		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, .4f, .4f, .4f, 1f));
-		environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
+        environment = new Environment();
+        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, .4f, .4f, .4f, 1f));
+        environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
 
-		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		cam.position.set(10f, 10f, 10f);
-		cam.lookAt(0, 0, 0);
-		cam.near = 0.1f;
-		cam.far = 150f;
-		cam.update();
+        cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        cam.position.set(10f, 10f, 10f);
+        cam.lookAt(0, 0, 0);
+        cam.near = 0.1f;
+        cam.far = 150f;
+        cam.update();
 
         instances = new Array<>();
         modelBuilder = new WgModelBuilder();
-		model = modelBuilder.createBox(1f, 1f, 1f, new Material(ColorAttribute.createDiffuse(Color.GREEN)),
-			VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		instances.add( new ModelInstance(model));
+        model = modelBuilder.createBox(1f, 1f, 1f, new Material(ColorAttribute.createDiffuse(Color.GREEN)),
+                VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+        instances.add(new ModelInstance(model));
 
         model = modelBuilder.createBox(1f, 1f, 1f, new Material(ColorAttribute.createDiffuse(Color.RED)),
-            VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-        instances.add( new ModelInstance(model, 0, 1, 0));
+                VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+        instances.add(new ModelInstance(model, 0, 1, 0));
 
         model = modelBuilder.createBox(1f, 1f, 1f, new Material(ColorAttribute.createDiffuse(Color.BLUE)),
-            VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-        instances.add( new ModelInstance(model, 0, 2, 0));
+                VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+        instances.add(new ModelInstance(model, 0, 2, 0));
 
         model = modelBuilder.createBox(1f, 1f, 1f, new Material(ColorAttribute.createDiffuse(Color.ORANGE)),
-            VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-        instances.add( new ModelInstance(model, 0, 3, 0));
+                VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+        instances.add(new ModelInstance(model, 0, 3, 0));
 
         model = modelBuilder.createBox(1f, 1f, 1f, new Material(ColorAttribute.createDiffuse(Color.GREEN)),
-            VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-        instances.add( new ModelInstance(model, 0, 4, 0));
+                VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+        instances.add(new ModelInstance(model, 0, 4, 0));
 
         model = modelBuilder.createBox(1f, 1f, 1f, new Material(ColorAttribute.createDiffuse(Color.BLUE)),
-            VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-        instances.add( new ModelInstance(model, 0, 5, 0));
+                VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+        instances.add(new ModelInstance(model, 0, 5, 0));
 
         model = modelBuilder.createBox(1f, 1f, 1f, new Material(ColorAttribute.createDiffuse(Color.BLUE)),
-            VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-        instances.add( new ModelInstance(model, 0, 6, 0));
+                VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+        instances.add(new ModelInstance(model, 0, 6, 0));
 
         model = modelBuilder.createBox(1f, 1f, 1f, new Material(ColorAttribute.createDiffuse(Color.BLUE)),
-            VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-        instances.add( new ModelInstance(model, 0, 7, 0));
+                VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+        instances.add(new ModelInstance(model, 0, 7, 0));
 
         texture1 = new WgTexture(Gdx.files.internal("data/badlogic.jpg"), true);
         texture1.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear);
         Material mat1 = new Material(TextureAttribute.createDiffuse(texture1));
 
-        model = modelBuilder.createBox(1f, 1f, 1f, mat1,
-            VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.TextureCoordinates);
-        instances.add( new ModelInstance(model, 2, 0, 0));
+        model = modelBuilder.createBox(1f, 1f, 1f, mat1, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal
+                | VertexAttributes.Usage.TextureCoordinates);
+        instances.add(new ModelInstance(model, 2, 0, 0));
 
         texture2 = new WgTexture(Gdx.files.internal("data/webgpu.png"), true);
         texture2.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear);
         Material mat2 = new Material(TextureAttribute.createDiffuse(texture2));
 
-        model = modelBuilder.createBox(1f, 1f, 1f, mat2,
-            VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.TextureCoordinates);
-        instances.add( new ModelInstance(model, 2, 1, 0));
+        model = modelBuilder.createBox(1f, 1f, 1f, mat2, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal
+                | VertexAttributes.Usage.TextureCoordinates);
+        instances.add(new ModelInstance(model, 2, 1, 0));
 
-		Gdx.input.setInputProcessor(new InputMultiplexer(this, inputController = new CameraInputController(cam)));
+        Gdx.input.setInputProcessor(new InputMultiplexer(this, inputController = new CameraInputController(cam)));
 
         batch = new WgSpriteBatch();
         font = new WgBitmapFont();
 
-	}
-
-    private void spawnRandom(){
-        Color col = new Color(MathUtils.random(), MathUtils.random(), MathUtils.random(), 1f);
-        model = modelBuilder.createBox(1f, 1f, 1f, new Material(ColorAttribute.createDiffuse(col)),
-            VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-        instances.add( new ModelInstance(model, 128*(MathUtils.random()-0.5f), 8*(MathUtils.random()-0.5f), 128*(MathUtils.random()-0.5f)));
     }
 
-	@Override
-	public void render () {
-		inputController.update();
+    private void spawnRandom() {
+        Color col = new Color(MathUtils.random(), MathUtils.random(), MathUtils.random(), 1f);
+        model = modelBuilder.createBox(1f, 1f, 1f, new Material(ColorAttribute.createDiffuse(col)),
+                VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+        instances.add(new ModelInstance(model, 128 * (MathUtils.random() - 0.5f), 8 * (MathUtils.random() - 0.5f),
+                128 * (MathUtils.random() - 0.5f)));
+    }
 
-        if(Gdx.input.isKeyPressed(Input.Keys.SPACE)){
+    @Override
+    public void render() {
+        inputController.update();
+
+        if (Gdx.input.isKeyPressed(Input.Keys.SPACE)) {
             spawnRandom();
         }
 
-
         WgScreenUtils.clear(Color.TEAL, true);
 
-		modelBatch.begin(cam);
-		modelBatch.render(instances, environment);
-		modelBatch.end();
+        modelBatch.begin(cam);
+        modelBatch.render(instances, environment);
+        modelBatch.end();
 
         batch.begin();
-        font.draw(batch, "FPS: "+Gdx.graphics.getFramesPerSecond(), 10, 110);
-        font.draw(batch, "Materials: "+modelBatch.materials.count(), 10, 80);
-        font.draw(batch, "Material bindings/frame: "+modelBatch.materials.materialBindings(), 10, 50);
+        font.draw(batch, "FPS: " + Gdx.graphics.getFramesPerSecond(), 10, 110);
+        font.draw(batch, "Materials: " + modelBatch.materials.count(), 10, 80);
+        font.draw(batch, "Material bindings/frame: " + modelBatch.materials.materialBindings(), 10, 50);
         font.draw(batch, "(SPACE to spawn more)", 10, 30);
         batch.end();
-	}
+    }
 
-	@Override
-	public void dispose () {
-		modelBatch.dispose();
-		model.dispose();
+    @Override
+    public void dispose() {
+        modelBatch.dispose();
+        model.dispose();
         batch.dispose();
         font.dispose();
         texture1.dispose();
         texture2.dispose();
-	}
+    }
 
 }

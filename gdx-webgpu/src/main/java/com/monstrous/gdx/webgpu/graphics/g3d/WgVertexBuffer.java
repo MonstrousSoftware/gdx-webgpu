@@ -24,7 +24,8 @@ public class WgVertexBuffer implements VertexData {
     private final boolean isStatic;
     private boolean isFrozen;
 
-    /** Create vertex buffer.
+    /**
+     * Create vertex buffer.
      *
      * @param isStatic will this vertex buffer never change? Allows to free the internal backing buffer after use.
      * @param maxVertices maximum number of vertices to be stored
@@ -34,7 +35,8 @@ public class WgVertexBuffer implements VertexData {
         this(isStatic, maxVertices, new VertexAttributes(attributes));
     }
 
-    /** Create vertex buffer.
+    /**
+     * Create vertex buffer.
      *
      * @param isStatic will this vertex buffer never change? Allows to free the internal backing buffer after use.
      * @param maxVertices maximum number of vertices to be stored
@@ -45,7 +47,7 @@ public class WgVertexBuffer implements VertexData {
         this.attributes = attributes;
         byteBuffer = BufferUtils.newUnsafeByteBuffer(this.attributes.vertexSize * maxVertices);
         floatBuffer = byteBuffer.asFloatBuffer();
-        vertexBuffer = new WebGPUVertexBuffer( this.attributes.vertexSize * maxVertices);
+        vertexBuffer = new WebGPUVertexBuffer(this.attributes.vertexSize * maxVertices);
         isDirty = true;
         isFrozen = false;
     }
@@ -67,16 +69,18 @@ public class WgVertexBuffer implements VertexData {
 
     @Override
     public void setVertices(float[] vertices, int offset, int count) {
-        if(isFrozen) throw new GdxRuntimeException("WgVertexBuffer: static vertex buffer cannot be modified.");
-        ((Buffer)floatBuffer).clear();
+        if (isFrozen)
+            throw new GdxRuntimeException("WgVertexBuffer: static vertex buffer cannot be modified.");
+        ((Buffer) floatBuffer).clear();
         floatBuffer.put(vertices, offset, count);
         isDirty = true;
     }
 
     @Override
     public void updateVertices(int targetOffset, float[] vertices, int sourceOffset, int count) {
-        if(isFrozen) throw new GdxRuntimeException("WgVertexBuffer: static vertex buffer cannot be modified.");
-        ((Buffer)floatBuffer).position(targetOffset);
+        if (isFrozen)
+            throw new GdxRuntimeException("WgVertexBuffer: static vertex buffer cannot be modified.");
+        ((Buffer) floatBuffer).position(targetOffset);
         floatBuffer.put(vertices, sourceOffset, count);
         isDirty = true;
     }
@@ -89,22 +93,23 @@ public class WgVertexBuffer implements VertexData {
 
     @Override
     public FloatBuffer getBuffer(boolean forWriting) {
-        if(forWriting && isFrozen) throw new GdxRuntimeException("WgVertexBuffer: static vertex buffer cannot be modified.");
+        if (forWriting && isFrozen)
+            throw new GdxRuntimeException("WgVertexBuffer: static vertex buffer cannot be modified.");
         isDirty |= forWriting;
         return floatBuffer;
     }
 
     @Override
     public void bind(ShaderProgram shader) {
-        if(isDirty){
-            int numBytes = ((Buffer)floatBuffer).limit() * Float.BYTES;
-            ((Buffer)byteBuffer).limit(numBytes);
-            ((Buffer)byteBuffer).position(0);
+        if (isDirty) {
+            int numBytes = ((Buffer) floatBuffer).limit() * Float.BYTES;
+            ((Buffer) byteBuffer).limit(numBytes);
+            ((Buffer) byteBuffer).position(0);
             vertexBuffer.setVertices(byteBuffer);
             isDirty = false;
-            if(isStatic){
-                BufferUtils.disposeUnsafeByteBuffer(byteBuffer);    // release memory of backing buffer
-                isFrozen = true;    // no more changes allowed
+            if (isStatic) {
+                BufferUtils.disposeUnsafeByteBuffer(byteBuffer); // release memory of backing buffer
+                isFrozen = true; // no more changes allowed
             }
         }
     }
@@ -114,13 +119,11 @@ public class WgVertexBuffer implements VertexData {
         throw new GdxRuntimeException("WgVertexBuffer: bind(ShaderProgram shader, int[] locations) not supported");
     }
 
-    public void bind(WebGPURenderPass renderPass){
+    public void bind(WebGPURenderPass renderPass) {
         bind((ShaderProgram) null);
         // bind vertex buffer to render pass
         renderPass.setVertexBuffer(0, vertexBuffer.getBuffer(), 0, vertexBuffer.getSize());
     }
-
-
 
     @Override
     public void unbind(ShaderProgram shader) {
@@ -139,10 +142,10 @@ public class WgVertexBuffer implements VertexData {
 
     @Override
     public void dispose() {
-        //Gdx.app.log("WebGPUVertexData", "dispose"+getNumMaxVertices());
+        // Gdx.app.log("WebGPUVertexData", "dispose"+getNumMaxVertices());
 
         vertexBuffer.dispose();
-        if(!isFrozen)
-            BufferUtils.disposeUnsafeByteBuffer(byteBuffer);    // release memory of backing buffer
+        if (!isFrozen)
+            BufferUtils.disposeUnsafeByteBuffer(byteBuffer); // release memory of backing buffer
     }
 }

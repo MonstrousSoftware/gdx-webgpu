@@ -20,83 +20,84 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.TextureData;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 
-/** A {@link TextureData} implementation which should be used to create webgpu only textures.
- *  For example when creating a Texture for the depth buffer.
- * The data is not managed. */
+/**
+ * A {@link TextureData} implementation which should be used to create webgpu only textures. For example when creating a
+ * Texture for the depth buffer. The data is not managed.
+ */
 public class WgTextureData implements TextureData {
 
-	/** width and height */
-	int width = 0;
-	int height = 0;
-	boolean isPrepared = false;
+    /** width and height */
+    int width = 0;
+    int height = 0;
+    boolean isPrepared = false;
 
-	/** properties of texture */
-	boolean useMipMaps;
-	int format;
-	int type;
+    /** properties of texture */
+    boolean useMipMaps;
+    int format;
+    int type;
 
+    public WgTextureData(int width, int height, boolean useMipMaps, int format, int type) {
+        this.width = width;
+        this.height = height;
+        this.useMipMaps = useMipMaps;
+        this.format = format;
+        this.type = type;
+    }
 
-	public WgTextureData(int width, int height, boolean useMipMaps, int format, int type) {
-		this.width = width;
-		this.height = height;
-		this.useMipMaps = useMipMaps;
-		this.format = format;
-		this.type = type;
-	}
+    @Override
+    public TextureDataType getType() {
+        return TextureDataType.Custom;
+    }
 
-	@Override
-	public TextureDataType getType () {
-		return TextureDataType.Custom;
-	}
+    @Override
+    public boolean isPrepared() {
+        return isPrepared;
+    }
 
-	@Override
-	public boolean isPrepared () {
-		return isPrepared;
-	}
+    @Override
+    public void prepare() {
+        if (isPrepared)
+            throw new GdxRuntimeException("Already prepared");
+        isPrepared = true;
+    }
 
-	@Override
-	public void prepare () {
-		if (isPrepared) throw new GdxRuntimeException("Already prepared");
-		isPrepared = true;
-	}
+    @Override
+    public void consumeCustomData(int target) {
 
-	@Override
-	public void consumeCustomData (int target) {
+    }
 
-	}
+    @Override
+    public Pixmap consumePixmap() {
+        throw new GdxRuntimeException("This TextureData implementation does not return a Pixmap");
+    }
 
-	@Override
-	public Pixmap consumePixmap () {
-		throw new GdxRuntimeException("This TextureData implementation does not return a Pixmap");
-	}
+    @Override
+    public boolean disposePixmap() {
+        throw new GdxRuntimeException("This TextureData implementation does not return a Pixmap");
+    }
 
-	@Override
-	public boolean disposePixmap () {
-		throw new GdxRuntimeException("This TextureData implementation does not return a Pixmap");
-	}
+    @Override
+    public int getWidth() {
+        return width;
+    }
 
-	@Override
-	public int getWidth () {
-		return width;
-	}
+    @Override
+    public int getHeight() {
+        return height;
+    }
 
-	@Override
-	public int getHeight () {
-		return height;
-	}
+    @Override
+    public Pixmap.Format getFormat() {
+        return Pixmap.Format.RGBA8888;
+    }
 
-	@Override
-	public Pixmap.Format getFormat () {
-		return Pixmap.Format.RGBA8888;
-	}
+    @Override
+    public boolean useMipMaps() {
+        return useMipMaps;
+    }
 
-	@Override
-	public boolean useMipMaps () {
-		return useMipMaps;
-	}
-
-	@Override
-	public boolean isManaged () {
-		return false;
-	}
+    @Override
+    public boolean isManaged() {
+        return false;
+    }
 }

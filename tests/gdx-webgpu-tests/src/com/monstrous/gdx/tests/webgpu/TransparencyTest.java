@@ -33,32 +33,30 @@ import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 
-/** Test rendering of semi-transparent models
- *  Shows a number of cubes and 'window panes'.
- *  If you look from different angles, you should see the cubes through the panes.
- *  and overlapping panes should get progressively more opaque.
+/**
+ * Test rendering of semi-transparent models Shows a number of cubes and 'window panes'. If you look from different
+ * angles, you should see the cubes through the panes. and overlapping panes should get progressively more opaque.
  */
 public class TransparencyTest extends GdxTest {
 
-	WgModelBatch modelBatch;
-	PerspectiveCamera cam;
+    WgModelBatch modelBatch;
+    PerspectiveCamera cam;
     CameraInputController controller;
     Model boxTrans;
     Model boxOpaque;
     Array<ModelInstance> instances;
 
-
-	public void create () {
-		modelBatch = new WgModelBatch();
-		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		cam.position.set(-6.5f, 1.2f, 6.1f);
-        cam.lookAt(0,0,0);
-		cam.near = 0.1f;
+    public void create() {
+        modelBatch = new WgModelBatch();
+        cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        cam.position.set(-6.5f, 1.2f, 6.1f);
+        cam.lookAt(0, 0, 0);
+        cam.near = 0.1f;
         cam.far = 100;
 
-		//controller = new PerspectiveCamController(cam);
+        // controller = new PerspectiveCamController(cam);
         controller = new CameraInputController(cam);
-		Gdx.input.setInputProcessor(controller);
+        Gdx.input.setInputProcessor(controller);
 
         instances = new Array<>();
 
@@ -72,45 +70,44 @@ public class TransparencyTest extends GdxTest {
         texture2.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear);
         Material matSolid = new Material(TextureAttribute.createDiffuse(texture2));
 
-
         //
-		// Create some model instances
-		//
+        // Create some model instances
+        //
         ModelBuilder modelBuilder = new WgModelBuilder();
-        long attribs = VertexAttributes.Usage.Position | VertexAttributes.Usage.TextureCoordinates | VertexAttributes.Usage.Normal ;
+        long attribs = VertexAttributes.Usage.Position | VertexAttributes.Usage.TextureCoordinates
+                | VertexAttributes.Usage.Normal;
         boxTrans = modelBuilder.createBox(3, 3, 0.2f, matTrans, attribs);
         boxOpaque = modelBuilder.createBox(1, 1, 1, matSolid, attribs);
 
+        instances.add(new ModelInstance(boxTrans, 0, 1, -2));
+        instances.add(new ModelInstance(boxOpaque, 0, 0, -5));
+        instances.add(new ModelInstance(boxTrans, 0, 1, -8));
+        instances.add(new ModelInstance(boxOpaque, 0, 0, -11));
+        instances.add(new ModelInstance(boxTrans, 0, 1, -14));
+    }
 
-        instances.add( new ModelInstance(boxTrans, 0, 1, -2));
-        instances.add( new ModelInstance(boxOpaque, 0, 0, -5));
-        instances.add( new ModelInstance(boxTrans, 0, 1, -8));
-        instances.add( new ModelInstance(boxOpaque, 0, 0, -11));
-        instances.add( new ModelInstance(boxTrans, 0, 1, -14));
-	}
+    public void render() {
+        WgScreenUtils.clear(Color.WHITE, true);
+        cam.update();
+        // System.out.println("cam: "+cam.position);
+        modelBatch.begin(cam);
+        modelBatch.render(instances);
+        modelBatch.end();
+    }
 
-	public void render () {
-		WgScreenUtils.clear(Color.WHITE, true);
-		cam.update();
-        //System.out.println("cam: "+cam.position);
-		modelBatch.begin(cam);
-		modelBatch.render(instances);
-		modelBatch.end();
-	}
+    @Override
+    public void resize(int width, int height) {
+        cam.viewportWidth = width;
+        cam.viewportHeight = height;
+        cam.update();
 
-	@Override
-	public void resize(int width, int height) {
-		cam.viewportWidth = width;
-		cam.viewportHeight = height;
-		cam.update();
+    }
 
-	}
-
-	@Override
-	public void dispose () {
-		modelBatch.dispose();
-		boxOpaque.dispose();
+    @Override
+    public void dispose() {
+        modelBatch.dispose();
+        boxOpaque.dispose();
         boxTrans.dispose();
-	}
+    }
 
 }

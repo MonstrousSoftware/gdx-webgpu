@@ -6,7 +6,6 @@ import com.monstrous.gdx.tests.webgpu.TeaVMTestLauncher;
 import com.monstrous.gdx.webgpu.backends.teavm.WgTeaApplication;
 import com.monstrous.gdx.webgpu.backends.teavm.WgTeaPreloadApplicationListener;
 
-
 public class AssetManagerTestLauncher {
 
     public static void main(String[] args) {

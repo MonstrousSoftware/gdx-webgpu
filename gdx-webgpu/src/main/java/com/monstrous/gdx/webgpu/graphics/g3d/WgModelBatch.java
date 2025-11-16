@@ -54,7 +54,7 @@ public class WgModelBatch implements Disposable {
     public int numRenderables;
     public int drawCalls;
     public int shaderSwitches;
-    //public int numMaterials;
+    // public int numMaterials;
     public MaterialsCache materials;
 
     public static class Config {
@@ -62,9 +62,9 @@ public class WgModelBatch implements Disposable {
         public int maxMaterials;
         public int maxDirectionalLights;
         public int maxPointLights;
-        public int numBones;            // max bone count per rigged instance
-        public int maxRigged;           // max number of instances that are rigged
-        public boolean usePBR;          // use physics based rendering
+        public int numBones; // max bone count per rigged instance
+        public int maxRigged; // max number of instances that are rigged
+        public boolean usePBR; // use physics based rendering
         public MaterialsCache materials;
 
         public Config() {
@@ -79,15 +79,14 @@ public class WgModelBatch implements Disposable {
         }
     }
 
-
     protected static class RenderablePool extends FlushablePool<Renderable> {
         @Override
-        protected Renderable newObject () {
+        protected Renderable newObject() {
             return new Renderable();
         }
 
         @Override
-        public Renderable obtain () {
+        public Renderable obtain() {
             Renderable renderable = super.obtain();
             renderable.environment = null;
             renderable.material = null;
@@ -98,7 +97,8 @@ public class WgModelBatch implements Disposable {
         }
     }
 
-    /** Create a ModelBatch.
+    /**
+     * Create a ModelBatch.
      *
      */
     public WgModelBatch() {
@@ -115,7 +115,7 @@ public class WgModelBatch implements Disposable {
 
     public WgModelBatch(ShaderProvider shaderProvider, Config config) {
         this.config = config == null ? new Config() : config;
-        this.shaderProvider = shaderProvider == null ?  new WgDefaultShaderProvider(this.config) : shaderProvider;
+        this.shaderProvider = shaderProvider == null ? new WgDefaultShaderProvider(this.config) : shaderProvider;
         ownsShaderProvider = shaderProvider == null;
         renderables = new Array<>();
         materials = new MaterialsCache(this.config.maxMaterials);
@@ -124,12 +124,11 @@ public class WgModelBatch implements Disposable {
         drawing = false;
     }
 
-
-    public boolean isDrawing () {
+    public boolean isDrawing() {
         return drawing;
     }
 
-    public void begin(final Camera camera){
+    public void begin(final Camera camera) {
         begin(camera, null, false, RenderPassType.COLOR_AND_DEPTH);
     }
 
@@ -137,7 +136,7 @@ public class WgModelBatch implements Disposable {
         begin(camera, clearColor, false, RenderPassType.COLOR_AND_DEPTH);
     }
 
-    public void begin(final Camera camera, final Color clearColor, boolean clearDepth){
+    public void begin(final Camera camera, final Color clearColor, boolean clearDepth) {
         begin(camera, clearColor, clearDepth, RenderPassType.COLOR_AND_DEPTH);
     }
 
@@ -150,7 +149,8 @@ public class WgModelBatch implements Disposable {
         this.camera = camera;
 
         WgGraphics gfx = (WgGraphics) Gdx.graphics;
-        renderPass = RenderPassBuilder.create("ModelBatch", clearColor, clearDepth, gfx.getContext().getSamples(), passType);
+        renderPass = RenderPassBuilder.create("ModelBatch", clearColor, clearDepth, gfx.getContext().getSamples(),
+                passType);
 
         renderables.clear();
         shaderSwitches = 0;
@@ -158,23 +158,22 @@ public class WgModelBatch implements Disposable {
         materials.start();
     }
 
-
-    public void render(final Renderable renderable){
+    public void render(final Renderable renderable) {
         renderable.shader = shaderProvider.getShader(renderable);
         renderables.add(renderable);
     }
 
-    public void render (final RenderableProvider renderableProvider) {
+    public void render(final RenderableProvider renderableProvider) {
 
         int offset = renderables.size;
         renderableProvider.getRenderables(renderables, renderablesPool);
-        for(int i = offset; i < renderables.size; i++){
+        for (int i = offset; i < renderables.size; i++) {
             Renderable renderable = renderables.get(i);
             renderable.shader = shaderProvider.getShader(renderable);
         }
     }
 
-    public void render (final RenderableProvider renderableProvider, final Environment environment) {
+    public void render(final RenderableProvider renderableProvider, final Environment environment) {
         final int offset = renderables.size;
         renderableProvider.getRenderables(renderables, renderablesPool);
         for (int i = offset; i < renderables.size; i++) {
@@ -185,12 +184,13 @@ public class WgModelBatch implements Disposable {
         }
     }
 
-    public <T extends RenderableProvider> void render (final Iterable<T> renderableProviders) {
+    public <T extends RenderableProvider> void render(final Iterable<T> renderableProviders) {
         for (final RenderableProvider renderableProvider : renderableProviders)
             render(renderableProvider);
     }
 
-    public <T extends RenderableProvider> void render (final Iterable<T> renderableProviders, final Environment environment) {
+    public <T extends RenderableProvider> void render(final Iterable<T> renderableProviders,
+            final Environment environment) {
         for (final RenderableProvider renderableProvider : renderableProviders)
             render(renderableProvider, environment);
     }
@@ -198,12 +198,13 @@ public class WgModelBatch implements Disposable {
     // todo add other render() combinations
 
     public void flush() {
-        if(renderables.size > config.maxInstances)
-            throw new ArrayIndexOutOfBoundsException("Too many renderables (> "+renderables.size+"). Increase config.maxInstances.");
+        if (renderables.size > config.maxInstances)
+            throw new ArrayIndexOutOfBoundsException(
+                    "Too many renderables (> " + renderables.size + "). Increase config.maxInstances.");
         sorter.sort(camera, renderables);
 
         WgShader currentShader = null;
-        for(Renderable renderable : renderables) {
+        for (Renderable renderable : renderables) {
             if (currentShader != renderable.shader) {
                 if (currentShader != null) {
                     currentShader.end();
@@ -215,7 +216,7 @@ public class WgModelBatch implements Disposable {
             }
             currentShader.render(renderable);
         }
-        if (currentShader != null){
+        if (currentShader != null) {
             currentShader.end();
             drawCalls += currentShader.drawCalls;
         }
@@ -234,16 +235,14 @@ public class WgModelBatch implements Disposable {
     }
 
     @Override
-    public void dispose(){
-        if(ownsShaderProvider)
+    public void dispose() {
+        if (ownsShaderProvider)
             shaderProvider.dispose();
         materials.dispose();
     }
 
-    public int getMaterialCount(){
+    public int getMaterialCount() {
         return materials.count();
     }
-
-
 
 }

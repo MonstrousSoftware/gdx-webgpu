@@ -16,7 +16,6 @@
 
 package com.monstrous.gdx.tests.webgpu;
 
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.graphics.Color;
@@ -37,62 +36,59 @@ import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 
 public class Basic3DTest extends GdxTest {
-	public PerspectiveCamera cam;
-	public CameraInputController inputController;
-	public WgModelBatch modelBatch;
-	public Model model;
-	public ModelInstance instance;
-	public Environment environment;
+    public PerspectiveCamera cam;
+    public CameraInputController inputController;
+    public WgModelBatch modelBatch;
+    public Model model;
+    public ModelInstance instance;
+    public Environment environment;
 
+    @Override
+    public void create() {
+        modelBatch = new WgModelBatch();
 
-	@Override
-	public void create () {
-		modelBatch = new WgModelBatch();
+        environment = new Environment();
+        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, .4f, .4f, .4f, 1f));
+        environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
 
-		environment = new Environment();
-		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, .4f, .4f, .4f, 1f));
-		environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
-
-		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		cam.position.set(10f, 10f, 10f);
-		cam.lookAt(0, 0, 0);
-		cam.near = 0.1f;
-		cam.far = 150f;
-		cam.update();
+        cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        cam.position.set(10f, 10f, 10f);
+        cam.lookAt(0, 0, 0);
+        cam.near = 0.1f;
+        cam.far = 150f;
+        cam.update();
 
         ModelBuilder modelBuilder = new WgModelBuilder();
-		model = modelBuilder.createBox(5f, 5f, 5f, new Material(ColorAttribute.createDiffuse(Color.GREEN)),
-			VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		instance = new ModelInstance(model);
+        model = modelBuilder.createBox(5f, 5f, 5f, new Material(ColorAttribute.createDiffuse(Color.GREEN)),
+                VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+        instance = new ModelInstance(model);
 
-		Gdx.input.setInputProcessor(new InputMultiplexer(this, inputController = new CameraInputController(cam)));
-	}
+        Gdx.input.setInputProcessor(new InputMultiplexer(this, inputController = new CameraInputController(cam)));
+    }
 
-	@Override
-	public void render () {
-		inputController.update();
-
+    @Override
+    public void render() {
+        inputController.update();
 
         WgScreenUtils.clear(Color.TEAL, true);
 
-		modelBatch.begin(cam);
-		modelBatch.render(instance, environment);
-		modelBatch.end();
-	}
+        modelBatch.begin(cam);
+        modelBatch.render(instance, environment);
+        modelBatch.end();
+    }
 
-	@Override
-	public void dispose () {
-		modelBatch.dispose();
-		model.dispose();
-	}
+    @Override
+    public void dispose() {
+        modelBatch.dispose();
+        model.dispose();
+    }
 
+    public void resume() {
+    }
 
-	public void resume () {
-	}
+    public void resize(int width, int height) {
+    }
 
-	public void resize (int width, int height) {
-	}
-
-	public void pause () {
-	}
+    public void pause() {
+    }
 }

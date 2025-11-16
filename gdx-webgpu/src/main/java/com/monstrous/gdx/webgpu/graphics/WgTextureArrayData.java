@@ -24,33 +24,40 @@ import com.badlogic.gdx.graphics.glutils.FileTextureArrayData;
 import com.github.xpenatan.webgpu.WGPUTexture;
 import com.monstrous.gdx.webgpu.graphics.utils.WgFileTextureArrayData;
 
-/** Used by a {@link TextureArray} to load the pixel data. The TextureArray will request the TextureArrayData to prepare itself
- * through {@link #prepare()} and upload its data using {@link #consumeTextureArrayData()}. These are the first methods to be
- * called by TextureArray. After that the TextureArray will invoke the other methods to find out about the size of the image data,
- * the format, whether the TextureArrayData is able to manage the pixel data if the OpenGL ES context is lost.
+/**
+ * Used by a {@link TextureArray} to load the pixel data. The TextureArray will request the TextureArrayData to prepare
+ * itself through {@link #prepare()} and upload its data using {@link #consumeTextureArrayData()}. These are the first
+ * methods to be called by TextureArray. After that the TextureArray will invoke the other methods to find out about the
+ * size of the image data, the format, whether the TextureArrayData is able to manage the pixel data if the OpenGL ES
+ * context is lost.
  * </p>
  *
  * Before a call to either {@link #consumeTextureArrayData()}, TextureArray will bind the OpenGL ES texture.
  * </p>
  *
  * Look at {@link FileTextureArrayData} for example implementation of this interface.
- * @author Tomski */
+ * 
+ * @author Tomski
+ */
 public interface WgTextureArrayData extends TextureArrayData {
 
-    public void consumeTextureArrayData (WgTexture texture);
+    public void consumeTextureArrayData(WgTexture texture);
 
-//    public WGPUTexture getTexture();
+    // public WGPUTexture getTexture();
 
     /** @return whether to generate mipmaps or not. */
-    public boolean useMipMaps ();
+    public boolean useMipMaps();
 
-	/** Provides static method to instantiate the right implementation.
-	 * @author Tomski */
-	public static class Factory {
+    /**
+     * Provides static method to instantiate the right implementation.
+     * 
+     * @author Tomski
+     */
+    public static class Factory {
 
-		public static WgTextureArrayData loadFromFiles (Pixmap.Format format, boolean useMipMaps, FileHandle... files) {
-			return new WgFileTextureArrayData(format, useMipMaps, files);
-		}
-	}
+        public static WgTextureArrayData loadFromFiles(Pixmap.Format format, boolean useMipMaps, FileHandle... files) {
+            return new WgFileTextureArrayData(format, useMipMaps, files);
+        }
+    }
 
 }
