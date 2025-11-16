@@ -48,7 +48,7 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 	private final int colorOffset;
 	private final int texCoordOffset;
 	private final Matrix4 projModelView = new Matrix4();
-
+    private final Matrix4 shiftDepthMatrix;
 
     private WebGPUVertexBuffer vertexBuffer;
 	private WebGPUUniformBuffer uniformBuffer;
@@ -66,20 +66,21 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 
 	public WgImmediateModeRenderer(boolean hasNormals, boolean hasColors, int numTexCoords) {
 		this(5000, hasNormals, hasColors, numTexCoords, createDefaultShader(hasNormals, hasColors, numTexCoords));
-
 	}
 
 	public WgImmediateModeRenderer(int maxVertices, boolean hasNormals, boolean hasColors, int numTexCoords) {
 		this(maxVertices, hasNormals, hasColors, numTexCoords, createDefaultShader(hasNormals, hasColors, numTexCoords));
-
 	}
 
 	/** hasNormals, hasColors and numTexCoords are ignored */
 	public WgImmediateModeRenderer(int maxVertices, boolean hasNormals, boolean hasColors, int numTexCoords,
                                    ShaderProgram shader) {
-
         WgGraphics gfx = (WgGraphics) Gdx.graphics;
         webgpu = gfx.getContext();
+
+        // matrix which will transform an opengl ortho matrix to a webgpu ortho matrix
+        // by scaling the Z range from [-1..1] to [0..1]
+        shiftDepthMatrix = new Matrix4().idt().scl(1,1,-0.5f).trn(0,0,0.5f);
 
 		this.maxVertices = maxVertices;
 
@@ -133,7 +134,7 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 	}
 
 	public void begin (Matrix4 projModelView, int primitiveType) {
-		this.projModelView.set(projModelView);
+		this.projModelView.set(shiftDepthMatrix).mul(projModelView);
 		this.primitiveType = primitiveType;
 
 		if(primitiveType == GL20.GL_LINES)
