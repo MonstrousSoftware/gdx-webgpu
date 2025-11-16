@@ -43,7 +43,7 @@ public class WebGPUTestStarter {
      * Runs libgdx tests.
      *
      *
-     * 
+     *
      * @param argv command line arguments
      */
     public static void main(String[] argv) {
