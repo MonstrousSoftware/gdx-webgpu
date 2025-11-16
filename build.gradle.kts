@@ -29,3 +29,5 @@ allprojects()  {
         resolutionStrategy.cacheChangingModulesFor(0, "seconds")
     }
 }
+
+apply(plugin = "publish")
