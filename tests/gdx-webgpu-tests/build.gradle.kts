@@ -14,6 +14,10 @@
  * limitations under the License.
  ******************************************************************************/
 
+plugins {
+    id("com.diffplug.spotless")
+}
+
 val javaVersion = project.property("java") as String
 
 dependencies {
@@ -24,6 +28,12 @@ dependencies {
 if (JavaVersion.current().isJava9Compatible) {
     tasks.withType<JavaCompile> {
         options.release.set(javaVersion.toInt())
+    }
+}
+
+spotless {
+    java {
+        eclipse().configFile(rootProject.file("intellij-java-style.xml"))
     }
 }
 

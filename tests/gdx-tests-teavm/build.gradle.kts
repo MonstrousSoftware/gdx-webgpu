@@ -1,6 +1,7 @@
 plugins {
     id("java")
     id("org.gretty") version("3.1.0")
+    id("com.diffplug.spotless")
 }
 
 gretty {
@@ -63,4 +64,10 @@ tasks.register("gdx_webgpu_asset_manager_run_teavm") {
     dependsOn(list)
 
     tasks.findByName("jettyRun")?.mustRunAfter("gdx_webgpu_asset_manager_build_teavm")
+}
+
+spotless {
+    java {
+        eclipse().configFile(rootProject.file("intellij-java-style.xml"))
+    }
 }

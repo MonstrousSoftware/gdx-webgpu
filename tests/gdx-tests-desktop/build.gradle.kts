@@ -7,6 +7,7 @@ val javaVersion = project.property("java") as String
 
 plugins {
     application
+    id("com.diffplug.spotless")
 }
 
 application {
@@ -49,4 +50,10 @@ tasks.register<JarTask>("dist") {
     from({ configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) } })
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     with(tasks.jar.get() as JarTask)
+}
+
+spotless {
+    java {
+        eclipse().configFile(rootProject.file("intellij-java-style.xml"))
+    }
 }
