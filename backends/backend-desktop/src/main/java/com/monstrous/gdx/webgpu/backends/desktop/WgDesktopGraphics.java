@@ -484,15 +484,13 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
             // store window position so we can restore it when switching from fullscreen to windowed later
             storeCurrentWindowPositionAndDisplayMode();
 
-            // context.drop(); // TEST
-
             // System.out.println("calling glfwSetWindowMonitor()");
             // switch from windowed to fullscreen
             // this will trigger a resize before we return
             GLFW.glfwSetWindowMonitor(window.getWindowHandle(), newMode.getMonitor(), 0, 0, newMode.width,
                     newMode.height, newMode.refreshRate);
 
-            // System.out.println("after glfwSetWindowMonitor()");
+             //System.out.println("after glfwSetWindowMonitor()");
 
             // probably don't need this
             // System.out.println("setFullScreenMode: set viewport: 0,0, "+backBufferWidth+", "+backBufferHeight);
@@ -580,7 +578,15 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
     @Override
     public void setVSync(boolean vsync) {
         getWindow().getConfig().vSyncEnabled = vsync;
-        getContext().setVSync(vsync);
+        // cannot call setVSync() directly because we may be in the middle of a render frame
+        // use postRunnable to call this after we end the frame and have released the surface.
+        getWindow().postRunnable(new Runnable() {
+            @Override
+            public void run() {
+                getContext().setVSync(vsync);
+            }
+        });
+
     }
 
     /**

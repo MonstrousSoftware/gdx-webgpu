@@ -57,7 +57,7 @@ public class FullScreenTest extends GdxTest {
 
     @Override
     public void resize(int width, int height) {
-        Gdx.app.log("resize", "");
+        Gdx.app.log("resize", width+" x "+height);
         viewport.update(width, height, true);
     }
 

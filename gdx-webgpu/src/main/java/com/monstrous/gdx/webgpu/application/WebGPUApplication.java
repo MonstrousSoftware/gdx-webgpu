@@ -286,10 +286,11 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
 
     /** Set Vertical Sync of swap chain */
     public void setVSync(boolean vsync) {
-        if (swapChainActive) {
-            exitSwapChain();
-            initSwapChain(width, height, vsync);
-        }
+        config.vSyncEnabled = vsync;
+//        if (swapChainActive) {
+//            exitSwapChain();
+//            initSwapChain(width, height, vsync);
+//        }
     }
 
     // Should not be called during a renderFrame() as the swap chain is then being used.
