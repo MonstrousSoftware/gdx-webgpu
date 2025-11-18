@@ -31,6 +31,7 @@ import com.badlogic.gdx.graphics.g3d.particles.ParticleShader;
 import com.badlogic.gdx.graphics.g3d.particles.ParticleShader.AlignMode;
 import com.badlogic.gdx.graphics.g3d.particles.ResourceData;
 import com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData;
+import com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch;
 import com.badlogic.gdx.graphics.g3d.particles.batches.BufferedParticleBatch;
 import com.badlogic.gdx.graphics.g3d.particles.renderers.BillboardControllerRenderData;
 import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
@@ -41,10 +42,13 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Pool;
 import com.monstrous.gdx.webgpu.graphics.WgMesh;
+import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDefaultShader;
 
 /** This class is used to render billboard particles.
  * @author Inferno */
-public class WgBillboardParticleBatch extends BufferedParticleBatch<BillboardControllerRenderData> {
+//public class WgBillboardParticleBatch extends BufferedParticleBatch<BillboardControllerRenderData> {
+
+public class WgBillboardParticleBatch extends BillboardParticleBatch {
 	protected static final Vector3 TMP_V1 = new Vector3(), TMP_V2 = new Vector3(), TMP_V3 = new Vector3(), TMP_V4 = new Vector3(),
 		TMP_V5 = new Vector3(), TMP_V6 = new Vector3();
 	protected static final Matrix3 TMP_M3 = new Matrix3();
@@ -132,7 +136,7 @@ public class WgBillboardParticleBatch extends BufferedParticleBatch<BillboardCon
 	 * @param depthTestAttribute DepthTest attribute used by the batch */
 	public WgBillboardParticleBatch(AlignMode mode, boolean useGPU, int capacity, BlendingAttribute blendingAttribute,
 									DepthTestAttribute depthTestAttribute) {
-		super(BillboardControllerRenderData[]::new);
+		//super(BillboardControllerRenderData[]::new);
 		renderables = new Array<Renderable>();
 		renderablePool = new RenderablePool();
 		this.blendingAttribute = blendingAttribute;
@@ -203,7 +207,7 @@ public class WgBillboardParticleBatch extends BufferedParticleBatch<BillboardCon
 	}
 
 	protected Shader getShader (Renderable renderable) {
-		Shader shader = useGPU ? new ParticleShader(renderable, new ParticleShader.Config(mode)) : new DefaultShader(renderable);
+		Shader shader = useGPU ? new ParticleShader(renderable, new ParticleShader.Config(mode)) : new WgDefaultShader(renderable);
 		shader.init();
 		return shader;
 	}

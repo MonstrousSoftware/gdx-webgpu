@@ -38,6 +38,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
+import com.monstrous.gdx.webgpu.assets.WgAssetManager;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.particles.batches.WgBillboardParticleBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.particles.batches.WgPointSpriteParticleBatch;
@@ -77,21 +78,24 @@ public class Particles3D extends GdxTest {
 //            particleSystem.add(pointSpriteBatch);
 
 
-            WgBillboardParticleBatch billboardParticleBatch = new WgBillboardParticleBatch(ParticleShader.AlignMode.Screen, true, 1000,
+            // NB don't set useGPU to true for now.
+            // requires shader implementation
+
+            WgBillboardParticleBatch billboardParticleBatch = new WgBillboardParticleBatch(ParticleShader.AlignMode.Screen, false, 1000,
                 new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA, 1.0f), null);
             billboardParticleBatch.setCamera(cam);
             particleSystem.add(billboardParticleBatch);
 
             // load particle effect from file
-            AssetManager assets = new AssetManager();
+            WgAssetManager assets = new WgAssetManager();
             ParticleEffectLoader.ParticleEffectLoadParameter loadParam = new ParticleEffectLoader.ParticleEffectLoadParameter(particleSystem.getBatches());
-            assets.load("particle/fire.pfx", ParticleEffect.class, loadParam);
-//            assets.load("particle/explosion-ring.pfx", ParticleEffect.class, loadParam);
-//            assets.load("particle/green-scatter.pfx", ParticleEffect.class, loadParam);
+            assets.load("data/g3d/particle/fire.pfx", ParticleEffect.class, loadParam);
+//            assets.load("g3d/particle/explosion-ring.pfx", ParticleEffect.class, loadParam);
+//            assets.load("g3d/particle/green-scatter.pfx", ParticleEffect.class, loadParam);
             assets.finishLoading();
-            smokeEffect = assets.get("particle/fire.pfx");
-//            ringEffect = assets.get("particle/explosion-ring.pfx");
-//            exhaustFumesEffect = assets.get("particle/green-scatter.pfx");
+            smokeEffect = assets.get("data/g3d/particle/fire.pfx");
+//            ringEffect = assets.get("g3d/particle/explosion-ring.pfx");
+//            exhaustFumesEffect = assets.get("g3d/particle/green-scatter.pfx");
 
             activeEffects = new Array<>();
             deleteList = new Array<>();
