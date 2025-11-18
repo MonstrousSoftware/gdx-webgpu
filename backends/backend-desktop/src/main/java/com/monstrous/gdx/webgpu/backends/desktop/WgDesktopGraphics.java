@@ -574,7 +574,7 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
     /**
      * Set vertical synchronisation for the current window. Note that if there are multiple windows, the frame rate of
      * all windows will be limited if any one of them has vsync set to true.
-     * 
+     *
      * @param vsync vsync enabled or not.
      */
     @Override

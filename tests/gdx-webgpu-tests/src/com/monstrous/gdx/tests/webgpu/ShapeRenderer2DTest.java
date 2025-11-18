@@ -37,9 +37,6 @@ public class ShapeRenderer2DTest extends GdxTest {
         renderer = new WgShapeRenderer();
 
         cam = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        // important to set near and far for WebGPU clip space
-        cam.near = -1;
-        cam.far = 1;
         cam.update();
 
         System.out.println(cam.combined.toString());
