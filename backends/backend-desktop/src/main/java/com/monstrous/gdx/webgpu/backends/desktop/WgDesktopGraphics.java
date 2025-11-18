@@ -490,7 +490,7 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
             GLFW.glfwSetWindowMonitor(window.getWindowHandle(), newMode.getMonitor(), 0, 0, newMode.width,
                     newMode.height, newMode.refreshRate);
 
-             //System.out.println("after glfwSetWindowMonitor()");
+            // System.out.println("after glfwSetWindowMonitor()");
 
             // probably don't need this
             // System.out.println("setFullScreenMode: set viewport: 0,0, "+backBufferWidth+", "+backBufferHeight);
