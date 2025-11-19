@@ -137,9 +137,9 @@ The library is available via Maven Central. Make sure the following section is i
 
 Define the version you want to use in the `gradle.properties` file, e.g. 
 
-    gdxWebGPUVersion=0.6
+    gdxWebGPUVersion=0.7.2
 
-You can refer to the latest stable release number, e.g. `0.6` or use `-SNAPSHOT` to follow the very latest developments. 
+You can refer to the latest stable release number, e.g. `0.7.2` or use `-SNAPSHOT` to follow the very latest developments. 
 (Beware when using a snapshot version, that functions may break without notice. Use a stable version by preference).
 
 To include the library in your project add the following lines to your `build.gradle` file in the `core` module:
