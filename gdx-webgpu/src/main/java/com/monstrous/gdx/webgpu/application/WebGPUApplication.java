@@ -133,7 +133,11 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
                     // = the first one listed under capabilities
                     WGPUSurfaceCapabilities surfaceCapabilities = WGPUSurfaceCapabilities.obtain();
                     surface.getCapabilities(adapter, surfaceCapabilities);
-                    surfaceFormat = surfaceCapabilities.getFormats().get(0);
+                    WGPUVectorTextureFormat formats = surfaceCapabilities.getFormats();
+                    if(formats.size() == 0){
+                        throw new RuntimeException("Adapter has no surface formats available");
+                    }
+                    surfaceFormat = formats.get(0);
                     // System.out.println("surfaceFormat: " + surfaceFormat);
 
                     // allocate some objects we will reuse a lot
