@@ -83,7 +83,7 @@ public class WgDesktopApplication implements Application {
 
         JWebGPULoader.init(config.backendWebGPU, (isSuccess, e) -> {
             // System.out.println("WebGPU Init Success: " + isSuccess);
-            System.out.println("WebGPU implementation: " + config.backendWebGPU);
+            System.out.println("WebGPU implementation: " + JWebGPULoader.getBackend());
             if (isSuccess) {
                 WGPUInstance instance = WGPU.setupInstance();
                 if (instance.isValid()) {

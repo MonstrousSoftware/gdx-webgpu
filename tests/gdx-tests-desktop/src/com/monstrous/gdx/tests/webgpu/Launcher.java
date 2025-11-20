@@ -16,7 +16,7 @@ public class Launcher {
         config.backend = WebGPUContext.Backend.DEFAULT; // Vulkan, DX12, etc.
 
         config.enableGPUtiming = false;
-        // config.samples = 4;
+        config.samples = 1;
 
         config.useVsync(true);
 
@@ -24,7 +24,7 @@ public class Launcher {
         // new WgDesktopApplication(new Scene2dTestScrollPane(), config);
         // new WgDesktopApplication(new MaterialsTest(), config);
         // new WgDesktopApplication(new GLTFSkinningMultiple(), config);
-        new WgDesktopApplication(new FullScreenTest(), config);
+        new WgDesktopApplication(new Basic3DTest(), config);
 
     }
 
