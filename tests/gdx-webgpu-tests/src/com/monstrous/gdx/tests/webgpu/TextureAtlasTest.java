@@ -19,6 +19,7 @@ package com.monstrous.gdx.tests.webgpu;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.InputAdapter;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
@@ -87,7 +88,7 @@ public class TextureAtlasTest extends GdxTest {
         // //renderer.rect(10, 10, 256, 256);
         // renderer.end();
 
-        batch.begin();
+        batch.begin(Color.BLACK);
         // badlogic.draw(batch);
         // star.draw(batch);
         // font.draw(batch, "This font was packed!", 26, 65);

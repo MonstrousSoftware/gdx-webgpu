@@ -140,17 +140,26 @@ public class WgModelBatch implements Disposable {
         begin(camera, clearColor, clearDepth, RenderPassType.COLOR_AND_DEPTH);
     }
 
+    public void begin(final Camera camera, final Color clearColor, boolean clearDepth, int numSamples) {
+        begin(camera, clearColor, clearDepth, RenderPassType.COLOR_AND_DEPTH, numSamples);
+    }
+
     // extra param for now to identify depth pass so that render pass is created without color attachment
     // can we detect this another way?
     public void begin(final Camera camera, final Color clearColor, boolean clearDepth, RenderPassType passType) {
+        WgGraphics gfx = (WgGraphics) Gdx.graphics;
+        int numSamples = gfx.getContext().getSamples();
+        begin(camera, clearColor, clearDepth, passType, numSamples);
+    }
+
+    public void begin(final Camera camera, final Color clearColor, boolean clearDepth, RenderPassType passType,
+            int numSamples) {
         if (drawing)
             throw new RuntimeException("Must end() before begin()");
         drawing = true;
         this.camera = camera;
 
-        WgGraphics gfx = (WgGraphics) Gdx.graphics;
-        renderPass = RenderPassBuilder.create("ModelBatch", clearColor, clearDepth, gfx.getContext().getSamples(),
-                passType);
+        renderPass = RenderPassBuilder.create("ModelBatch", clearColor, clearDepth, numSamples, passType);
 
         renderables.clear();
         shaderSwitches = 0;

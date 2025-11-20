@@ -36,7 +36,7 @@ public class RenderPassBuilder {
     }
 
     public static WebGPURenderPass create(String name, Color clearColor) {
-        return create(name, clearColor, 1);
+        return create(name, clearColor, ((WgGraphics) Gdx.graphics).getContext().getSamples());
     }
 
     public static WebGPURenderPass create(String name, Color clearColor, int sampleCount) {
@@ -148,8 +148,6 @@ public class RenderPassBuilder {
 
             depthStencilAttachment.setDepthClearValue(1.0f);
             depthStencilAttachment.setDepthLoadOp(clearDepth ? WGPULoadOp.Clear : WGPULoadOp.Load);
-            // depthStencilAttachment.setDepthLoadOp(passType == RenderPassType.COLOR_PASS_AFTER_DEPTH_PREPASS ?
-            // WGPULoadOp.Load : WGPULoadOp.Clear);
             depthStencilAttachment.setDepthStoreOp(WGPUStoreOp.Store);
             depthStencilAttachment.setDepthReadOnly(false);
             depthStencilAttachment.setStencilClearValue(0);
@@ -177,7 +175,7 @@ public class RenderPassBuilder {
         WebGPURenderPass pass = WebGPURenderPass.obtain(); // Reuse render pass
 
         Rectangle view = webgpu.getViewportRectangle(); // todo may change over time
-        WGPUTextureFormat format = WGPUTextureFormat.RGBA8UnormSrgb; // TMP
+        WGPUTextureFormat format = webgpu.getSurfaceFormat();
         pass.begin(webgpu.encoder, renderPassDescriptor, passType, format, depthTexture.getFormat(), sampleCount,
                 outTexture == null ? (int) view.width : outTexture.getWidth(),
                 outTexture == null ? (int) view.height : outTexture.getHeight());

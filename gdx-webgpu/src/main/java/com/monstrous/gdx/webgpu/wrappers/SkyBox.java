@@ -96,7 +96,8 @@ public class SkyBox implements Disposable {
      * @param clearDepth true to clear the depth buffer
      */
     public void renderPass(Camera cam, boolean clearDepth) {
-        WebGPURenderPass pass = RenderPassBuilder.create("skybox", null, clearDepth);
+        WebGPURenderPass pass = RenderPassBuilder.create("skybox", null, clearDepth,
+                ((WgGraphics) Gdx.graphics).getContext().getSamples());
         render(cam, pass);
         pass.end();
     }

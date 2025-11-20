@@ -182,7 +182,7 @@ public class IBLGenerator {
                 WebGPUContext.RenderOutputState prevState = webgpu.pushTargetView(colorTexture.getTextureView(), format,
                         size, size, depthTexture);
 
-                mapBatch.begin(snapCam, Color.GREEN, true); // , RenderPassType.NO_DEPTH);
+                mapBatch.begin(snapCam, Color.GREEN, true, 1);
                 mapBatch.render(instance, environment);
                 mapBatch.end();
 
@@ -263,7 +263,7 @@ public class IBLGenerator {
             WebGPUContext.RenderOutputState prevState = webgpu.pushTargetView(colorTexture.getTextureView(), format,
                     size, size, depthTexture);
 
-            mapBatch.begin(snapCam, Color.BLACK, true);
+            mapBatch.begin(snapCam, Color.BLACK, true, 1);
             mapBatch.render(instance);
             mapBatch.end();
 

@@ -79,7 +79,7 @@ public class PipelineSpecification {
         WgGraphics gfx = (WgGraphics) Gdx.graphics;
         colorFormat = gfx.getContext().getSurfaceFormat();
         depthFormat = WGPUTextureFormat.Depth24Plus; // todo get from adapter?
-        numSamples = 1;
+        numSamples = gfx.getContext().getSamples(); // take from window
         isSkyBox = false;
         afterDepthPrepass = false;
         maxDirLights = 0;
