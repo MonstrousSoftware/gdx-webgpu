@@ -497,9 +497,6 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
             context.setViewportRectangle(0, 0, backBufferWidth, backBufferHeight);
         }
         updateFramebufferInfo();
-
-        setVSync(window.getConfig().vSyncEnabled);
-
         return true;
     }
 

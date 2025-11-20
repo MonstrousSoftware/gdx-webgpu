@@ -18,7 +18,7 @@ public class Launcher {
         config.enableGPUtiming = false;
         // config.samples = 4;
 
-        config.useVsync(false);
+        config.useVsync(true);
 
         // new WgDesktopApplication(new SpriteBatchScissorTest(), config);
         // new WgDesktopApplication(new Scene2dTestScrollPane(), config);

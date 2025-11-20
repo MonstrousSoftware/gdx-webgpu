@@ -17,6 +17,7 @@
 package com.monstrous.gdx.tests.webgpu;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
@@ -31,6 +32,7 @@ import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
@@ -42,6 +44,7 @@ public class Basic3DTest extends GdxTest {
     public Model model;
     public ModelInstance instance;
     public Environment environment;
+    private int savedWidth, savedHeight;
 
     @Override
     public void create() {
@@ -68,6 +71,18 @@ public class Basic3DTest extends GdxTest {
 
     @Override
     public void render() {
+        // F11 to toggle full screen
+        if (Gdx.input.isKeyJustPressed(Input.Keys.F11)) {
+            boolean fullScreen = Gdx.graphics.isFullscreen();
+            WgGraphics.DisplayMode currentMode = Gdx.graphics.getDisplayMode();
+            if (fullScreen)
+                Gdx.graphics.setWindowedMode(savedWidth, savedHeight);
+            else {
+                savedWidth = Gdx.graphics.getWidth();
+                savedHeight = Gdx.graphics.getHeight();
+                Gdx.graphics.setFullscreenMode(currentMode);
+            }
+        }
         inputController.update();
 
         WgScreenUtils.clear(Color.TEAL, true);

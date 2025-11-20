@@ -214,6 +214,8 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
     public void renderFrame(ApplicationListener listener) {
 
         targetView = getNextSurfaceTextureView();
+        if (targetView == null)
+            return;
 
         WGPUCommandEncoderDescriptor encoderDesc = WGPUCommandEncoderDescriptor.obtain();
         encoderDesc.setLabel("The Command Encoder");
@@ -262,9 +264,20 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
         // get the surface texture for this frame
         WGPUSurfaceTexture surfaceTexture = WGPUSurfaceTexture.obtain();
         surface.getCurrentTexture(surfaceTexture);
+        WGPUSurfaceGetCurrentTextureStatus status = surfaceTexture.getStatus();
 
+        // after setFullScreenMode or setWindowedMode the status may be 'Outdated' for one frame
+        if (status != WGPUSurfaceGetCurrentTextureStatus.SuccessOptimal
+                && status != WGPUSurfaceGetCurrentTextureStatus.SuccessSuboptimal) {
+            // System.out.println("Surface texture status: "+status);
+            return null;
+        }
         // get texture from surface texture
         surfaceTexture.getTexture(surfaceTextureTexture);
+        if (!surfaceTextureTexture.isValid()) {
+            System.out.println("Surface texture texture is not valid!");
+            return null;
+        }
 
         // surfaceTexture is not releasable.
         // we will release surfaceTextureTexture after SurfacePresent (due to WGPU constraint, on Dawn we could release
@@ -291,10 +304,7 @@ public class WebGPUApplication extends WebGPUContext implements Disposable {
     /** Set Vertical Sync of swap chain */
     public void setVSync(boolean vsync) {
         config.vSyncEnabled = vsync;
-        if (swapChainActive) {
-            exitSwapChain();
-            initSwapChain(width, height, vsync);
-        }
+        resize(width, height);
     }
 
     // Should not be called during a renderFrame() as the swap chain is then being used.
