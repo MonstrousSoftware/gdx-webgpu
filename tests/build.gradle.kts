@@ -20,7 +20,7 @@ plugins {
 
 val javaVersion = project.property("java") as String
 
-configure(subprojects - project(":tests:gdx-tests-android")) {
+configure(subprojects) {
     apply(plugin = "java")
 
     if (JavaVersion.current().isJava9Compatible) {
