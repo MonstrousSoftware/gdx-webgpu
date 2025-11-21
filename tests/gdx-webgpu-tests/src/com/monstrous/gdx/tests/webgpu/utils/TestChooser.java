@@ -1,5 +1,6 @@
 package com.monstrous.gdx.tests.webgpu.utils;
 
+import com.badlogic.gdx.Application;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
@@ -17,6 +18,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.monstrous.gdx.tests.webgpu.WebGPUTests;
 import com.monstrous.gdx.webgpu.scene2d.WgSkin;
@@ -29,8 +31,29 @@ public class TestChooser extends ApplicationAdapter {
     private ApplicationListener test;
     boolean dispose = false;
 
+    // Tunable UI scale factors
+    private float uiScale = 1f;
+    private float buttonHeight = 32f;
+    private float buttonPad = 4f;
+    private float fontScale = 1f;
+
     public void create() {
         final Preferences prefs = Gdx.app.getPreferences("webgpu-tests");
+
+        // Detect mobile vs desktop/web and choose a slightly different scale.
+        boolean mobile = Gdx.app.getType() == Application.ApplicationType.Android
+                || Gdx.app.getType() == Application.ApplicationType.iOS;
+        if (mobile) {
+            uiScale = 1.8f;   // overall UI scale boost
+            buttonHeight = 54f;
+            buttonPad = 8f;
+            fontScale = 1.3f;
+        } else {
+            uiScale = 1.0f;
+            buttonHeight = 32f;
+            buttonPad = 4f;
+            fontScale = 1.0f;
+        }
 
         stage = new WgStage(new ScreenViewport());
 
@@ -62,13 +85,23 @@ public class TestChooser extends ApplicationAdapter {
         scroll.setFadeScrollBars(false);
         stage.setScrollFocus(scroll);
 
-        int tableSpace = 4;
-        table.pad(10).defaults().expandX().space(tableSpace);
+        int tableSpace = (int)(buttonPad * uiScale);
+        table.pad(10 * uiScale).defaults()
+                .expandX()
+                .space(tableSpace)
+                .height(buttonHeight * uiScale);
+
         for (final String testName : WebGPUTests.getNames()) {
             final TextButton testButton = new TextButton(testName, skin);
             testButton.setName(testName);
+
+            // Center text and apply larger font scale on mobile for readability.
+            testButton.getLabel().setAlignment(Align.center);
+            testButton.getLabel().setFontScale(fontScale);
+
             table.add(testButton).fillX();
             table.row();
+
             testButton.addListener(new ChangeListener() {
                 @Override
                 public void changed(ChangeEvent event, Actor actor) {
@@ -98,7 +131,7 @@ public class TestChooser extends ApplicationAdapter {
             lastClickedTestButton.setColor(Color.CYAN);
             scroll.layout();
             float scrollY = lastClickedTestButton.getY() + scroll.getScrollHeight() / 2
-                    + lastClickedTestButton.getHeight() / 2 + tableSpace * 2 + 20;
+                    + lastClickedTestButton.getHeight() / 2 + tableSpace * 2 + 20 * uiScale;
             scroll.scrollTo(0, scrollY, 0, 0, false, false);
             stage.act(1f);
             stage.act(1f);

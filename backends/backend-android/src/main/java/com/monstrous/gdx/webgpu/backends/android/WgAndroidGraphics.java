@@ -3,9 +3,6 @@ package com.monstrous.gdx.webgpu.backends.android;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.hardware.display.DisplayManager;
-import android.opengl.GLSurfaceView;
-import android.opengl.GLSurfaceView.EGLConfigChooser;
-import android.opengl.GLSurfaceView.Renderer;
 import android.os.Build;
 import android.util.DisplayMetrics;
 import android.view.Display;
@@ -15,21 +12,12 @@ import android.view.SurfaceHolder;
 import android.view.View;
 import android.view.WindowManager.LayoutParams;
 import com.badlogic.gdx.AbstractGraphics;
-import com.badlogic.gdx.Application;
-import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Graphics;
 import com.badlogic.gdx.LifecycleListener;
-import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationBase;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
-import com.badlogic.gdx.backends.android.AndroidCursor;
 import com.badlogic.gdx.backends.android.AndroidFragmentApplication;
-import com.badlogic.gdx.backends.android.AndroidGL20;
-import com.badlogic.gdx.backends.android.AndroidGL30;
-import com.badlogic.gdx.backends.android.AndroidGraphics;
-import com.badlogic.gdx.backends.android.surfaceview.GLSurfaceView20;
-import com.badlogic.gdx.backends.android.surfaceview.GdxEglConfigChooser;
 import com.badlogic.gdx.backends.android.surfaceview.ResolutionStrategy;
 import com.badlogic.gdx.graphics.Cubemap;
 import com.badlogic.gdx.graphics.Cursor;
@@ -46,8 +34,6 @@ import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.GLVersion;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.utils.GdxRuntimeException;
-import com.badlogic.gdx.utils.SnapshotArray;
 import com.github.xpenatan.webgpu.WGPU;
 import com.github.xpenatan.webgpu.WGPUAndroidWindow;
 import com.github.xpenatan.webgpu.WGPUBackendType;
@@ -59,17 +45,9 @@ import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WebGPUInitialization;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.utils.WgGL20;
-import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
-import javax.microedition.khronos.egl.EGL10;
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.egl.EGLContext;
-import javax.microedition.khronos.egl.EGLDisplay;
-import javax.microedition.khronos.opengles.GL10;
 
 /**
- * An implementation of {@link Graphics} for Android.
- *
- * @author mzechner
+ * An implementation of {@link Graphics} for Android, backed by WebGPU.
  */
 public class WgAndroidGraphics extends AbstractGraphics implements WgGraphics, WgSurfaceView.WgRenderer {
 
@@ -113,13 +91,21 @@ public class WgAndroidGraphics extends AbstractGraphics implements WgGraphics, W
     protected final AndroidApplicationConfiguration config;
     private BufferFormat bufferFormat;
     private boolean isContinuous = true;
-    private ApplicationListener applicationListener;
 
     public WebGPUApplication context;
 
     private WGPUInstance instance;
     private WGPUAndroidWindow androidWindow;
     private WgGL20 gl20;
+
+    Object synch = new Object();
+
+    /**
+     * Indicates that the owning WgAndroidApplication has completed its init() method,
+     * created all subsystems (input, audio, files, net) and wired Gdx.* singletons.
+     * Until this is true, the render thread will not execute the main render logic.
+     */
+    volatile boolean appInitialized = false;
 
     public WgAndroidGraphics(AndroidApplicationBase application, AndroidApplicationConfiguration config,
                              ResolutionStrategy resolutionStrategy) {
@@ -132,8 +118,8 @@ public class WgAndroidGraphics extends AbstractGraphics implements WgGraphics, W
             config.coverageSampling);
         this.config = config;
         this.app = application;
-        applicationListener = app.getApplicationListener();
         view = createGLSurfaceView(application, resolutionStrategy);
+        view.setRenderer(this);
         if(focusableView) {
             view.setFocusable(true);
             view.setFocusableInTouchMode(true);
@@ -181,6 +167,7 @@ public class WgAndroidGraphics extends AbstractGraphics implements WgGraphics, W
      */
     @Override
     public void setGL20(GL20 gl20) {
+        // no-op, we control the GL/WebGPU implementation
     }
 
     /**
@@ -268,19 +255,24 @@ public class WgAndroidGraphics extends AbstractGraphics implements WgGraphics, W
         this.height = height;
         updatePpi();
         updateSafeAreaInsets();
-//        gl.glViewport(0, 0, this.width, this.height);
-        if(created == false) {
-            applicationListener.create();
+
+        if (context != null && context.isReady()) {
+            context.resize(width, height);
+        }
+
+        if(!created) {
+            app.getApplicationListener().create();
             created = true;
             synchronized(this) {
                 running = true;
             }
         }
-        applicationListener.resize(width, height);
+        app.getApplicationListener().resize(width, height);
     }
 
     @Override
     public void surfaceDestroyed() {
+        // Nothing special here; lifecycle is managed via pause/destroy.
     }
 
     @Override
@@ -295,17 +287,18 @@ public class WgAndroidGraphics extends AbstractGraphics implements WgGraphics, W
         androidWindow.createAndroidSurface(surface);
         WGPUSurface androidSurface = instance.createAndroidSurface(androidWindow);
 
-        WebGPUApplication.Configuration configg = new WebGPUApplication.Configuration(1, true, false,
-            WebGPUContext.Backend.VULKAN);
+        WebGPUApplication.Configuration configg = new WebGPUApplication.Configuration(config.numSamples <= 0 ? 1 : config.numSamples,
+                true,
+                false,
+                WebGPUContext.Backend.VULKAN);
         context = new WebGPUApplication(configg, instance, androidSurface);
 
         WebGPUInitialization.setup(instance, WGPUPowerPreference.HighPerformance, WGPUBackendType.Vulkan, context);
 
         this.gl20 = new WgGL20();
+        Gdx.gl = this.gl20;
+        Gdx.gl20 = this.gl20;
 
-//        eglContext = ((EGL10)EGLContext.getEGL()).eglGetCurrentContext();
-//        setupGL(gl);
-//        logConfig(config);
         updatePpi();
         updateSafeAreaInsets();
 
@@ -322,42 +315,7 @@ public class WgAndroidGraphics extends AbstractGraphics implements WgGraphics, W
         this.width = display.getWidth();
         this.height = display.getHeight();
         this.lastFrameTime = System.nanoTime();
-
-//        gl.glViewport(0, 0, this.width, this.height);
     }
-
-    protected void logConfig(EGLConfig config) {
-        EGL10 egl = (EGL10)EGLContext.getEGL();
-        EGLDisplay display = egl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
-        int r = getAttrib(egl, display, config, EGL10.EGL_RED_SIZE, 0);
-        int g = getAttrib(egl, display, config, EGL10.EGL_GREEN_SIZE, 0);
-        int b = getAttrib(egl, display, config, EGL10.EGL_BLUE_SIZE, 0);
-        int a = getAttrib(egl, display, config, EGL10.EGL_ALPHA_SIZE, 0);
-        int d = getAttrib(egl, display, config, EGL10.EGL_DEPTH_SIZE, 0);
-        int s = getAttrib(egl, display, config, EGL10.EGL_STENCIL_SIZE, 0);
-        int samples = Math.max(getAttrib(egl, display, config, EGL10.EGL_SAMPLES, 0),
-            getAttrib(egl, display, config, GdxEglConfigChooser.EGL_COVERAGE_SAMPLES_NV, 0));
-        boolean coverageSample = getAttrib(egl, display, config, GdxEglConfigChooser.EGL_COVERAGE_SAMPLES_NV, 0) != 0;
-
-        Gdx.app.log(LOG_TAG, "framebuffer: (" + r + ", " + g + ", " + b + ", " + a + ")");
-        Gdx.app.log(LOG_TAG, "depthbuffer: (" + d + ")");
-        Gdx.app.log(LOG_TAG, "stencilbuffer: (" + s + ")");
-        Gdx.app.log(LOG_TAG, "samples: (" + samples + ")");
-        Gdx.app.log(LOG_TAG, "coverage sampling: (" + coverageSample + ")");
-
-        bufferFormat = new BufferFormat(r, g, b, a, d, s, samples, coverageSample);
-    }
-
-    int[] value = new int[1];
-
-    private int getAttrib(EGL10 egl, EGLDisplay display, EGLConfig config, int attrib, int defValue) {
-        if(egl.eglGetConfigAttrib(display, config, attrib, value)) {
-            return value[0];
-        }
-        return defValue;
-    }
-
-    Object synch = new Object();
 
     void resume() {
         synchronized(synch) {
@@ -419,22 +377,30 @@ public class WgAndroidGraphics extends AbstractGraphics implements WgGraphics, W
         }
     }
 
+    void markAppInitialized() {
+        appInitialized = true;
+    }
+
     @Override
     public void onDrawFrame() {
-        long time = System.nanoTime();
-        // After pause deltaTime can have somewhat huge value that destabilizes the mean, so let's cut it off
-        if(!resume) {
-            deltaTime = (time - lastFrameTime) / 1000000000.0f;
+        // Do not start rendering until WgAndroidApplication has completed init().
+        if (!appInitialized) {
+            // We still want to advance timing so deltaTime is sensible when we start.
+            long now = System.nanoTime();
+            lastFrameTime = now;
+            frameStart = now;
+            return;
         }
-        else {
-            deltaTime = 0;
-        }
-        lastFrameTime = time;
 
-        boolean lrunning = false;
-        boolean lpause = false;
-        boolean ldestroy = false;
-        boolean lresume = false;
+        long time = System.nanoTime();
+        deltaTime = (time - lastFrameTime) / 1000000000.0f;
+        lastFrameTime = time;
+        frameId++;
+
+        boolean lrunning;
+        boolean lpause;
+        boolean ldestroy;
+        boolean lresume;
 
         synchronized(synch) {
             lrunning = running;
@@ -458,16 +424,11 @@ public class WgAndroidGraphics extends AbstractGraphics implements WgGraphics, W
         }
 
         if(lresume) {
-            SnapshotArray<LifecycleListener> lifecycleListeners = app.getLifecycleListeners();
-            synchronized(lifecycleListeners) {
-                LifecycleListener[] listeners = lifecycleListeners.begin();
-                for(int i = 0, n = lifecycleListeners.size; i < n; ++i) {
-                    listeners[i].resume();
-                }
-                lifecycleListeners.end();
+            for(int i = 0; i < app.getLifecycleListeners().size; i++) {
+                LifecycleListener listener = app.getLifecycleListeners().get(i);
+                listener.resume();
             }
-            applicationListener.resume();
-            Gdx.app.log(LOG_TAG, "resumed");
+            Gdx.app.getApplicationListener().resume();
         }
 
         if(lrunning) {
@@ -478,43 +439,48 @@ public class WgAndroidGraphics extends AbstractGraphics implements WgGraphics, W
             }
 
             for(int i = 0; i < app.getExecutedRunnables().size; i++) {
-                app.getExecutedRunnables().get(i).run();
+                try {
+                    app.getExecutedRunnables().get(i).run();
+                } catch(Throwable t) {
+                    t.printStackTrace();
+                }
             }
+
             app.getInput().processEvents();
-            frameId++;
-            applicationListener.render();
+
+            if (context != null && context.isReady()) {
+                context.update();
+                context.renderFrame(app.getApplicationListener());
+            }
         }
 
         if(lpause) {
-            SnapshotArray<LifecycleListener> lifecycleListeners = app.getLifecycleListeners();
-            synchronized(lifecycleListeners) {
-                LifecycleListener[] listeners = lifecycleListeners.begin();
-                for(int i = 0, n = lifecycleListeners.size; i < n; ++i) {
-                    listeners[i].pause();
-                }
+            Gdx.app.getApplicationListener().pause();
+            for(int i = 0; i < app.getLifecycleListeners().size; i++) {
+                LifecycleListener listener = app.getLifecycleListeners().get(i);
+                listener.pause();
             }
-            applicationListener.pause();
-            Gdx.app.log(LOG_TAG, "paused");
         }
 
         if(ldestroy) {
-            SnapshotArray<LifecycleListener> lifecycleListeners = app.getLifecycleListeners();
-            synchronized(lifecycleListeners) {
-                LifecycleListener[] listeners = lifecycleListeners.begin();
-                for(int i = 0, n = lifecycleListeners.size; i < n; ++i) {
-                    listeners[i].dispose();
-                }
+            Gdx.app.getApplicationListener().dispose();
+            for(int i = 0; i < app.getLifecycleListeners().size; i++) {
+                LifecycleListener listener = app.getLifecycleListeners().get(i);
+                listener.dispose();
             }
-            applicationListener.dispose();
-            Gdx.app.log(LOG_TAG, "destroyed");
+
+            clearManagedCaches();
         }
 
-        if(time - frameStart > 1000000000) {
+        frames++;
+        if(time - frameStart >= 1000000000L) {
             fps = frames;
             frames = 0;
             frameStart = time;
+            if (context != null && context.getGPUTimer() != null) {
+                context.secondsTick();
+            }
         }
-        frames++;
     }
 
     @Override
@@ -658,7 +624,7 @@ public class WgAndroidGraphics extends AbstractGraphics implements WgGraphics, W
                     safeInsetTop = displayCutout.getSafeInsetTop();
                     safeInsetLeft = displayCutout.getSafeInsetLeft();
                 }
-            } // Some Application implementations (such as Live Wallpapers) do not implement Application#getApplicationWindow()
+            }
             catch(UnsupportedOperationException e) {
                 Gdx.app.log("AndroidGraphics", "Unable to get safe area insets");
             }
@@ -730,6 +696,9 @@ public class WgAndroidGraphics extends AbstractGraphics implements WgGraphics, W
 
     @Override
     public void setVSync(boolean vsync) {
+        if (context != null) {
+            context.setVSync(vsync);
+        }
     }
 
     @Override
@@ -738,18 +707,8 @@ public class WgAndroidGraphics extends AbstractGraphics implements WgGraphics, W
 
     @Override
     public boolean supportsExtension(String extension) {
-        if(extensions == null) extensions = Gdx.gl.glGetString(GL10.GL_EXTENSIONS);
-        return extensions.contains(extension);
-    }
-
-    @Override
-    public void setContinuousRendering(boolean isContinuous) {
-        if(view != null) {
-            // ignore setContinuousRendering(false) while pausing
-            this.isContinuous = enforceContinuousRendering || isContinuous;
-            int renderMode = this.isContinuous ? GLSurfaceView.RENDERMODE_CONTINUOUSLY : GLSurfaceView.RENDERMODE_WHEN_DIRTY;
-            view.setRenderMode(renderMode);
-        }
+        // WebGPU backend does not expose GL extensions in the usual way; return false by default.
+        return false;
     }
 
     @Override
@@ -758,10 +717,19 @@ public class WgAndroidGraphics extends AbstractGraphics implements WgGraphics, W
     }
 
     @Override
-    public void requestRendering() {
-        if(view != null) {
-            view.requestRender();
+    public void setContinuousRendering(boolean isContinuous) {
+        if(!enforceContinuousRendering) {
+            this.isContinuous = isContinuous;
+            view.setRenderMode(isContinuous ? WgSurfaceView.RENDERMODE_CONTINUOUSLY : WgSurfaceView.RENDERMODE_WHEN_DIRTY);
+            synchronized(synch) {
+                synch.notifyAll();
+            }
         }
+    }
+
+    @Override
+    public void requestRendering() {
+        view.requestRender();
     }
 
     @Override
@@ -789,6 +757,12 @@ public class WgAndroidGraphics extends AbstractGraphics implements WgGraphics, W
     @Override
     public WebGPUContext getContext() {
         return context;
+    }
+
+    @Override
+    public boolean isReadyForRendering() {
+        // Only start the render loop when the Activity has finished init() and we have a listener.
+        return appInitialized && app.getApplicationListener() != null;
     }
 
     private class AndroidDisplayMode extends DisplayMode {

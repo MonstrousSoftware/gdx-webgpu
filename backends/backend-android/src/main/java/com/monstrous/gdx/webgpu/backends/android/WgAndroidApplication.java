@@ -58,7 +58,7 @@ import com.github.xpenatan.webgpu.JWebGPULoader;
  */
 public class WgAndroidApplication extends Activity implements AndroidApplicationBase {
 
-    private  boolean webgpuLoaded = false;
+    private boolean webgpuLoaded = false;
 
     protected WgAndroidGraphics graphics;
     protected AndroidInput input;
@@ -141,13 +141,39 @@ public class WgAndroidApplication extends Activity implements AndroidApplication
         if(this.getVersion() < MINIMUM_SDK) {
             throw new GdxRuntimeException("libGDX requires Android API Level " + MINIMUM_SDK + " or later.");
         }
+
+        // Load jWebGPU native library synchronously before creating the WebGPU instance.
+        final Object lock = new Object();
+        final boolean[] done = {false};
+        final boolean[] success = {false};
+        final Exception[] error = {null};
+
         JWebGPULoader.init((isSuccess, e) -> {
-            System.out.println("WebGPU Init Success: " + isSuccess);
-            webgpuLoaded = isSuccess;
+            synchronized (lock) {
+                success[0] = isSuccess;
+                error[0] = e;
+                done[0] = true;
+                lock.notifyAll();
+            }
         });
-        if(!webgpuLoaded) {
-            throw new GdxRuntimeException("WebGPU Failed to load" + MINIMUM_SDK + " or later.");
+
+        synchronized (lock) {
+            while (!done[0]) {
+                try {
+                    lock.wait();
+                } catch (InterruptedException ignored) {
+                }
+            }
         }
+
+        webgpuLoaded = success[0];
+        if(!webgpuLoaded) {
+            if (error[0] != null) {
+                error[0].printStackTrace();
+            }
+            throw new GdxRuntimeException("WebGPU Failed to load");
+        }
+
         init(listener, config, isForView);
     }
 
@@ -222,6 +248,12 @@ public class WgAndroidApplication extends Activity implements AndroidApplication
         }
         else {
             keyboardHeightProvider = new StandardKeyboardHeightProvider(this);
+        }
+
+        // At this point, all subsystems are ready and Gdx.* is wired.
+        // Allow the render thread to start executing the main render loop.
+        if (graphics != null) {
+            graphics.markAppInitialized();
         }
     }
 
