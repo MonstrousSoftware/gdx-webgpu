@@ -33,6 +33,7 @@ public class WebGPUApplication extends WebGPUContext implements WebGPUInitializa
     private WGPUTextureView textureViewOut;
     private WGPUTexture surfaceTextureTexture;
     private boolean swapChainActive = false;
+    private boolean disposed = false;
 
     public static class Configuration {
         public int numSamples;
@@ -214,13 +215,21 @@ public class WebGPUApplication extends WebGPUContext implements WebGPUInitializa
     /** Set Vertical Sync of swap chain */
     public void setVSync(boolean vsync) {
         config.vSyncEnabled = vsync;
-        resize(width, height);
+        // Avoid reconfiguring the swap chain if this context has been disposed or not fully initialized yet.
+        if (!disposed && device != null && surface != null) {
+            resize(width, height);
+        }
     }
 
     // Should not be called during a renderFrame() as the swap chain is then being used.
     // E.g. WgDesktopWindow calls this via postRunnable() after having received an async resize event from GLFW.
     //
     public void resize(int width, int height) {
+        // If we've been disposed or the device/surface are invalid, ignore resize requests.
+        if (disposed || device == null || surface == null) {
+            return;
+        }
+
         // System.out.println("resize: "+width+" x "+height);
 
         // if there was already a swap chain, release it
@@ -325,24 +334,41 @@ public class WebGPUApplication extends WebGPUContext implements WebGPUInitializa
 
     @Override
     public void dispose() {
-        terminateDepthBuffer();
-        exitSwapChain();
+        if (disposed) return;
+        disposed = true;
 
-        command.dispose();
-        encoder.dispose();
-        textureViewOut.dispose();
-        surfaceTextureTexture.dispose();
+        // Guard against partial initialization
+        if (swapChainActive) {
+            terminateDepthBuffer();
+            exitSwapChain();
+            swapChainActive = false;
+        }
 
-        surface.release();
-        surface.dispose();
-        queue.release();
-        // queue.dispose();
-        device.destroy();
-        gpuTimer.dispose();
+        if (command != null) command.dispose();
+        if (encoder != null) encoder.dispose();
+        if (textureViewOut != null) textureViewOut.dispose();
+        if (surfaceTextureTexture != null) surfaceTextureTexture.dispose();
+
+        if (surface != null) {
+            surface.release();
+            surface.dispose();
+        }
+        if (queue != null) {
+            queue.release();
+            // queue.dispose();
+        }
+        if (device != null) {
+            device.destroy();
+        }
+        if (gpuTimer != null) {
+            gpuTimer.dispose();
+        }
 
         WebGPURenderPass.clearPool();
 
-        device.dispose();
+        if (device != null) {
+            device.dispose();
+        }
     }
 
     @Override

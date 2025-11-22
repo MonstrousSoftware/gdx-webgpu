@@ -37,14 +37,16 @@ public class TestChooser extends ApplicationAdapter {
     private float buttonPad = 4f;
     private float fontScale = 1f;
 
+    // Mobile detection so we can add a touch-close hotspot only on mobile.
+    private boolean mobile = false;
+
     public void create() {
         final Preferences prefs = Gdx.app.getPreferences("webgpu-tests");
 
-        // Detect mobile vs desktop/web and choose a slightly different scale.
-        boolean mobile = Gdx.app.getType() == Application.ApplicationType.Android
+        mobile = Gdx.app.getType() == Application.ApplicationType.Android
                 || Gdx.app.getType() == Application.ApplicationType.iOS;
         if (mobile) {
-            uiScale = 1.8f;   // overall UI scale boost
+            uiScale = 1.8f;
             buttonHeight = 54f;
             buttonPad = 8f;
             fontScale = 1.3f;
@@ -67,6 +69,21 @@ public class TestChooser extends ApplicationAdapter {
                     }
                 }
                 return false;
+            }
+
+            @Override
+            public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+                if (mobile && test != null) {
+                    int hotspotSize = (int)(80 * uiScale); // ~80dp scaled
+                    boolean inHotspot = (Gdx.graphics.getWidth() - screenX) < hotspotSize
+                            && (Gdx.graphics.getHeight() - screenY) < hotspotSize;
+                    if (inHotspot) {
+                        Gdx.app.log("TestChooser", "Top-left hotspot tapped, closing current test.");
+                        dispose = true;
+                        return true;
+                    }
+                }
+                return super.touchDown(screenX, screenY, pointer, button);
             }
         };
 
@@ -149,7 +166,13 @@ public class TestChooser extends ApplicationAdapter {
                 test.dispose();
                 test = null;
                 stage.getViewport().update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
-                Gdx.graphics.setVSync(true);
+
+                // On desktop/web we may want to enforce vsync after some tests; on mobile this
+                // can cause a swapchain reconfigure at an unsafe time, so skip it there.
+                if (!mobile) {
+                    Gdx.graphics.setVSync(true);
+                }
+
                 InputWrapper wrapper = ((InputWrapper) Gdx.input);
                 wrapper.multiplexer.addProcessor(stage);
                 wrapper.multiplexer.removeProcessor(wrapper.lastProcessor);
