@@ -25,9 +25,12 @@ import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.utils.Disposable;
 
 import com.github.xpenatan.jParser.idl.IDLBase;
+import com.github.xpenatan.webgpu.WGPUBackendType;
 import com.github.xpenatan.webgpu.WGPUInstance;
+import com.github.xpenatan.webgpu.WGPUPowerPreference;
 import com.github.xpenatan.webgpu.WGPUSurface;
 import com.monstrous.gdx.webgpu.application.WebGPUApplication;
+import com.monstrous.gdx.webgpu.application.WebGPUInitialization;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.utils.WgGL20;
 import org.lwjgl.BufferUtils;
@@ -76,6 +79,22 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
     final IntBuffer tmpBuffer2 = BufferUtils.createIntBuffer(1);
 
     public WgDesktopGraphics(WgDesktopWindow window, WGPUInstance instance, long windowHandle) {
+        app = (WgDesktopApplication) Gdx.app;
+
+        WebGPUApplication.Configuration config = new WebGPUApplication.Configuration(app.getConfiguration().samples,
+            app.getConfiguration().vSyncEnabled, app.getConfiguration().enableGPUtiming,
+            app.getConfiguration().backend);
+
+        WGPUSurface surface = createSurface(instance, windowHandle);
+        this.context = new WebGPUApplication(config, instance, surface);
+        WGPUBackendType backendType = WebGPUApplication.convertBackendType(config.requestedBackendType);
+        WebGPUInitialization.setup(instance, WGPUPowerPreference.HighPerformance, backendType, context);
+        while (!context.isReady()) {
+            if(context.isError()) {
+                throw new RuntimeException("Failed to initialize WebGPU");
+            }
+            instance.processEvents();
+        }
 
         this.window = window;
 
@@ -85,20 +104,9 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
         this.gl32 = null;
         updateFramebufferInfo();
 
-        app = (WgDesktopApplication) Gdx.app;
         Gdx.graphics = this;
         Gdx.gl = this.gl20;
 
-        WebGPUApplication.Configuration config = new WebGPUApplication.Configuration(app.getConfiguration().samples,
-                app.getConfiguration().vSyncEnabled, app.getConfiguration().enableGPUtiming,
-                app.getConfiguration().backend);
-
-        WGPUSurface surface = createSurface(instance, windowHandle);
-
-        this.context = new WebGPUApplication(config, instance, surface);
-        while (!context.isReady()) {
-            instance.processEvents();
-        }
 
         // this.context = new WebGPUApplication(config, new WebGPUApplication.OnInitCallback() {
         // @Override
