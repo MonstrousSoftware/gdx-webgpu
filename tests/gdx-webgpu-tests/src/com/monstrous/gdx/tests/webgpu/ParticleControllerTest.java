@@ -33,8 +33,7 @@ import com.monstrous.gdx.webgpu.scene2d.WgSkin;
 import com.monstrous.gdx.webgpu.scene2d.WgStage;
 
 
-// 3d particles
-// BROKEN
+// 3d particles, set up programmatically rather than via a particle effect file
 
 /** @author Inferno */
 public class ParticleControllerTest extends BaseG3dTest {
@@ -204,7 +203,6 @@ public class ParticleControllerTest extends BaseG3dTest {
 				controller.draw();
 			}
 			billboardParticleBatch.end();
-            //modelBatch.render(billboardParticleBatch, environment);
 		}
 
         inputController.update();
@@ -222,6 +220,8 @@ public class ParticleControllerTest extends BaseG3dTest {
 
         ui.draw();
     }
+
+    // we had to adapt this from the original libgdx version because you cannot do a ui.draw() before calling modelBatch.end();
 
     @Override
     protected void render (final WgModelBatch batch, final Array<ModelInstance> instances){
