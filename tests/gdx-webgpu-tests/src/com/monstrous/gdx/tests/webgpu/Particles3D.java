@@ -16,7 +16,6 @@
 
 package com.monstrous.gdx.tests.webgpu;
 
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.assets.AssetManager;
@@ -41,23 +40,19 @@ import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.webgpu.assets.WgAssetManager;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.particles.batches.WgBillboardParticleBatch;
-import com.monstrous.gdx.webgpu.graphics.g3d.particles.batches.WgPointSpriteParticleBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 
 public class Particles3D extends GdxTest {
-	public PerspectiveCamera cam;
-	public CameraInputController inputController;
-	public WgModelBatch modelBatch;
-	public Model model;
-	public ModelInstance instance;
-	public Environment environment;
+    public PerspectiveCamera cam;
+    public CameraInputController inputController;
+    public WgModelBatch modelBatch;
+    public Model model;
+    public ModelInstance instance;
+    public Environment environment;
     public ParticleEffects particleEffects;
 
-
-
     public static class ParticleEffects implements Disposable {
-
 
         private ParticleSystem particleSystem;
         private Array<ParticleEffect> activeEffects;
@@ -72,30 +67,30 @@ public class Particles3D extends GdxTest {
             particleSystem = new ParticleSystem();
 
             // create a point sprite batch and add it to the particle system
-//            WgPointSpriteParticleBatch pointSpriteBatch = new WgPointSpriteParticleBatch(1000,  new ParticleShader.Config(ParticleShader.ParticleType.Point),
-//                new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA, 0.1f), null );
-//            pointSpriteBatch.setCamera(cam);
-//            particleSystem.add(pointSpriteBatch);
-
+            // WgPointSpriteParticleBatch pointSpriteBatch = new WgPointSpriteParticleBatch(1000, new
+            // ParticleShader.Config(ParticleShader.ParticleType.Point),
+            // new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA, 0.1f), null );
+            // pointSpriteBatch.setCamera(cam);
+            // particleSystem.add(pointSpriteBatch);
 
             // NB don't set useGPU to true for now.
             // requires shader implementation
 
-            WgBillboardParticleBatch billboardParticleBatch = new WgBillboardParticleBatch(ParticleShader.AlignMode.Screen, false, 1000,
-                new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA, 1.0f), null);
+            WgBillboardParticleBatch billboardParticleBatch = new WgBillboardParticleBatch(
+                    ParticleShader.AlignMode.Screen, false, 1000,
+                    new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA, 1.0f), null);
             billboardParticleBatch.setCamera(cam);
             particleSystem.add(billboardParticleBatch);
 
             // load particle effect from file
             // via the asset manager
             WgAssetManager assets = new WgAssetManager();
-            ParticleEffectLoader.ParticleEffectLoadParameter loadParam = new ParticleEffectLoader.ParticleEffectLoadParameter(particleSystem.getBatches());
+            ParticleEffectLoader.ParticleEffectLoadParameter loadParam = new ParticleEffectLoader.ParticleEffectLoadParameter(
+                    particleSystem.getBatches());
             assets.load("data/g3d/particle/fire.pfx", ParticleEffect.class, loadParam);
 
             assets.finishLoading();
             smokeEffect = assets.get("data/g3d/particle/fire.pfx");
-
-
 
             activeEffects = new Array<>();
             deleteList = new Array<>();
@@ -104,7 +99,7 @@ public class Particles3D extends GdxTest {
         // puff of smoke effect where character lands
         public void addExhaustFumes(Matrix4 transform) {
             // we cannot use the originalEffect, we must make a copy each time we create new particle effect
-            addEffect( exhaustFumesEffect.copy(), transform );
+            addEffect(exhaustFumesEffect.copy(), transform);
         }
 
         // add effect
@@ -114,7 +109,7 @@ public class Particles3D extends GdxTest {
             // add loaded effect to particle system
             effect.setTransform(transform);
             effect.init();
-            effect.start();  // optional: particle will begin playing immediately
+            effect.start(); // optional: particle will begin playing immediately
             particleSystem.add(effect);
             activeEffects.add(effect);
         }
@@ -126,7 +121,7 @@ public class Particles3D extends GdxTest {
             ParticleEffect effect = smokeEffect.copy();
             effect.translate(position);
             effect.init();
-            effect.start();  // optional: particle will begin playing immediately
+            effect.start(); // optional: particle will begin playing immediately
             particleSystem.add(effect);
             activeEffects.add(effect);
         }
@@ -134,23 +129,23 @@ public class Particles3D extends GdxTest {
         public void addExplosion(Vector3 position) {
             // add loaded effect to particle system
 
-//            // we cannot use the originalEffect, we must make a copy each time we create new particle effect
-//            ParticleEffect effect = ringEffect.copy();
-//            effect.translate(position);
-//            effect.init();
-//            effect.start();  // optional: particle will begin playing immediately
-//            particleSystem.add(effect);
-//            activeEffects.add(effect);
+            // // we cannot use the originalEffect, we must make a copy each time we create new particle effect
+            // ParticleEffect effect = ringEffect.copy();
+            // effect.translate(position);
+            // effect.init();
+            // effect.start(); // optional: particle will begin playing immediately
+            // particleSystem.add(effect);
+            // activeEffects.add(effect);
         }
 
-        public void update( float deltaTime ) {
+        public void update(float deltaTime) {
             particleSystem.update(deltaTime);
 
             // remove effects that have finished
             deleteList.clear();
-            for(ParticleEffect effect : activeEffects) {
-                if(effect.isComplete()) {
-                    //Gdx.app.debug("particle effect completed", "");
+            for (ParticleEffect effect : activeEffects) {
+                if (effect.isComplete()) {
+                    // Gdx.app.debug("particle effect completed", "");
                     particleSystem.remove(effect);
                     effect.dispose();
                     deleteList.add(effect);
@@ -159,7 +154,6 @@ public class Particles3D extends GdxTest {
             activeEffects.removeAll(deleteList, true);
         }
 
-
         public void render(ModelBatch modelBatch) {
             particleSystem.begin();
             particleSystem.draw();
@@ -167,55 +161,51 @@ public class Particles3D extends GdxTest {
             modelBatch.render(particleSystem);
         }
 
-
         @Override
         public void dispose() {
             particleSystem.removeAll();
-            for(ParticleEffect effect : activeEffects)
+            for (ParticleEffect effect : activeEffects)
                 effect.dispose();
         }
     }
 
-
-
     @Override
-	public void create () {
-		modelBatch = new WgModelBatch();
+    public void create() {
+        modelBatch = new WgModelBatch();
 
-		environment = new Environment();
-		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, .4f, .4f, .4f, 1f));
-		environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
+        environment = new Environment();
+        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, .4f, .4f, .4f, 1f));
+        environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
 
-		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		cam.position.set(10f, 10f, 10f);
-		cam.lookAt(0, 0, 0);
-		cam.near = 0.1f;
-		cam.far = 150f;
-		cam.update();
+        cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        cam.position.set(10f, 10f, 10f);
+        cam.lookAt(0, 0, 0);
+        cam.near = 0.1f;
+        cam.far = 150f;
+        cam.update();
 
         ModelBuilder modelBuilder = new WgModelBuilder();
-		model = modelBuilder.createBox(5f, 5f, 5f, new Material(ColorAttribute.createDiffuse(Color.GREEN)),
-			VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		instance = new ModelInstance(model);
+        model = modelBuilder.createBox(5f, 5f, 5f, new Material(ColorAttribute.createDiffuse(Color.GREEN)),
+                VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+        instance = new ModelInstance(model);
 
-		Gdx.input.setInputProcessor(new InputMultiplexer(this, inputController = new CameraInputController(cam)));
+        Gdx.input.setInputProcessor(new InputMultiplexer(this, inputController = new CameraInputController(cam)));
 
         particleEffects = new ParticleEffects(cam);
         spawnFire(Vector3.Zero);
         spawnExplosion(Vector3.Zero);
-	}
+    }
 
-	@Override
-	public void render () {
-		inputController.update();
-
+    @Override
+    public void render() {
+        inputController.update();
 
         WgScreenUtils.clear(Color.TEAL, true);
 
-		modelBatch.begin(cam);
-		modelBatch.render(instance, environment);
-		modelBatch.end();
-	}
+        modelBatch.begin(cam);
+        modelBatch.render(instance, environment);
+        modelBatch.end();
+    }
 
     @Override
     public void resize(int width, int height) {
@@ -224,23 +214,23 @@ public class Particles3D extends GdxTest {
         cam.update();
     }
 
-	@Override
-	public void dispose () {
-		modelBatch.dispose();
-		model.dispose();
+    @Override
+    public void dispose() {
+        modelBatch.dispose();
+        model.dispose();
         particleEffects.dispose();
-	}
+    }
 
-    public  void spawnFire(Vector3 position) {
+    public void spawnFire(Vector3 position) {
         particleEffects.addFire(position);
     }
 
-    public  void spawnExplosion(Vector3 position) {
+    public void spawnExplosion(Vector3 position) {
 
         particleEffects.addExplosion(position);
     }
 
-    public  void spawnSmokeTrail(Matrix4 transform) {
+    public void spawnSmokeTrail(Matrix4 transform) {
 
         particleEffects.addExhaustFumes(transform);
     }

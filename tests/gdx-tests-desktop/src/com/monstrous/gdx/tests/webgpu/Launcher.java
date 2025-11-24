@@ -12,19 +12,19 @@ public class Launcher {
         WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
         config.setWindowedMode(640, 480);
         config.setTitle("WebGPU");
-        config.backendWebGPU = JWebGPUBackend.DAWN; // prefer WGPU or DAWN
+        config.backendWebGPU = JWebGPUBackend.WGPU; // prefer WGPU or DAWN
         config.backend = WebGPUContext.Backend.DEFAULT; // Vulkan, DX12, etc.
 
         config.enableGPUtiming = false;
         config.samples = 4;
 
-        config.useVsync(true);
+        config.useVsync(false);
 
         // new WgDesktopApplication(new SpriteBatchScissorTest(), config);
         // new WgDesktopApplication(new Scene2dTestScrollPane(), config);
         // new WgDesktopApplication(new MaterialsTest(), config);
         // new WgDesktopApplication(new GLTFSkinningMultiple(), config);
-        new WgDesktopApplication(new Basic3DTest(), config);
+        new WgDesktopApplication(new ParticleControllerTest(), config);
 
     }
 

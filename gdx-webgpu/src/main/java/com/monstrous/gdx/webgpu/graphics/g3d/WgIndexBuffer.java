@@ -32,7 +32,7 @@ public class WgIndexBuffer implements IndexData {
      */
     public WgIndexBuffer(boolean isStatic, int maxIndices) {
         // use wide indices (i.e. int rather than short) is maxIndices is too large for shorts
-        this(isStatic, maxIndices, (maxIndices >= 65535)); //Short.MAX_VALUE));
+        this(isStatic, maxIndices, (maxIndices >= 65535)); // Short.MAX_VALUE));
     }
 
     /**

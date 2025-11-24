@@ -28,36 +28,42 @@ import com.badlogic.gdx.graphics.g3d.particles.renderers.BillboardControllerRend
 import com.badlogic.gdx.graphics.g3d.particles.renderers.ParticleControllerRenderer;
 import com.monstrous.gdx.webgpu.graphics.g3d.particles.batches.WgBillboardParticleBatch;
 
-/** A {@link ParticleControllerRenderer} which will render particles as billboards to a {@link BillboardParticleBatch} .
- * @author Inferno */
-public class WgBillboardRenderer extends ParticleControllerRenderer<BillboardControllerRenderData, WgBillboardParticleBatch> {
+/**
+ * A {@link ParticleControllerRenderer} which will render particles as billboards to a {@link BillboardParticleBatch} .
+ * 
+ * @author Inferno
+ */
+public class WgBillboardRenderer
+        extends ParticleControllerRenderer<BillboardControllerRenderData, WgBillboardParticleBatch> {
 
-	public WgBillboardRenderer() {
-		super(new BillboardControllerRenderData());
-	}
+    public WgBillboardRenderer() {
+        super(new BillboardControllerRenderData());
+    }
 
-	public WgBillboardRenderer(WgBillboardParticleBatch batch) {
-		this();
-		setBatch(batch);
-	}
+    public WgBillboardRenderer(WgBillboardParticleBatch batch) {
+        this();
+        setBatch(batch);
+    }
 
-	@Override
-	public void allocateChannels () {
-		renderData.positionChannel = controller.particles.addChannel(ParticleChannels.Position);
-		renderData.regionChannel = controller.particles.addChannel(ParticleChannels.TextureRegion, TextureRegionInitializer.get());
-		renderData.colorChannel = controller.particles.addChannel(ParticleChannels.Color, ColorInitializer.get());
-		renderData.scaleChannel = controller.particles.addChannel(ParticleChannels.Scale, ScaleInitializer.get());
-		renderData.rotationChannel = controller.particles.addChannel(ParticleChannels.Rotation2D, Rotation2dInitializer.get());
-	}
+    @Override
+    public void allocateChannels() {
+        renderData.positionChannel = controller.particles.addChannel(ParticleChannels.Position);
+        renderData.regionChannel = controller.particles.addChannel(ParticleChannels.TextureRegion,
+                TextureRegionInitializer.get());
+        renderData.colorChannel = controller.particles.addChannel(ParticleChannels.Color, ColorInitializer.get());
+        renderData.scaleChannel = controller.particles.addChannel(ParticleChannels.Scale, ScaleInitializer.get());
+        renderData.rotationChannel = controller.particles.addChannel(ParticleChannels.Rotation2D,
+                Rotation2dInitializer.get());
+    }
 
-	@Override
-	public ParticleControllerComponent copy () {
-		return new WgBillboardRenderer(batch);
-	}
+    @Override
+    public ParticleControllerComponent copy() {
+        return new WgBillboardRenderer(batch);
+    }
 
-	@Override
-	public boolean isCompatible (ParticleBatch<?> batch) {
-		return batch instanceof WgBillboardParticleBatch;
-	}
+    @Override
+    public boolean isCompatible(ParticleBatch<?> batch) {
+        return batch instanceof WgBillboardParticleBatch;
+    }
 
 }
