@@ -87,15 +87,15 @@ public class Particles3D extends GdxTest {
             particleSystem.add(billboardParticleBatch);
 
             // load particle effect from file
+            // via the asset manager
             WgAssetManager assets = new WgAssetManager();
             ParticleEffectLoader.ParticleEffectLoadParameter loadParam = new ParticleEffectLoader.ParticleEffectLoadParameter(particleSystem.getBatches());
             assets.load("data/g3d/particle/fire.pfx", ParticleEffect.class, loadParam);
-//            assets.load("g3d/particle/explosion-ring.pfx", ParticleEffect.class, loadParam);
-//            assets.load("g3d/particle/green-scatter.pfx", ParticleEffect.class, loadParam);
+
             assets.finishLoading();
             smokeEffect = assets.get("data/g3d/particle/fire.pfx");
-//            ringEffect = assets.get("g3d/particle/explosion-ring.pfx");
-//            exhaustFumesEffect = assets.get("g3d/particle/green-scatter.pfx");
+
+
 
             activeEffects = new Array<>();
             deleteList = new Array<>();

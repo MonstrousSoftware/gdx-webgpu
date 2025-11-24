@@ -30,12 +30,13 @@ import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.monstrous.gdx.webgpu.assets.WgAssetManager;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 
 public abstract class BaseG3dTest extends GdxTest {
-	public AssetManager assets;
+	public WgAssetManager assets;
 
 	public PerspectiveCamera cam;
 	public CameraInputController inputController;
@@ -48,7 +49,7 @@ public abstract class BaseG3dTest extends GdxTest {
 
 	@Override
 	public void create () {
-		if (assets == null) assets = new AssetManager();
+		if (assets == null) assets = new WgAssetManager();
 
 		modelBatch = new WgModelBatch();
 

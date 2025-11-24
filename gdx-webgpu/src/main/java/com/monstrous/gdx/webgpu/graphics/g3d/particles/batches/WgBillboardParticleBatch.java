@@ -29,6 +29,7 @@ import com.badlogic.gdx.graphics.g3d.particles.ParallelArray.FloatChannel;
 import com.badlogic.gdx.graphics.g3d.particles.ParticleChannels;
 import com.badlogic.gdx.graphics.g3d.particles.ParticleShader;
 import com.badlogic.gdx.graphics.g3d.particles.ParticleShader.AlignMode;
+import com.badlogic.gdx.graphics.g3d.particles.ParticleSorter;
 import com.badlogic.gdx.graphics.g3d.particles.ResourceData;
 import com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData;
 import com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch;
@@ -46,9 +47,9 @@ import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDefaultShader;
 
 /** This class is used to render billboard particles.
  * @author Inferno */
-//public class WgBillboardParticleBatch extends BufferedParticleBatch<BillboardControllerRenderData> {
+public class WgBillboardParticleBatch extends BufferedParticleBatch<BillboardControllerRenderData> {
 
-public class WgBillboardParticleBatch extends BillboardParticleBatch {
+//public class WgBillboardParticleBatch extends BillboardParticleBatch {
 	protected static final Vector3 TMP_V1 = new Vector3(), TMP_V2 = new Vector3(), TMP_V3 = new Vector3(), TMP_V4 = new Vector3(),
 		TMP_V5 = new Vector3(), TMP_V6 = new Vector3();
 	protected static final Matrix3 TMP_M3 = new Matrix3();
@@ -136,7 +137,10 @@ public class WgBillboardParticleBatch extends BillboardParticleBatch {
 	 * @param depthTestAttribute DepthTest attribute used by the batch */
 	public WgBillboardParticleBatch(AlignMode mode, boolean useGPU, int capacity, BlendingAttribute blendingAttribute,
 									DepthTestAttribute depthTestAttribute) {
-		//super(BillboardControllerRenderData[]::new);
+
+        //this.sorter = new ParticleSorter.Distance();
+        //renderData = new com.badlogic.gdx.utils.Array<BillboardControllerRenderData>(false, 10, BillboardControllerRenderData[]::new);
+		super(BillboardControllerRenderData[]::new);
 		renderables = new Array<Renderable>();
 		renderablePool = new RenderablePool();
 		this.blendingAttribute = blendingAttribute;
