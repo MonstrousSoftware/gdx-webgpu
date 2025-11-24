@@ -75,7 +75,7 @@ public class WgModelBatch implements Disposable {
             this.numBones = 48; // todo
             this.maxRigged = 20;
             this.usePBR = true;
-            this.materials = null;
+            this.materials = new MaterialsCache(256);
         }
     }
 
