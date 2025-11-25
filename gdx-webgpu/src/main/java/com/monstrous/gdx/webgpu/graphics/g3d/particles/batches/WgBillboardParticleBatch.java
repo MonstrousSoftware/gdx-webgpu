@@ -25,12 +25,9 @@ import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.DepthTestAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
+import com.badlogic.gdx.graphics.g3d.particles.*;
 import com.badlogic.gdx.graphics.g3d.particles.ParallelArray.FloatChannel;
-import com.badlogic.gdx.graphics.g3d.particles.ParticleChannels;
-import com.badlogic.gdx.graphics.g3d.particles.ParticleShader;
 import com.badlogic.gdx.graphics.g3d.particles.ParticleShader.AlignMode;
-import com.badlogic.gdx.graphics.g3d.particles.ParticleSorter;
-import com.badlogic.gdx.graphics.g3d.particles.ResourceData;
 import com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData;
 import com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch;
 import com.badlogic.gdx.graphics.g3d.particles.batches.BufferedParticleBatch;
@@ -43,14 +40,17 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Pool;
 import com.monstrous.gdx.webgpu.graphics.WgMesh;
+import com.monstrous.gdx.webgpu.graphics.g3d.particles.renderers.WgBillboardRenderer;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDefaultShader;
+
+import static com.badlogic.gdx.graphics.g3d.particles.ParticleShader.AlignMode.Screen;
 
 // webgpu version, can we do this with less duplication?
 // the main change is using WgMesh instead of Mesh
 
 /**
  * This class is used to render billboard particles.
- * 
+ *
  * @author Inferno
  */
 public class WgBillboardParticleBatch extends BufferedParticleBatch<BillboardControllerRenderData> {
@@ -111,18 +111,18 @@ public class WgBillboardParticleBatch extends BufferedParticleBatch<BillboardCon
         }
     }
 
-    public static class Config {
-        public Config() {
-        }
-
-        public Config(boolean useGPU, AlignMode mode) {
-            this.useGPU = useGPU;
-            this.mode = mode;
-        }
-
-        boolean useGPU;
-        AlignMode mode;
-    }
+    // public static class Config {
+    // public Config() {
+    // }
+    //
+    // public Config(boolean useGPU, AlignMode mode) {
+    // this.useGPU = useGPU;
+    // this.mode = mode;
+    // }
+    //
+    // boolean useGPU;
+    // AlignMode mode;
+    // }
 
     private RenderablePool renderablePool;
     private Array<Renderable> renderables;
@@ -131,7 +131,7 @@ public class WgBillboardParticleBatch extends BufferedParticleBatch<BillboardCon
     private int currentVertexSize = 0;
     private VertexAttributes currentAttributes;
     protected boolean useGPU = false;
-    protected AlignMode mode = AlignMode.Screen;
+    protected AlignMode mode = Screen;
     protected Texture texture;
     protected BlendingAttribute blendingAttribute;
     protected DepthTestAttribute depthTestAttribute;
@@ -139,7 +139,7 @@ public class WgBillboardParticleBatch extends BufferedParticleBatch<BillboardCon
 
     /**
      * Create a new BillboardParticleBatch
-     * 
+     *
      * @param mode
      * @param useGPU Allow to use GPU instead of CPU
      * @param capacity Max particle displayed
@@ -175,11 +175,11 @@ public class WgBillboardParticleBatch extends BufferedParticleBatch<BillboardCon
     }
 
     public WgBillboardParticleBatch() {
-        this(AlignMode.Screen, false, 100);
+        this(Screen, false, 100);
     }
 
     public WgBillboardParticleBatch(int capacity) {
-        this(AlignMode.Screen, false, capacity);
+        this(Screen, false, capacity);
     }
 
     @Override
@@ -672,7 +672,7 @@ public class WgBillboardParticleBatch extends BufferedParticleBatch<BillboardCon
             // else
             // fillVerticesToParticleDirectionGPU(offsets);
         } else {
-            if (mode == AlignMode.Screen)
+            if (mode == Screen)
                 fillVerticesToScreenCPU(offsets);
             else if (mode == AlignMode.ViewPoint)
                 fillVerticesToViewPointCPU(offsets);
@@ -702,7 +702,7 @@ public class WgBillboardParticleBatch extends BufferedParticleBatch<BillboardCon
     @Override
     public void save(AssetManager manager, ResourceData resources) {
         SaveData data = resources.createSaveData("billboardBatch");
-        data.save("cfg", new Config(useGPU, mode));
+        data.save("cfg", new BillboardParticleBatch.Config(useGPU, mode));
         data.saveAsset(manager.getAssetFileName(texture), Texture.class);
     }
 
@@ -711,9 +711,24 @@ public class WgBillboardParticleBatch extends BufferedParticleBatch<BillboardCon
         SaveData data = resources.getSaveData("billboardBatch");
         if (data != null) {
             setTexture((Texture) manager.get(data.loadAsset()));
-            Config cfg = (Config) data.load("cfg");
-            setUseGpu(cfg.useGPU);
-            setAlignMode(cfg.mode);
+            BillboardParticleBatch.Config cfg = (BillboardParticleBatch.Config) data.load("cfg");
+            // members are package private :-(
+            // setUseGpu(cfg.useGPU);
+            // setAlignMode(cfg.mode);
+            // use defaults, ignore value from file
+            setUseGpu(false);
+            setAlignMode(Screen);
+
+            // hack
+            // replace BillBoardRenderer in all controllers by WgBillboardRenderer
+            // otherwise setBatch() will fail due to the isCompatible() check
+            //
+            WgBillboardRenderer renderer = new WgBillboardRenderer();
+            ResourceData<ParticleEffect> res = (ResourceData<ParticleEffect>) resources;
+            ParticleEffect pe = res.resource;
+            for (ParticleController controller : pe.getControllers()) {
+                controller.renderer = renderer;
+            }
         }
     }
 }

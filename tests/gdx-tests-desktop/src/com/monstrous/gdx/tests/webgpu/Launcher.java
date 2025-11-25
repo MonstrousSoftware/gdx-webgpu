@@ -18,13 +18,13 @@ public class Launcher {
         config.enableGPUtiming = false;
         config.samples = 4;
 
-        config.useVsync(false);
+        config.useVsync(true);
 
         // new WgDesktopApplication(new SpriteBatchScissorTest(), config);
         // new WgDesktopApplication(new Scene2dTestScrollPane(), config);
         // new WgDesktopApplication(new MaterialsTest(), config);
         // new WgDesktopApplication(new GLTFSkinningMultiple(), config);
-        new WgDesktopApplication(new ParticleControllerTest(), config);
+        new WgDesktopApplication(new Particles3D(), config);
 
     }
 
