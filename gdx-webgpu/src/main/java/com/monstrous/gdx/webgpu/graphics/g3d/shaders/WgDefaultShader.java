@@ -85,28 +85,6 @@ public class WgDefaultShader extends WgShader implements Disposable {
     private Color linearFogColor;
     private final WgTexture brdfLUT;
 
-    // public static class Config {
-    // public int maxInstances;
-    // public int maxMaterials;
-    // public int maxDirectionalLights;
-    // public int maxPointLights;
-    // public int numBones; // max bone count per rigged instance
-    // public int maxRigged; // max number of instances that are rigged
-    // public boolean usePBR; // use physics based rendering
-    // public MaterialsCache materials;
-    //
-    // public Config() {
-    // this.maxInstances = 1024;
-    // this.maxMaterials = 512;
-    // this.maxDirectionalLights = 3;
-    // this.maxPointLights = 3;
-    // this.numBones = 48; // todo
-    // this.maxRigged = 20;
-    // this.usePBR = true;
-    // this.materials = null;
-    // }
-    // }
-
     public WgDefaultShader(final Renderable renderable) {
         this(renderable, new WgModelBatch.Config());
     }
@@ -371,6 +349,8 @@ public class WgDefaultShader extends WgShader implements Disposable {
         prevRenderable = null; // to store renderable that still needs to be rendered
         appliedMaterialHash = -1;
 
+        materials.start(); // indicate that no material is currently bound
+
         renderPass.setPipeline(pipeline);
     }
 
@@ -491,6 +471,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
     // to combine instances in single draw call if they have same mesh part
     private void renderBatch(MeshPart meshPart, int numInstances, int numRenderables) {
+
         // System.out.println("numInstances: "+numInstances);
         final WgMesh mesh = (WgMesh) meshPart.mesh;
         // use an instance offset to find the right modelMatrix in the instanceBuffer

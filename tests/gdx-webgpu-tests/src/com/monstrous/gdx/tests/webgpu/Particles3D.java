@@ -18,7 +18,6 @@ package com.monstrous.gdx.tests.webgpu;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
-import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
@@ -28,8 +27,6 @@ import com.badlogic.gdx.graphics.g3d.particles.ParticleEffect;
 import com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader;
 import com.badlogic.gdx.graphics.g3d.particles.ParticleShader;
 import com.badlogic.gdx.graphics.g3d.particles.ParticleSystem;
-import com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch;
-import com.badlogic.gdx.graphics.g3d.particles.batches.PointSpriteParticleBatch;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Matrix4;
@@ -40,10 +37,13 @@ import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.webgpu.assets.WgAssetManager;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.particles.batches.WgBillboardParticleBatch;
-import com.monstrous.gdx.webgpu.graphics.g3d.particles.renderers.WgBillboardRenderer;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 
+/**
+ * Test of loading 3d particle effects from a file. Supports only BillBoardParticles for now. Blending and coloring
+ * seems to be incorrect.
+ */
 public class Particles3D extends GdxTest {
     public PerspectiveCamera cam;
     public CameraInputController inputController;
@@ -60,7 +60,7 @@ public class Particles3D extends GdxTest {
         private final Array<ParticleEffect> deleteList;
 
         private final ParticleEffect smokeEffect;
-        private ParticleEffect ringEffect;
+        private ParticleEffect ringEffect; // requires point sprites
         private ParticleEffect exhaustFumesEffect;
 
         public ParticleEffects(Camera cam) {
@@ -188,9 +188,11 @@ public class Particles3D extends GdxTest {
         cam.far = 150f;
         cam.update();
 
+        Material mat = new Material(ColorAttribute.createDiffuse(Color.GREEN),
+                new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA, 0.15f));
         ModelBuilder modelBuilder = new WgModelBuilder();
-        model = modelBuilder.createBox(1f, 1f, 1f, new Material(ColorAttribute.createDiffuse(Color.GREEN)),
-                VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+        model = modelBuilder.createBox(1f, 1f, 1f, mat, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal
+                | VertexAttributes.Usage.TextureCoordinates);
         instance = new ModelInstance(model);
 
         Gdx.input.setInputProcessor(new InputMultiplexer(this, inputController = new CameraInputController(cam)));
@@ -208,7 +210,7 @@ public class Particles3D extends GdxTest {
         WgScreenUtils.clear(Color.TEAL, true);
 
         modelBatch.begin(cam);
-        modelBatch.render(instance, environment);
+        // modelBatch.render(instance, environment);
         particleEffects.render(modelBatch);
         modelBatch.end();
     }
