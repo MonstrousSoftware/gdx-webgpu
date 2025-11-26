@@ -60,8 +60,6 @@ public class WgSpriteBatch implements Batch {
     private WebGPURenderPass renderPass;
     private int vbOffset;
     private final PipelineCache pipelines;
-    private WebGPUPipeline currentPipeline;
-    private WebGPUPipeline initialPipeline;
     public int maxSpritesInBatch; // most nr of sprites in the batch over its lifetime
     public int renderCalls;
     public int pipelineCount;
@@ -179,9 +177,6 @@ public class WgSpriteBatch implements Batch {
             pipelineSpec.shaderSource = getDefaultShaderSource();
         }
 
-        setPipeline();
-        initialPipeline = currentPipeline;
-
         projectionMatrix.setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), 0, 100);
         transformMatrix.idt();
 
@@ -252,7 +247,8 @@ public class WgSpriteBatch implements Batch {
 
         flush();
         pipelineSpec.setBlendFactorSeparate(srcFuncColor, dstFuncColor, srcFuncAlpha, dstFuncAlpha);
-        setPipeline();
+        if (drawing)
+            setPipeline(renderPass);
     }
 
     public WGPUBlendFactor getBlendSrcFactor() {
@@ -288,7 +284,8 @@ public class WgSpriteBatch implements Batch {
 
         flush();
         pipelineSpec.setBlendFactorSeparate(srcFactorColor, dstFactorColor, srcFactorAlpha, dstFactorAlpha);
-        setPipeline();
+        if (drawing)
+            setPipeline(renderPass);
     }
 
     public int getBlendSrcFunc() {
@@ -312,7 +309,8 @@ public class WgSpriteBatch implements Batch {
             return;
         flush();
         pipelineSpec.enableBlending();
-        setPipeline();
+        if (drawing)
+            setPipeline(renderPass);
     }
 
     public void disableBlending() {
@@ -320,7 +318,8 @@ public class WgSpriteBatch implements Batch {
             return;
         flush();
         pipelineSpec.disableBlending();
-        setPipeline();
+        if (drawing)
+            setPipeline(renderPass);
     }
 
     /** Apply a scissor rectangle for further sprites. */
@@ -346,20 +345,10 @@ public class WgSpriteBatch implements Batch {
     public void begin(Color clearColor) {
         if (drawing)
             throw new RuntimeException("Must end() before begin()");
+        drawing = true;
 
         renderPass = RenderPassBuilder.create("SpriteBatch", clearColor, webgpu.getSamples());
-
-        // default blending values
-        pipelineSpec.enableBlending();
-        pipelineSpec.setBlendFactor(WGPUBlendFactor.SrcAlpha, WGPUBlendFactor.OneMinusSrcAlpha);
-        pipelineSpec.disableDepthTest();
-
-        // if the pipeline was never changed (no shader changes, no blending changes)
-        // continue with the one from the constructor, and we can avoid a cache lookup
-        if (currentPipeline == initialPipeline)
-            renderPass.setPipeline(currentPipeline);
-        else
-            setPipeline();
+        setPipeline(renderPass);
 
         // First begin() call in this render frame?
         if (webgpu.frameNumber != this.frameNumber) {
@@ -386,7 +375,6 @@ public class WgSpriteBatch implements Batch {
         // don't reset the matrices because setProjectionMatrix() and setTransformMatrix()
         // may be called before begin() and need to be respected.
 
-        drawing = true;
     }
 
     protected void switchTexture(Texture texture) {
@@ -402,6 +390,8 @@ public class WgSpriteBatch implements Batch {
     }
 
     public void flush() {
+        if (!drawing)
+            return;
         if (numSpritesPerFlush == 0)
             return;
         if (numSpritesPerFlush > maxSpritesInBatch)
@@ -446,22 +436,19 @@ public class WgSpriteBatch implements Batch {
     public void end() {
         if (!drawing) // catch incorrect usage
             throw new RuntimeException("Cannot end() without begin()");
-        drawing = false;
+
         flush();
         uniformBuffer.endSlices();
         renderPass.end();
         renderPass = null;
         pipelineCount = pipelines.size(); // statistics
+        drawing = false;
     }
 
     // create or reuse pipeline on demand to match the pipeline spec
-    private void setPipeline() {
+    private void setPipeline(WebGPURenderPass pass) {
         WebGPUPipeline pipeline = pipelines.findPipeline(pipelineLayout, pipelineSpec);
-        if (pipeline != currentPipeline) { // avoid unneeded switches
-            if (renderPass != null)
-                renderPass.setPipeline(pipeline);
-            currentPipeline = pipeline;
-        }
+        pass.setPipeline(pipeline);
     }
 
     /**
@@ -482,7 +469,8 @@ public class WgSpriteBatch implements Batch {
             pipelineSpec.shaderSource = "precompiled"; // shaderProgram.getName(); // todo
         }
         pipelineSpec.invalidateHashCode();
-        setPipeline();
+        if (drawing)
+            setPipeline(renderPass);
     }
 
     @Override

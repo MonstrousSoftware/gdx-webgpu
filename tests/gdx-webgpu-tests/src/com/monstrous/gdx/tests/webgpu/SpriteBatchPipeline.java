@@ -8,48 +8,42 @@ import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 
-// Test different WgSpriteBatch draw methods, sprites and blending
+// Test WgSpriteBatch with blending disabled before begin()
+// (begin() should not reset the blending status)
 
-public class SpriteBatchDraw extends GdxTest {
+public class SpriteBatchPipeline extends GdxTest {
 
     private WgSpriteBatch batch;
     private WgTexture texture;
     private ScreenViewport viewport;
-    private Sprite sprite;
-    private float angleDegrees;
 
     @Override
     public void create() {
         texture = new WgTexture("data/webgpu.png", true);
 
         batch = new WgSpriteBatch();
+        // by default blending is enabled
+
+        // disable blending outside the begin/end brackets
+        batch.disableBlending();
         viewport = new ScreenViewport();
 
-        // texture is 256x256
-        // sprite will cover only the bottom 80 pixels
-        sprite = new Sprite(texture, 0, 176, 256, 80);
     }
 
     @Override
     public void render() {
-        float delta = Gdx.graphics.getDeltaTime();
-        angleDegrees += 30 * delta;
-
-        sprite.setPosition(200, 200);
-        sprite.setRotation(angleDegrees);
-
         viewport.apply();
         batch.setProjectionMatrix(viewport.getCamera().combined);
 
+        // disable blending before begin()
+        // batch.disableBlending();
         // pass a clear color to batch begin
         batch.begin(Color.WHITE);
         batch.draw(texture, 0, 0); // bottom left, full texture size
 
-        batch.draw(texture, 0, 320, 32, 32); // resized
-
         // set tint to use from now on
         batch.setColor(Color.YELLOW);
-        // smaller size at right bottom corner
+        // right bottom corner
         batch.draw(texture, Gdx.graphics.getWidth() - 64, 0, 64, 64);
 
         // set tint to white with 50% transparency
@@ -59,15 +53,17 @@ public class SpriteBatchDraw extends GdxTest {
         batch.draw(texture, Gdx.graphics.getWidth() - 64, Gdx.graphics.getHeight() - 64, 64, 64);
 
         // now disable blending. tint still has 50% alpha
-        batch.disableBlending();
+        // batch.disableBlending();
         // smaller size at top right, should appear opaque
         batch.draw(texture, Gdx.graphics.getWidth() - 128, Gdx.graphics.getHeight() - 64, 64, 64);
 
-        //
-        //
-        // sprite.draw(batch);
-        batch.enableBlending();
+        // enable blending again. tint still has 50% alpha
+        // batch.enableBlending();
+        // smaller size towards centre top, should be semi-transparent
+        batch.draw(texture, Gdx.graphics.getWidth() - 256, Gdx.graphics.getHeight() - 64, 64, 64);
+        // batch.disableBlending();
         batch.end();
+        // System.out.println("pipelines: "+batch.pipelineCount+" flushes: "+batch.flushCount);
     }
 
     @Override
