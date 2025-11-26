@@ -187,7 +187,7 @@ public class WebGPUVertexLayout {
                 loc = 1;
                 break;
             case VertexAttributes.Usage.Generic:
-                loc = 0;
+                loc = 8;
                 break;
             case VertexAttributes.Usage.BoneWeight:
                 loc = 7;
