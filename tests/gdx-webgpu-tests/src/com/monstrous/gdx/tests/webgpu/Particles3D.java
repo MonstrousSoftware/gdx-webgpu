@@ -36,7 +36,9 @@ import com.badlogic.gdx.utils.Disposable;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.webgpu.assets.WgAssetManager;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
+import com.monstrous.gdx.webgpu.graphics.g3d.particles.WgParticleShader;
 import com.monstrous.gdx.webgpu.graphics.g3d.particles.batches.WgBillboardParticleBatch;
+import com.monstrous.gdx.webgpu.graphics.g3d.particles.batches.WgPointSpriteParticleBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 
@@ -67,12 +69,12 @@ public class Particles3D extends GdxTest {
             // create a particle system
             particleSystem = new ParticleSystem();
 
-            // create a point sprite batch and add it to the particle system
-            // WgPointSpriteParticleBatch pointSpriteBatch = new WgPointSpriteParticleBatch(1000, new
-            // ParticleShader.Config(ParticleShader.ParticleType.Point),
-            // new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA, 0.1f), null );
-            // pointSpriteBatch.setCamera(cam);
-            // particleSystem.add(pointSpriteBatch);
+             //create a point sprite batch and add it to the particle system
+             WgPointSpriteParticleBatch pointSpriteBatch = new WgPointSpriteParticleBatch(1000, new
+             WgParticleShader.Config(WgParticleShader.ParticleType.Point),
+             new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA, 0.1f), null );
+             pointSpriteBatch.setCamera(cam);
+             particleSystem.add(pointSpriteBatch);
 
             // NB don't set useGPU to true for now.
             // requires shader implementation
@@ -88,11 +90,12 @@ public class Particles3D extends GdxTest {
             WgAssetManager assets = new WgAssetManager();
             ParticleEffectLoader.ParticleEffectLoadParameter loadParam = new ParticleEffectLoader.ParticleEffectLoadParameter(
                     particleSystem.getBatches());
-            assets.load("data/g3d/particle/fire.pfx", ParticleEffect.class, loadParam);
+            assets.load("data/g3d/particle/fire-and-smoke.pfx", ParticleEffect.class, loadParam);
+            assets.load("data/g3d/particle/explosion-ring.pfx", ParticleEffect.class, loadParam);
 
             assets.finishLoading();
-            smokeEffect = assets.get("data/g3d/particle/fire.pfx");
-            // ringEffect = assets.get("data/g3d/particle/explosion-ring.pfx");
+            smokeEffect = assets.get("data/g3d/particle/fire-and-smoke.pfx");
+            ringEffect = assets.get("data/g3d/particle/explosion-ring.pfx");
             // exhaustFumesEffect = assets.get("data/g3d/particle/green-scatter.pfx");
 
             activeEffects = new Array<>();
@@ -199,7 +202,7 @@ public class Particles3D extends GdxTest {
 
         particleEffects = new ParticleEffects(cam);
         spawnFire(Vector3.Zero);
-        // spawnExplosion(Vector3.Zero);
+        spawnExplosion(Vector3.Zero);
     }
 
     @Override

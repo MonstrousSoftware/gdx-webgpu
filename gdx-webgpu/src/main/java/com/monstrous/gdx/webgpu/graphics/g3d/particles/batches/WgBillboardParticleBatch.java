@@ -149,9 +149,6 @@ public class WgBillboardParticleBatch extends BufferedParticleBatch<BillboardCon
     public WgBillboardParticleBatch(AlignMode mode, boolean useGPU, int capacity, BlendingAttribute blendingAttribute,
             DepthTestAttribute depthTestAttribute) {
 
-        // this.sorter = new ParticleSorter.Distance();
-        // renderData = new com.badlogic.gdx.utils.Array<BillboardControllerRenderData>(false, 10,
-        // BillboardControllerRenderData[]::new);
         super(BillboardControllerRenderData[]::new);
         renderables = new Array<Renderable>();
         renderablePool = new RenderablePool();
@@ -194,7 +191,7 @@ public class WgBillboardParticleBatch extends BufferedParticleBatch<BillboardCon
         renderable.meshPart.offset = 0;
         renderable.material = new Material(this.blendingAttribute, this.depthTestAttribute,
                 TextureAttribute.createDiffuse(texture));
-        // adapted for webgpu
+        // adapted for webgpu: WgMesh
         renderable.meshPart.mesh = new WgMesh(false, MAX_VERTICES_PER_MESH, MAX_PARTICLES_PER_MESH * 6,
                 currentAttributes);
         renderable.meshPart.mesh.setIndices(indices);
