@@ -18,6 +18,7 @@ import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.Binder;
 import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
+import com.monstrous.gdx.webgpu.graphics.utils.BlendMapper;
 import com.monstrous.gdx.webgpu.wrappers.*;
 
 import java.nio.*;
@@ -67,8 +68,6 @@ public class WgSpriteBatch implements Batch {
     public int maxFlushes;
     private float invTexWidth;
     private float invTexHeight;
-    private final Map<Integer, WGPUBlendFactor> blendConstantMap = new HashMap<>(); // mapping GL vs WebGPU constants
-    private final Map<WGPUBlendFactor, Integer> blendGLConstantMap = new HashMap<>(); // vice versa
     private final Binder binder;
     private static String defaultShader;
     private int frameNumber;
@@ -110,8 +109,6 @@ public class WgSpriteBatch implements Batch {
 
         // vertex: x, y, rgba, u, v
         vertexSize = vertexAttributes.vertexSize; // bytes
-
-        initBlendMap(); // fill constants mapping table
 
         // allow for a different projectionView matrix per flush.
         this.maxFlushes = maxFlushes;
@@ -276,10 +273,10 @@ public class WgSpriteBatch implements Batch {
     }
 
     public void setBlendFunctionSeparate(int srcFuncColor, int dstFuncColor, int srcFuncAlpha, int dstFuncAlpha) {
-        WGPUBlendFactor srcFactorColor = blendConstantMap.get(srcFuncColor);
-        WGPUBlendFactor dstFactorColor = blendConstantMap.get(dstFuncColor);
-        WGPUBlendFactor srcFactorAlpha = blendConstantMap.get(srcFuncAlpha);
-        WGPUBlendFactor dstFactorAlpha = blendConstantMap.get(dstFuncAlpha);
+        WGPUBlendFactor srcFactorColor = BlendMapper.blendFactor(srcFuncColor);
+        WGPUBlendFactor dstFactorColor = BlendMapper.blendFactor(dstFuncColor);
+        WGPUBlendFactor srcFactorAlpha = BlendMapper.blendFactor(srcFuncAlpha);
+        WGPUBlendFactor dstFactorAlpha = BlendMapper.blendFactor(dstFuncAlpha);
         if (pipelineSpec.getBlendSrcFactor() == srcFactorColor && pipelineSpec.getBlendDstFactor() == dstFactorColor
                 && pipelineSpec.getBlendSrcFactorAlpha() == srcFactorAlpha
                 && pipelineSpec.getBlendDstFactorAlpha() == dstFactorAlpha)
@@ -292,19 +289,19 @@ public class WgSpriteBatch implements Batch {
     }
 
     public int getBlendSrcFunc() {
-        return blendGLConstantMap.get(pipelineSpec.getBlendSrcFactor());
+        return BlendMapper.blendFunction(pipelineSpec.getBlendSrcFactor());
     }
 
     public int getBlendDstFunc() {
-        return blendGLConstantMap.get(pipelineSpec.getBlendDstFactor());
+        return BlendMapper.blendFunction(pipelineSpec.getBlendDstFactor());
     }
 
     public int getBlendSrcFuncAlpha() {
-        return blendGLConstantMap.get(pipelineSpec.getBlendSrcFactorAlpha());
+        return BlendMapper.blendFunction(pipelineSpec.getBlendSrcFactorAlpha());
     }
 
     public int getBlendDstFuncAlpha() {
-        return blendGLConstantMap.get(pipelineSpec.getBlendDstFactorAlpha());
+        return BlendMapper.blendFunction(pipelineSpec.getBlendDstFactorAlpha());
     }
 
     public void enableBlending() {
@@ -1068,23 +1065,4 @@ public class WgSpriteBatch implements Batch {
         return defaultShader;
     }
 
-    private void initBlendMap() {
-        blendConstantMap.put(GL20.GL_ZERO, WGPUBlendFactor.Zero);
-        blendConstantMap.put(GL20.GL_ONE, WGPUBlendFactor.One);
-        blendConstantMap.put(GL20.GL_SRC_ALPHA, WGPUBlendFactor.SrcAlpha);
-        blendConstantMap.put(GL20.GL_ONE_MINUS_SRC_ALPHA, WGPUBlendFactor.OneMinusSrcAlpha);
-        blendConstantMap.put(GL20.GL_DST_ALPHA, WGPUBlendFactor.DstAlpha);
-        blendConstantMap.put(GL20.GL_ONE_MINUS_DST_ALPHA, WGPUBlendFactor.OneMinusDstAlpha);
-        blendConstantMap.put(GL20.GL_SRC_COLOR, WGPUBlendFactor.Src);
-        blendConstantMap.put(GL20.GL_ONE_MINUS_SRC_COLOR, WGPUBlendFactor.OneMinusSrc);
-        blendConstantMap.put(GL20.GL_DST_COLOR, WGPUBlendFactor.Dst);
-        blendConstantMap.put(GL20.GL_ONE_MINUS_DST_COLOR, WGPUBlendFactor.OneMinusDst);
-        blendConstantMap.put(GL20.GL_SRC_ALPHA_SATURATE, WGPUBlendFactor.SrcAlphaSaturated);
-
-        // and build the inverse mapping
-        for (int key : blendConstantMap.keySet()) {
-            WGPUBlendFactor factor = blendConstantMap.get(key);
-            blendGLConstantMap.put(factor, key);
-        }
-    }
 }

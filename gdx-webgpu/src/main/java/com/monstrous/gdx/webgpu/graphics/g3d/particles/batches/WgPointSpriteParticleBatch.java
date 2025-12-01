@@ -43,7 +43,7 @@ import com.monstrous.gdx.webgpu.graphics.g3d.particles.renderers.WgPointSpriteRe
 
 /**
  * This class is used to draw particles as point sprites.
- * 
+ *
  * @author Inferno
  */
 public class WgPointSpriteParticleBatch extends BufferedParticleBatch<PointSpriteControllerRenderData> {

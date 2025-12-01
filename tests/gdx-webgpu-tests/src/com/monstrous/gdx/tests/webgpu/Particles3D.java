@@ -48,6 +48,9 @@ import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
  * seems to be incorrect.
  */
 public class Particles3D extends GdxTest {
+
+    public final static String SMOKE = "fire-and-smoke-pointsprite.pfx";
+
     public PerspectiveCamera cam;
     public Color bgColor;
     public CameraInputController inputController;
@@ -77,7 +80,7 @@ public class Particles3D extends GdxTest {
             // create a point sprite batch and add it to the particle system
             WgPointSpriteParticleBatch pointSpriteBatch = new WgPointSpriteParticleBatch(1000,
                     new WgParticleShader.Config(WgParticleShader.ParticleType.Point),
-                    new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA, 0.1f), null);
+                    new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA, 1.0f), null);
             pointSpriteBatch.setCamera(cam);
             particleSystem.add(pointSpriteBatch);
 
@@ -95,11 +98,11 @@ public class Particles3D extends GdxTest {
             WgAssetManager assets = new WgAssetManager();
             ParticleEffectLoader.ParticleEffectLoadParameter loadParam = new ParticleEffectLoader.ParticleEffectLoadParameter(
                     particleSystem.getBatches());
-            assets.load("data/g3d/particle/fire-and-smoke-pointsprite.pfx", ParticleEffect.class, loadParam);
+            assets.load("data/g3d/particle/" + SMOKE, ParticleEffect.class, loadParam);
             assets.load("data/g3d/particle/explosion-ring.pfx", ParticleEffect.class, loadParam);
 
             assets.finishLoading();
-            smokeEffect = assets.get("data/g3d/particle/fire-and-smoke-pointsprite.pfx");
+            smokeEffect = assets.get("data/g3d/particle/" + SMOKE);
             ringEffect = assets.get("data/g3d/particle/explosion-ring.pfx");
             // exhaustFumesEffect = assets.get("data/g3d/particle/green-scatter.pfx");
 
@@ -220,6 +223,7 @@ public class Particles3D extends GdxTest {
         if (countDown < 0) {
             countDown = 3;
             spawnExplosion(Vector3.Zero);
+            spawnFire(Vector3.Zero);
         }
         inputController.update();
 

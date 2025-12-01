@@ -44,6 +44,7 @@ import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgVertexBuffer;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.MaterialsCache;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgShader;
+import com.monstrous.gdx.webgpu.graphics.utils.BlendMapper;
 import com.monstrous.gdx.webgpu.wrappers.*;
 
 import static com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888;
@@ -182,9 +183,20 @@ public class WgParticleShader extends WgShader {
         pipelineSpec.vertexLayout.setStepMode(WGPUVertexStepMode.Instance); // advance once per instance (i.e.per quad)
         pipelineSpec.topology = WGPUPrimitiveTopology.TriangleList;
 
+        // get blending factors from renderable
+        for (Attribute attr : renderable.material) {
+            final long t = attr.type;
+            if (BlendingAttribute.is(t)) {
+                BlendingAttribute blend = (BlendingAttribute) attr;
+                pipelineSpec.enableBlending();
+                pipelineSpec.setBlendFactor(BlendMapper.blendFactor(blend.sourceFunction),
+                        BlendMapper.blendFactor(blend.destFunction));
+            }
+        }
+
         // default blending values
-        pipelineSpec.enableBlending();
-        pipelineSpec.setBlendFactor(WGPUBlendFactor.SrcAlpha, WGPUBlendFactor.OneMinusSrcAlpha);
+        // pipelineSpec.enableBlending();
+        // pipelineSpec.setBlendFactor(WGPUBlendFactor.SrcAlpha, WGPUBlendFactor.OneMinusSrcAlpha);
         pipelineSpec.disableDepthTest();
 
         pipeline = new WebGPUPipeline(pipelineLayout, pipelineSpec);
