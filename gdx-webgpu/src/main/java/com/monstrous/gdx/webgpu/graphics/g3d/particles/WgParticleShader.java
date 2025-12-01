@@ -21,8 +21,7 @@ package com.monstrous.gdx.webgpu.graphics.g3d.particles;
 
 import com.badlogic.gdx.Application.ApplicationType;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Camera;
-import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.DepthTestAttribute;
@@ -33,16 +32,26 @@ import com.badlogic.gdx.graphics.g3d.shaders.BaseShader;
 import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.badlogic.gdx.graphics.glutils.VertexData;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.GdxRuntimeException;
+import com.github.xpenatan.webgpu.*;
+import com.monstrous.gdx.webgpu.graphics.Binder;
+import com.monstrous.gdx.webgpu.graphics.WgMesh;
+import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
+import com.monstrous.gdx.webgpu.graphics.WgTexture;
+import com.monstrous.gdx.webgpu.graphics.g3d.WgVertexBuffer;
+import com.monstrous.gdx.webgpu.graphics.g3d.shaders.MaterialsCache;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgShader;
-import com.monstrous.gdx.webgpu.wrappers.WebGPURenderPass;
+import com.monstrous.gdx.webgpu.wrappers.*;
+
+import static com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888;
 
 /**
  * This is a custom shader to render the particles. Usually is not required, because the {@link DefaultShader} will be
  * used instead. This shader will be used when dealing with billboards using GPU mode or point sprites.
- * 
+ *
  * @author inferno
  */
 public class WgParticleShader extends WgShader {
@@ -55,10 +64,9 @@ public class WgParticleShader extends WgShader {
     }
 
     public static class Config {
-        /** The uber vertex shader to use, null to use the default vertex shader. */
-        public String vertexShader = null;
-        /** The uber fragment shader to use, null to use the default fragment shader. */
-        public String fragmentShader = null;
+        /** The uber shader to use, null to use the default vertex shader. */
+        public String shaderSource = null;
+
         public boolean ignoreUnimplemented = true;
         /** Set to 0 to disable culling */
         public int defaultCullFace = -1;
@@ -83,192 +91,192 @@ public class WgParticleShader extends WgShader {
             this.type = type;
         }
 
-        public Config(final String vertexShader, final String fragmentShader) {
-            this.vertexShader = vertexShader;
-            this.fragmentShader = fragmentShader;
+        public Config(final String shaderSource) {
+            this.shaderSource = shaderSource;
         }
     }
 
-    // private static String defaultVertexShader = null;
-    //
-    // public static String getDefaultVertexShader () {
-    // if (defaultVertexShader == null)
-    // defaultVertexShader =
-    // Gdx.files.classpath("com/badlogic/gdx/graphics/g3d/particles/particles.vertex.glsl").readString();
-    // return defaultVertexShader;
-    // }
-    //
-    // private static String defaultFragmentShader = null;
-    //
-    // public static String getDefaultFragmentShader () {
-    // if (defaultFragmentShader == null) defaultFragmentShader = Gdx.files
-    // .classpath("com/badlogic/gdx/graphics/g3d/particles/particles.fragment.glsl").readString();
-    // return defaultFragmentShader;
-    // }
-    //
-    // protected static long implementedFlags = BlendingAttribute.Type | TextureAttribute.Diffuse;
-    //
-    // static final Vector3 TMP_VECTOR3 = new Vector3();
-    //
-    // public static class Inputs {
-    // public final static Uniform cameraRight = new Uniform("u_cameraRight");
-    // public final static Uniform cameraInvDirection = new Uniform("u_cameraInvDirection");
-    // public final static Uniform screenWidth = new Uniform("u_screenWidth");
-    // public final static Uniform regionSize = new Uniform("u_regionSize");
-    // }
-    //
-    // public static class Setters {
-    // public final static Setter cameraRight = new Setter() {
-    // @Override
-    // public boolean isGlobal (BaseShader shader, int inputID) {
-    // return true;
-    // }
-    //
-    // @Override
-    // public void set (BaseShader shader, int inputID, Renderable renderable, Attributes combinedAttributes) {
-    // shader.set(inputID, TMP_VECTOR3.set(shader.camera.direction).crs(shader.camera.up).nor());
-    // }
-    // };
-    //
-    // public final static Setter cameraUp = new Setter() {
-    // @Override
-    // public boolean isGlobal (BaseShader shader, int inputID) {
-    // return true;
-    // }
-    //
-    // @Override
-    // public void set (BaseShader shader, int inputID, Renderable renderable, Attributes combinedAttributes) {
-    // shader.set(inputID, TMP_VECTOR3.set(shader.camera.up).nor());
-    // }
-    // };
-    //
-    // public final static Setter cameraInvDirection = new Setter() {
-    // @Override
-    // public boolean isGlobal (BaseShader shader, int inputID) {
-    // return true;
-    // }
-    //
-    // @Override
-    // public void set (BaseShader shader, int inputID, Renderable renderable, Attributes combinedAttributes) {
-    // shader.set(inputID,
-    // TMP_VECTOR3.set(-shader.camera.direction.x, -shader.camera.direction.y, -shader.camera.direction.z).nor());
-    // }
-    // };
-    // public final static Setter cameraPosition = new Setter() {
-    // @Override
-    // public boolean isGlobal (BaseShader shader, int inputID) {
-    // return true;
-    // }
-    //
-    // @Override
-    // public void set (BaseShader shader, int inputID, Renderable renderable, Attributes combinedAttributes) {
-    // shader.set(inputID, shader.camera.position);
-    // }
-    // };
-    // public final static Setter screenWidth = new Setter() {
-    // @Override
-    // public boolean isGlobal (BaseShader shader, int inputID) {
-    // return true;
-    // }
-    //
-    // @Override
-    // public void set (BaseShader shader, int inputID, Renderable renderable, Attributes combinedAttributes) {
-    // shader.set(inputID, (float)Gdx.graphics.getWidth());
-    // }
-    // };
-    // public final static Setter worldViewTrans = new Setter() {
-    // final Matrix4 temp = new Matrix4();
-    //
-    // @Override
-    // public boolean isGlobal (BaseShader shader, int inputID) {
-    // return false;
-    // }
-    //
-    // @Override
-    // public void set (BaseShader shader, int inputID, Renderable renderable, Attributes combinedAttributes) {
-    // shader.set(inputID, temp.set(shader.camera.view).mul(renderable.worldTransform));
-    // }
-    // };
-    // }
-    //
-    // /** The renderable used to create this shader, invalid after the call to init */
-    // private Renderable renderable;
-    // private long materialMask;
-    // private long vertexMask;
-    // protected final Config config;
-    // /** Material attributes which are not required but always supported. */
-    // private final static long optionalAttributes = IntAttribute.CullFace | DepthTestAttribute.Type;
+    private static String defaultShader = null;
+
+    public static String getDefaultShader() {
+        if (defaultShader == null)
+            defaultShader = Gdx.files.classpath("shaders/pointsprites.wgsl").readString();
+        return defaultShader;
+    }
+
+    /** The renderable used to create this shader, invalid after the call to init */
+    private Renderable renderable;
+    private long materialMask;
+    private long vertexMask;
+    protected final Config config;
+    /** Material attributes which are not required but always supported. */
+    private final static long optionalAttributes = IntAttribute.CullFace | DepthTestAttribute.Type;
+
+    protected int uniformBufferSize;
+    protected WebGPUUniformBuffer uniformBuffer;
+    protected Binder binder;
+    private WebGPURenderPass renderPass;
+    protected WgTexture defaultTexture;
+    protected WebGPUPipeline pipeline;
+
     //
     public WgParticleShader(final Renderable renderable) {
         this(renderable, new Config());
     }
 
     public WgParticleShader(final Renderable renderable, final Config config) {
-        // his(renderable, config, createPrefix(renderable, config));
+        this(renderable, config, createPrefix(renderable, config));
     }
 
-    //
-    // public WgParticleShader(final Renderable renderable, final Config config, final String prefix) {
-    // this(renderable, config, prefix, config.vertexShader != null ? config.vertexShader : getDefaultVertexShader(),
-    // config.fragmentShader != null ? config.fragmentShader : getDefaultFragmentShader());
-    // }
-    //
-    // public WgParticleShader(final Renderable renderable, final Config config, final String prefix, final String
-    // vertexShader,
-    // final String fragmentShader) {
-    // this(renderable, config, new ShaderProgram(prefix + vertexShader, prefix + fragmentShader));
-    // }
-    //
-    // public WgParticleShader(final Renderable renderable, final Config config, final ShaderProgram shaderProgram) {
-    // this.config = config;
-    // this.program = shaderProgram;
-    // this.renderable = renderable;
-    // materialMask = renderable.material.getMask() | optionalAttributes;
-    // vertexMask = renderable.meshPart.mesh.getVertexAttributes().getMask();
-    //
-    // if (!config.ignoreUnimplemented && (implementedFlags & materialMask) != materialMask)
-    // throw new GdxRuntimeException("Some attributes not implemented yet (" + materialMask + ")");
-    //
-    // // Global uniforms
-    // register(DefaultShader.Inputs.viewTrans, DefaultShader.Setters.viewTrans);
-    // register(DefaultShader.Inputs.projViewTrans, DefaultShader.Setters.projViewTrans);
-    // register(DefaultShader.Inputs.projTrans, DefaultShader.Setters.projTrans);
-    // register(Inputs.screenWidth, Setters.screenWidth);
-    // register(DefaultShader.Inputs.cameraUp, Setters.cameraUp);
-    // register(Inputs.cameraRight, Setters.cameraRight);
-    // register(Inputs.cameraInvDirection, Setters.cameraInvDirection);
-    // register(DefaultShader.Inputs.cameraPosition, Setters.cameraPosition);
-    //
-    // // Object uniforms
-    // register(DefaultShader.Inputs.diffuseTexture, DefaultShader.Setters.diffuseTexture);
-    // }
-    //
+    public WgParticleShader(final Renderable renderable, final Config config, final String prefix) {
+        this(renderable, config, prefix, config.shaderSource != null ? config.shaderSource : getDefaultShader());
+    }
+
+    public WgParticleShader(final Renderable renderable, final Config config, final String prefix,
+            final String shader) {
+        this(renderable, config, new WgShaderProgram("PointSprite shader", shader, prefix));
+    }
+
+    public WgParticleShader(final Renderable renderable, final Config config, final WgShaderProgram shaderProgram) {
+        this.config = config;
+        // this.program = shaderProgram;
+        this.renderable = renderable;
+        materialMask = renderable.material.getMask() | optionalAttributes;
+        vertexMask = renderable.meshPart.mesh.getVertexAttributes().getMask();
+
+        defaultTexture = createDefaultTexture();
+
+        // Create uniform buffer for global (per-frame) uniforms, i.e. projection matrix
+        uniformBufferSize = 16 * Float.BYTES;
+        uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Uniform));
+
+        binder = new Binder();
+        // define groups
+        binder.defineGroup(0, createFrameBindGroupLayout(uniformBufferSize));
+
+        // define bindings in the groups
+        // must match with shader code
+        binder.defineBinding("uniforms", 0, 0);
+        binder.defineBinding("texture", 0, 1);
+        binder.defineBinding("sampler", 0, 2);
+        // define uniforms
+        binder.defineUniform("projectionViewTransform", 0, 0, 0);
+
+        // set binding 0 to uniform buffer
+        binder.setBuffer("uniforms", uniformBuffer, 0, uniformBufferSize);
+
+        // get pipeline layout which aggregates all the bind group layouts
+        WGPUPipelineLayout pipelineLayout = binder.getPipelineLayout("PointSprite pipeline layout");
+
+        // vertexAttributes will be set from the renderable
+        VertexAttributes vertexAttributes = renderable.meshPart.mesh.getVertexAttributes();
+        PipelineSpecification pipelineSpec = new PipelineSpecification("PointSprite pipeline", vertexAttributes,
+                shaderProgram);
+
+        // define locations of vertex attributes in line with shader code
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.POSITION_ATTRIBUTE, 0);
+        pipelineSpec.vertexLayout.setVertexAttributeLocation("a_sizeAndRotation", 1);
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.COLOR_ATTRIBUTE, 2);
+        pipelineSpec.vertexLayout.setVertexAttributeLocation("a_region", 3);
+
+        pipelineSpec.vertexLayout.setStepMode(WGPUVertexStepMode.Instance); // advance once per instance (i.e.per quad)
+        pipelineSpec.topology = WGPUPrimitiveTopology.TriangleList;
+
+        // default blending values
+        pipelineSpec.enableBlending();
+        pipelineSpec.setBlendFactor(WGPUBlendFactor.SrcAlpha, WGPUBlendFactor.OneMinusSrcAlpha);
+        pipelineSpec.disableDepthTest();
+
+        pipeline = new WebGPUPipeline(pipelineLayout, pipelineSpec);
+
+    }
+
     @Override
     public void init() {
-        // final ShaderProgram program = this.program;
-        // this.program = null;
-        // init(program, renderable);
-        // renderable = null;
+
     }
 
-    //
-    // public static String createPrefix (final Renderable renderable, final Config config) {
-    // String prefix = "";
-    // if (Gdx.app.getType() == ApplicationType.Desktop)
-    // prefix += "#version 120\n";
-    // else
-    // prefix += "#version 100\n";
-    // if (config.type == ParticleType.Billboard) {
-    // prefix += "#define billboard\n";
-    // if (config.align == AlignMode.Screen)
-    // prefix += "#define screenFacing\n";
-    // else if (config.align == AlignMode.ViewPoint) prefix += "#define viewPointFacing\n";
-    // // else if(config.align == AlignMode.ParticleDirection)
-    // // prefix += "#define paticleDirectionFacing\n";
-    // }
-    // return prefix;
-    // }
-    //
+    @Override
+    public void begin(final Camera camera, final RenderContext context) {
+        throw new IllegalArgumentException("Use begin(Camera, WebGPURenderPass)");
+    }
+
+    @Override
+    public void begin(Camera camera, Renderable renderable, WebGPURenderPass renderPass) {
+        this.renderPass = renderPass;
+
+        // set global uniforms, that do not depend on renderables
+        binder.setUniform("projectionViewTransform", camera.combined);
+        // now that we've set all the uniforms, write the buffer to the gpu
+        uniformBuffer.flush();
+
+        // bind texture using the initial renderable
+        bindMaterial(renderable.material);
+
+        // bind group 0 (frame) once per frame
+        binder.bindGroup(renderPass, 0);
+
+        renderPass.setPipeline(pipeline);
+    }
+
+    public void bindMaterial(Material material) {
+        // diffuse texture
+        WgTexture diffuseTexture;
+        if (material.has(TextureAttribute.Diffuse)) {
+            TextureAttribute ta = (TextureAttribute) material.get(TextureAttribute.Diffuse);
+            assert ta != null;
+            Texture tex = ta.textureDescription.texture;
+            diffuseTexture = (WgTexture) tex;
+            diffuseTexture.setWrap(ta.textureDescription.uWrap, ta.textureDescription.vWrap);
+            diffuseTexture.setFilter(ta.textureDescription.minFilter, ta.textureDescription.magFilter);
+        } else {
+            diffuseTexture = defaultTexture;
+        }
+
+        // System.out.println("bind "+bindCount+ ": "+mat.attributesHash());
+        binder.setTexture("texture", diffuseTexture.getTextureView());
+        binder.setSampler("sampler", diffuseTexture.getSampler());
+    }
+
+    private WgTexture createDefaultTexture() {
+        // fallback texture
+        Pixmap pixmap = new Pixmap(1, 1, RGBA8888);
+        pixmap.setColor(Color.WHITE);
+        pixmap.fill();
+        return new WgTexture(pixmap, "default (white)");
+    }
+
+    private final Attributes combinedAttributes = new Attributes();
+
+    @Override
+    public void render(final Renderable renderable) {
+        render(renderable, null);
+    }
+
+    @Override
+    public void render(Renderable renderable, Attributes attributes) {
+
+        // bind vertices
+        VertexData vertexData = ((WgMesh) renderable.meshPart.mesh).getVertexData();
+        ((WgVertexBuffer) vertexData).bind(renderPass);
+
+        int numParticles = renderable.meshPart.size;
+
+        // 6 vertices per instance (2 triangles to make a quad)
+        // each "vertex" in the vertex buffer is a particle
+        // should firstVertex be meshPart.offset?
+        renderPass.draw(6, numParticles, 0, 0);
+    }
+
+    @Override
+    public void end() {
+
+    }
+
+    public static String createPrefix(final Renderable renderable, final Config config) {
+        return "";
+    }
+
     @Override
     public boolean canRender(final Renderable renderable) {
         return true;
@@ -293,85 +301,26 @@ public class WgParticleShader extends WgShader {
     }
 
     @Override
-    public void begin(final Camera camera, final RenderContext context) {
-        // super.begin(camera, context);
-    }
-
-    @Override
-    public void begin(Camera camera, Renderable renderable, WebGPURenderPass renderPass) {
-        // todo
-    }
-
-    @Override
-    public void render(final Renderable renderable) {
-        // if (!renderable.material.has(BlendingAttribute.Type))
-        // context.setBlending(false, GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-        // bindMaterial(renderable);
-        // super.render(renderable);
-    }
-
-    @Override
-    public void render(Renderable renderable, Attributes attributes) {
-
-    }
-
-    @Override
-    public void end() {
-        // currentMaterial = null;
-        // super.end();
-    }
-
-    //
-    // Material currentMaterial;
-    //
-    // protected void bindMaterial (final Renderable renderable) {
-    // if (currentMaterial == renderable.material) return;
-    //
-    // int cullFace = config.defaultCullFace == -1 ? GL20.GL_BACK : config.defaultCullFace;
-    // int depthFunc = config.defaultDepthFunc == -1 ? GL20.GL_LEQUAL : config.defaultDepthFunc;
-    // float depthRangeNear = 0f;
-    // float depthRangeFar = 1f;
-    // boolean depthMask = true;
-    //
-    // currentMaterial = renderable.material;
-    // for (final Attribute attr : currentMaterial) {
-    // final long t = attr.type;
-    // if (BlendingAttribute.is(t)) {
-    // context.setBlending(true, ((BlendingAttribute)attr).sourceFunction, ((BlendingAttribute)attr).destFunction);
-    // } else if ((t & DepthTestAttribute.Type) == DepthTestAttribute.Type) {
-    // DepthTestAttribute dta = (DepthTestAttribute)attr;
-    // depthFunc = dta.depthFunc;
-    // depthRangeNear = dta.depthRangeNear;
-    // depthRangeFar = dta.depthRangeFar;
-    // depthMask = dta.depthMask;
-    // } else if (!config.ignoreUnimplemented) throw new GdxRuntimeException("Unknown material attribute: " +
-    // attr.toString());
-    // }
-    //
-    // context.setCullFace(cullFace);
-    // context.setDepthTest(depthFunc, depthRangeNear, depthRangeFar);
-    // context.setDepthMask(depthMask);
-    // }
-    //
-    @Override
     public void dispose() {
         // program.dispose();
         // super.dispose();
     }
-    //
-    // public int getDefaultCullFace () {
-    // return config.defaultCullFace == -1 ? GL20.GL_BACK : config.defaultCullFace;
-    // }
-    //
-    // public void setDefaultCullFace (int cullFace) {
-    // config.defaultCullFace = cullFace;
-    // }
-    //
-    // public int getDefaultDepthFunc () {
-    // return config.defaultDepthFunc == -1 ? GL20.GL_LEQUAL : config.defaultDepthFunc;
-    // }
-    //
-    // public void setDefaultDepthFunc (int depthFunc) {
-    // config.defaultDepthFunc = depthFunc;
-    // }
+
+    // @group(0) @binding(0) var<uniform> uniforms: Uniforms;
+    // @group(0) @binding(1) var texture: texture_2d<f32>;
+    // @group(0) @binding(2) var textureSampler: sampler;
+    private WebGPUBindGroupLayout createFrameBindGroupLayout(int uniformBufferSize) {
+        WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("PointSprite bind group layout (frame)");
+        layout.begin();
+        layout.addBuffer(0, WGPUShaderStage.Vertex.or(WGPUShaderStage.Fragment), WGPUBufferBindingType.Uniform,
+                uniformBufferSize, false);
+
+        layout.addTexture(1, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D,
+                false);
+        layout.addSampler(2, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering);
+
+        layout.end();
+        return layout;
+    }
+
 }

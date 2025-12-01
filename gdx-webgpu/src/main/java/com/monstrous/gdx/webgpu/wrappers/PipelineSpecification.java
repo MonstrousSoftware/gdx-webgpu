@@ -31,6 +31,7 @@ public class PipelineSpecification {
     public String name;
     public VertexAttributes vertexAttributes;
     public WebGPUVertexLayout vertexLayout;
+    public WGPUVertexStepMode vertexStepMode;
     public WGPUIndexFormat indexFormat;
     public WGPUPrimitiveTopology topology;
     public Environment environment;
@@ -69,6 +70,7 @@ public class PipelineSpecification {
         noDepthAttachment = false;
         vertexShaderEntryPoint = "vs_main";
         fragmentShaderEntryPoint = "fs_main";
+        vertexStepMode = WGPUVertexStepMode.Vertex;
         blendOpColor = WGPUBlendOperation.Add;
         blendOpAlpha = WGPUBlendOperation.Add;
         setBlendFactor(WGPUBlendFactor.SrcAlpha, WGPUBlendFactor.OneMinusSrcAlpha);

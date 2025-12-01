@@ -28,6 +28,7 @@ import com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader;
 import com.badlogic.gdx.graphics.g3d.particles.ParticleShader;
 import com.badlogic.gdx.graphics.g3d.particles.ParticleSystem;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
+import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
@@ -48,12 +49,15 @@ import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
  */
 public class Particles3D extends GdxTest {
     public PerspectiveCamera cam;
+    public Color bgColor;
     public CameraInputController inputController;
     public WgModelBatch modelBatch;
     public Model model;
     public ModelInstance instance;
     public Environment environment;
     public ParticleEffects particleEffects;
+    public Model axesModel;
+    public ModelInstance axesInstance;
 
     public static class ParticleEffects implements Disposable {
 
@@ -90,12 +94,12 @@ public class Particles3D extends GdxTest {
             WgAssetManager assets = new WgAssetManager();
             ParticleEffectLoader.ParticleEffectLoadParameter loadParam = new ParticleEffectLoader.ParticleEffectLoadParameter(
                     particleSystem.getBatches());
-            assets.load("data/g3d/particle/fire-and-smoke.pfx", ParticleEffect.class, loadParam);
-            assets.load("data/g3d/particle/explosion-ring.pfx", ParticleEffect.class, loadParam);
+            assets.load("data/g3d/particle/fire-and-smoke-pointsprite.pfx", ParticleEffect.class, loadParam);
+            // assets.load("data/g3d/particle/explosion-ring.pfx", ParticleEffect.class, loadParam);
 
             assets.finishLoading();
-            smokeEffect = assets.get("data/g3d/particle/fire-and-smoke.pfx");
-            ringEffect = assets.get("data/g3d/particle/explosion-ring.pfx");
+            smokeEffect = assets.get("data/g3d/particle/fire-and-smoke-pointsprite.pfx");
+            // ringEffect = assets.get("data/g3d/particle/explosion-ring.pfx");
             // exhaustFumesEffect = assets.get("data/g3d/particle/green-scatter.pfx");
 
             activeEffects = new Array<>();
@@ -179,6 +183,7 @@ public class Particles3D extends GdxTest {
     @Override
     public void create() {
         modelBatch = new WgModelBatch();
+        bgColor = new Color(0x878787FF);
 
         environment = new Environment();
         environment.set(new ColorAttribute(ColorAttribute.AmbientLight, .4f, .4f, .4f, 1f));
@@ -198,11 +203,13 @@ public class Particles3D extends GdxTest {
                 | VertexAttributes.Usage.TextureCoordinates);
         instance = new ModelInstance(model);
 
+        createAxes();
+
         Gdx.input.setInputProcessor(new InputMultiplexer(this, inputController = new CameraInputController(cam)));
 
         particleEffects = new ParticleEffects(cam);
         spawnFire(Vector3.Zero);
-        spawnExplosion(Vector3.Zero);
+        // spawnExplosion(Vector3.Zero);
     }
 
     @Override
@@ -210,10 +217,10 @@ public class Particles3D extends GdxTest {
         inputController.update();
         particleEffects.update(Gdx.graphics.getDeltaTime());
 
-        WgScreenUtils.clear(Color.TEAL, true);
+        WgScreenUtils.clear(bgColor, true);
 
         modelBatch.begin(cam);
-        // modelBatch.render(instance, environment);
+        modelBatch.render(axesInstance);
         particleEffects.render(modelBatch);
         modelBatch.end();
     }
@@ -244,6 +251,32 @@ public class Particles3D extends GdxTest {
     public void spawnSmokeTrail(Matrix4 transform) {
 
         particleEffects.addExhaustFumes(transform);
+    }
+
+    final float GRID_MIN = -5f;
+    final float GRID_MAX = 5f;
+    final float GRID_STEP = 1f;
+
+    private void createAxes() {
+        WgModelBuilder modelBuilder = new WgModelBuilder();
+        modelBuilder.begin();
+        MeshPartBuilder builder = modelBuilder.part("grid", GL20.GL_LINES,
+                VertexAttributes.Usage.Position | VertexAttributes.Usage.ColorUnpacked, new Material());
+        builder.setColor(Color.LIGHT_GRAY);
+        for (float t = GRID_MIN; t <= GRID_MAX; t += GRID_STEP) {
+            builder.line(t, 0, GRID_MIN, t, 0, GRID_MAX);
+            builder.line(GRID_MIN, 0, t, GRID_MAX, 0, t);
+        }
+        builder = modelBuilder.part("axes", GL20.GL_LINES,
+                VertexAttributes.Usage.Position | VertexAttributes.Usage.ColorUnpacked, new Material());
+        builder.setColor(Color.RED);
+        builder.line(0, 0, 0, 100, 0, 0);
+        builder.setColor(Color.GREEN);
+        builder.line(0, 0, 0, 0, 100, 0);
+        builder.setColor(Color.BLUE);
+        builder.line(0, 0, 0, 0, 0, 100);
+        axesModel = modelBuilder.end();
+        axesInstance = new ModelInstance(axesModel);
     }
 
 }

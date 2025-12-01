@@ -29,10 +29,12 @@ public class WebGPUVertexLayout {
 
     protected VertexAttributes attributes;
     protected final ObjectIntMap<String> attributeLocations;
+    protected WGPUVertexStepMode stepMode;
 
     public WebGPUVertexLayout(VertexAttributes attributes) {
         this.attributes = attributes;
         this.attributeLocations = new ObjectIntMap<>();
+        this.stepMode = WGPUVertexStepMode.Vertex; // default
     }
 
     /** define a location for a vertex attribute to match the shader code */
@@ -46,6 +48,10 @@ public class WebGPUVertexLayout {
         if (loc == -1)
             throw new GdxRuntimeException("Vertex Attribute undefined: " + alias);
         return loc;
+    }
+
+    public void setStepMode(WGPUVertexStepMode stepMode) {
+        this.stepMode = stepMode;
     }
 
     /** create a vertex buffer layout object from the VertexAttributes */
@@ -97,7 +103,7 @@ public class WebGPUVertexLayout {
         WGPUVertexBufferLayout vertexBufferLayout = WGPUVertexBufferLayout.obtain(); // use is assumed to be ephemeral
         vertexBufferLayout.setAttributes(attribs);
         vertexBufferLayout.setArrayStride(offset);
-        vertexBufferLayout.setStepMode(WGPUVertexStepMode.Vertex);
+        vertexBufferLayout.setStepMode(stepMode);
         return vertexBufferLayout;
     }
 
