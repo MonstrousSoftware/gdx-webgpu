@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.github.xpenatan.webgpu.WGPUPipelineLayout;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.webgpu.graphics.WgMesh;
@@ -31,6 +32,9 @@ public class TestMeshNoIndices extends GdxTest {
 
         // create a render pipeline with the given shader code
         PipelineSpecification pipelineSpec = new PipelineSpecification("pipeline", vattr, getShaderSource());
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.POSITION_ATTRIBUTE, 0);
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.COLOR_ATTRIBUTE, 5);
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.TEXCOORD_ATTRIBUTE+"0", 1);
         pipeline = new WebGPUPipeline(WGPUPipelineLayout.NULL, pipelineSpec);
 
         // create a mesh for a square: 6 verts (to make two triangles)

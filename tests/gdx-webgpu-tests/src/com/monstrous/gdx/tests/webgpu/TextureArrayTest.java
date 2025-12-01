@@ -110,6 +110,8 @@ public class TextureArrayTest extends GdxTest {
 
         // create a render pipeline with the given shader code
         PipelineSpecification pipelineSpec = new PipelineSpecification("pipeline", vattr, getShaderSource());
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.POSITION_ATTRIBUTE, 0);
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.TEXCOORD_ATTRIBUTE, 1);
         pipeline = new WebGPUPipeline(binder.getPipelineLayout("pipeline layout"), pipelineSpec);
 
     }

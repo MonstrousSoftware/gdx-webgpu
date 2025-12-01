@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Vector3;
 import com.github.xpenatan.webgpu.WGPUPipelineLayout;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
@@ -31,7 +32,9 @@ public class TestMeshBuilder extends GdxTest {
                 VertexAttribute.ColorUnpacked());
 
         PipelineSpecification pipelineSpec = new PipelineSpecification("pipeline", vattr, getShaderSource());
-
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.POSITION_ATTRIBUTE, 0);
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.COLOR_ATTRIBUTE, 5);
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.TEXCOORD_ATTRIBUTE+"0", 1);
         pipeline = new WebGPUPipeline(WGPUPipelineLayout.NULL, pipelineSpec);
 
         // create a circular mesh part with the mesh builder
