@@ -58,6 +58,7 @@ public class Particles3D extends GdxTest {
     public ParticleEffects particleEffects;
     public Model axesModel;
     public ModelInstance axesInstance;
+    public float countDown;
 
     public static class ParticleEffects implements Disposable {
 
@@ -95,11 +96,11 @@ public class Particles3D extends GdxTest {
             ParticleEffectLoader.ParticleEffectLoadParameter loadParam = new ParticleEffectLoader.ParticleEffectLoadParameter(
                     particleSystem.getBatches());
             assets.load("data/g3d/particle/fire-and-smoke-pointsprite.pfx", ParticleEffect.class, loadParam);
-            // assets.load("data/g3d/particle/explosion-ring.pfx", ParticleEffect.class, loadParam);
+            assets.load("data/g3d/particle/explosion-ring.pfx", ParticleEffect.class, loadParam);
 
             assets.finishLoading();
             smokeEffect = assets.get("data/g3d/particle/fire-and-smoke-pointsprite.pfx");
-            // ringEffect = assets.get("data/g3d/particle/explosion-ring.pfx");
+            ringEffect = assets.get("data/g3d/particle/explosion-ring.pfx");
             // exhaustFumesEffect = assets.get("data/g3d/particle/green-scatter.pfx");
 
             activeEffects = new Array<>();
@@ -209,13 +210,20 @@ public class Particles3D extends GdxTest {
 
         particleEffects = new ParticleEffects(cam);
         spawnFire(Vector3.Zero);
-        // spawnExplosion(Vector3.Zero);
+        spawnExplosion(Vector3.Zero);
     }
 
     @Override
     public void render() {
+        float delta = Gdx.graphics.getDeltaTime();
+        countDown -= delta;
+        if (countDown < 0) {
+            countDown = 3;
+            spawnExplosion(Vector3.Zero);
+        }
         inputController.update();
-        particleEffects.update(Gdx.graphics.getDeltaTime());
+
+        particleEffects.update(delta);
 
         WgScreenUtils.clear(bgColor, true);
 
