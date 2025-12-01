@@ -30,8 +30,8 @@ public class TestMeshBuilder extends GdxTest {
         VertexAttributes vattr = new VertexAttributes(VertexAttribute.Position(), VertexAttribute.TexCoords(0),
                 VertexAttribute.ColorUnpacked());
 
-        PipelineSpecification pipelineSpec = new PipelineSpecification(vattr, getShaderSource());
-        pipelineSpec.name = "pipeline";
+        PipelineSpecification pipelineSpec = new PipelineSpecification("pipeline", vattr, getShaderSource());
+
         pipeline = new WebGPUPipeline(WGPUPipelineLayout.NULL, pipelineSpec);
 
         // create a circular mesh part with the mesh builder

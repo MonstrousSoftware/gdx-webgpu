@@ -30,8 +30,7 @@ public class TestMeshNoIndices extends GdxTest {
                 VertexAttribute.ColorUnpacked());
 
         // create a render pipeline with the given shader code
-        PipelineSpecification pipelineSpec = new PipelineSpecification(vattr, getShaderSource());
-        pipelineSpec.name = "pipeline";
+        PipelineSpecification pipelineSpec = new PipelineSpecification("pipeline", vattr, getShaderSource());
         pipeline = new WebGPUPipeline(WGPUPipelineLayout.NULL, pipelineSpec);
 
         // create a mesh for a square: 6 verts (to make two triangles)

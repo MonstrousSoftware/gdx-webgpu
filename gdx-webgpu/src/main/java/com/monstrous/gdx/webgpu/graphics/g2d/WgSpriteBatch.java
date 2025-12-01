@@ -104,8 +104,9 @@ public class WgSpriteBatch implements Batch {
         this.specificShader = specificShader;
 
         vertexAttributes = new VertexAttributes(
-                new VertexAttribute(VertexAttributes.Usage.Position, 2, ShaderProgram.POSITION_ATTRIBUTE),
-                VertexAttribute.ColorPacked(), VertexAttribute.TexCoords(0));
+                new VertexAttribute(VertexAttributes.Usage.Position, 2, ShaderProgram.POSITION_ATTRIBUTE),  // 2D position
+                VertexAttribute.ColorPacked(),
+                VertexAttribute.TexCoords(0));
 
         // vertex: x, y, rgba, u, v
         vertexSize = vertexAttributes.vertexSize; // bytes
@@ -159,15 +160,18 @@ public class WgSpriteBatch implements Batch {
         pipelineLayout = binder.getPipelineLayout("SpriteBatch pipeline layout");
 
         pipelines = new PipelineCache();
-        pipelineSpec = new PipelineSpecification(vertexAttributes, this.specificShader);
-        pipelineSpec.name = "SpriteBatch pipeline";
+        pipelineSpec = new PipelineSpecification("SpriteBatch pipeline", vertexAttributes, this.specificShader);
+        // define locations of vertex attributes in line with shader code
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.POSITION_ATTRIBUTE, 0);
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.COLOR_ATTRIBUTE, 5);
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.TEXCOORD_ATTRIBUTE+"0", 1);
+
 
         // default blending values
         pipelineSpec.enableBlending();
         pipelineSpec.setBlendFactor(WGPUBlendFactor.SrcAlpha, WGPUBlendFactor.OneMinusSrcAlpha);
         pipelineSpec.disableDepthTest();
 
-        pipelineSpec.vertexAttributes = vertexAttributes;
         pipelineSpec.numSamples = webgpu.getSamples();
 
         // use provided (compiled) shader or else use default shader (source)

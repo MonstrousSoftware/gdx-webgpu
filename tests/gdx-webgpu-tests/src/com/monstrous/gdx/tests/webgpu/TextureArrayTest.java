@@ -109,8 +109,7 @@ public class TextureArrayTest extends GdxTest {
         binder.setSampler("diffuseSampler", textureArray.getSampler());
 
         // create a render pipeline with the given shader code
-        PipelineSpecification pipelineSpec = new PipelineSpecification(vattr, getShaderSource());
-        pipelineSpec.name = "pipeline";
+        PipelineSpecification pipelineSpec = new PipelineSpecification("pipeline", vattr, getShaderSource());
         pipeline = new WebGPUPipeline(binder.getPipelineLayout("pipeline layout"), pipelineSpec);
 
     }

@@ -30,6 +30,7 @@ import java.util.Objects;
 public class PipelineSpecification {
     public String name;
     public VertexAttributes vertexAttributes;
+    public WebGPUVertexLayout vertexLayout;
     public WGPUIndexFormat indexFormat;
     public WGPUPrimitiveTopology topology;
     public Environment environment;
@@ -87,21 +88,28 @@ public class PipelineSpecification {
         usePBR = true;
     }
 
-    public PipelineSpecification(VertexAttributes vertexAttributes, String shaderSource) {
+    public PipelineSpecification(String name, VertexAttributes vertexAttributes, String shaderSource) {
         this();
-        this.vertexAttributes = vertexAttributes;
+        this.name = name;
+        setVertexAttributes(vertexAttributes);
         this.shaderSource = shaderSource;
     }
 
-    public PipelineSpecification(VertexAttributes vertexAttributes, WgShaderProgram shader) {
+    public PipelineSpecification(String name, VertexAttributes vertexAttributes, WgShaderProgram shader) {
         this();
-        this.vertexAttributes = vertexAttributes;
+        this.name = name;
+        setVertexAttributes(vertexAttributes);
         this.shader = shader;
+    }
+
+    public void setVertexAttributes(VertexAttributes vertexAttributes) {
+        this.vertexAttributes = vertexAttributes;
+        this.vertexLayout = new WebGPUVertexLayout(vertexAttributes);
     }
 
     public PipelineSpecification(PipelineSpecification spec) {
         this.name = spec.name;
-        this.vertexAttributes = spec.vertexAttributes; // should be deep copy
+        setVertexAttributes(spec.vertexAttributes);// should be deep copy
         this.environment = spec.environment;
         this.shaderSource = spec.shaderSource;
         this.shader = spec.shader;
@@ -245,24 +253,6 @@ public class PipelineSpecification {
         hash = 31 * hash + maxDirLights;
         hash = 31 * hash + maxPointLights;
         hash = 31 * hash + (usePBR ? 1231 : 1237);
-
-        //
-        // hash = Objects.hash(
-        // vertexAttributes == null ? 0 : vertexAttributes.hashCode(),
-        // shaderSource,
-        // isDepthPass, afterDepthPrepass,
-        // useDepthTest, noDepthAttachment,
-        // topology, indexFormat,
-        // blendingEnabled,
-        // // blend factors should be ignored when !blendingEnabled
-        // blendingEnabled ? blendSrcColor : 0,
-        // blendingEnabled ? blendDstColor : 0,
-        // blendingEnabled ? blendOpColor : 0,
-        // blendingEnabled ? blendSrcAlpha: 0,
-        // blendingEnabled ? blendDstAlpha: 0,
-        // blendingEnabled ? blendOpAlpha : 0,
-        // numSamples, cullMode, isSkyBox, depthFormat, numSamples
-        // );
     }
 
     // note: don't include compiled shader in the hash because this would force new compiles every frame since a spec of

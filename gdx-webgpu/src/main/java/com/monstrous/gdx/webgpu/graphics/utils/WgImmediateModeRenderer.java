@@ -84,8 +84,11 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 
         this.maxVertices = maxVertices;
 
-        VertexAttributes vertexAttributes = new VertexAttributes(VertexAttribute.Position(),
-                VertexAttribute.ColorPacked(), VertexAttribute.TexCoords(0), VertexAttribute.Normal());
+        VertexAttributes vertexAttributes = new VertexAttributes(
+            VertexAttribute.Position(),
+            VertexAttribute.ColorPacked(),
+            VertexAttribute.TexCoords(0),
+            VertexAttribute.Normal());
 
         vertexSize = vertexAttributes.vertexSize / Float.BYTES; // size in floats
 
@@ -104,8 +107,16 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
         pipelineLayout = createPipelineLayout("ImmediateModeRenderer pipeline layout", bindGroupLayout);
 
         pipelines = new PipelineCache();
-        pipelineSpec = new PipelineSpecification(vertexAttributes, defaultShaderSource());
-        pipelineSpec.name = "ImmediateModeRenderer pipeline";
+        pipelineSpec = new PipelineSpecification("ImmediateModeRenderer pipeline", vertexAttributes, defaultShaderSource());
+        // define locations of vertex attributes in line with shader code
+        //              @location(0) position: vec4f,
+        //              @location(1) normal: vec3f,
+        //              @location(2) color: vec4f,
+        //              @location(3) uv: vec2f,
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.POSITION_ATTRIBUTE, 0);
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.COLOR_ATTRIBUTE, 1);
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.TEXCOORD_ATTRIBUTE+"0", 2);
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.NORMAL_ATTRIBUTE, 3);
         pipelineSpec.enableDepthTest();
 
         // default blending values
@@ -249,8 +260,8 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
                 + "@group(0) @binding(0) var<uniform> uniforms: Uniforms;\n"
                 + "@group(0) @binding(1) var texture: texture_2d<f32>;\n"
                 + "@group(0) @binding(2) var textureSampler: sampler;\n" + "\n" + "struct VertexInput {\n"
-                + "    @location(0) position: vec3f,\n" + "    @location(5) color: vec4f,\n"
-                + "    @location(1) uv: vec2f,\n" + "    @location(2) normal: vec3f,\n" + "};\n" + "\n"
+                + "    @location(0) position: vec3f,\n" + "    @location(1) color: vec4f,\n"
+                + "    @location(2) uv: vec2f,\n" + "    @location(3) normal: vec3f,\n" + "};\n" + "\n"
                 + "struct VertexOutput {\n" + "    @builtin(position) position: vec4f,\n"
                 + "    @location(0) uv : vec2f,\n" + "    @location(1) color: vec4f,\n" + "};\n" + "\n" + "\n"
                 + "@vertex\n" + "fn vs_main(in: VertexInput) -> VertexOutput {\n" + "   var out: VertexOutput;\n" + "\n"
