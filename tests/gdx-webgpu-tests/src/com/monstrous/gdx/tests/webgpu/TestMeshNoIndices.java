@@ -34,7 +34,7 @@ public class TestMeshNoIndices extends GdxTest {
         PipelineSpecification pipelineSpec = new PipelineSpecification("pipeline", vattr, getShaderSource());
         pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.POSITION_ATTRIBUTE, 0);
         pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.COLOR_ATTRIBUTE, 5);
-        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.TEXCOORD_ATTRIBUTE+"0", 1);
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.TEXCOORD_ATTRIBUTE + "0", 1);
         pipeline = new WebGPUPipeline(WGPUPipelineLayout.NULL, pipelineSpec);
 
         // create a mesh for a square: 6 verts (to make two triangles)

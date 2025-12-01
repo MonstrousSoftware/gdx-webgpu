@@ -69,12 +69,12 @@ public class Particles3D extends GdxTest {
             // create a particle system
             particleSystem = new ParticleSystem();
 
-             //create a point sprite batch and add it to the particle system
-             WgPointSpriteParticleBatch pointSpriteBatch = new WgPointSpriteParticleBatch(1000, new
-             WgParticleShader.Config(WgParticleShader.ParticleType.Point),
-             new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA, 0.1f), null );
-             pointSpriteBatch.setCamera(cam);
-             particleSystem.add(pointSpriteBatch);
+            // create a point sprite batch and add it to the particle system
+            WgPointSpriteParticleBatch pointSpriteBatch = new WgPointSpriteParticleBatch(1000,
+                    new WgParticleShader.Config(WgParticleShader.ParticleType.Point),
+                    new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA, 0.1f), null);
+            pointSpriteBatch.setCamera(cam);
+            particleSystem.add(pointSpriteBatch);
 
             // NB don't set useGPU to true for now.
             // requires shader implementation

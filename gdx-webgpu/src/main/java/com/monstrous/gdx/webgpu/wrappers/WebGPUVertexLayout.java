@@ -35,16 +35,16 @@ public class WebGPUVertexLayout {
         this.attributeLocations = new ObjectIntMap<>();
     }
 
-    /** define a location for a vertex attribute to match the shader code  */
-    public void setVertexAttributeLocation(String alias, int location){
+    /** define a location for a vertex attribute to match the shader code */
+    public void setVertexAttributeLocation(String alias, int location) {
         attributeLocations.put(alias, location);
     }
 
     /** lookup location defined for the vertex attribute */
-    public int getVertexAttributeLocation(String alias){
+    public int getVertexAttributeLocation(String alias) {
         int loc = attributeLocations.get(alias, -1);
-        if(loc == -1)
-            throw new GdxRuntimeException("Vertex Attribute undefined: "+alias);
+        if (loc == -1)
+            throw new GdxRuntimeException("Vertex Attribute undefined: " + alias);
         return loc;
     }
 
@@ -88,13 +88,13 @@ public class WebGPUVertexLayout {
             WGPUVertexAttribute attribute = new WGPUVertexAttribute();
             attribute.setFormat(format);
             attribute.setOffset(offset);
-            //attribute.setShaderLocation(getLocation(attrib.usage));
+            // attribute.setShaderLocation(getLocation(attrib.usage));
             attribute.setShaderLocation(getVertexAttributeLocation(attrib.alias));
             attribs.push_back(attribute);
             offset += getSize(format);
         }
 
-        WGPUVertexBufferLayout vertexBufferLayout = WGPUVertexBufferLayout.obtain();    // use is assumed to be ephemeral
+        WGPUVertexBufferLayout vertexBufferLayout = WGPUVertexBufferLayout.obtain(); // use is assumed to be ephemeral
         vertexBufferLayout.setAttributes(attribs);
         vertexBufferLayout.setArrayStride(offset);
         vertexBufferLayout.setStepMode(WGPUVertexStepMode.Vertex);
@@ -196,40 +196,40 @@ public class WebGPUVertexLayout {
      * use standard locations for vertex attributes. Shader code needs to follow this too.
      */
 
-//    public static int getLocation(int usage) {
-//        int loc = -1;
-//        switch (usage) {
-//            case VertexAttributes.Usage.Position:
-//                loc = 0;
-//                break;
-//            case VertexAttributes.Usage.ColorUnpacked:
-//                loc = 5;
-//                break;
-//            case VertexAttributes.Usage.ColorPacked:
-//                loc = 5;
-//                break;
-//            case VertexAttributes.Usage.Normal:
-//                loc = 2;
-//                break;
-//            case VertexAttributes.Usage.TextureCoordinates:
-//                loc = 1;
-//                break;
-//            case VertexAttributes.Usage.Generic:
-//                loc = 8;
-//                break;
-//            case VertexAttributes.Usage.BoneWeight:
-//                loc = 7;
-//                break; // we use 6 for joints and 7 for weights
-//            case VertexAttributes.Usage.Tangent:
-//                loc = 3;
-//                break;
-//            case VertexAttributes.Usage.BiNormal:
-//                loc = 4;
-//                break;
-//            default:
-//                throw new RuntimeException("Unknown usage: " + usage);
-//        }
-//        return loc;
-//    }
+    // public static int getLocation(int usage) {
+    // int loc = -1;
+    // switch (usage) {
+    // case VertexAttributes.Usage.Position:
+    // loc = 0;
+    // break;
+    // case VertexAttributes.Usage.ColorUnpacked:
+    // loc = 5;
+    // break;
+    // case VertexAttributes.Usage.ColorPacked:
+    // loc = 5;
+    // break;
+    // case VertexAttributes.Usage.Normal:
+    // loc = 2;
+    // break;
+    // case VertexAttributes.Usage.TextureCoordinates:
+    // loc = 1;
+    // break;
+    // case VertexAttributes.Usage.Generic:
+    // loc = 8;
+    // break;
+    // case VertexAttributes.Usage.BoneWeight:
+    // loc = 7;
+    // break; // we use 6 for joints and 7 for weights
+    // case VertexAttributes.Usage.Tangent:
+    // loc = 3;
+    // break;
+    // case VertexAttributes.Usage.BiNormal:
+    // loc = 4;
+    // break;
+    // default:
+    // throw new RuntimeException("Unknown usage: " + usage);
+    // }
+    // return loc;
+    // }
 
 }

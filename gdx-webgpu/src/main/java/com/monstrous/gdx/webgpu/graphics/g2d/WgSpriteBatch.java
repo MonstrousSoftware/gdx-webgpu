@@ -104,9 +104,9 @@ public class WgSpriteBatch implements Batch {
         this.specificShader = specificShader;
 
         vertexAttributes = new VertexAttributes(
-                new VertexAttribute(VertexAttributes.Usage.Position, 2, ShaderProgram.POSITION_ATTRIBUTE),  // 2D position
-                VertexAttribute.ColorPacked(),
-                VertexAttribute.TexCoords(0));
+                new VertexAttribute(VertexAttributes.Usage.Position, 2, ShaderProgram.POSITION_ATTRIBUTE), // 2D
+                                                                                                           // position
+                VertexAttribute.ColorPacked(), VertexAttribute.TexCoords(0));
 
         // vertex: x, y, rgba, u, v
         vertexSize = vertexAttributes.vertexSize; // bytes
@@ -164,8 +164,7 @@ public class WgSpriteBatch implements Batch {
         // define locations of vertex attributes in line with shader code
         pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.POSITION_ATTRIBUTE, 0);
         pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.COLOR_ATTRIBUTE, 5);
-        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.TEXCOORD_ATTRIBUTE+"0", 1);
-
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.TEXCOORD_ATTRIBUTE + "0", 1);
 
         // default blending values
         pipelineSpec.enableBlending();

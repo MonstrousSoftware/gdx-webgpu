@@ -84,11 +84,8 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 
         this.maxVertices = maxVertices;
 
-        VertexAttributes vertexAttributes = new VertexAttributes(
-            VertexAttribute.Position(),
-            VertexAttribute.ColorPacked(),
-            VertexAttribute.TexCoords(0),
-            VertexAttribute.Normal());
+        VertexAttributes vertexAttributes = new VertexAttributes(VertexAttribute.Position(),
+                VertexAttribute.ColorPacked(), VertexAttribute.TexCoords(0), VertexAttribute.Normal());
 
         vertexSize = vertexAttributes.vertexSize / Float.BYTES; // size in floats
 
@@ -107,15 +104,16 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
         pipelineLayout = createPipelineLayout("ImmediateModeRenderer pipeline layout", bindGroupLayout);
 
         pipelines = new PipelineCache();
-        pipelineSpec = new PipelineSpecification("ImmediateModeRenderer pipeline", vertexAttributes, defaultShaderSource());
+        pipelineSpec = new PipelineSpecification("ImmediateModeRenderer pipeline", vertexAttributes,
+                defaultShaderSource());
         // define locations of vertex attributes in line with shader code
-        //              @location(0) position: vec4f,
-        //              @location(1) normal: vec3f,
-        //              @location(2) color: vec4f,
-        //              @location(3) uv: vec2f,
+        // @location(0) position: vec4f,
+        // @location(1) normal: vec3f,
+        // @location(2) color: vec4f,
+        // @location(3) uv: vec2f,
         pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.POSITION_ATTRIBUTE, 0);
         pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.COLOR_ATTRIBUTE, 1);
-        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.TEXCOORD_ATTRIBUTE+"0", 2);
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.TEXCOORD_ATTRIBUTE + "0", 2);
         pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.NORMAL_ATTRIBUTE, 3);
         pipelineSpec.enableDepthTest();
 

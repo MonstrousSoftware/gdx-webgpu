@@ -29,35 +29,42 @@ import com.badlogic.gdx.graphics.g3d.particles.renderers.PointSpriteControllerRe
 import com.badlogic.gdx.graphics.g3d.particles.renderers.PointSpriteRenderer;
 import com.monstrous.gdx.webgpu.graphics.g3d.particles.batches.WgPointSpriteParticleBatch;
 
-/** A {@link ParticleControllerRenderer} which will render particles as point sprites to a {@link PointSpriteParticleBatch} .
- * @author Inferno */
-public class WgPointSpriteRenderer extends ParticleControllerRenderer<PointSpriteControllerRenderData, WgPointSpriteParticleBatch> {
-	public WgPointSpriteRenderer() {
-		super(new PointSpriteControllerRenderData());
-	}
+/**
+ * A {@link ParticleControllerRenderer} which will render particles as point sprites to a
+ * {@link PointSpriteParticleBatch} .
+ * 
+ * @author Inferno
+ */
+public class WgPointSpriteRenderer
+        extends ParticleControllerRenderer<PointSpriteControllerRenderData, WgPointSpriteParticleBatch> {
+    public WgPointSpriteRenderer() {
+        super(new PointSpriteControllerRenderData());
+    }
 
-	public WgPointSpriteRenderer(WgPointSpriteParticleBatch batch) {
-		this();
-		setBatch(batch);
-	}
+    public WgPointSpriteRenderer(WgPointSpriteParticleBatch batch) {
+        this();
+        setBatch(batch);
+    }
 
-	@Override
-	public void allocateChannels () {
-		renderData.positionChannel = controller.particles.addChannel(ParticleChannels.Position);
-		renderData.regionChannel = controller.particles.addChannel(ParticleChannels.TextureRegion, TextureRegionInitializer.get());
-		renderData.colorChannel = controller.particles.addChannel(ParticleChannels.Color, ColorInitializer.get());
-		renderData.scaleChannel = controller.particles.addChannel(ParticleChannels.Scale, ScaleInitializer.get());
-		renderData.rotationChannel = controller.particles.addChannel(ParticleChannels.Rotation2D, Rotation2dInitializer.get());
-	}
+    @Override
+    public void allocateChannels() {
+        renderData.positionChannel = controller.particles.addChannel(ParticleChannels.Position);
+        renderData.regionChannel = controller.particles.addChannel(ParticleChannels.TextureRegion,
+                TextureRegionInitializer.get());
+        renderData.colorChannel = controller.particles.addChannel(ParticleChannels.Color, ColorInitializer.get());
+        renderData.scaleChannel = controller.particles.addChannel(ParticleChannels.Scale, ScaleInitializer.get());
+        renderData.rotationChannel = controller.particles.addChannel(ParticleChannels.Rotation2D,
+                Rotation2dInitializer.get());
+    }
 
-	@Override
-	public boolean isCompatible (ParticleBatch<?> batch) {
-		return batch instanceof WgPointSpriteParticleBatch;
-	}
+    @Override
+    public boolean isCompatible(ParticleBatch<?> batch) {
+        return batch instanceof WgPointSpriteParticleBatch;
+    }
 
-	@Override
-	public ParticleControllerComponent copy () {
-		return new WgPointSpriteRenderer(batch);
-	}
+    @Override
+    public ParticleControllerComponent copy() {
+        return new WgPointSpriteRenderer(batch);
+    }
 
 }

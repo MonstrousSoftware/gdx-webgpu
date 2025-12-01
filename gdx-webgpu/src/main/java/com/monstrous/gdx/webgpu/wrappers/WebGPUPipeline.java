@@ -48,7 +48,7 @@ public class WebGPUPipeline implements Disposable {
         this.specification = new PipelineSpecification(spec);
 
         WGPUVertexBufferLayout vertexBufferLayout;
-        if(spec.vertexLayout == null){
+        if (spec.vertexLayout == null) {
             // could happen, e.g. for the skybox pipeline
             vertexBufferLayout = null;
         } else {

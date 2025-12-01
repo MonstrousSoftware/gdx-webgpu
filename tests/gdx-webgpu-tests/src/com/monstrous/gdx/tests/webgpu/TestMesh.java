@@ -24,9 +24,7 @@ public class TestMesh extends GdxTest {
 
     @Override
     public void create() {
-        VertexAttributes vattr = new VertexAttributes(
-                VertexAttribute.Position(),
-                VertexAttribute.TexCoords(0),
+        VertexAttributes vattr = new VertexAttributes(VertexAttribute.Position(), VertexAttribute.TexCoords(0),
                 VertexAttribute.ColorUnpacked());
 
         // create a render pipeline with the given shader code
@@ -34,7 +32,7 @@ public class TestMesh extends GdxTest {
         // define locations of vertex attributes in line with shader code
         pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.POSITION_ATTRIBUTE, 0);
         pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.COLOR_ATTRIBUTE, 5);
-        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.TEXCOORD_ATTRIBUTE+"0", 1);
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.TEXCOORD_ATTRIBUTE + "0", 1);
         pipeline = new WebGPUPipeline(WGPUPipelineLayout.NULL, pipelineSpec);
 
         // create a mesh for a square: 4 vertices and 6 indices (to make two triangles)
