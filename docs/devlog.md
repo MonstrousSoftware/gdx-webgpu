@@ -378,3 +378,22 @@ To reproduce launch the menu starter, open visualVM and run a garbage collection
 After a few frames it hangs in queue.submit().  A minimal example is in the side branch: Launch2 and Lighting2.  
 
 
+
+2/12/2025:
+3d particle effects can now be loaded from files created by Flame (runnable-3d-particles.jar). Billboard and Pointsprites are supported.
+Billboard relies on WgSpriteBatch and PointSprites has a dedicated shader.  
+Both types look very similar. Pointsprite should be more efficient because it only needs to transfer a single vertex per particle to the GPU.
+The particle texture should be created with premultiplied alpha for best results and blending set to (ONE, ONE_MINUS_SRC_ALPHA).
+Without premultiplied alpha you may have dark ridges around the particle.
+The particle colours are slightly different between Dawn and WGPU because Dawn has an RBG canvas and WGPU has a SRGB canvas, i.e. Dawn needs
+gamma correction.  The particle tint is multiplied by the particle texture and here it makes a difference if you are working in linear color space
+or not.
+
+Particle rotation is not supported nor using texture regions (i.e. an atlas).
+
+Issue with resizing: the frame stops rendering until the resize is complete, then you get multiple resize events and a render frame with a very large
+delta time.  In libgdx the rendering continues during resizing.
+
+
+
+
