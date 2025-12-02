@@ -94,14 +94,17 @@ public class ShaderPrefix {
         // }
 
         // Add gamma correction if surface format is not Srgb
-
-        WgGraphics gfx = (WgGraphics) Gdx.graphics;
-        WebGPUContext webgpu = gfx.getContext();
-        if (!webgpu.hasLinearOutput()) {
+        if (!hasLinearOutput()) {
             sb.append("#define GAMMA_CORRECTION\n");
         }
 
         // System.out.println("Prefix: "+sb.toString());
         return sb.toString();
+    }
+
+    public static boolean hasLinearOutput(){
+        WgGraphics gfx = (WgGraphics) Gdx.graphics;
+        WebGPUContext webgpu = gfx.getContext();
+        return webgpu.hasLinearOutput();
     }
 }

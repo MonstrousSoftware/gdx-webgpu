@@ -10,15 +10,9 @@ struct Uniforms {
 @group(0) @binding(1) var texture: texture_2d<f32>;
 @group(0) @binding(2) var textureSampler: sampler;
 
-
-////Point particles
-//attribute vec3 a_position;
-//attribute vec3 a_sizeAndRotation;
-//attribute vec4 a_color;
-//attribute vec4 a_region;
 struct VertexInput {
     @location(0) position: vec3f,
-    @location(1) sizeAndRotation: vec3f,	// ignored
+    @location(1) sizeAndRotation: vec3f,	// rotation ignored
     @location(2) color: vec4f,
     @location(3) region: vec4f,			// ignored
 
@@ -46,13 +40,20 @@ fn vs_main(in: VertexInput, @builtin(vertex_index) ix: u32) -> VertexOutput {
   );
 
    let pos:vec2f = quadpoints[ix];
-   let scale:f32 = 0.5 * in.sizeAndRotation.x; //0.5;	// fixed scale (should be per particle)
+   let scale:f32 = 0.5 * in.sizeAndRotation.x;
    let clipPos:vec4f =  uniforms.projectionViewTransform * vec4f(in.position, 1.0);
    let cornerPos:vec4f = vec4f(pos * scale, 0, 0);	// screen space offset per quad corner
+   // todo take into account aspect ratio to ensure quad appears as a square on the screen
    out.position = clipPos + cornerPos;
 
 
-   out.color = in.color; //vec4f(pow(in.color.rgb, vec3f(2.2)), in.color.a);
+#ifdef GAMMA_CORRECTION
+   out.color = in.color;
+#else
+    // vertex tint needs to be linearized if output is Srgb
+    // gamma tweaked to give reasonable output
+   out.color = vec4f(pow(in.color.rgb, vec3f(1.6)),in.color.a);
+#endif
    out.uv = pos * 0.5 + 0.5;
    return out;
 }
@@ -60,14 +61,10 @@ fn vs_main(in: VertexInput, @builtin(vertex_index) ix: u32) -> VertexOutput {
 @fragment
 fn fs_main(in : VertexOutput) -> @location(0) vec4f {
 
-    var color = in.color * textureSample(texture, textureSampler, in.uv);
+    // the texture should be a texture with premultiplied alpha and is taken as linear
+    // in.color is in the color space of the render output (Rgb or Srgb)
+    var texel = textureSample(texture, textureSampler, in.uv);
+    var color =  in.color * texel;
 
-
-// textures are loaded into linear space already.
-
-//#ifdef GAMMA_CORRECTION
-//    let linearColor: vec3f = pow(color.rgb, vec3f(1/2.2));
-//    color = vec4f(linearColor, color.a);
-//#endif
     return color;
 };

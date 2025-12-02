@@ -18,6 +18,7 @@ package com.monstrous.gdx.webgpu.graphics.g3d.particles.batches;
 
 import com.badlogic.gdx.Application.ApplicationType;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.assets.AssetDescriptor;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
@@ -37,6 +38,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Pool;
 import com.monstrous.gdx.webgpu.graphics.WgMesh;
+import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g3d.particles.WgParticleShader;
 import com.monstrous.gdx.webgpu.graphics.g3d.particles.renderers.WgBillboardRenderer;
 import com.monstrous.gdx.webgpu.graphics.g3d.particles.renderers.WgPointSpriteRenderer;
@@ -196,8 +198,13 @@ public class WgPointSpriteParticleBatch extends BufferedParticleBatch<PointSprit
     @Override
     public void load(AssetManager manager, ResourceData resources) {
         SaveData data = resources.getSaveData("pointSpriteBatch");
-        if (data != null)
-            setTexture((Texture) manager.get(data.loadAsset()));
+        if (data != null) {
+            // don't load asynchronously, but directly so that we can indicate it should not be treated as a color texture
+            // otherwise the premultiplied alpha will be distorted and point sprites will have visible edge artifacts.
+            AssetDescriptor<Texture> ad =  data.loadAsset();
+            Texture tex = new WgTexture(ad.fileName, true, false);
+            setTexture(tex);
+        }
 
         // hack
         // replace PointSpriteRenderer in all controllers by WgPointSpriteRenderer

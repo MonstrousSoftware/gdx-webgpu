@@ -47,9 +47,12 @@ import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
  * Test of loading 3d particle effects from a file. Supports only BillBoardParticles for now. Blending and coloring
  * seems to be incorrect.
  */
+
 public class Particles3D extends GdxTest {
 
-    public final static String SMOKE = "fire-and-smoke-pointsprite.pfx";
+    public final static String FX1 = "fire-and-smoke-pointsprite.pfx";
+    //public final static String FX1 = "test.pfx";
+    public final static String FX2 = "explosion-ring.pfx";
 
     public PerspectiveCamera cam;
     public Color bgColor;
@@ -62,6 +65,7 @@ public class Particles3D extends GdxTest {
     public Model axesModel;
     public ModelInstance axesInstance;
     public float countDown;
+    public static float time = 0;
 
     public static class ParticleEffects implements Disposable {
 
@@ -80,7 +84,7 @@ public class Particles3D extends GdxTest {
             // create a point sprite batch and add it to the particle system
             WgPointSpriteParticleBatch pointSpriteBatch = new WgPointSpriteParticleBatch(1000,
                     new WgParticleShader.Config(WgParticleShader.ParticleType.Point),
-                    new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA, 1.0f), null);
+                    new BlendingAttribute(GL20.GL_ONE, GL20.GL_ONE_MINUS_SRC_ALPHA, 1.0f), null);
             pointSpriteBatch.setCamera(cam);
             particleSystem.add(pointSpriteBatch);
 
@@ -89,7 +93,7 @@ public class Particles3D extends GdxTest {
 
             WgBillboardParticleBatch billboardParticleBatch = new WgBillboardParticleBatch(
                     ParticleShader.AlignMode.Screen, false, 1000,
-                    new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA, 0.15f), null);
+                    new BlendingAttribute(GL20.GL_ONE, GL20.GL_ONE_MINUS_SRC_ALPHA, 1.0f), null);
             billboardParticleBatch.setCamera(cam);
             particleSystem.add(billboardParticleBatch);
 
@@ -98,12 +102,12 @@ public class Particles3D extends GdxTest {
             WgAssetManager assets = new WgAssetManager();
             ParticleEffectLoader.ParticleEffectLoadParameter loadParam = new ParticleEffectLoader.ParticleEffectLoadParameter(
                     particleSystem.getBatches());
-            assets.load("data/g3d/particle/" + SMOKE, ParticleEffect.class, loadParam);
-            assets.load("data/g3d/particle/explosion-ring.pfx", ParticleEffect.class, loadParam);
+            assets.load("data/g3d/particle/" + FX1, ParticleEffect.class, loadParam);
+            assets.load("data/g3d/particle/" + FX2, ParticleEffect.class, loadParam);
 
             assets.finishLoading();
-            smokeEffect = assets.get("data/g3d/particle/" + SMOKE);
-            ringEffect = assets.get("data/g3d/particle/explosion-ring.pfx");
+            smokeEffect = assets.get("data/g3d/particle/" + FX1);
+            ringEffect = assets.get("data/g3d/particle/" + FX2);
             // exhaustFumesEffect = assets.get("data/g3d/particle/green-scatter.pfx");
 
             activeEffects = new Array<>();
@@ -159,7 +163,7 @@ public class Particles3D extends GdxTest {
             deleteList.clear();
             for (ParticleEffect effect : activeEffects) {
                 if (effect.isComplete()) {
-                    // Gdx.app.debug("particle effect completed", "");
+                    //System.out.println("particle effect completed "+time);
                     particleSystem.remove(effect);
                     effect.dispose();
                     deleteList.add(effect);
@@ -213,17 +217,18 @@ public class Particles3D extends GdxTest {
 
         particleEffects = new ParticleEffects(cam);
         spawnFire(Vector3.Zero);
-        spawnExplosion(Vector3.Zero);
+        //spawnExplosion(Vector3.Zero);
     }
 
     @Override
     public void render() {
         float delta = Gdx.graphics.getDeltaTime();
+        time += delta;
         countDown -= delta;
         if (countDown < 0) {
             countDown = 3;
             spawnExplosion(Vector3.Zero);
-            spawnFire(Vector3.Zero);
+            //spawnFire(Vector3.Zero);
         }
         inputController.update();
 

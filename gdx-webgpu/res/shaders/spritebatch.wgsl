@@ -59,6 +59,8 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
 
 // textures are loaded into linear space already.
 
+// if the ouput surface is Srgb (i.e. WGPU) we can output linear values,
+// otherwise (i.e Dawn) we have to do inverse gamma correction here in the shader
 #ifdef GAMMA_CORRECTION
     let linearColor: vec3f = pow(color.rgb, vec3f(1/2.2));
     color = vec4f(linearColor, color.a);

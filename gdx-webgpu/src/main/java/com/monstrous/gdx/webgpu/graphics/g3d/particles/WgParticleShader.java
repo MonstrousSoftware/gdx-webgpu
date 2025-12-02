@@ -16,10 +16,8 @@
 
 package com.monstrous.gdx.webgpu.graphics.g3d.particles;
 
-// TODO
-// Perhaps using https://webgpufundamentals.org/webgpu/lessons/webgpu-points.html
 
-import com.badlogic.gdx.Application.ApplicationType;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.*;
@@ -27,22 +25,13 @@ import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.DepthTestAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.IntAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
-import com.badlogic.gdx.graphics.g3d.particles.ParticleShader;
-import com.badlogic.gdx.graphics.g3d.shaders.BaseShader;
 import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.VertexData;
-import com.badlogic.gdx.math.Matrix4;
-import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.github.xpenatan.webgpu.*;
-import com.monstrous.gdx.webgpu.graphics.Binder;
-import com.monstrous.gdx.webgpu.graphics.WgMesh;
-import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
-import com.monstrous.gdx.webgpu.graphics.WgTexture;
+import com.monstrous.gdx.webgpu.graphics.*;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgVertexBuffer;
-import com.monstrous.gdx.webgpu.graphics.g3d.shaders.MaterialsCache;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgShader;
 import com.monstrous.gdx.webgpu.graphics.utils.BlendMapper;
 import com.monstrous.gdx.webgpu.wrappers.*;
@@ -189,15 +178,17 @@ public class WgParticleShader extends WgShader {
             if (BlendingAttribute.is(t)) {
                 BlendingAttribute blend = (BlendingAttribute) attr;
                 pipelineSpec.enableBlending();
-                pipelineSpec.setBlendFactor(BlendMapper.blendFactor(blend.sourceFunction),
-                        BlendMapper.blendFactor(blend.destFunction));
+//               pipelineSpec.setBlendFactor(BlendMapper.blendFactor(blend.sourceFunction),
+//                        BlendMapper.blendFactor(blend.destFunction));
+                pipelineSpec.setBlendFactor(WGPUBlendFactor.One, WGPUBlendFactor.OneMinusSrcAlpha); // test
+
             }
         }
 
         // default blending values
         // pipelineSpec.enableBlending();
         // pipelineSpec.setBlendFactor(WGPUBlendFactor.SrcAlpha, WGPUBlendFactor.OneMinusSrcAlpha);
-        pipelineSpec.disableDepthTest();
+        pipelineSpec.enableDepthTest();
 
         pipeline = new WebGPUPipeline(pipelineLayout, pipelineSpec);
 
@@ -284,9 +275,14 @@ public class WgParticleShader extends WgShader {
     public void end() {
 
     }
+    private static final StringBuffer sb = new StringBuffer();
 
     public static String createPrefix(final Renderable renderable, final Config config) {
-        return "";
+        sb.setLength(0);
+        if (!ShaderPrefix.hasLinearOutput()) {
+            sb.append("#define GAMMA_CORRECTION\n");
+        }
+        return sb.toString();
     }
 
     @Override
