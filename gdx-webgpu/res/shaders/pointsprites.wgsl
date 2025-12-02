@@ -4,6 +4,7 @@
 
 struct Uniforms {
     projectionViewTransform: mat4x4f,
+    projectionTransform: mat4x4f
 };
 
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
@@ -40,10 +41,10 @@ fn vs_main(in: VertexInput, @builtin(vertex_index) ix: u32) -> VertexOutput {
   );
 
    let pos:vec2f = quadpoints[ix];
-   let scale:f32 = 0.5 * in.sizeAndRotation.x;
+   // adapt scale to aspect ratio
+   let scale:vec4f = uniforms.projectionTransform * vec4f(0.5 * in.sizeAndRotation.x, 0.5*in.sizeAndRotation.x, 0, 1);
    let clipPos:vec4f =  uniforms.projectionViewTransform * vec4f(in.position, 1.0);
-   let cornerPos:vec4f = vec4f(pos * scale, 0, 0);	// screen space offset per quad corner
-   // todo take into account aspect ratio to ensure quad appears as a square on the screen
+   let cornerPos:vec4f = vec4f(pos * scale.xy, 0, 0);	// screen space offset per quad corner
    out.position = clipPos + cornerPos;
 
 

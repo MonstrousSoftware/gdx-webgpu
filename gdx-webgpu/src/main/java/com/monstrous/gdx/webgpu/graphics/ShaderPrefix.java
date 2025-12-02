@@ -102,7 +102,7 @@ public class ShaderPrefix {
         return sb.toString();
     }
 
-    public static boolean hasLinearOutput(){
+    public static boolean hasLinearOutput() {
         WgGraphics gfx = (WgGraphics) Gdx.graphics;
         WebGPUContext webgpu = gfx.getContext();
         return webgpu.hasLinearOutput();

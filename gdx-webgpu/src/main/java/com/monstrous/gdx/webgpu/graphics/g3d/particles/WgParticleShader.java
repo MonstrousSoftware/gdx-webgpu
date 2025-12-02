@@ -16,8 +16,6 @@
 
 package com.monstrous.gdx.webgpu.graphics.g3d.particles;
 
-
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.*;
@@ -29,6 +27,7 @@ import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.VertexData;
+import com.badlogic.gdx.math.Vector2;
 import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.webgpu.graphics.*;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgVertexBuffer;
@@ -129,7 +128,6 @@ public class WgParticleShader extends WgShader {
 
     public WgParticleShader(final Renderable renderable, final Config config, final WgShaderProgram shaderProgram) {
         this.config = config;
-        // this.program = shaderProgram;
         this.renderable = renderable;
         materialMask = renderable.material.getMask() | optionalAttributes;
         vertexMask = renderable.meshPart.mesh.getVertexAttributes().getMask();
@@ -137,7 +135,7 @@ public class WgParticleShader extends WgShader {
         defaultTexture = createDefaultTexture();
 
         // Create uniform buffer for global (per-frame) uniforms, i.e. projection matrix
-        uniformBufferSize = 16 * Float.BYTES;
+        uniformBufferSize = (16 + 16) * Float.BYTES;
         uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Uniform));
 
         binder = new Binder();
@@ -151,6 +149,7 @@ public class WgParticleShader extends WgShader {
         binder.defineBinding("sampler", 0, 2);
         // define uniforms
         binder.defineUniform("projectionViewTransform", 0, 0, 0);
+        binder.defineUniform("projectionTransform", 0, 1, 16 * Float.BYTES);
 
         // set binding 0 to uniform buffer
         binder.setBuffer("uniforms", uniformBuffer, 0, uniformBufferSize);
@@ -178,16 +177,10 @@ public class WgParticleShader extends WgShader {
             if (BlendingAttribute.is(t)) {
                 BlendingAttribute blend = (BlendingAttribute) attr;
                 pipelineSpec.enableBlending();
-//               pipelineSpec.setBlendFactor(BlendMapper.blendFactor(blend.sourceFunction),
-//                        BlendMapper.blendFactor(blend.destFunction));
-                pipelineSpec.setBlendFactor(WGPUBlendFactor.One, WGPUBlendFactor.OneMinusSrcAlpha); // test
-
+                pipelineSpec.setBlendFactor(BlendMapper.blendFactor(blend.sourceFunction),
+                        BlendMapper.blendFactor(blend.destFunction));
             }
         }
-
-        // default blending values
-        // pipelineSpec.enableBlending();
-        // pipelineSpec.setBlendFactor(WGPUBlendFactor.SrcAlpha, WGPUBlendFactor.OneMinusSrcAlpha);
         pipelineSpec.enableDepthTest();
 
         pipeline = new WebGPUPipeline(pipelineLayout, pipelineSpec);
@@ -210,6 +203,7 @@ public class WgParticleShader extends WgShader {
 
         // set global uniforms, that do not depend on renderables
         binder.setUniform("projectionViewTransform", camera.combined);
+        binder.setUniform("projectionTransform", camera.projection);
         // now that we've set all the uniforms, write the buffer to the gpu
         uniformBuffer.flush();
 
@@ -275,6 +269,7 @@ public class WgParticleShader extends WgShader {
     public void end() {
 
     }
+
     private static final StringBuffer sb = new StringBuffer();
 
     public static String createPrefix(final Renderable renderable, final Config config) {

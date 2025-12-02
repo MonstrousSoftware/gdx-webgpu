@@ -63,14 +63,6 @@ public class WgPointSpriteParticleBatch extends BufferedParticleBatch<PointSprit
             CPU_REGION_OFFSET = (short) (CPU_ATTRIBUTES.findByUsage(Usage.TextureCoordinates).offset / 4),
             CPU_SIZE_AND_ROTATION_OFFSET = (short) (CPU_ATTRIBUTES.findByUsage(sizeAndRotationUsage).offset / 4);
 
-    // private static void enablePointSprites () {
-    // Gdx.gl.glEnable(GL20.GL_VERTEX_PROGRAM_POINT_SIZE);
-    // if (Gdx.app.getType() == ApplicationType.Desktop) {
-    // Gdx.gl.glEnable(0x8861); // GL_POINT_OES
-    // }
-    // pointSpritesEnabled = true;
-    // }
-
     private float[] vertices;
     Renderable renderable;
     protected BlendingAttribute blendingAttribute;
@@ -91,8 +83,6 @@ public class WgPointSpriteParticleBatch extends BufferedParticleBatch<PointSprit
     public WgPointSpriteParticleBatch(int capacity, WgParticleShader.Config shaderConfig,
             BlendingAttribute blendingAttribute, DepthTestAttribute depthTestAttribute) {
         super(PointSpriteControllerRenderData[]::new);
-
-        // if (!pointSpritesEnabled) enablePointSprites();
 
         this.blendingAttribute = blendingAttribute;
         this.depthTestAttribute = depthTestAttribute;
@@ -128,6 +118,8 @@ public class WgPointSpriteParticleBatch extends BufferedParticleBatch<PointSprit
     public void setTexture(Texture texture) {
         TextureAttribute attribute = (TextureAttribute) renderable.material.get(TextureAttribute.Diffuse);
         attribute.textureDescription.texture = texture;
+        attribute.textureDescription.magFilter = Texture.TextureFilter.Linear;
+        attribute.textureDescription.minFilter = Texture.TextureFilter.MipMap;
     }
 
     public Texture getTexture() {
@@ -199,9 +191,10 @@ public class WgPointSpriteParticleBatch extends BufferedParticleBatch<PointSprit
     public void load(AssetManager manager, ResourceData resources) {
         SaveData data = resources.getSaveData("pointSpriteBatch");
         if (data != null) {
-            // don't load asynchronously, but directly so that we can indicate it should not be treated as a color texture
+            // don't load asynchronously, but directly so that we can indicate it should not be treated as a color
+            // texture
             // otherwise the premultiplied alpha will be distorted and point sprites will have visible edge artifacts.
-            AssetDescriptor<Texture> ad =  data.loadAsset();
+            AssetDescriptor<Texture> ad = data.loadAsset();
             Texture tex = new WgTexture(ad.fileName, true, false);
             setTexture(tex);
         }

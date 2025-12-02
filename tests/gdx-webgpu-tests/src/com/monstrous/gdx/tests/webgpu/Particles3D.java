@@ -51,7 +51,7 @@ import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 public class Particles3D extends GdxTest {
 
     public final static String FX1 = "fire-and-smoke-pointsprite.pfx";
-    //public final static String FX1 = "test.pfx";
+    // public final static String FX1 = "test.pfx";
     public final static String FX2 = "explosion-ring.pfx";
 
     public PerspectiveCamera cam;
@@ -163,7 +163,7 @@ public class Particles3D extends GdxTest {
             deleteList.clear();
             for (ParticleEffect effect : activeEffects) {
                 if (effect.isComplete()) {
-                    //System.out.println("particle effect completed "+time);
+                    // System.out.println("particle effect completed "+time);
                     particleSystem.remove(effect);
                     effect.dispose();
                     deleteList.add(effect);
@@ -217,19 +217,23 @@ public class Particles3D extends GdxTest {
 
         particleEffects = new ParticleEffects(cam);
         spawnFire(Vector3.Zero);
-        //spawnExplosion(Vector3.Zero);
+        // spawnExplosion(Vector3.Zero);
     }
 
     @Override
     public void render() {
         float delta = Gdx.graphics.getDeltaTime();
+        if (delta > 0.1f)
+            System.out.println(delta);
+
         time += delta;
         countDown -= delta;
         if (countDown < 0) {
             countDown = 3;
             spawnExplosion(Vector3.Zero);
-            //spawnFire(Vector3.Zero);
+            // spawnFire(Vector3.Zero);
         }
+
         inputController.update();
 
         particleEffects.update(delta);

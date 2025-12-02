@@ -709,13 +709,14 @@ public class WgBillboardParticleBatch extends BufferedParticleBatch<BillboardCon
     public void load(AssetManager manager, ResourceData resources) {
         SaveData data = resources.getSaveData("billboardBatch");
         if (data != null) {
-            // don't load asynchronously, but directly so that we can indicate it should not be treated as a color texture
+            // don't load asynchronously, but directly so that we can indicate it should not be treated as a color
+            // texture
             // otherwise the premultiplied alpha will be distorted and point sprites will have visible edge artifacts.
-            AssetDescriptor<Texture> ad =  data.loadAsset();
+            AssetDescriptor<Texture> ad = data.loadAsset();
             Texture tex = new WgTexture(ad.fileName, true, false);
             setTexture(tex);
 
-            //setTexture((Texture) manager.get(data.loadAsset()));
+            // setTexture((Texture) manager.get(data.loadAsset()));
             BillboardParticleBatch.Config cfg = (BillboardParticleBatch.Config) data.load("cfg");
             // members are package private :-(
             // setUseGpu(cfg.useGPU);
