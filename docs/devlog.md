@@ -389,11 +389,16 @@ The particle colours are slightly different between Dawn and WGPU because Dawn h
 gamma correction.  The particle tint is multiplied by the particle texture and here it makes a difference if you are working in linear color space
 or not.
 
-Particle rotation is not supported nor using texture regions (i.e. an atlas).
+
 
 Issue with resizing: the frame stops rendering until the resize is complete, then you get multiple resize events and a render frame with a very large
 delta time.  In libgdx the rendering continues during resizing.
 
+3/12/2025:
+Particle rotation is now also supported for point sprites particles (this rotates the texture around the billboard axis, see the snow flake demo).
+Also using texture regions (atlas) is supported. Note that if you have multiple particle textures in an atlas texture you need
+plenty of empty space between them if you also use texture rotation otherwise you will see fragments of the other images.
 
-
+Also done: modelInstance particles. This required very little change.
+Note that GLTF or GLB files are also supported, but you will need to edit the effects file by hand, because the Flame editor only supports G3DB files.
 

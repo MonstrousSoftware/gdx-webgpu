@@ -31,6 +31,7 @@ import com.badlogic.gdx.graphics.g3d.particles.ParticleEffect;
 import com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader;
 import com.badlogic.gdx.graphics.g3d.particles.ParticleShader;
 import com.badlogic.gdx.graphics.g3d.particles.ParticleSystem;
+import com.badlogic.gdx.graphics.g3d.particles.batches.ModelInstanceParticleBatch;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Matrix4;
@@ -47,12 +48,13 @@ import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 
 /**
- * Test of loading 3d particle effects from a file. Demonstrates texture rotation.
+ * Test of loading 3d particle effects from a file. Demonstrates model instance particles. Note: the Flame editor
+ * doesn't support glb/gltf models, but you can edit the pfx file to replace the model file name from a g3db file.
  */
 
-public class Particles3DSnow extends GdxTest {
+public class Particles3DmodelInstance extends GdxTest {
 
-    public final static String FX1 = "data/g3d/particle/snow.pfx";
+    public final static String FX1 = "data/g3d/particle/ducks.pfx";
 
     public PerspectiveCamera cam;
     public WgModelBatch modelBatch;
@@ -61,6 +63,7 @@ public class Particles3DSnow extends GdxTest {
     private ParticleSystem particleSystem;
     private Color bgColor;
     private CameraInputController inputController;
+    private Environment environment;
 
     @Override
     public void create() {
@@ -68,7 +71,7 @@ public class Particles3DSnow extends GdxTest {
         cam.position.set(10f, 10f, 10f);
         cam.lookAt(0, 0, 0);
         cam.near = 0.1f;
-        cam.far = 150f;
+        cam.far = 1500f;
         cam.update();
 
         Gdx.input.setInputProcessor(new InputMultiplexer(this, inputController = new CameraInputController(cam)));
@@ -76,25 +79,16 @@ public class Particles3DSnow extends GdxTest {
         modelBatch = new WgModelBatch();
         bgColor = new Color(0x201D80FF);
 
-        // cam = new OrthographicCamera(18.0f, 18.0f);
         assets = new WgAssetManager();
 
         // create a particle system
         particleSystem = new ParticleSystem();
 
-        // WgPointSpriteParticleBatch pointSpriteBatch = new WgPointSpriteParticleBatch();
-
-        // create a point sprite batch and add it to the particle system
-        WgPointSpriteParticleBatch pointSpriteBatch = new WgPointSpriteParticleBatch(1000,
-                new WgParticleShader.Config(WgParticleShader.ParticleType.Point),
-                new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA, 1.0f), null);
-        pointSpriteBatch.setCamera(cam);
-        particleSystem.add(pointSpriteBatch);
+        ModelInstanceParticleBatch instanceParticleBatch = new ModelInstanceParticleBatch();
+        particleSystem.add(instanceParticleBatch);
 
         ParticleEffectLoader.ParticleEffectLoadParameter loadParam = new ParticleEffectLoader.ParticleEffectLoadParameter(
                 particleSystem.getBatches());
-        // ParticleEffectLoader loader = new ParticleEffectLoader(new InternalFileHandleResolver());
-        // assets.setLoader(ParticleEffect.class, loader);
 
         assets.load(FX1, ParticleEffect.class, loadParam);
         // halt the main thread until assets are loaded.
@@ -104,6 +98,10 @@ public class Particles3DSnow extends GdxTest {
 
         currentEffects.init();
         particleSystem.add(currentEffects);
+
+        environment = new Environment();
+        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, .4f, .4f, .4f, 1f));
+        environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
 
     }
 
@@ -118,8 +116,15 @@ public class Particles3DSnow extends GdxTest {
         particleSystem.begin();
         particleSystem.draw();
         particleSystem.end();
-        modelBatch.render(particleSystem);
+        modelBatch.render(particleSystem, environment);
         modelBatch.end();
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        cam.viewportWidth = width;
+        cam.viewportHeight = height;
+        cam.update();
     }
 
     @Override
