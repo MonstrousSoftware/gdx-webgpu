@@ -13,16 +13,20 @@ struct Uniforms {
 
 struct VertexInput {
     @location(0) position: vec3f,
-    @location(1) sizeAndRotation: vec3f,	// rotation ignored
+    @location(1) sizeAndRotation: vec3f,	    // scale, sin, cos
     @location(2) color: vec4f,
-    @location(3) region: vec4f,			// ignored
+    @location(3) region: vec4f,			        // u1, v1, u2, v2
 
 };
 
 struct VertexOutput {
     @builtin(position) position: vec4f,
     @location(2) color: vec4f,
-    @location(3) uv: vec2f,
+    @location(3) corner: vec2f,
+    @location(4) rotation: vec4f,
+    @location(5) regionCenter: vec2f,
+    @location(6) regionPos: vec2f,
+    @location(7) regionSize: vec2f,
 };
 
 // to be called as draw(6, numVertices)
@@ -47,6 +51,11 @@ fn vs_main(in: VertexInput, @builtin(vertex_index) ix: u32) -> VertexOutput {
    let cornerPos:vec4f = vec4f(pos * scale.xy, 0, 0);	// screen space offset per quad corner
    out.position = clipPos + cornerPos;
 
+   out.rotation = vec4f(in.sizeAndRotation.y, in.sizeAndRotation.z, -in.sizeAndRotation.z, in.sizeAndRotation.y);
+   out.regionPos = in.region.xy;
+   out.regionSize = in.region.zw - in.region.xy;
+   out.regionCenter = 0.5 * (in.region.xy + in.region.zw);
+
 
 #ifdef GAMMA_CORRECTION
    out.color = in.color;
@@ -55,16 +64,20 @@ fn vs_main(in: VertexInput, @builtin(vertex_index) ix: u32) -> VertexOutput {
     // gamma tweaked to give reasonable output
    out.color = vec4f(pow(in.color.rgb, vec3f(1.6)),in.color.a);
 #endif
-   out.uv = pos * 0.5 + 0.5;
+   out.corner = pos * 0.5 + 0.5;
    return out;
 }
 
 @fragment
 fn fs_main(in : VertexOutput) -> @location(0) vec4f {
 
+    let rotMat: mat2x2f = mat2x2f(in.rotation.x, in.rotation.y, in.rotation.z, in.rotation.w);
+    let uv: vec2f =  in.regionPos + in.corner * in.regionSize -in.regionCenter;
+    let texCoord: vec2f = rotMat * uv + in.regionCenter;
+
     // the texture should be a texture with premultiplied alpha and is taken as linear
     // in.color is in the color space of the render output (Rgb or Srgb)
-    var texel = textureSample(texture, textureSampler, in.uv);
+    let texel = textureSample(texture, textureSampler, texCoord);
     var color =  in.color * texel;
 
     return color;

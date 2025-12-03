@@ -50,8 +50,9 @@ import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 
 public class Particles3D extends GdxTest {
 
-    public final static String FX1 = "fire-and-smoke-pointsprite.pfx";
+    // public final static String FX1 = "fire-and-smoke-pointsprite.pfx";
     // public final static String FX1 = "test.pfx";
+    public final static String FX1 = "snow.pfx";
     public final static String FX2 = "explosion-ring.pfx";
 
     public PerspectiveCamera cam;
@@ -84,7 +85,7 @@ public class Particles3D extends GdxTest {
             // create a point sprite batch and add it to the particle system
             WgPointSpriteParticleBatch pointSpriteBatch = new WgPointSpriteParticleBatch(1000,
                     new WgParticleShader.Config(WgParticleShader.ParticleType.Point),
-                    new BlendingAttribute(GL20.GL_ONE, GL20.GL_ONE_MINUS_SRC_ALPHA, 1.0f), null);
+                    new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA, 1.0f), null);
             pointSpriteBatch.setCamera(cam);
             particleSystem.add(pointSpriteBatch);
 
@@ -103,11 +104,11 @@ public class Particles3D extends GdxTest {
             ParticleEffectLoader.ParticleEffectLoadParameter loadParam = new ParticleEffectLoader.ParticleEffectLoadParameter(
                     particleSystem.getBatches());
             assets.load("data/g3d/particle/" + FX1, ParticleEffect.class, loadParam);
-            assets.load("data/g3d/particle/" + FX2, ParticleEffect.class, loadParam);
+            // assets.load("data/g3d/particle/" + FX2, ParticleEffect.class, loadParam);
 
             assets.finishLoading();
             smokeEffect = assets.get("data/g3d/particle/" + FX1);
-            ringEffect = assets.get("data/g3d/particle/" + FX2);
+            // ringEffect = assets.get("data/g3d/particle/" + FX2);
             // exhaustFumesEffect = assets.get("data/g3d/particle/green-scatter.pfx");
 
             activeEffects = new Array<>();
@@ -230,7 +231,7 @@ public class Particles3D extends GdxTest {
         countDown -= delta;
         if (countDown < 0) {
             countDown = 3;
-            spawnExplosion(Vector3.Zero);
+            // spawnExplosion(Vector3.Zero);
             // spawnFire(Vector3.Zero);
         }
 

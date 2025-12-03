@@ -118,8 +118,8 @@ public class WgPointSpriteParticleBatch extends BufferedParticleBatch<PointSprit
     public void setTexture(Texture texture) {
         TextureAttribute attribute = (TextureAttribute) renderable.material.get(TextureAttribute.Diffuse);
         attribute.textureDescription.texture = texture;
-        attribute.textureDescription.magFilter = Texture.TextureFilter.Linear;
-        attribute.textureDescription.minFilter = Texture.TextureFilter.MipMap;
+        attribute.textureDescription.magFilter = texture.getMagFilter();
+        attribute.textureDescription.minFilter = texture.getMinFilter();
     }
 
     public Texture getTexture() {

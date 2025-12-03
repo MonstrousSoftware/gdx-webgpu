@@ -208,6 +208,7 @@ public class WgParticleShader extends WgShader {
         uniformBuffer.flush();
 
         // bind texture using the initial renderable
+        // note that the texture is set per Particle Batch, not per Particle Effect
         bindMaterial(renderable.material);
 
         // bind group 0 (frame) once per frame
