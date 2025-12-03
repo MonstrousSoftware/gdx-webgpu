@@ -19,7 +19,10 @@ package com.monstrous.gdx.tests.webgpu;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.graphics.g3d.*;
+import com.badlogic.gdx.graphics.g3d.Environment;
+import com.badlogic.gdx.graphics.g3d.Material;
+import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
@@ -44,13 +47,12 @@ import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 
 /**
- * Test of loading 3d particle effects from a file.
+ * Test of loading 3d particle effects from a file. Demonstrates texture rotation.
  */
 
-public class Particles3D extends GdxTest {
+public class Particles3DSnow extends GdxTest {
 
-    public final static String FX1 = "fire-and-smoke-pointsprite.pfx";
-    public final static String FX2 = "explosion-ring.pfx";
+    public final static String FX1 = "snow.pfx";
 
     public PerspectiveCamera cam;
     public Color bgColor;
@@ -60,9 +62,6 @@ public class Particles3D extends GdxTest {
     public ModelInstance instance;
     public Environment environment;
     public ParticleEffects particleEffects;
-    public Model axesModel;
-    public ModelInstance axesInstance;
-    public float countDown;
     public static float time = 0;
 
     public static class ParticleEffects implements Disposable {
@@ -72,8 +71,6 @@ public class Particles3D extends GdxTest {
         private final Array<ParticleEffect> deleteList;
 
         private final ParticleEffect smokeEffect;
-        private ParticleEffect ringEffect; // requires point sprites
-        private ParticleEffect exhaustFumesEffect;
 
         public ParticleEffects(Camera cam) {
             // create a particle system
@@ -82,7 +79,7 @@ public class Particles3D extends GdxTest {
             // create a point sprite batch and add it to the particle system
             WgPointSpriteParticleBatch pointSpriteBatch = new WgPointSpriteParticleBatch(1000,
                     new WgParticleShader.Config(WgParticleShader.ParticleType.Point),
-                    new BlendingAttribute(GL20.GL_ONE, GL20.GL_ONE_MINUS_SRC_ALPHA, 1.0f), null);
+                    new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA, 1.0f), null);
             pointSpriteBatch.setCamera(cam);
             particleSystem.add(pointSpriteBatch);
 
@@ -100,22 +97,13 @@ public class Particles3D extends GdxTest {
             WgAssetManager assets = new WgAssetManager();
             ParticleEffectLoader.ParticleEffectLoadParameter loadParam = new ParticleEffectLoader.ParticleEffectLoadParameter(
                     particleSystem.getBatches());
-            assets.load("data/g3d/particle/" + FX2, ParticleEffect.class, loadParam);
+
             assets.load("data/g3d/particle/" + FX1, ParticleEffect.class, loadParam);
 
             assets.finishLoading();
             smokeEffect = assets.get("data/g3d/particle/" + FX1);
-            ringEffect = assets.get("data/g3d/particle/" + FX2);
-            // exhaustFumesEffect = assets.get("data/g3d/particle/green-scatter.pfx");
-
             activeEffects = new Array<>();
             deleteList = new Array<>();
-        }
-
-        // puff of smoke effect where character lands
-        public void addExhaustFumes(Matrix4 transform) {
-            // we cannot use the originalEffect, we must make a copy each time we create new particle effect
-            addEffect(exhaustFumesEffect.copy(), transform);
         }
 
         // add effect
@@ -135,18 +123,6 @@ public class Particles3D extends GdxTest {
 
             // we cannot use the originalEffect, we must make a copy each time we create new particle effect
             ParticleEffect effect = smokeEffect.copy();
-            effect.translate(position);
-            effect.init();
-            effect.start(); // optional: particle will begin playing immediately
-            particleSystem.add(effect);
-            activeEffects.add(effect);
-        }
-
-        public void addExplosion(Vector3 position) {
-            // add loaded effect to particle system
-
-            // we cannot use the originalEffect, we must make a copy each time we create new particle effect
-            ParticleEffect effect = ringEffect.copy();
             effect.translate(position);
             effect.init();
             effect.start(); // optional: particle will begin playing immediately
@@ -189,7 +165,7 @@ public class Particles3D extends GdxTest {
     @Override
     public void create() {
         modelBatch = new WgModelBatch();
-        bgColor = new Color(0x878787FF);
+        bgColor = new Color(0x201D80FF);
 
         environment = new Environment();
         environment.set(new ColorAttribute(ColorAttribute.AmbientLight, .4f, .4f, .4f, 1f));
@@ -209,13 +185,10 @@ public class Particles3D extends GdxTest {
                 | VertexAttributes.Usage.TextureCoordinates);
         instance = new ModelInstance(model);
 
-        createAxes();
-
         Gdx.input.setInputProcessor(new InputMultiplexer(this, inputController = new CameraInputController(cam)));
 
         particleEffects = new ParticleEffects(cam);
         spawnFire(Vector3.Zero);
-        spawnExplosion(Vector3.Zero);
     }
 
     @Override
@@ -224,14 +197,6 @@ public class Particles3D extends GdxTest {
         if (delta > 0.1f)
             System.out.println(delta);
 
-        time += delta;
-        countDown -= delta;
-        if (countDown < 0) {
-            countDown = 3;
-            spawnExplosion(Vector3.Zero);
-            // spawnFire(Vector3.Zero);
-        }
-
         inputController.update();
 
         particleEffects.update(delta);
@@ -239,7 +204,6 @@ public class Particles3D extends GdxTest {
         WgScreenUtils.clear(bgColor, true);
 
         modelBatch.begin(cam);
-        modelBatch.render(axesInstance);
         particleEffects.render(modelBatch);
         modelBatch.end();
     }
@@ -260,42 +224,6 @@ public class Particles3D extends GdxTest {
 
     public void spawnFire(Vector3 position) {
         particleEffects.addFire(position);
-    }
-
-    public void spawnExplosion(Vector3 position) {
-
-        particleEffects.addExplosion(position);
-    }
-
-    public void spawnSmokeTrail(Matrix4 transform) {
-
-        particleEffects.addExhaustFumes(transform);
-    }
-
-    final float GRID_MIN = -5f;
-    final float GRID_MAX = 5f;
-    final float GRID_STEP = 1f;
-
-    private void createAxes() {
-        WgModelBuilder modelBuilder = new WgModelBuilder();
-        modelBuilder.begin();
-        MeshPartBuilder builder = modelBuilder.part("grid", GL20.GL_LINES,
-                VertexAttributes.Usage.Position | VertexAttributes.Usage.ColorUnpacked, new Material());
-        builder.setColor(Color.LIGHT_GRAY);
-        for (float t = GRID_MIN; t <= GRID_MAX; t += GRID_STEP) {
-            builder.line(t, 0, GRID_MIN, t, 0, GRID_MAX);
-            builder.line(GRID_MIN, 0, t, GRID_MAX, 0, t);
-        }
-        builder = modelBuilder.part("axes", GL20.GL_LINES,
-                VertexAttributes.Usage.Position | VertexAttributes.Usage.ColorUnpacked, new Material());
-        builder.setColor(Color.RED);
-        builder.line(0, 0, 0, 100, 0, 0);
-        builder.setColor(Color.GREEN);
-        builder.line(0, 0, 0, 0, 100, 0);
-        builder.setColor(Color.BLUE);
-        builder.line(0, 0, 0, 0, 0, 100);
-        axesModel = modelBuilder.end();
-        axesInstance = new ModelInstance(axesModel);
     }
 
 }
