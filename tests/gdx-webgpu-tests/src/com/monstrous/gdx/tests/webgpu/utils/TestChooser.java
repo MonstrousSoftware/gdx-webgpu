@@ -1,5 +1,6 @@
-package com.monstrous.gdx.tests.webgpu;
+package com.monstrous.gdx.tests.webgpu.utils;
 
+import com.badlogic.gdx.Application;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
@@ -17,7 +18,9 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.monstrous.gdx.tests.webgpu.WebGPUTests;
 import com.monstrous.gdx.webgpu.scene2d.WgSkin;
 import com.monstrous.gdx.webgpu.scene2d.WgStage;
 
@@ -28,8 +31,31 @@ public class TestChooser extends ApplicationAdapter {
     private ApplicationListener test;
     boolean dispose = false;
 
+    // Tunable UI scale factors
+    private float uiScale = 1f;
+    private float buttonHeight = 32f;
+    private float buttonPad = 4f;
+    private float fontScale = 1f;
+
+    // Mobile detection so we can add a touch-close hotspot only on mobile.
+    private boolean mobile = false;
+
     public void create() {
         final Preferences prefs = Gdx.app.getPreferences("webgpu-tests");
+
+        mobile = Gdx.app.getType() == Application.ApplicationType.Android
+                || Gdx.app.getType() == Application.ApplicationType.iOS;
+        if (mobile) {
+            uiScale = 1.8f;
+            buttonHeight = 54f;
+            buttonPad = 8f;
+            fontScale = 1.3f;
+        } else {
+            uiScale = 1.0f;
+            buttonHeight = 32f;
+            buttonPad = 4f;
+            fontScale = 1.0f;
+        }
 
         stage = new WgStage(new ScreenViewport());
 
@@ -43,6 +69,21 @@ public class TestChooser extends ApplicationAdapter {
                     }
                 }
                 return false;
+            }
+
+            @Override
+            public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+                if (mobile && test != null) {
+                    int hotspotSize = (int)(80 * uiScale); // ~80dp scaled
+                    boolean inHotspot = (Gdx.graphics.getWidth() - screenX) < hotspotSize
+                            && (Gdx.graphics.getHeight() - screenY) < hotspotSize;
+                    if (inHotspot) {
+                        Gdx.app.log("TestChooser", "Top-left hotspot tapped, closing current test.");
+                        dispose = true;
+                        return true;
+                    }
+                }
+                return super.touchDown(screenX, screenY, pointer, button);
             }
         };
 
@@ -61,13 +102,23 @@ public class TestChooser extends ApplicationAdapter {
         scroll.setFadeScrollBars(false);
         stage.setScrollFocus(scroll);
 
-        int tableSpace = 4;
-        table.pad(10).defaults().expandX().space(tableSpace);
+        int tableSpace = (int)(buttonPad * uiScale);
+        table.pad(10 * uiScale).defaults()
+                .expandX()
+                .space(tableSpace)
+                .height(buttonHeight * uiScale);
+
         for (final String testName : WebGPUTests.getNames()) {
             final TextButton testButton = new TextButton(testName, skin);
             testButton.setName(testName);
+
+            // Center text and apply larger font scale on mobile for readability.
+            testButton.getLabel().setAlignment(Align.center);
+            testButton.getLabel().setFontScale(fontScale);
+
             table.add(testButton).fillX();
             table.row();
+
             testButton.addListener(new ChangeListener() {
                 @Override
                 public void changed(ChangeEvent event, Actor actor) {
@@ -97,7 +148,7 @@ public class TestChooser extends ApplicationAdapter {
             lastClickedTestButton.setColor(Color.CYAN);
             scroll.layout();
             float scrollY = lastClickedTestButton.getY() + scroll.getScrollHeight() / 2
-                    + lastClickedTestButton.getHeight() / 2 + tableSpace * 2 + 20;
+                    + lastClickedTestButton.getHeight() / 2 + tableSpace * 2 + 20 * uiScale;
             scroll.scrollTo(0, scrollY, 0, 0, false, false);
             stage.act(1f);
             stage.act(1f);
@@ -115,7 +166,13 @@ public class TestChooser extends ApplicationAdapter {
                 test.dispose();
                 test = null;
                 stage.getViewport().update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
-                Gdx.graphics.setVSync(true);
+
+                // On desktop/web we may want to enforce vsync after some tests; on mobile this
+                // can cause a swapchain reconfigure at an unsafe time, so skip it there.
+                if (!mobile) {
+                    Gdx.graphics.setVSync(true);
+                }
+
                 InputWrapper wrapper = ((InputWrapper) Gdx.input);
                 wrapper.multiplexer.addProcessor(stage);
                 wrapper.multiplexer.removeProcessor(wrapper.lastProcessor);

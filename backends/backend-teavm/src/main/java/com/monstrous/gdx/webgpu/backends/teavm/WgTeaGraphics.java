@@ -10,6 +10,7 @@ import com.github.xpenatan.gdx.backends.teavm.dom.impl.TeaWindow;
 import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.webgpu.application.WebGPUApplication;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WebGPUInitialization;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.utils.WgGL20;
 import org.teavm.jso.dom.html.HTMLCanvasElement;
@@ -66,6 +67,8 @@ public class WgTeaGraphics extends TeaGraphics implements WgGraphics {
         System.out.println("Creating context");
         this.context = new WebGPUApplication(configg, instance, surface);
 
+        WebGPUInitialization.setup(instance, WGPUPowerPreference.HighPerformance, WGPUBackendType.WebGPU, context);
+
         // listen to fullscreen changes
         addFullscreenChangeListener(canvas, new FullscreenChanged() {
             @Override
@@ -95,7 +98,6 @@ public class WgTeaGraphics extends TeaGraphics implements WgGraphics {
             if (!webGPUReady && context.isReady()) {
                 TeaApplication teaApplication = WgTeaApplication.get();
                 teaApplication.subtractInitQueue();
-                ;
                 webGPUReady = true;
             }
         }
