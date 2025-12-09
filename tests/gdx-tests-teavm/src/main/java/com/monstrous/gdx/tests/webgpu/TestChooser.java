@@ -12,10 +12,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.input.NativeInputConfiguration;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.monstrous.gdx.webgpu.scene2d.WgSkin;
@@ -63,10 +60,12 @@ public class TestChooser extends ApplicationAdapter {
 
         int tableSpace = 4;
         table.pad(10).defaults().expandX().space(tableSpace);
+        table.add(new Label("Start a test (Escape to close a test)", skin));
+        table.row();
         for (final String testName : WebGPUTests.getNames()) {
             final TextButton testButton = new TextButton(testName, skin);
             testButton.setName(testName);
-            table.add(testButton).fillX();
+            table.add(testButton).width(300);
             table.row();
             testButton.addListener(new ChangeListener() {
                 @Override

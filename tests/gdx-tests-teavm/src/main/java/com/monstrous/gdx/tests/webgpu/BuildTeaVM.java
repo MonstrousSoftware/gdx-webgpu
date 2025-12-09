@@ -2,6 +2,7 @@ package com.monstrous.gdx.tests.webgpu;
 
 import com.github.xpenatan.gdx.backends.teavm.config.AssetFileHandle;
 import com.github.xpenatan.gdx.backends.teavm.config.TeaBuildConfiguration;
+import com.github.xpenatan.gdx.backends.teavm.config.TeaBuildReflectionListener;
 import com.github.xpenatan.gdx.backends.teavm.config.TeaBuilder;
 import com.github.xpenatan.gdx.backends.teavm.config.plugins.TeaReflectionSupplier;
 import java.io.File;
@@ -23,6 +24,18 @@ public class BuildTeaVM {
         teaBuildConfiguration.shouldGenerateAssetFile = true;
         teaBuildConfiguration.webappPath = new File("build/dist").getCanonicalPath();
         teaBuildConfiguration.targetType = TeaVMTargetType.JAVASCRIPT;
+
+        teaBuildConfiguration.reflectionListener = new TeaBuildReflectionListener() {
+            @Override
+            public boolean shouldEnableReflection(String fullClassName) {
+                // needed for 3d particles
+                if(fullClassName.contains("com.badlogic.gdx.graphics.g3d.particles")) {
+                    return true;
+                }
+                return false;
+            }
+        };
+
         TeaBuilder.config(teaBuildConfiguration);
 
         TeaVMTool tool = new TeaVMTool();

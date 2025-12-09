@@ -24,7 +24,7 @@ public class Launcher {
         // new WgDesktopApplication(new Scene2dTestScrollPane(), config);
         // new WgDesktopApplication(new MaterialsTest(), config);
         // new WgDesktopApplication(new GLTFSkinningMultiple(), config);
-        new WgDesktopApplication(new Particles3DmodelInstance(), config);
+        new WgDesktopApplication(new Particles3DSnow(), config);
 
     }
 
