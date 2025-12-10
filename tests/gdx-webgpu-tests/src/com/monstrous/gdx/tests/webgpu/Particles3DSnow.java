@@ -93,8 +93,8 @@ public class Particles3DSnow extends GdxTest {
 
         ParticleEffectLoader.ParticleEffectLoadParameter loadParam = new ParticleEffectLoader.ParticleEffectLoadParameter(
                 particleSystem.getBatches());
-         ParticleEffectLoader loader = new ParticleEffectLoader(new InternalFileHandleResolver());
-         assets.setLoader(ParticleEffect.class, loader);
+        ParticleEffectLoader loader = new ParticleEffectLoader(new InternalFileHandleResolver());
+        assets.setLoader(ParticleEffect.class, loader);
 
         assets.load(FX1, ParticleEffect.class, loadParam);
     }
@@ -103,7 +103,7 @@ public class Particles3DSnow extends GdxTest {
     public void render() {
         inputController.update();
 
-        if(assets.update(5)) {
+        if (assets.update(5)) {
 
             currentEffects = assets.get(FX1, ParticleEffect.class).copy();
             currentEffects.init();

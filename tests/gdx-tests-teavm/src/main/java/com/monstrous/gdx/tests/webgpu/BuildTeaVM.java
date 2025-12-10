@@ -29,7 +29,7 @@ public class BuildTeaVM {
             @Override
             public boolean shouldEnableReflection(String fullClassName) {
                 // needed for 3d particles
-                if(fullClassName.contains("com.badlogic.gdx.graphics.g3d.particles")) {
+                if (fullClassName.contains("com.badlogic.gdx.graphics.g3d.particles")) {
                     return true;
                 }
                 return false;
