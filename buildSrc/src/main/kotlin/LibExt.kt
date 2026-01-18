@@ -3,12 +3,12 @@ import java.util.Properties
 
 object LibExt {
     var overrideGroup: String? = null
-    val groupId get() = overrideGroup ?: "io.github.monstroussoftware.gdx-webgpu"
+    val groupId get() = overrideGroup?.takeIf { it.isNotBlank() } ?: "io.github.monstroussoftware.gdx-webgpu"
     const val libName = "gdx-webgpu"
     var overrideVersion: String? = null
     var libVersion: String = ""
         get() {
-            return overrideVersion ?: getVersion()
+            return overrideVersion?.takeIf { it.isNotBlank() } ?: getVersion()
         }
     var isRelease = true
 }
