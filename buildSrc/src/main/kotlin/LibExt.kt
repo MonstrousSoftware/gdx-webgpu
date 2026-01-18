@@ -8,7 +8,7 @@ object LibExt {
     var overrideVersion: String? = null
     var libVersion: String = ""
         get() {
-            return overrideVersion?.takeIf { it.isNotBlank() } ?: getVersion()
+            return overrideVersion?.takeIf { it.isNotBlank() && it != "unspecified" } ?: getVersion()
         }
     var isRelease = true
 }
@@ -24,7 +24,11 @@ private fun getVersion(): String {
         val properties = Properties()
         properties.load(file.inputStream())
         val version = properties.getProperty("gdxWebGPU")
+
         if(LibExt.isRelease) {
+            if (version == null || version == "unspecified") {
+                throw RuntimeException("Version not set properly in gradle.properties. Set gdxWebGPU to a valid version.")
+            }
             libVersion = version
         }
     }
