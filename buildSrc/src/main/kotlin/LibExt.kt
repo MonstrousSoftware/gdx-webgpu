@@ -2,11 +2,13 @@ import java.io.File
 import java.util.Properties
 
 object LibExt {
-    val groupId = System.getProperty("group") ?: "io.github.monstroussoftware.gdx-webgpu"
+    var overrideGroup: String? = null
+    val groupId get() = overrideGroup ?: "io.github.monstroussoftware.gdx-webgpu"
     const val libName = "gdx-webgpu"
+    var overrideVersion: String? = null
     var libVersion: String = ""
         get() {
-            return getVersion()
+            return overrideVersion ?: getVersion()
         }
     var isRelease = true
 }
