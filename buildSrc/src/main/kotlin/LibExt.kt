@@ -2,7 +2,7 @@ import java.io.File
 import java.util.Properties
 
 object LibExt {
-    const val groupId = "io.github.monstroussoftware.gdx-webgpu"
+    val groupId = System.getProperty("group") ?: "io.github.monstroussoftware.gdx-webgpu"
     const val libName = "gdx-webgpu"
     var libVersion: String = ""
         get() {
@@ -12,6 +12,10 @@ object LibExt {
 }
 
 private fun getVersion(): String {
+    val propVersion = System.getProperty("version")
+    if (propVersion != null) {
+        return propVersion
+    }
     var libVersion = "-SNAPSHOT"
     val file = File("gradle.properties")
     if(file.exists()) {
