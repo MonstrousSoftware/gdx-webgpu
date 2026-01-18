@@ -1,6 +1,6 @@
 package com.monstrous.gdx.tests.webgpu;
 
-import com.github.xpenatan.gdx.backends.teavm.TeaApplicationConfiguration;
+import com.github.xpenatan.gdx.teavm.backends.web.TeaApplicationConfiguration;
 import com.monstrous.gdx.tests.webgpu.ASimpleGame;
 import com.monstrous.gdx.tests.webgpu.ComputeMoldSlime;
 import com.monstrous.gdx.tests.webgpu.LightingTest;

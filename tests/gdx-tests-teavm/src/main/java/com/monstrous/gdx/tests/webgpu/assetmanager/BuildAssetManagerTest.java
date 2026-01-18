@@ -1,9 +1,9 @@
 package com.monstrous.gdx.tests.webgpu.assetmanager;
 
-import com.github.xpenatan.gdx.backends.teavm.config.AssetFileHandle;
-import com.github.xpenatan.gdx.backends.teavm.config.TeaBuildConfiguration;
-import com.github.xpenatan.gdx.backends.teavm.config.TeaBuilder;
-import com.github.xpenatan.gdx.backends.teavm.config.plugins.TeaReflectionSupplier;
+import com.github.xpenatan.gdx.teavm.backends.shared.config.AssetFileHandle;
+import com.github.xpenatan.gdx.teavm.backends.web.config.TeaBuildConfiguration;
+import com.github.xpenatan.gdx.teavm.backends.web.config.TeaBuilder;
+import com.github.xpenatan.gdx.teavm.backends.web.config.plugins.TeaReflectionSupplier;
 import com.monstrous.gdx.tests.webgpu.TeaVMTestLauncher;
 import java.io.File;
 import java.io.IOException;

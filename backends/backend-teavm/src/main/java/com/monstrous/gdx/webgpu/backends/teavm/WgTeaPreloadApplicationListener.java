@@ -5,10 +5,10 @@ import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.github.xpenatan.gdx.backends.teavm.TeaPreloadApplicationListener;
-import com.github.xpenatan.gdx.backends.teavm.assetloader.AssetLoaderListener;
-import com.github.xpenatan.gdx.backends.teavm.assetloader.AssetType;
-import com.github.xpenatan.gdx.backends.teavm.assetloader.TeaBlob;
+import com.github.xpenatan.gdx.teavm.backends.web.TeaPreloadApplicationListener;
+import com.github.xpenatan.gdx.teavm.backends.web.assetloader.AssetLoaderListener;
+import com.github.xpenatan.gdx.teavm.backends.web.assetloader.AssetType;
+import com.github.xpenatan.gdx.teavm.backends.web.assetloader.TeaBlob;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 import com.monstrous.gdx.webgpu.scene2d.WgStage;
@@ -37,13 +37,13 @@ public class WgTeaPreloadApplicationListener extends TeaPreloadApplicationListen
 
     @Override
     protected void setupPreloadAssets() {
-        super.setupPreloadAssets();
         addQueue();
         assetLoader.loadAsset("shaders/spritebatch.wgsl", AssetType.Binary, Files.FileType.Classpath,
-                new AssetLoaderListener<TeaBlob>() {
-                    public void onSuccess(String url, TeaBlob result) {
-                        subtractQueue();
-                    }
-                });
+            new AssetLoaderListener<TeaBlob>() {
+                public void onSuccess(String url, TeaBlob result) {
+                    subtractQueue();
+                    preloadAssets();
+                }
+            });
     }
 }

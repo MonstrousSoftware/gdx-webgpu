@@ -1,9 +1,9 @@
 package com.monstrous.gdx.webgpu.backends.teavm;
 
 import com.badlogic.gdx.ApplicationListener;
-import com.github.xpenatan.gdx.backends.teavm.TeaApplication;
-import com.github.xpenatan.gdx.backends.teavm.TeaApplicationConfiguration;
-import com.github.xpenatan.gdx.backends.teavm.TeaGraphics;
+import com.github.xpenatan.gdx.teavm.backends.web.TeaApplication;
+import com.github.xpenatan.gdx.teavm.backends.web.TeaApplicationConfiguration;
+import com.github.xpenatan.gdx.teavm.backends.web.TeaGraphics;
 import com.github.xpenatan.webgpu.JWebGPULoader;
 
 public class WgTeaApplication extends TeaApplication {
@@ -23,13 +23,7 @@ public class WgTeaApplication extends TeaApplication {
 
     @Override
     protected TeaGraphics createGraphics(TeaApplicationConfiguration config) {
-        return new WgTeaGraphics(config);
-    }
-
-    @Override
-    protected void init() {
         addInitQueue();
-        super.init();
         JWebGPULoader.init((isSuccess, e) -> {
             if (isSuccess) {
                 WgTeaGraphics graphics = (WgTeaGraphics) getGraphics();
@@ -39,5 +33,6 @@ public class WgTeaApplication extends TeaApplication {
                 e.printStackTrace();
             }
         });
+        return new WgTeaGraphics(config);
     }
 }

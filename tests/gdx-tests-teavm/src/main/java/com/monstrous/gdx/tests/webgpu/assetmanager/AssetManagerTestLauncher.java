@@ -1,6 +1,6 @@
 package com.monstrous.gdx.tests.webgpu.assetmanager;
 
-import com.github.xpenatan.gdx.backends.teavm.TeaApplicationConfiguration;
+import com.github.xpenatan.gdx.teavm.backends.web.TeaApplicationConfiguration;
 import com.monstrous.gdx.tests.webgpu.AssetManagerTest;
 import com.monstrous.gdx.tests.webgpu.TeaVMTestLauncher;
 import com.monstrous.gdx.webgpu.backends.teavm.WgTeaApplication;

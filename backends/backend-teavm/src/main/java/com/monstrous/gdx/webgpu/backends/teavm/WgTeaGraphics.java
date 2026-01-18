@@ -2,11 +2,12 @@ package com.monstrous.gdx.webgpu.backends.teavm;
 
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
-import com.github.xpenatan.gdx.backends.teavm.TeaApplication;
-import com.github.xpenatan.gdx.backends.teavm.TeaApplicationConfiguration;
-import com.github.xpenatan.gdx.backends.teavm.TeaGraphics;
-import com.github.xpenatan.gdx.backends.teavm.dom.HTMLDocumentExt;
-import com.github.xpenatan.gdx.backends.teavm.dom.impl.TeaWindow;
+import com.badlogic.gdx.graphics.GL20;
+import com.github.xpenatan.gdx.teavm.backends.web.TeaApplication;
+import com.github.xpenatan.gdx.teavm.backends.web.TeaApplicationConfiguration;
+import com.github.xpenatan.gdx.teavm.backends.web.TeaGraphics;
+import com.github.xpenatan.gdx.teavm.backends.web.dom.HTMLDocumentExt;
+import com.github.xpenatan.gdx.teavm.backends.web.dom.impl.TeaWindow;
 import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.webgpu.application.WebGPUApplication;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
@@ -17,12 +18,13 @@ import org.teavm.jso.dom.html.HTMLElement;
 
 public class WgTeaGraphics extends TeaGraphics implements WgGraphics {
 
-    private static String canvasName = "webgpuCanvas";
-    private static String canvasWGPU = "#" + canvasName;
+    private static final String canvasName = "webgpuCanvas";
+    private static final String canvasWGPU = "#" + canvasName;
 
     public WebGPUApplication context;
     private WGPUInstance instance;
     private boolean webGPUReady = false;
+    private WgGL20 gl20;
 
     public WgTeaGraphics(TeaApplicationConfiguration config) {
         this.config = config;
@@ -34,8 +36,8 @@ public class WgTeaGraphics extends TeaGraphics implements WgGraphics {
         this.gl20 = new WgGL20();
     }
 
-    void init(TeaApplicationConfiguration config) {
-        TeaApplication teaApplication = WgTeaApplication.get();
+    public void init(TeaApplicationConfiguration config) {
+        TeaApplication teaApplication = TeaApplication.get();
         teaApplication.addInitQueue();
 
         if (config.width >= 0 || config.height >= 0) {
@@ -50,20 +52,17 @@ public class WgTeaGraphics extends TeaGraphics implements WgGraphics {
         }
 
         WebGPUApplication.Configuration configg = new WebGPUApplication.Configuration(1, true, false,
-                WebGPUContext.Backend.WEBGPU);
+            WebGPUContext.Backend.WEBGPU);
 
-        System.out.println("Creating instance");
         instance = WGPU.setupInstance();
         if (!instance.isValid()) {
             throw new RuntimeException("WebGPU: cannot get instance");
         }
-        System.out.println("Creating surface");
         WGPUSurface surface = instance.createWebSurface(canvasWGPU);
         if (surface == null) {
             throw new RuntimeException("WebGPU: cannot get surface");
         }
 
-        System.out.println("Creating context");
         this.context = new WebGPUApplication(configg, instance, surface);
 
         // listen to fullscreen changes
@@ -77,7 +76,6 @@ public class WgTeaGraphics extends TeaGraphics implements WgGraphics {
 
     @Override
     public void resize(ApplicationListener appListener, int width, int height) {
-        System.out.println("resize");
         context.resize(width, height);
         Gdx.gl.glViewport(0, 0, width, height);
         appListener.resize(width, height);
@@ -93,9 +91,8 @@ public class WgTeaGraphics extends TeaGraphics implements WgGraphics {
         if (context != null) {
             context.update();
             if (!webGPUReady && context.isReady()) {
-                TeaApplication teaApplication = WgTeaApplication.get();
+                TeaApplication teaApplication = TeaApplication.get();
                 teaApplication.subtractInitQueue();
-                ;
                 webGPUReady = true;
             }
         }
@@ -106,4 +103,10 @@ public class WgTeaGraphics extends TeaGraphics implements WgGraphics {
     public WebGPUContext getContext() {
         return context;
     }
+
+    @Override
+    public GL20 getGL20() {
+        return gl20;
+    }
+
 }
