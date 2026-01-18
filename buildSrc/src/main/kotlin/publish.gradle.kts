@@ -8,7 +8,7 @@ var libProjects = mutableSetOf(
     project(":backends:backend-teavm")
 )
 
-LibExt.isRelease = gradle.startParameter.taskNames.any { it == "publishRelease" }
+LibExt.isRelease = gradle.startParameter.taskNames.any { it == "publishRelease" || it == "publishToMavenLocal" }
 
 println("Library Version: " + LibExt.libVersion)
 
