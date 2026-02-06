@@ -15,8 +15,8 @@ dependencies {
 //    val teaVMVersion = project.property("teaVMVersion") as String
 
     //implementation("com.badlogicgames.gdx:gdx:$gdxVersion")
-    implementation("com.github.xpenatan.gdx-teavm:backend-teavm:$gdxTeaVMVersion")
-    implementation("com.github.xpenatan.gdx-teavm:backend-teavm:$gdxTeaVMVersion:sources")
+    implementation("com.github.xpenatan.gdx-teavm:backend-web:$gdxTeaVMVersion")
+    implementation("com.github.xpenatan.gdx-teavm:backend-web:$gdxTeaVMVersion:sources")
 
 //    implementation("org.teavm:teavm-classlib:${teaVMVersion}")
 //    implementation("org.teavm:teavm-core:${teaVMVersion}")

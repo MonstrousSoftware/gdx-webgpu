@@ -201,7 +201,7 @@ WgTexture instead of Texture, WgScreenUtils instead of ScreenUtils, etcetera.
 If you want to use the Web TeaVM platform, set the dependencies as follows in `build.gradle` of the `teavm` module:
 
     dependencies {
-        implementation "com.github.xpenatan.gdx-teavm:backend-teavm:$gdxTeaVMVersion"
+        implementation "com.github.xpenatan.gdx-teavm:backend-web:$gdxTeaVMVersion"
         implementation "io.github.monstroussoftware.gdx-webgpu:backend-teavm:$gdxWebGPUVersion"
         implementation "io.github.monstroussoftware.gdx-webgpu:backend-teavm:$gdxWebGPUVersion:sources"
 

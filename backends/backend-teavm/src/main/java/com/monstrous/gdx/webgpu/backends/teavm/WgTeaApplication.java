@@ -1,18 +1,18 @@
 package com.monstrous.gdx.webgpu.backends.teavm;
 
 import com.badlogic.gdx.ApplicationListener;
-import com.github.xpenatan.gdx.backends.teavm.TeaApplication;
-import com.github.xpenatan.gdx.backends.teavm.TeaApplicationConfiguration;
-import com.github.xpenatan.gdx.backends.teavm.TeaGraphics;
+import com.github.xpenatan.gdx.teavm.backends.web.WebApplication;
+import com.github.xpenatan.gdx.teavm.backends.web.WebApplicationConfiguration;
+import com.github.xpenatan.gdx.teavm.backends.web.WebGraphics;
 import com.github.xpenatan.webgpu.JWebGPULoader;
 
-public class WgTeaApplication extends TeaApplication {
-    public WgTeaApplication(ApplicationListener appListener, TeaApplicationConfiguration config) {
+public class WgTeaApplication extends WebApplication {
+    public WgTeaApplication(ApplicationListener appListener, WebApplicationConfiguration config) {
         super(appListener, config);
     }
 
     public WgTeaApplication(ApplicationListener appListener, ApplicationListener preloadApplication,
-            TeaApplicationConfiguration config) {
+            WebApplicationConfiguration config) {
         super(appListener, preloadApplication, config);
     }
 
@@ -22,14 +22,8 @@ public class WgTeaApplication extends TeaApplication {
     }
 
     @Override
-    protected TeaGraphics createGraphics(TeaApplicationConfiguration config) {
-        return new WgTeaGraphics(config);
-    }
-
-    @Override
-    protected void init() {
+    protected WebGraphics createGraphics(WebApplicationConfiguration config) {
         addInitQueue();
-        super.init();
         JWebGPULoader.init((isSuccess, e) -> {
             if (isSuccess) {
                 WgTeaGraphics graphics = (WgTeaGraphics) getGraphics();
@@ -39,5 +33,6 @@ public class WgTeaApplication extends TeaApplication {
                 e.printStackTrace();
             }
         });
+        return new WgTeaGraphics(config);
     }
 }
