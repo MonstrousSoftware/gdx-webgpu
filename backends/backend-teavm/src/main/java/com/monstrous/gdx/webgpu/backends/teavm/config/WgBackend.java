@@ -13,8 +13,8 @@ public class WgBackend extends WebBackend {
         assetFilter = new DefaultAssetFilter() {
             @Override
             public boolean accept(String file) {
-                if(super.accept(file)) {
-                    if(file.contains("net/mgsx/") || file.endsWith(".glsl")) {
+                if (super.accept(file)) {
+                    if (file.contains("net/mgsx/") || file.endsWith(".glsl")) {
                         return false;
                     }
                     return true;

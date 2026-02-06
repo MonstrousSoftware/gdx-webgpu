@@ -52,7 +52,7 @@ public class WgTeaGraphics extends WebGraphics implements WgGraphics {
         }
 
         WebGPUApplication.Configuration configg = new WebGPUApplication.Configuration(1, true, false,
-            WebGPUContext.Backend.WEBGPU);
+                WebGPUContext.Backend.WEBGPU);
 
         instance = WGPU.setupInstance();
         if (!instance.isValid()) {
