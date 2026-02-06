@@ -11,12 +11,9 @@ public class BuildAssetManagerTest {
 
     public static void main(String[] args) throws IOException {
         AssetFileHandle assetsPath = new AssetFileHandle("../assets");
-        new TeaCompiler(new WgBackend().setWebAssembly(true).setStartJettyAfterBuild(true))
-            .addAssets(assetsPath)
-            .setOptimizationLevel(TeaVMOptimizationLevel.SIMPLE)
-            .setMainClass(AssetManagerTestLauncher.class.getName())
-            .setObfuscated(false)
-            .addReflectionClass("com.badlogic.gdx.graphics.g3d.particles.**")
-            .build(new File("build/dist"));
+        new TeaCompiler(new WgBackend().setWebAssembly(true).setStartJettyAfterBuild(true)).addAssets(assetsPath)
+                .setOptimizationLevel(TeaVMOptimizationLevel.SIMPLE)
+                .setMainClass(AssetManagerTestLauncher.class.getName()).setObfuscated(false)
+                .addReflectionClass("com.badlogic.gdx.graphics.g3d.particles.**").build(new File("build/dist"));
     }
 }
