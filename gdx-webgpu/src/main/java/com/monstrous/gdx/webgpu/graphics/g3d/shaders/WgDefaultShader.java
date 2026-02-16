@@ -41,8 +41,6 @@ import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute;
 import com.monstrous.gdx.webgpu.wrappers.*;
 
-import static com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888;
-
 /** Default shader to render renderables */
 public class WgDefaultShader extends WgShader implements Disposable {
 
@@ -58,7 +56,9 @@ public class WgDefaultShader extends WgShader implements Disposable {
     private MaterialsCache materials;
     private int numRigged;
     private int rigSize; // bytes per rigged instance
-    private final WebGPUPipeline pipeline; // a shader has one pipeline
+    private final PipelineCache pipelineCache; // cache of pipelines for different render targets
+    private final WGPUPipelineLayout pipelineLayout;
+    private final PipelineSpecification pipelineSpec;
     private WebGPURenderPass renderPass;
     private final VertexAttributes vertexAttributes;
     private final Matrix4 combined;
@@ -247,11 +247,11 @@ public class WgDefaultShader extends WgShader implements Disposable {
         environmentMask = renderable.environment == null ? 0 : renderable.environment.getMask();
 
         // get pipeline layout which aggregates all the bind group layouts
-        WGPUPipelineLayout pipelineLayout = binder.getPipelineLayout("ModelBatch pipeline layout");
+        pipelineLayout = binder.getPipelineLayout("ModelBatch pipeline layout");
 
         // vertexAttributes will be set from the renderable
         vertexAttributes = renderable.meshPart.mesh.getVertexAttributes();
-        PipelineSpecification pipelineSpec = new PipelineSpecification("ModelBatch pipeline", vertexAttributes,
+        pipelineSpec = new PipelineSpecification("ModelBatch pipeline", vertexAttributes,
                 getDefaultShaderSource());
         // define locations of vertex attributes in line with shader code
         pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.POSITION_ATTRIBUTE, 0);
@@ -284,7 +284,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         pipelineSpec.usePBR = config.usePBR;
         // System.out.println("pipeline spec: "+pipelineSpec.hashCode()+pipelineSpec.vertexAttributes);
 
-        pipeline = new WebGPUPipeline(pipelineLayout, pipelineSpec);
+        pipelineCache = new PipelineCache();
 
         directionalLights = new DirectionalLight[config.maxDirectionalLights];
         for (int i = 0; i < config.maxDirectionalLights; i++)
@@ -365,6 +365,14 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
         materials.start(); // indicate that no material is currently bound
 
+        // Update pipeline spec to match the current render pass's format and sample count
+        // This is crucial when rendering to framebuffers with different formats than the screen
+        pipelineSpec.colorFormat = renderPass.getColorFormat();
+        pipelineSpec.numSamples = renderPass.getSampleCount();
+        pipelineSpec.invalidateHashCode();
+
+        // Get or create a pipeline that matches the current render target
+        WebGPUPipeline pipeline = pipelineCache.findPipeline(pipelineLayout, pipelineSpec);
         renderPass.setPipeline(pipeline);
     }
 
@@ -591,6 +599,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         binder.dispose();
         instanceBuffer.dispose();
         uniformBuffer.dispose();
+        pipelineCache.dispose();
         if (brdfLUT != null)
             brdfLUT.dispose();
     }
