@@ -82,6 +82,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
     private int instanceIndex;
     private Color linearFogColor;
     private final WgTexture brdfLUT;
+    private int maxRenderPassesPerFrame = 16; // Support up to 16 render passes per frame with this shader
 
     public WgDefaultShader(final Renderable renderable) {
         this(renderable, new WgModelBatch.Config());
@@ -112,7 +113,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         // Use multiple slices to support multiple render passes per frame with different camera/lighting state
         uniformBufferSize = (16 + 16 + 4 + 4 + 4 + 4 + +32 + 8 * config.maxDirectionalLights
                 + 12 * config.maxPointLights) * Float.BYTES;
-        int maxRenderPassesPerFrame = 16; // Support up to 16 render passes per frame with this shader
+
         uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Uniform),
                 maxRenderPassesPerFrame);
 
