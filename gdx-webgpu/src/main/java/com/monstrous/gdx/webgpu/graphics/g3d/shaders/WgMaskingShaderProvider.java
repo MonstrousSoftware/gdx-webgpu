@@ -6,20 +6,15 @@ import com.badlogic.gdx.graphics.g3d.utils.BaseShaderProvider;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 
 /**
- * Shader provider for depth masking operations.
- * Creates depth shaders that output constant depth values for masking.
+ * Shader provider for depth masking operations. Creates depth shaders that output constant depth values for masking.
  */
 public class WgMaskingShaderProvider extends BaseShaderProvider {
     public final WgModelBatch.Config config;
 
     // Fragment shader for masking - outputs constant depth to create blocking mask
-    private static final String MASKING_FRAGMENT_SHADER =
-        "\n// Fragment shader for depth masking\n" +
-        "@fragment\n" +
-        "fn fs_main(in: VertexOutput) -> @builtin(frag_depth) f32 {\n" +
-        "    // Output depth of 0.0 (nearest possible) to create a blocking mask\n" +
-        "    return 0.0;\n" +
-        "}\n";
+    private static final String MASKING_FRAGMENT_SHADER = "\n// Fragment shader for depth masking\n" + "@fragment\n"
+            + "fn fs_main(in: VertexOutput) -> @builtin(frag_depth) f32 {\n"
+            + "    // Output depth of 0.0 (nearest possible) to create a blocking mask\n" + "    return 0.0;\n" + "}\n";
 
     public WgMaskingShaderProvider(final WgModelBatch.Config config) {
         this.config = (config == null) ? new WgModelBatch.Config() : config;
@@ -39,4 +34,3 @@ public class WgMaskingShaderProvider extends BaseShaderProvider {
         return new WgDepthShader(renderable, config, shaderSource, "fs_main");
     }
 }
-

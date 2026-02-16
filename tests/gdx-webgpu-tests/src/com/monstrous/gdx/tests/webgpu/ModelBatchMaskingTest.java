@@ -19,14 +19,14 @@ import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.wrappers.RenderPassType;
 
 /**
- * Test WebGPU ModelBatch with masking. A sphere acts as a masking model that hides parts of the cube behind it.
- * The sphere is positioned in front of the cube, and only the parts of the cube not covered by the sphere are visible.
+ * Test WebGPU ModelBatch with masking. A sphere acts as a masking model that hides parts of the cube behind it. The
+ * sphere is positioned in front of the cube, and only the parts of the cube not covered by the sphere are visible.
  */
 public class ModelBatchMaskingTest extends GdxTest {
 
-    WgModelBatch sceneBatch;      // For scene objects (red cube)
-    WgModelBatch maskBatch;       // For masking objects (blue cube)
-    WgModelBatch depthOnlyBatch;  // For depth-only masking (sphere)
+    WgModelBatch sceneBatch; // For scene objects (red cube)
+    WgModelBatch maskBatch; // For masking objects (blue cube)
+    WgModelBatch depthOnlyBatch; // For depth-only masking (sphere)
     PerspectiveCamera cam;
     PerspectiveCamController controller;
     WgSpriteBatch batch;
@@ -38,9 +38,9 @@ public class ModelBatchMaskingTest extends GdxTest {
     ModelInstance sphereInstance;
 
     public void create() {
-        sceneBatch = new WgModelBatch();      // Scene rendering (red cube)
-        maskBatch = new WgModelBatch();      // Gizmo rendering (blue cube)
-        depthOnlyBatch = new WgModelBatch(new WgMaskingShaderProvider());  // Masking depth (sphere with constant depth)
+        sceneBatch = new WgModelBatch(); // Scene rendering (red cube)
+        maskBatch = new WgModelBatch(); // Gizmo rendering (blue cube)
+        depthOnlyBatch = new WgModelBatch(new WgMaskingShaderProvider()); // Masking depth (sphere with constant depth)
         cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         cam.position.set(0, 0, 4);
         cam.lookAt(0, 0, 0);
@@ -90,7 +90,7 @@ public class ModelBatchMaskingTest extends GdxTest {
         // Reset transforms to base positions before rotating
         blueCubeInstance.transform.setToTranslation(0, 0, 0);
         redCubeInstance.transform.setToTranslation(0, 0, -3f);
-        sphereInstance.transform.setToTranslation(0, 0, 0.05f);  // Sphere slightly forward
+        sphereInstance.transform.setToTranslation(0, 0, 0.05f); // Sphere slightly forward
 
         // Rotate the cubes around their own centers
         blueCubeInstance.transform.rotate(Vector3.Y, delta * 15f);
@@ -143,4 +143,3 @@ public class ModelBatchMaskingTest extends GdxTest {
         depthOnlyBatch.dispose();
     }
 }
-

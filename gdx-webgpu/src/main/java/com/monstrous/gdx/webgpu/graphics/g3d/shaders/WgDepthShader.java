@@ -62,10 +62,11 @@ public class WgDepthShader extends WgShader {
     }
 
     protected WgDepthShader(final Renderable renderable, WgModelBatch.Config config, String shaderSource) {
-        this(renderable, config, shaderSource, null);  // null = no fragment shader for normal depth rendering
+        this(renderable, config, shaderSource, null); // null = no fragment shader for normal depth rendering
     }
 
-    protected WgDepthShader(final Renderable renderable, WgModelBatch.Config config, String shaderSource, String fragmentEntryPoint) {
+    protected WgDepthShader(final Renderable renderable, WgModelBatch.Config config, String shaderSource,
+            String fragmentEntryPoint) {
         this.config = config;
 
         // Create uniform buffer for global (per-frame) uniforms, i.e. projection matrix
@@ -140,9 +141,9 @@ public class WgDepthShader extends WgShader {
         pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.BONEWEIGHT_ATTRIBUTE, 7);
 
         // Fragment shader entry point (null for normal depth rendering, "fs_main" for masking)
-        pipelineSpec.colorFormat = WGPUTextureFormat.Undefined;  // No color output
+        pipelineSpec.colorFormat = WGPUTextureFormat.Undefined; // No color output
         pipelineSpec.fragmentShaderEntryPoint = fragmentEntryPoint;
-        pipelineSpec.isDepthPass = true;  // Mark this as a depth pass
+        pipelineSpec.isDepthPass = true; // Mark this as a depth pass
 
         // default blending values
         pipelineSpec.enableBlending();
