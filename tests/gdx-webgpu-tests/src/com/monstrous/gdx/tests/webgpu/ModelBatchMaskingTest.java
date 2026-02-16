@@ -2,10 +2,12 @@ package com.monstrous.gdx.tests.webgpu;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.math.Vector3;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.tests.webgpu.utils.PerspectiveCamController;
@@ -29,6 +31,7 @@ public class ModelBatchMaskingTest extends GdxTest {
     PerspectiveCamController controller;
     WgSpriteBatch batch;
     WgBitmapFont font;
+    Environment environment;
 
     ModelInstance blueCubeInstance;
     ModelInstance redCubeInstance;
@@ -51,7 +54,13 @@ public class ModelBatchMaskingTest extends GdxTest {
         batch = new WgSpriteBatch();
         font = new WgBitmapFont(Gdx.files.internal("data/lsans-15.fnt"), false);
 
-        // Create the blue cube model (front)
+        // Create environment with lighting
+        environment = new Environment();
+        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1f));
+        DirectionalLight light = new DirectionalLight().set(1.0f, 1.0f, 1.0f, -1f, -0.8f, -0.2f);
+        environment.add(light);
+
+        // Create the blue cube model (front) with normals for lighting
         WgModelBuilder modelBuilder = new WgModelBuilder();
         long vertexUsage = VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal;
         Material blueMaterial = new Material(ColorAttribute.createDiffuse(Color.BLUE));
@@ -97,7 +106,7 @@ public class ModelBatchMaskingTest extends GdxTest {
 
         // SCENE RENDERING: Red cube in its own batch - clear both color and depth initially
         sceneBatch.begin(cam, Color.TEAL, true);
-        sceneBatch.render(redCubeInstance);
+        sceneBatch.render(redCubeInstance, environment);
         sceneBatch.end();
 
         // CUBE MASKING: Apply sphere depth mask - fragment shader outputs 0.0 depth
@@ -109,7 +118,7 @@ public class ModelBatchMaskingTest extends GdxTest {
         // CUBE RENDERING: Render blue cube ONCE - sphere's depth will mask it
         // Preserve scene color and depth from previous passes
         maskBatch.begin(cam, null, false);
-        maskBatch.render(blueCubeInstance);
+        maskBatch.render(blueCubeInstance, environment);
         maskBatch.end();
 
         batch.begin();
