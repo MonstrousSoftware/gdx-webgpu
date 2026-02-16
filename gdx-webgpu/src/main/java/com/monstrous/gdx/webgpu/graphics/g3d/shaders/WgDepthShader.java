@@ -58,6 +58,14 @@ public class WgDepthShader extends WgShader {
     }
 
     public WgDepthShader(final Renderable renderable, WgModelBatch.Config config) {
+        this(renderable, config, getDefaultShaderSource());
+    }
+
+    protected WgDepthShader(final Renderable renderable, WgModelBatch.Config config, String shaderSource) {
+        this(renderable, config, shaderSource, null);  // null = no fragment shader for normal depth rendering
+    }
+
+    protected WgDepthShader(final Renderable renderable, WgModelBatch.Config config, String shaderSource, String fragmentEntryPoint) {
         this.config = config;
 
         // Create uniform buffer for global (per-frame) uniforms, i.e. projection matrix
@@ -119,7 +127,7 @@ public class WgDepthShader extends WgShader {
         // vertexAttributes will be set from the renderable
         vertexAttributes = renderable.meshPart.mesh.getVertexAttributes();
         PipelineSpecification pipelineSpec = new PipelineSpecification("DepthBatch pipeline", vertexAttributes,
-                getDefaultShaderSource());
+                shaderSource);
         // define locations of vertex attributes in line with shader code
         // we're only using position and bones for depth shading but the vertex buffer is shared with the renderer
         // so we have to cover all possible vertex attributes
@@ -131,9 +139,10 @@ public class WgDepthShader extends WgShader {
         pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.BINORMAL_ATTRIBUTE, 4);
         pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.BONEWEIGHT_ATTRIBUTE, 7);
 
-        // no fragment shader
-        pipelineSpec.colorFormat = WGPUTextureFormat.Undefined;
-        pipelineSpec.fragmentShaderEntryPoint = null;
+        // Fragment shader entry point (null for normal depth rendering, "fs_main" for masking)
+        pipelineSpec.colorFormat = WGPUTextureFormat.Undefined;  // No color output
+        pipelineSpec.fragmentShaderEntryPoint = fragmentEntryPoint;
+        pipelineSpec.isDepthPass = true;  // Mark this as a depth pass
 
         // default blending values
         pipelineSpec.enableBlending();
@@ -314,7 +323,7 @@ public class WgDepthShader extends WgShader {
         return layout;
     }
 
-    private String getDefaultShaderSource() {
+    protected static String getDefaultShaderSource() {
         if (defaultShader == null) {
             defaultShader = Gdx.files.classpath("shaders/depthshader.wgsl").readString();
         }

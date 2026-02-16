@@ -51,7 +51,7 @@ public class WebGPUTests {
                     // @off
                     AssetManagerTest.class, ClearScreen.class, SpriteBatchTest.class, StageTest.class, ColorTest.class,
                     FontTest.class, Scene2dTest.class, ImmediateModeRendererTest.class, ShapeRendererTest.class,
-                    ShapeRenderer2DTest.class, NinePatchTest.class, ModelBatchTest.class, WrapAndFilterTest.class,
+                    ShapeRenderer2DTest.class, NinePatchTest.class, ModelBatchTest.class, ModelBatchMaskingTest.class, WrapAndFilterTest.class,
                     LoadObjTest.class, LoadG3DJTest.class, LoadModelTest.class, LoadGLTFTest.class, LightingTest.class,
                     InstancingTest.class, ViewportTest.class, ScissorTest.class, ASimpleGame.class,
                     ParticleEmitterTest.class, ParticleEmittersTest.class, HeightMapTest.class, FullScreenTest.class,
