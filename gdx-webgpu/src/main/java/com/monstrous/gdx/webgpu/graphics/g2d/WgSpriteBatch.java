@@ -447,6 +447,12 @@ public class WgSpriteBatch implements Batch {
 
     // create or reuse pipeline on demand to match the pipeline spec
     private void setPipeline(WebGPURenderPass pass) {
+        // Update pipeline spec to match the current render pass's format and sample count
+        // This is crucial when rendering to framebuffers with different formats than the screen
+        pipelineSpec.colorFormat = pass.getColorFormat();
+        pipelineSpec.numSamples = pass.getSampleCount();
+        pipelineSpec.invalidateHashCode();
+
         WebGPUPipeline pipeline = pipelines.findPipeline(pipelineLayout, pipelineSpec);
         pass.setPipeline(pipeline);
     }

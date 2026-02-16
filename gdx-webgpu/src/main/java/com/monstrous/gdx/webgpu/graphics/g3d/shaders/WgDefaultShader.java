@@ -38,10 +38,7 @@ import com.monstrous.gdx.webgpu.graphics.Binder;
 import com.monstrous.gdx.webgpu.graphics.WgMesh;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
-import com.monstrous.gdx.webgpu.graphics.g3d.attributes.PBRFloatAttribute;
-import com.monstrous.gdx.webgpu.graphics.g3d.attributes.PBRTextureAttribute;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute;
-import com.monstrous.gdx.webgpu.graphics.g3d.environment.ibl.IBLGenerator;
 import com.monstrous.gdx.webgpu.wrappers.*;
 
 import static com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888;
@@ -112,9 +109,12 @@ public class WgDefaultShader extends WgShader implements Disposable {
                 && renderable.environment.has(WgCubemapAttribute.SpecularCubeMap);
 
         // Create uniform buffer for global (per-frame) uniforms, e.g. projection matrix, camera position, etc.
+        // Use multiple slices to support multiple render passes per frame with different camera/lighting state
         uniformBufferSize = (16 + 16 + 4 + 4 + 4 + 4 + +32 + 8 * config.maxDirectionalLights
                 + 12 * config.maxPointLights) * Float.BYTES;
-        uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Uniform));
+        int maxRenderPassesPerFrame = 16; // Support up to 16 render passes per frame with this shader
+        uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Uniform),
+                maxRenderPassesPerFrame);
 
         rigSize = config.numBones * 16 * Float.BYTES;
 
@@ -315,6 +315,20 @@ public class WgDefaultShader extends WgShader implements Disposable {
     public void begin(Camera camera, Renderable renderable, WebGPURenderPass renderPass) {
         this.renderPass = renderPass;
 
+        // Reset buffer slices at the start of each frame
+        if (webgpu.frameNumber != this.frameNumber) {
+            instanceIndex = 0;
+            numRigged = 0;
+            this.frameNumber = webgpu.frameNumber;
+            uniformBuffer.beginSlices(); // Reset uniform buffer slices for new frame
+            if (jointMatricesBuffer != null)
+                jointMatricesBuffer.beginSlices();
+        }
+
+        // Get a new slice of the uniform buffer for this render pass
+        // This ensures each render pass has its own independent camera/lighting data
+        int dynamicOffset = uniformBuffer.nextSlice();
+
         // set global uniforms, that do not depend on renderables
         // e.g. camera, lighting, environment uniforms
         //
@@ -330,8 +344,6 @@ public class WgDefaultShader extends WgShader implements Disposable {
         tmpVec4.set(camera.position.x, camera.position.y, camera.position.z, 1.1881f / (camera.far * camera.far));
         binder.setUniform("cameraPosition", tmpVec4);
 
-        // note: if we call WgModelBatch multiple times per frame with a different camera, the old ones are lost
-
         // todo: different shaders may overwrite lighting uniforms if renderables have other environments ...
         bindLights(renderable.environment);
 
@@ -340,19 +352,12 @@ public class WgDefaultShader extends WgShader implements Disposable {
         // now that we've set all the uniforms (camera,lights, etc.) write the buffer to the gpu
         uniformBuffer.flush();
 
-        // bind group 0 (frame) once per frame
-        binder.bindGroup(renderPass, 0);
+        // bind group 0 (frame) with dynamic offset for this render pass
+        binder.bindGroup(renderPass, 0, dynamicOffset);
 
         // idem for group 2 (instances), we will fill in the buffer as we go
         binder.bindGroup(renderPass, 2);
 
-        if (webgpu.frameNumber != this.frameNumber) { // reset at the start of a frame
-            instanceIndex = 0;
-            numRigged = 0;
-            this.frameNumber = webgpu.frameNumber;
-            if (jointMatricesBuffer != null)
-                jointMatricesBuffer.beginSlices();
-        }
         numRenderables = 0;
         drawCalls = 0;
         prevRenderable = null; // to store renderable that still needs to be rendered
@@ -524,7 +529,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch bind group layout (frame)");
         layout.begin();
         layout.addBuffer(0, WGPUShaderStage.Vertex.or(WGPUShaderStage.Fragment), WGPUBufferBindingType.Uniform,
-                uniformBufferSize, false);
+                uniformBufferSize, true); // Enable dynamic offset for multiple render passes per frame
         if (hasShadowMap) {
             layout.addTexture(1, WGPUShaderStage.Fragment, WGPUTextureSampleType.Depth, WGPUTextureViewDimension._2D,
                     false);
