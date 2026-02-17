@@ -73,8 +73,7 @@ public class FrameBufferTest extends GdxTest {
         if (sharedBatch) {
             modelBatch2 = modelBatch1;
             textureBatch2 = textureBatch1;
-        }
-        else {
+        } else {
             modelBatch2 = new WgModelBatch();
             textureBatch2 = new WgSpriteBatch();
         }
