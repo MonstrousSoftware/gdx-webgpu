@@ -18,7 +18,8 @@ public class OutlineColorAttribute extends Attribute {
 
     public OutlineColorAttribute(long type, Color color) {
         super(type);
-        if (color != null) this.color.set(color);
+        if (color != null)
+            this.color.set(color);
     }
 
     public OutlineColorAttribute(Color color) {
@@ -43,12 +44,12 @@ public class OutlineColorAttribute extends Attribute {
 
     @Override
     public int compareTo(Attribute o) {
-        if (type != o.type) return (int)(type - o.type);
-        return ((OutlineColorAttribute)o).color.toIntBits() - color.toIntBits();
+        if (type != o.type)
+            return (int) (type - o.type);
+        return ((OutlineColorAttribute) o).color.toIntBits() - color.toIntBits();
     }
 
     public static OutlineColorAttribute createOutlineColor(Color color) {
         return new OutlineColorAttribute(color);
     }
 }
-

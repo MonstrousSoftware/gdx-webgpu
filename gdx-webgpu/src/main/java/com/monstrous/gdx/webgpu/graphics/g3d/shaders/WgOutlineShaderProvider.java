@@ -27,7 +27,8 @@ public class WgOutlineShaderProvider extends BaseShaderProvider {
     @Override
     public Shader getShader(Renderable renderable) {
         // Get outline color from material attribute
-        OutlineColorAttribute attr = (OutlineColorAttribute) renderable.material.get(OutlineColorAttribute.OutlineColor);
+        OutlineColorAttribute attr = (OutlineColorAttribute) renderable.material
+                .get(OutlineColorAttribute.OutlineColor);
         Color targetColor = (attr != null) ? attr.color : Color.WHITE;
 
         // Find existing shader with matching color and capability
@@ -47,8 +48,10 @@ public class WgOutlineShaderProvider extends BaseShaderProvider {
     protected Shader createShader(final Renderable renderable) {
         // This method is not used since we override getShader
         Color color = Color.WHITE;
-        OutlineColorAttribute attr = (OutlineColorAttribute) renderable.material.get(OutlineColorAttribute.OutlineColor);
-        if (attr != null) color = attr.color;
+        OutlineColorAttribute attr = (OutlineColorAttribute) renderable.material
+                .get(OutlineColorAttribute.OutlineColor);
+        if (attr != null)
+            color = attr.color;
         return new WgOutlineShader(renderable, config, color);
     }
 
@@ -60,5 +63,3 @@ public class WgOutlineShaderProvider extends BaseShaderProvider {
         shaders.clear();
     }
 }
-
-

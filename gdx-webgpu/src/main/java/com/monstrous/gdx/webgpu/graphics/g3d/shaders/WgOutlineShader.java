@@ -109,40 +109,20 @@ public class WgOutlineShader extends WgShader {
     }
 
     private static String getOutlineShaderSource() {
-        return "// Outline shader\n" +
-                "struct Uniforms {\n" +
-                "    projectionViewTransform: mat4x4<f32>,\n" +
-                "    outlineColor: vec4<f32>,\n" +
-                "}\n" +
-                "\n" +
-                "@group(0) @binding(0) var<uniform> uniforms: Uniforms;\n" +
-                "\n" +
-                "struct InstanceData {\n" +
-                "    modelMatrix: mat4x4<f32>,\n" +
-                "}\n" +
-                "\n" +
-                "@group(1) @binding(0) var<storage, read> instanceData: array<InstanceData>;\n" +
-                "\n" +
-                "struct VertexInput {\n" +
-                "    @location(0) position: vec3<f32>,\n" +
-                "}\n" +
-                "\n" +
-                "struct VertexOutput {\n" +
-                "    @builtin(position) position: vec4<f32>,\n" +
-                "}\n" +
-                "\n" +
-                "@vertex\n" +
-                "fn vs_main(in: VertexInput, @builtin(instance_index) instanceIndex: u32) -> VertexOutput {\n" +
-                "    var out: VertexOutput;\n" +
-                "    let worldPosition = instanceData[instanceIndex].modelMatrix * vec4<f32>(in.position, 1.0);\n" +
-                "    out.position = uniforms.projectionViewTransform * worldPosition;\n" +
-                "    return out;\n" +
-                "}\n" +
-                "\n" +
-                "@fragment\n" +
-                "fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {\n" +
-                "    return uniforms.outlineColor;\n" +
-                "}\n";
+        return "// Outline shader\n" + "struct Uniforms {\n" + "    projectionViewTransform: mat4x4<f32>,\n"
+                + "    outlineColor: vec4<f32>,\n" + "}\n" + "\n"
+                + "@group(0) @binding(0) var<uniform> uniforms: Uniforms;\n" + "\n" + "struct InstanceData {\n"
+                + "    modelMatrix: mat4x4<f32>,\n" + "}\n" + "\n"
+                + "@group(1) @binding(0) var<storage, read> instanceData: array<InstanceData>;\n" + "\n"
+                + "struct VertexInput {\n" + "    @location(0) position: vec3<f32>,\n" + "}\n" + "\n"
+                + "struct VertexOutput {\n" + "    @builtin(position) position: vec4<f32>,\n" + "}\n" + "\n"
+                + "@vertex\n"
+                + "fn vs_main(in: VertexInput, @builtin(instance_index) instanceIndex: u32) -> VertexOutput {\n"
+                + "    var out: VertexOutput;\n"
+                + "    let worldPosition = instanceData[instanceIndex].modelMatrix * vec4<f32>(in.position, 1.0);\n"
+                + "    out.position = uniforms.projectionViewTransform * worldPosition;\n" + "    return out;\n" + "}\n"
+                + "\n" + "@fragment\n" + "fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {\n"
+                + "    return uniforms.outlineColor;\n" + "}\n";
     }
 
     @Override
@@ -273,4 +253,3 @@ public class WgOutlineShader extends WgShader {
         uniformBuffer.dispose();
     }
 }
-

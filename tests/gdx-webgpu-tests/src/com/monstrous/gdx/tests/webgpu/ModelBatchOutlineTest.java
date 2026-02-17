@@ -49,7 +49,6 @@ public class ModelBatchOutlineTest extends GdxTest {
         outlineProvider = new WgOutlineShaderProvider();
         outlineBatch = new WgModelBatch(outlineProvider);
 
-
         cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         cam.position.set(0, 0, 5);
         cam.lookAt(0, 0, 0);
@@ -155,6 +154,3 @@ public class ModelBatchOutlineTest extends GdxTest {
         outlineBatch.dispose();
     }
 }
-
-
-
