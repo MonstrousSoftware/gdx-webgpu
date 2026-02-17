@@ -128,9 +128,9 @@ public class WebGPUPipeline implements Disposable {
                                                                              // 1.0, i.e. at max distance
             depthStencilState.setDepthWriteEnabled(WGPUOptionalBool.True);
         } else if (spec.isDepthPass && spec.fragmentShaderEntryPoint != null) {
-            // Depth-only masking pass with fragment shader: always write depth
-            // Fragment shader outputs custom depth (e.g., constant 0.0 for masking)
-            depthStencilState.setDepthCompare(WGPUCompareFunction.Always);
+            // Depth-only masking pass with fragment shader: use proper depth testing
+            // Fragment shader outputs actual depth so only fragments behind are masked
+            depthStencilState.setDepthCompare(WGPUCompareFunction.LessEqual);
             depthStencilState.setDepthWriteEnabled(WGPUOptionalBool.True);
         } else {
             if (!spec.useDepthTest) {

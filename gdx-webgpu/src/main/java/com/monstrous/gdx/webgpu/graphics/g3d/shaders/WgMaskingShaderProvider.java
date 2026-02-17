@@ -11,10 +11,12 @@ import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 public class WgMaskingShaderProvider extends BaseShaderProvider {
     public final WgModelBatch.Config config;
 
-    // Fragment shader for masking - outputs constant depth to create blocking mask
+    // Fragment shader for masking - outputs the actual fragment depth
+    // This allows proper depth testing so only fragments BEHIND the mask are hidden
     private static final String MASKING_FRAGMENT_SHADER = "\n// Fragment shader for depth masking\n" + "@fragment\n"
             + "fn fs_main(in: VertexOutput) -> @builtin(frag_depth) f32 {\n"
-            + "    // Output depth of 0.0 (nearest possible) to create a blocking mask\n" + "    return 0.0;\n" + "}\n";
+            + "    // Output actual depth so only fragments behind this surface are masked\n"
+            + "    return in.position.z;\n" + "}\n";
 
     public WgMaskingShaderProvider(final WgModelBatch.Config config) {
         this.config = (config == null) ? new WgModelBatch.Config() : config;
