@@ -78,7 +78,7 @@ public class ModelBatchMaskingTest extends GdxTest {
         // Create the sphere model (masking model) - SMALLER than cube to mask only center area
         modelBuilder = new WgModelBuilder();
         Material sphereMaterial = new Material(ColorAttribute.createDiffuse(Color.GREEN));
-        Model sphereModel = modelBuilder.createSphere(1.8f, 1.8f, 1.8f, 32, 32, sphereMaterial, vertexUsage);
+        Model sphereModel = modelBuilder.createSphere(2.5f, 2.5f, 2.5f, 32, 32, sphereMaterial, vertexUsage);
         sphereInstance = new ModelInstance(sphereModel);
         // Position sphere slightly FORWARD (z=0.05) so its depth blocks the blue cube
         sphereInstance.transform.setToTranslation(0, 0, 0.05f);
