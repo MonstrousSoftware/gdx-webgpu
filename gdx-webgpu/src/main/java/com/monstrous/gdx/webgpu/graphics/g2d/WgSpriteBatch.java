@@ -1062,7 +1062,17 @@ public class WgSpriteBatch implements Batch {
         uniformBuffer.dispose();
         bindGroupLayout.dispose();
         // pipelineLayout.dispose();
+    }
 
+    /**
+     * Clear the pipeline cache, forcing all pipelines to be rebuilt.
+     * Useful when changing shader parameters at runtime.
+     */
+    public void clearPipelineCache() {
+        if (drawing) {
+            flush();
+        }
+        pipelines.clear();
     }
 
     private String getDefaultShaderSource() {
