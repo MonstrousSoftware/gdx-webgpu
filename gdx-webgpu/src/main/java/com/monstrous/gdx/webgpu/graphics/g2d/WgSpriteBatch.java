@@ -1065,8 +1065,7 @@ public class WgSpriteBatch implements Batch {
     }
 
     /**
-     * Clear the pipeline cache, forcing all pipelines to be rebuilt.
-     * Useful when changing shader parameters at runtime.
+     * Clear the pipeline cache, forcing all pipelines to be rebuilt. Useful when changing shader parameters at runtime.
      */
     public void clearPipelineCache() {
         if (drawing) {

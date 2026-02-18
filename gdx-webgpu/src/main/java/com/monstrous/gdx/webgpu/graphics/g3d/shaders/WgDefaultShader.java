@@ -252,8 +252,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
         // vertexAttributes will be set from the renderable
         vertexAttributes = renderable.meshPart.mesh.getVertexAttributes();
-        pipelineSpec = new PipelineSpecification("ModelBatch pipeline", vertexAttributes,
-                getDefaultShaderSource());
+        pipelineSpec = new PipelineSpecification("ModelBatch pipeline", vertexAttributes, getDefaultShaderSource());
         // define locations of vertex attributes in line with shader code
         pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.POSITION_ATTRIBUTE, 0);
         pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.NORMAL_ATTRIBUTE, 2);

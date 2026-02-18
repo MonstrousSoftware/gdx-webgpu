@@ -59,7 +59,6 @@ public class SpriteHighlightTest extends GdxTest {
         // Rotate sprite
         sprite1.setRotation(time * 30f);
 
-
         batch.begin(Color.BLACK);
 
         // STEP 1: Render normal sprites first
@@ -75,7 +74,7 @@ public class SpriteHighlightTest extends GdxTest {
         sprite1.draw(batch);
         sprite2.setColor(Color.RED);
         sprite2.draw(batch);
-        batch.setShader((WgShaderProgram)null);
+        batch.setShader((WgShaderProgram) null);
 
         // STEP 3: Render UI
         font.draw(batch, "fps: " + Gdx.graphics.getFramesPerSecond(), 10, 30);
@@ -94,36 +93,42 @@ public class SpriteHighlightTest extends GdxTest {
         // Adjust thickness
         if (Gdx.input.isKeyJustPressed(Input.Keys.UP)) {
             currentThickness += 0.5f;
-            if (currentThickness > 20.0f) currentThickness = 20.0f;
+            if (currentThickness > 20.0f)
+                currentThickness = 20.0f;
             needsRecreate = true;
         }
         if (Gdx.input.isKeyJustPressed(Input.Keys.DOWN)) {
             currentThickness -= 0.5f;
-            if (currentThickness < 0.5f) currentThickness = 0.5f;
+            if (currentThickness < 0.5f)
+                currentThickness = 0.5f;
             needsRecreate = true;
         }
 
         // Adjust alpha threshold
         if (Gdx.input.isKeyJustPressed(Input.Keys.RIGHT)) {
             currentAlphaThreshold += 0.05f;
-            if (currentAlphaThreshold > 1.0f) currentAlphaThreshold = 1.0f;
+            if (currentAlphaThreshold > 1.0f)
+                currentAlphaThreshold = 1.0f;
             needsRecreate = true;
         }
         if (Gdx.input.isKeyJustPressed(Input.Keys.LEFT)) {
             currentAlphaThreshold -= 0.05f;
-            if (currentAlphaThreshold < 0.0f) currentAlphaThreshold = 0.0f;
+            if (currentAlphaThreshold < 0.0f)
+                currentAlphaThreshold = 0.0f;
             needsRecreate = true;
         }
 
         // Adjust smoothing
         if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
             currentSmoothing += 0.25f;
-            if (currentSmoothing > 5.0f) currentSmoothing = 5.0f;
+            if (currentSmoothing > 5.0f)
+                currentSmoothing = 5.0f;
             needsRecreate = true;
         }
         if (Gdx.input.isKeyJustPressed(Input.Keys.Q)) {
             currentSmoothing -= 0.25f;
-            if (currentSmoothing < 0.0f) currentSmoothing = 0.0f;
+            if (currentSmoothing < 0.0f)
+                currentSmoothing = 0.0f;
             needsRecreate = true;
         }
 
