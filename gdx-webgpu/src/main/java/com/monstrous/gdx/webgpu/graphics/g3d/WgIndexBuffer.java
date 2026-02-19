@@ -151,9 +151,8 @@ public class WgIndexBuffer implements IndexData {
             indexBuffer.setIndices(byteBuffer); // write to GPU buffer
             isDirty = false;
 
-            // if this is a static buffer, we can release the backing buffer.
+            // if this is a static buffer, we can freeze it
             if (isStatic) {
-                BufferUtils.disposeUnsafeByteBuffer(byteBuffer);
                 isFrozen = true; // no more modifications allowed
             }
         }
@@ -180,7 +179,6 @@ public class WgIndexBuffer implements IndexData {
     @Override
     public void dispose() {
         indexBuffer.dispose();
-        if (!isFrozen)
-            BufferUtils.disposeUnsafeByteBuffer(byteBuffer);
+        BufferUtils.disposeUnsafeByteBuffer(byteBuffer);
     }
 }
