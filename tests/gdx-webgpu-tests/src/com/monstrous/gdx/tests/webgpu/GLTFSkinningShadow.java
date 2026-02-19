@@ -19,6 +19,7 @@ package com.monstrous.gdx.tests.webgpu;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.VertexAttributes;
@@ -26,9 +27,14 @@ import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
+import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
+import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
+import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.ConeShapeBuilder;
+import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.CylinderShapeBuilder;
+import com.badlogic.gdx.math.collision.BoundingBox;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.environment.WgDirectionalShadowLight;
 import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.graphics.g3d.model.NodePart;
@@ -121,7 +127,11 @@ public class GLTFSkinningShadow extends GdxTest {
                 | VertexAttributes.Usage.Normal;
         box = modelBuilder.createBox(1, 1, 1, mat, attribs);
         disposables.add(box);
-        instances.add(new ModelInstance(box, 2, 1f, 0));
+        Model arrowUpAxis = createArrowUpAxis(1, 0, 0, 1, 1);
+
+        instances.add(new ModelInstance(arrowUpAxis, 2, 1f, 0));
+
+
         instances.add(new ModelInstance(box, 0, 1f, -2));
         instances.add(new ModelInstance(box, -2, 0.5f, 0));
 
@@ -177,6 +187,10 @@ public class GLTFSkinningShadow extends GdxTest {
         environment.shadowMap = shadowLight;
 
         shadowBatch = new WgModelBatch(new WgDepthShaderProvider(config));
+
+        BoundingBox box = new BoundingBox();
+        jointBoxes.get(0).calculateBoundingBox(box);
+        System.out.println("Green Box Bounding Box: " + box);
     }
 
     public void render() {
@@ -288,4 +302,39 @@ public class GLTFSkinningShadow extends GdxTest {
         }
     }
 
+
+    public static Model createArrowUpAxis(float r, float g, float b, float axisWidth, float alpha) {
+        ModelBuilder mb = new WgModelBuilder();
+        Material material = null;
+
+        float offset = 0.1f;
+
+        mb.begin();
+        Node nodeConeAxisX = mb.node();
+        nodeConeAxisX.id = "coneAxisX";
+        nodeConeAxisX.translation.y = offset + axisWidth + 0.15f;
+
+        nodeConeAxisX.calculateLocalTransform();
+        nodeConeAxisX.calculateWorldTransform();
+        material = new Material("coneAxisX",
+            ColorAttribute.createDiffuse(r, g, b, alpha)
+        );
+        BlendingAttribute blending = new BlendingAttribute();
+        blending.blended = false;
+        material.set(blending);
+        MeshPartBuilder mesBuilderConeX = mb.part("cone", GL20.GL_TRIANGLES, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal, material);
+        ConeShapeBuilder.build(mesBuilderConeX, 0.2f, 0.3f, 0.2f, 10);
+
+        Node cylinderX = mb.node();
+        cylinderX.id = "cylinderX";
+        cylinderX.translation.y = offset + (axisWidth / 2f + 0.011f);
+        cylinderX.calculateLocalTransform();
+        cylinderX.calculateWorldTransform();
+        MeshPartBuilder meshBuilderCylinderX = mb.part("cylinder", GL20.GL_TRIANGLES, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal,
+            material);
+
+        CylinderShapeBuilder.build(meshBuilderCylinderX, 0.07f, axisWidth - 0.022f, 0.07f, 5);
+
+        return mb.end();
+    }
 }

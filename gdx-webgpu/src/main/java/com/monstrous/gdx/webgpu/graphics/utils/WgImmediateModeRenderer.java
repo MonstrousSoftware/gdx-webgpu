@@ -41,6 +41,9 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
     private int vertexIdx;
     private final int maxVertices;
     private int numVertices;
+    private int vbOffset;
+    private int frameNumber;
+    private final int maxFlushes = 100;
 
     private final int vertexSize;
     private final int normalOffset;
@@ -77,6 +80,8 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
             ShaderProgram shader) {
         WgGraphics gfx = (WgGraphics) Gdx.graphics;
         webgpu = gfx.getContext();
+        frameNumber = -1;
+        vbOffset = 0;
 
         // matrix which will transform an opengl ortho matrix to a webgpu ortho matrix
         // by scaling the Z range from [-1..1] to [0..1]
@@ -139,6 +144,14 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
     }
 
     public void begin(Matrix4 projModelView, int primitiveType) {
+        if (webgpu.frameNumber != frameNumber) {
+            frameNumber = webgpu.frameNumber;
+            vbOffset = 0;
+            uniformBuffer.beginSlices();
+        }
+        // we reset vertexIdx and numVertices at the start of every FLUSH/end of FLUSH,
+        // so no need to do it here for every begin call in the same frame.
+
         this.projModelView.set(shiftDepthMatrix).mul(projModelView);
         this.primitiveType = primitiveType;
 
@@ -148,6 +161,7 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
             pipelineSpec.topology = WGPUPrimitiveTopology.PointList;
         else
             pipelineSpec.topology = WGPUPrimitiveTopology.TriangleList;
+        pipelineSpec.invalidateHashCode();
         pipelineSpec.setCullMode(WGPUCullMode.None);
 
         renderPass = RenderPassBuilder.create("ImmediateModeRenderer", null, false, webgpu.getSamples());
@@ -194,31 +208,35 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
         if (numVertices == 0)
             return;
 
-        setUniforms(); // push matrix to uniform buffer
+        setUniforms(); // push matrix to uniform buffer data
+
+        int uOffset = uniformBuffer.getSliceOffset();
+        uniformBuffer.nextSlice(); // write matrix to GPU at uOffset
 
         // bind texture
-        WebGPUBindGroup bg = makeBindGroup(bindGroupLayout, uniformBuffer, texture);
+        WebGPUBindGroup bg = makeBindGroup(bindGroupLayout, uniformBuffer, texture, uOffset, uniformBufferSize);
         setPipeline();
         renderPass.setPipeline(prevPipeline);
 
-        // write number of vertices to the GPU's vertex buffer
+        // write current batch of vertices to the GPU's vertex buffer
         //
         int numBytes = numVertices * vertexSize * Float.BYTES;
-        // since we used put with an index, the position was never updated
-        // set it now, because writeBuffer needs it.
-        vertexFloatBuffer.position(numVertices * vertexSize);
-        // System.out.println("write buffer in imm mode rndr: pos:"+vertexData.getPosition());
-        vertexFloatBuffer.flip(); // prepare for reading
 
-        vertexBuffer.setVertices(vertexByteBuffer, 0, numBytes);
+        // ensure vbOffset is aligned to 4 bytes
+        vbOffset = (vbOffset + 3) & ~3;
+        if (vbOffset + numBytes > vertexBuffer.getSize()) {
+            Gdx.app.error("WgImmediateModeRenderer", "Vertex buffer overflow. Increase maxVertices or maxFlushes.");
+            return;
+        }
 
-        // copy vertex data to GPU vertex buffer
-        // System.out.println("write buffer in imm mode rndr: size:"+numBytes+" byteData:
-        // "+vertexData.getByteBuffer().getLimit());
-        // webgpu.queue.writeBuffer(vertexBuffer.getBuffer(), 0, vertexByteBuffer, numBytes);
+        // The current batch always starts at 0 in our local vertexByteBuffer
+        vertexByteBuffer.position(0);
+        vertexByteBuffer.limit(numBytes);
+
+        vertexBuffer.setVertices(vertexByteBuffer, vbOffset, numBytes);
 
         // Set vertex buffer while encoding the render pass
-        renderPass.setVertexBuffer(0, vertexBuffer.getBuffer(), 0, numBytes);
+        renderPass.setVertexBuffer(0, vertexBuffer.getBuffer(), vbOffset, numBytes);
 
         renderPass.setBindGroup(0, bg.getBindGroup());
 
@@ -226,14 +244,17 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 
         bg.dispose(); // done with bind group
 
-        // reset
-        vertexIdx = 0;
+        // Prepare for next batch/flush
+        vbOffset += numBytes;
         numVertices = 0;
-        vertexFloatBuffer.clear();
+        vertexIdx = 0;
+        vertexFloatBuffer.clear(); // resets position to 0 for next batch
+        vertexByteBuffer.clear(); // resets position/limit for next batch
     }
 
     public void end() {
         flush();
+        uniformBuffer.endSlices();
         renderPass.end();
         renderPass = null;
     }
@@ -279,16 +300,16 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 
         // Create vertex buffer (no index buffer)
         vertexBuffer = new WebGPUVertexBuffer(WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Vertex),
-                maxVertices * vertexSize);
+                maxVertices * maxFlushes * vertexSize * Float.BYTES);
 
         // Create uniform buffer for the projection matrix
         uniformBufferSize = 16 * Float.BYTES;
-        uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Uniform));
+        uniformBuffer = new WebGPUUniformBuffer("ImmediateModeRenderer uniform buffer", uniformBufferSize,
+                WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Uniform), maxFlushes);
     }
 
     private void setUniforms() {
         uniformBuffer.set(0, projModelView);
-        uniformBuffer.flush();
     }
 
     private WebGPUBindGroupLayout createBindGroupLayout() {
@@ -303,10 +324,10 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
     }
 
     private WebGPUBindGroup makeBindGroup(WebGPUBindGroupLayout bindGroupLayout, WebGPUBuffer uniformBuffer,
-            WgTexture texture) {
+            WgTexture texture, int uOffset, int uSize) {
         WebGPUBindGroup bg = new WebGPUBindGroup(bindGroupLayout);
         bg.begin();
-        bg.setBuffer(0, uniformBuffer);
+        bg.setBuffer(0, uniformBuffer, uOffset, uSize);
         bg.setTexture(1, texture.getTextureView());
         bg.setSampler(2, texture.getSampler());
         bg.end();

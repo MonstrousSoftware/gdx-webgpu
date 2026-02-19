@@ -166,8 +166,10 @@ public class WgDesktopWindow implements Disposable {
                         }
                         // makeCurrent();
                         // System.out.println("context resize");
-                        listener.resize(width, height);
-                        graphics.context.resize(width, height);
+                        if (width > 0 && height > 0) {
+                            listener.resize(width, height);
+                            graphics.context.resize(width, height);
+                        }
                     } else {
                         asyncResized = true;
                         // System.out.println("Window.async resized");
