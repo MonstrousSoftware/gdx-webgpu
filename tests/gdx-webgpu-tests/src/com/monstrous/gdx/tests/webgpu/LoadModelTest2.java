@@ -93,7 +93,7 @@ public class LoadModelTest2 extends GdxTest {
         loadedAll = false;
         loadedFirst = false;
 
-        assets.load(fileNames[0], Model.class);
+        assets.load(fileNames[fileNames.length-1], Model.class);
 
         // Create an environment with lights
         environment = new Environment();
@@ -162,7 +162,7 @@ public class LoadModelTest2 extends GdxTest {
         float delta = Gdx.graphics.getDeltaTime();
         if (!loadedFirst && assets.update()) { // advance loading
             loadedFirst = true;
-            model = assets.get(fileNames[0], Model.class);
+            model = assets.get(fileNames[fileNames.length-1], Model.class);
             instance = new ModelInstance(model);
             // start loading rest of assets
             for (int i = 1; i < fileNames.length; i++) {

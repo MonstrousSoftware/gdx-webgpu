@@ -26,6 +26,7 @@ import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.model.NodeAnimation;
 import com.badlogic.gdx.graphics.g3d.model.data.*;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.*;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ArrayMap;
@@ -34,6 +35,8 @@ import com.monstrous.gdx.webgpu.graphics.g3d.loaders.gltf.*;
 import com.monstrous.gdx.webgpu.graphics.g3d.model.PBRModelTexture;
 import com.monstrous.gdx.webgpu.graphics.g3d.model.WgModelMeshPart;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -263,8 +266,8 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
         modelData.materials.add(modelMaterial);
         fallbackMaterialId = modelData.materials.size - 1;
 
-        long endLoad = System.currentTimeMillis();
-        System.out.println("Material loading/generation time (ms): " + (endLoad - startLoad));
+//        long endLoad = System.currentTimeMillis();
+//        System.out.println("Material loading/generation time (ms): " + (endLoad - startLoad));
     }
 
     private void loadMeshes(ModelData modelData, GLTF gltf) {
@@ -276,8 +279,8 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
             buildMesh(modelData, gltf, gltfMesh);
         }
 
-        long endLoad = System.currentTimeMillis();
-        System.out.println("Mesh loading time (ms): " + (endLoad - startLoad));
+//        long endLoad = System.currentTimeMillis();
+//        System.out.println("Mesh loading time (ms): " + (endLoad - startLoad));
     }
 
     /** convert all nodes, but does not yet create a node hierarchy */
@@ -306,15 +309,27 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
         }
     }
 
+    private static final String MORPH_PREFIX = ".morph.";
+
+    private FloatBuffer getFloatBuffer(GLTF gltf, GLTFAccessor accessor) {
+        GLTFBufferView view = gltf.bufferViews.get(accessor.bufferView);
+        GLTFRawBuffer rawBuffer = gltf.rawBuffers.get(view.buffer);
+        ByteBuffer byteBuffer = rawBuffer.byteBuffer.duplicate().order(ByteOrder.LITTLE_ENDIAN);
+        byteBuffer.position(view.byteOffset + accessor.byteOffset);
+        return byteBuffer.slice().order(ByteOrder.LITTLE_ENDIAN).asFloatBuffer();
+    }
+
     private void loadAnimations(ModelData modelData, GLTF gltf) {
         for (GLTFAnimation gltfAnim : gltf.animations) {
             ModelAnimation animation = new ModelAnimation();
             animation.id = gltfAnim.name != null ? gltfAnim.name : "anim" + numAnimations;
             numAnimations++;
             for (GLTFAnimationChannel gltfChannel : gltfAnim.channels) {
-                // Note: all channels for the same node need to be captured in the same ModelNodeAnimation
-                //
+                if (gltfChannel.node < 0)
+                    continue;
+
                 String nodeId = nodes.get(gltfChannel.node).id;
+
                 // see if we already have a ModelNodeAnimation for this node
                 ModelNodeAnimation nodeAnimation = null;
                 for (ModelNodeAnimation na : animation.nodeAnimations) {
@@ -324,40 +339,85 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                     }
                 }
                 // othwerwise create one
-                if (nodeAnimation == null)
+                if (nodeAnimation == null) {
                     nodeAnimation = new ModelNodeAnimation();
-                nodeAnimation.nodeId = nodeId;
-
-                int numComponents = 3;
-                if (gltfChannel.path.contentEquals("rotation"))
-                    numComponents = 4; // 4 floats per quaternion
+                    nodeAnimation.nodeId = nodeId;
+                    animation.nodeAnimations.add(nodeAnimation);
+                }
 
                 GLTFAnimationSampler sampler = gltfAnim.samplers.get(gltfChannel.sampler);
                 GLTFAccessor inAccessor = gltf.accessors.get(sampler.input); // key frame time stamps
                 GLTFAccessor outAccessor = gltf.accessors.get(sampler.output); // key frame values (translation,
-                                                                               // rotation or scale)
-                // ignore interpolation, we only do linear
+                                                                               // rotation or scale or weights)
 
-                GLTFBufferView inView = gltf.bufferViews.get(inAccessor.bufferView);
-                GLTFRawBuffer rawBuffer = gltf.rawBuffers.get(inView.buffer);
-                rawBuffer.byteBuffer.position(inView.byteOffset + inAccessor.byteOffset); // does this carry over to
-                                                                                          // floatbuf?
-                FloatBuffer timeBuf = rawBuffer.byteBuffer.asFloatBuffer();
+                FloatBuffer timeBuf = getFloatBuffer(gltf, inAccessor);
                 float[] times = new float[inAccessor.count];
-                timeBuf.get(times, 0, inAccessor.count);
+                timeBuf.get(times);
 
-                GLTFBufferView outView = gltf.bufferViews.get(outAccessor.bufferView);
-                rawBuffer = gltf.rawBuffers.get(outView.buffer);
-                rawBuffer.byteBuffer.position(outView.byteOffset + outAccessor.byteOffset); // does this carry over to
-                                                                                            // floatbuf?
-                FloatBuffer floatBuf = rawBuffer.byteBuffer.asFloatBuffer();
-                float[] floats = new float[numComponents * outAccessor.count];
-                floatBuf.get(floats, 0, numComponents * outAccessor.count);
+                FloatBuffer floatBuf = getFloatBuffer(gltf, outAccessor);
+
+                int isCubic = sampler.interpolation.contentEquals("CUBICSPLINE") ? 3 : 1;
+
+                if (gltfChannel.path.contentEquals("weights")) {
+                    int numTargets = (outAccessor.count / inAccessor.count) / isCubic;
+                    float[] floats = new float[outAccessor.count];
+                    floatBuf.get(floats);
+
+                    // support only up to 8 morph targets
+                    int activeTargets = Math.min(numTargets, 8);
+
+                    for (int i = 0; i < activeTargets; i++) {
+                        String childNodeId = nodeId + MORPH_PREFIX + i;
+                        ModelNodeAnimation childAnim = null;
+                        for (ModelNodeAnimation na : animation.nodeAnimations) {
+                            if (na.nodeId.contentEquals(childNodeId)) {
+                                childAnim = na;
+                                break;
+                            }
+                        }
+                        if (childAnim == null) {
+                            childAnim = new ModelNodeAnimation();
+                            childAnim.nodeId = childNodeId;
+                            animation.nodeAnimations.add(childAnim);
+                        }
+                        if (childAnim.translation == null)
+                            childAnim.translation = new Array<>();
+
+                        for (int key = 0; key < inAccessor.count; key++) {
+                            ModelNodeKeyframe<Vector3> kf = new ModelNodeKeyframe<>();
+                            kf.keytime = times[key];
+                            // for CUBICSPLINE, the data is [in-tangent, value, out-tangent] per component
+                            // we just take the value (middle one)
+                            int stride = numTargets * isCubic;
+                            int offsetVal = (isCubic == 3) ? numTargets : 0;
+                            float val = floats[key * stride + offsetVal + i];
+                            kf.value = new Vector3(val, 0, 0);
+
+                            if (key == 0 && kf.keytime > 0) {
+                                ModelNodeKeyframe<Vector3> startKey = new ModelNodeKeyframe<>();
+                                startKey.keytime = 0;
+                                startKey.value = new Vector3(val, 0, 0);
+                                childAnim.translation.add(startKey);
+                            }
+                            childAnim.translation.add(kf);
+                        }
+                        // System.out.println("    Loaded " + childAnim.translation.size + " keyframes for morph target " + i + " of node " + nodeId);
+                    }
+                    continue;
+                }
+
+                int componentsPerValue = outAccessor.type.contentEquals("VEC3") ? 3 : (outAccessor.type.contentEquals("VEC4") ? 4 : (outAccessor.type.contentEquals("SCALAR") ? 1 : 0));
+                float[] floats = new float[outAccessor.count * componentsPerValue];
+                floatBuf.get(floats);
 
                 for (int key = 0; key < inAccessor.count; key++) {
                     float time = times[key];
+                    int stride = componentsPerValue * isCubic;
+                    int offsetVal = (isCubic == 3) ? componentsPerValue : 0;
+                    int base = key * stride + offsetVal;
+
                     if (gltfChannel.path.contentEquals("translation")) {
-                        Vector3 tr = new Vector3(floats[3 * key], floats[3 * key + 1], floats[3 * key + 2]);
+                        Vector3 tr = new Vector3(floats[base], floats[base + 1], floats[base + 2]);
                         ModelNodeKeyframe<Vector3> keyFrame = new ModelNodeKeyframe<Vector3>();
                         keyFrame.keytime = time;
                         keyFrame.value = tr;
@@ -373,8 +433,8 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                         }
                         nodeAnimation.translation.add(keyFrame);
                     } else if (gltfChannel.path.contentEquals("rotation")) {
-                        Quaternion q = new Quaternion(floats[4 * key], floats[4 * key + 1], floats[4 * key + 2],
-                                floats[4 * key + 3]);
+                        Quaternion q = new Quaternion(floats[base], floats[base + 1], floats[base + 2],
+                                floats[base + 3]);
                         q.nor();
                         ModelNodeKeyframe<Quaternion> keyFrame = new ModelNodeKeyframe<Quaternion>();
                         keyFrame.keytime = time;
@@ -390,26 +450,26 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                         }
                         nodeAnimation.rotation.add(keyFrame);
                     } else if (gltfChannel.path.contentEquals("scale")) {
-                        // todo scaling breaks the animation even if all values are Vector3(1,1,1)
-                        Vector3 sc = new Vector3(floats[3 * key], floats[3 * key + 1], floats[3 * key + 2]);
+                        Vector3 sc = new Vector3(floats[base], floats[base + 1], floats[base + 2]);
                         ModelNodeKeyframe<Vector3> keyFrame = new ModelNodeKeyframe<Vector3>();
                         keyFrame.keytime = time;
-                        keyFrame.value = new Vector3(1, 1, 1); // sc;
+                        keyFrame.value = sc;
                         if (nodeAnimation.scaling == null) {
                             nodeAnimation.scaling = new Array<>();
                             if (time > 0) { // insert key frame for t = 0
                                 ModelNodeKeyframe<Vector3> startKey = new ModelNodeKeyframe<Vector3>();
                                 startKey.keytime = 0;
-                                startKey.value = new Vector3(1, 1, 1);// sc
+                                startKey.value = sc;
                                 nodeAnimation.scaling.add(startKey);
                             }
                         }
                         nodeAnimation.scaling.add(keyFrame);
                     }
                 }
-                animation.nodeAnimations.add(nodeAnimation);
             }
-            modelData.animations.add(animation);
+            if (animation.nodeAnimations.size > 0) {
+                modelData.animations.add(animation);
+            }
         }
     }
 
@@ -533,6 +593,20 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
             // translate to ModelNodePart per GLTF primitive
             GLTFMesh gltfMesh = gltf.meshes.get(gltfNode.mesh);
 
+            // if mesh has morph targets, create child nodes to store/animate their weights
+            if (!gltfMesh.primitives.isEmpty() && !gltfMesh.primitives.get(0).targets.isEmpty()) {
+                int numTargets = Math.min(gltfMesh.primitives.get(0).targets.size(), 8);
+                node.children = new ModelNode[numTargets];
+                for (int i = 0; i < numTargets; i++) {
+                    ModelNode morphNode = new ModelNode();
+                    morphNode.id = node.id + MORPH_PREFIX + i;
+                    morphNode.translation = new Vector3(0, 0, 0);
+                    if (gltfNode.weights != null && i < gltfNode.weights.length)
+                        morphNode.translation.x = gltfNode.weights[i];
+                    node.children[i] = morphNode;
+                }
+            }
+
             node.parts = new ModelNodePart[gltfMesh.primitives.size()];
             // assumes mesh is dedicated to this node
 
@@ -566,14 +640,23 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
     }
 
     private void addNodeHierarchy(ModelData model, GLTF gltf, GLTFNode gltfNode, ModelNode root) {
-        // now add any children
-        root.children = new ModelNode[gltfNode.children.size()];
-        int i = 0;
-        for (int j : gltfNode.children) {
-            GLTFNode gltfChild = gltf.nodes.get(j);
-            ModelNode child = nodes.get(j);
-            root.children[i++] = child;
-            addNodeHierarchy(model, gltf, gltfChild, child);
+        // now add any children from GLTF node
+        int numGltfChildren = gltfNode.children.size();
+        int existingChildren = (root.children == null) ? 0 : root.children.length;
+
+        if (numGltfChildren > 0) {
+            ModelNode[] newChildren = new ModelNode[existingChildren + numGltfChildren];
+            if (existingChildren > 0)
+                System.arraycopy(root.children, 0, newChildren, 0, existingChildren);
+
+            for (int i = 0; i < numGltfChildren; i++) {
+                int childIndex = gltfNode.children.get(i);
+                GLTFNode gltfChild = gltf.nodes.get(childIndex);
+                ModelNode child = nodes.get(childIndex);
+                newChildren[existingChildren + i] = child;
+                addNodeHierarchy(model, gltf, gltfChild, child);
+            }
+            root.children = newChildren;
         }
     }
 
@@ -593,6 +676,8 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
             ArrayList<Vector4> joints = new ArrayList<>();
             ArrayList<Vector4> weights = new ArrayList<>();
             ArrayList<Vector3> bitangents = new ArrayList<>();
+            ArrayList<ArrayList<Vector3>> morphPositions = new ArrayList<>();
+
             boolean hasNormalMap = false;
 
             // if the primitive has a normal texture, the mesh will need tangents and binormals
@@ -606,9 +691,16 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
             va.add(VertexAttribute.Normal());
 
             if (hasNormalMap) {
-                va.add(VertexAttribute.Tangent());
+                va.add(new VertexAttribute(VertexAttributes.Usage.Tangent, 3, ShaderProgram.TANGENT_ATTRIBUTE));
                 va.add(VertexAttribute.Binormal());
             }
+
+            int numMorphTargets = Math.min(primitive.targets.size(), 8); // support up to 8 morph targets
+            for (int i = 0; i < numMorphTargets; i++) {
+                va.add(new VertexAttribute(VertexAttributes.Usage.Generic, 3, "a_position_morph_" + i));
+                // Note: morph normals are not added as vertex attributes because the shader only uses morph positions.
+            }
+
             for (GLTFAttribute attrib : primitive.attributes) {
                 // weight factor and joint id are combined in the BoneWeight attribute which is a vec2
                 if (attrib.name.contentEquals("JOINTS_0")) { // todo only supports _0
@@ -666,7 +758,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                     for (int i = 0; i < indexAccessor.count; i++) {
                         modelMeshPart.indices32[i] = rawBuffer.byteBuffer.getInt();
                     }
-                    System.out.println("Using 32 bit indices:  " + indexAccessor.count);
+//                    System.out.println("Using 32 bit indices:  " + indexAccessor.count);
                 }
             }
 
@@ -697,6 +789,32 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                     weightsAccessorId = attribute.value;
                 }
             }
+
+            for (int m = 0; m < numMorphTargets; m++) {
+                ArrayList<GLTFAttribute> target = primitive.targets.get(m);
+                int mPosId = -1;
+                for (GLTFAttribute attribute : target) {
+                    if (attribute.name.contentEquals("POSITION"))
+                        mPosId = attribute.value;
+                    // morph normals are intentionally skipped: the shader only applies morph positions
+                }
+
+                ArrayList<Vector3> mPositions = new ArrayList<>();
+                if (mPosId >= 0) {
+                    GLTFAccessor accessor = gltf.accessors.get(mPosId);
+                    view = gltf.bufferViews.get(accessor.bufferView);
+                    rawBuffer = gltf.rawBuffers.get(view.buffer);
+                    offset = view.byteOffset + accessor.byteOffset;
+                    int byteStride = (view.byteStride != 0) ? view.byteStride : 3 * Float.BYTES;
+                    for (int i = 0; i < accessor.count; i++) {
+                        rawBuffer.byteBuffer.position(offset + i * byteStride);
+                        mPositions.add(new Vector3(rawBuffer.byteBuffer.getFloat(), rawBuffer.byteBuffer.getFloat(),
+                                rawBuffer.byteBuffer.getFloat()));
+                    }
+                }
+                morphPositions.add(mPositions);
+            }
+
             if (positionAccessorId < 0)
                 throw new RuntimeException("GLTF: need POSITION attribute");
             GLTFAccessor positionAccessor = gltf.accessors.get(positionAccessorId);
@@ -818,10 +936,10 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
 
                 boolean isByte = (jointsAccessor.componentType == GLTF.UBYTE8);
                 short u1, u2, u3, u4;
-                byteStride = (view.byteStride != 0) ? view.byteStride : (isByte ? 4 : 4 * Short.BYTES);
+                int byteStrideJoints = (view.byteStride != 0) ? view.byteStride : (isByte ? 4 : 4 * Short.BYTES);
                 for (int i = 0; i < jointsAccessor.count; i++) {
                     // note we use byte stride per joint
-                    rawBuffer.byteBuffer.position(offset + i * byteStride);
+                    rawBuffer.byteBuffer.position(offset + i * byteStrideJoints);
                     // assuming ubyte8 or ushort16 (handled as (signed) short here)
                     if (isByte) {
                         u1 = rawBuffer.byteBuffer.get();
@@ -855,9 +973,9 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                 offset = view.byteOffset;
                 offset += accessor.byteOffset;
                 // rawBuffer.byteBuffer.position(offset);
-                byteStride = (view.byteStride != 0) ? view.byteStride : 4 * Float.BYTES;
+                int byteStrideWeights = (view.byteStride != 0) ? view.byteStride : 4 * Float.BYTES;
                 for (int i = 0; i < accessor.count; i++) {
-                    rawBuffer.byteBuffer.position(offset + i * byteStride);
+                    rawBuffer.byteBuffer.position(offset + i * byteStrideWeights);
                     float f1 = rawBuffer.byteBuffer.getFloat();
                     float f2 = rawBuffer.byteBuffer.getFloat();
                     float f3 = rawBuffer.byteBuffer.getFloat();
@@ -888,6 +1006,8 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                 vertSize += 4;
             if (!weights.isEmpty())
                 vertSize += 4;
+
+            vertSize += numMorphTargets * 3; // 3 for position per target
 
             float[] verts = new float[positions.size() * vertSize];
             modelMesh.vertices = verts;
@@ -936,6 +1056,14 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                     verts[ix++] = weight.z;
                     verts[ix++] = weight.w;
                 }
+
+                for (int m = 0; m < numMorphTargets; m++) {
+                    Vector3 mPos = (morphPositions.get(m).isEmpty()) ? Vector3.Zero : morphPositions.get(m).get(i);
+                    verts[ix++] = mPos.x;
+                    verts[ix++] = mPos.y;
+                    verts[ix++] = mPos.z;
+                    // morph normals intentionally omitted: the shader only applies morph positions
+                }
             }
             modelData.addMesh(modelMesh);
         }
@@ -948,7 +1076,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
         Vector2 uv;
     }
 
-    private void addTBN(final ModelMeshPart modelData, final ArrayList<Vector3> positions,
+    private void addTBN(final WgModelMeshPart modelData, final ArrayList<Vector3> positions,
             final ArrayList<Vector2> textureCoordinates, final ArrayList<Vector3> normals, ArrayList<Vector3> tangents,
             ArrayList<Vector3> bitangents) {
 
@@ -959,21 +1087,22 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
         for (int i = 0; i < 3; i++)
             corners[i] = new Vertex();
 
-        // todo assumes short index
-        for (int j = 0; j < modelData.indices.length; j += 3) { // for each triangle
+        int numIndices = (modelData.indices != null) ? modelData.indices.length : modelData.indices32.length;
+
+        for (int j = 0; j < numIndices; j += 3) { // for each triangle
             for (int i = 0; i < 3; i++) { // for each corner
-                int index = modelData.indices[i]; // assuming we use an indexed mesh
+                int index = (modelData.indices != null) ? (modelData.indices[j + i] & 0xFFFF) : modelData.indices32[j + i];
 
                 corners[i].position = positions.get(index);
                 corners[i].normal = normals.get(index);
-                corners[i].uv = textureCoordinates.get(index);
+                corners[i].uv = textureCoordinates.size() > index ? textureCoordinates.get(index) : Vector2.Zero;
             }
 
             calculateBTN(corners, T, B);
 
             for (int i = 0; i < 3; i++) {
-                tangents.add(T);
-                bitangents.add(B);
+                tangents.add(new Vector3(T));
+                bitangents.add(new Vector3(B));
             }
         }
     }
@@ -1399,7 +1528,4 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
     // }
     // }
     // }
-    // }
-    // }
-
 }

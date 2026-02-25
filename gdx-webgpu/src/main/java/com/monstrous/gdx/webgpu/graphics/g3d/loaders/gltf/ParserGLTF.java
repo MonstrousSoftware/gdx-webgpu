@@ -25,6 +25,8 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
 
+import java.util.ArrayList;
+
 public class ParserGLTF {
 
     /**
@@ -64,7 +66,7 @@ public class ParserGLTF {
             }
         }
 
-        JsonValue.JsonIterator sampls = fromJson.iterator("images");
+        JsonValue.JsonIterator sampls = fromJson.iterator("samplers");
         if (sampls != null) {
             while (sampls.hasNext()) {
                 GLTFSampler sampler = new GLTFSampler();
@@ -176,6 +178,23 @@ public class ParserGLTF {
                             primitive.attributes.add(attribute);
                             attrib = attrib.next;
                         }
+
+                        JsonValue trgs = p.get("targets");
+                        if (trgs != null) {
+                            JsonValue trg = trgs.child;
+                            while (trg != null) {
+                                ArrayList<GLTFAttribute> target = new ArrayList<>();
+                                JsonValue targetAttrib = trg.child;
+                                while (targetAttrib != null) {
+                                    GLTFAttribute attribute = new GLTFAttribute(targetAttrib.name, targetAttrib.asInt());
+                                    target.add(attribute);
+                                    targetAttrib = targetAttrib.next;
+                                }
+                                primitive.targets.add(target);
+                                trg = trg.next;
+                            }
+                        }
+
                         mesh.primitives.add(primitive);
                     }
                 }
@@ -265,6 +284,9 @@ public class ParserGLTF {
                     float[] tr = nd.get("matrix").asFloatArray();
                     node.matrix = new Matrix4(tr);
                 }
+                if (nd.has("weights")) {
+                    node.weights = nd.get("weights").asFloatArray();
+                }
                 if (nd.has("children")) {
                     int[] ch = nd.get("children").asIntArray();
                     for (int i = 0; i < ch.length; i++)
@@ -336,7 +358,10 @@ public class ParserGLTF {
                         // System.out.println("sampler: " + channel.sampler);
 
                         JsonValue tgt = ch.get("target");
-                        channel.node = tgt.get("node").asInt();
+                        if (tgt.has("node"))
+                            channel.node = tgt.get("node").asInt();
+                        else
+                            channel.node = -1;
                         channel.path = tgt.get("path").asString();
                         // System.out.println("target: " + channel.node+" "+channel.path);
 

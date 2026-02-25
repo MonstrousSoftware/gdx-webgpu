@@ -23,6 +23,8 @@ import com.badlogic.gdx.graphics.g3d.attributes.*;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
+import com.badlogic.gdx.graphics.g3d.model.Node;
+import com.badlogic.gdx.graphics.g3d.model.NodePart;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Matrix4;
@@ -57,6 +59,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
     private int numRigged;
     private int rigSize; // bytes per rigged instance
     private final PipelineCache pipelineCache; // cache of pipelines for different render targets
+    private final float[] tmpWeights = new float[8];
     private final WGPUPipelineLayout pipelineLayout;
     private final PipelineSpecification pipelineSpec;
     private WebGPURenderPass renderPass;
@@ -161,6 +164,14 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
         binder.defineBinding("jointMatrices", 3, 0);
 
+        boolean hasMorph = false;
+        for (VertexAttribute attr : renderable.meshPart.mesh.getVertexAttributes()) {
+            if (attr.alias.startsWith("a_position_morph_")) {
+                hasMorph = true;
+                break;
+            }
+        }
+
         // define uniforms in uniform buffers with their offset
         // frame uniforms
         int offset = 0;
@@ -220,7 +231,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
         // binder.setBuffer("materialUniforms", materialBuffer, 0, materialSize);
 
-        int instanceSize = 2 * 16 * Float.BYTES; // data size per instance
+        int instanceSize = (2 * 16 + 8) * Float.BYTES; // 2 matrices + 8 morph weights
 
         // for now we use a uniform buffer, but we organize data as an array of modelMatrix
         // we are not using dynamic offsets, but we will index the array in teh shader code using the instance_index
@@ -261,6 +272,9 @@ public class WgDefaultShader extends WgShader implements Disposable {
         pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.TANGENT_ATTRIBUTE, 3);
         pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.BINORMAL_ATTRIBUTE, 4);
         pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.BONEWEIGHT_ATTRIBUTE, 7);
+        for (int i = 0; i < 8; i++) {
+            pipelineSpec.vertexLayout.setVertexAttributeLocation("a_position_morph_" + i, 8 + i);
+        }
 
         // default blending values
         blended = renderable.material.has(BlendingAttribute.Type)
@@ -455,11 +469,46 @@ public class WgDefaultShader extends WgShader implements Disposable {
         // renderable-specific data
 
         // add instance data to instance buffer (instance transform)
-        int offset = instanceIndex * 2 * 16 * Float.BYTES;
+        int offset = instanceIndex * (2 * 16 + 8) * Float.BYTES;
         // set world transform for this instance
         instanceBuffer.set(offset, renderable.worldTransform);
         // normal matrix is transpose of inverse of world transform
         instanceBuffer.set(offset + 16 * Float.BYTES, tmpM.set(renderable.worldTransform).inv().tra());
+
+        // Clear previous weights
+        for (int i = 0; i < 8; i++)
+            tmpWeights[i] = 0;
+
+        int numWeights = 0;
+        Node node = null;
+        if (renderable.userData instanceof Node) {
+            node = (Node) renderable.userData;
+        }
+
+        if (node != null) {
+            for (Node child : node.getChildren()) {
+                String childId = child.id;
+                int morphIdx = childId.indexOf(".morph.");
+                if (morphIdx >= 0) {
+                    try {
+                        int index = Integer.parseInt(childId.substring(morphIdx + 7));
+                        if (index < 8) {
+                            // Read from localTransform because AnimationController updates localTransform,
+                            // not the node.translation field
+                            tmpWeights[index] = child.localTransform.val[Matrix4.M03];
+                            numWeights = Math.max(numWeights, index + 1);
+                        }
+                    } catch (NumberFormatException e) {
+                    }
+                }
+            }
+        }
+
+
+        // Update weights in the buffer
+        for (int i = 0; i < 8; i++) {
+            instanceBuffer.set(offset + 32 * Float.BYTES + i * Float.BYTES, tmpWeights[i]);
+        }
 
         // don't use Material.hashCode() because that also looks at the id which is not relevant
         int materialHash = renderable.material.attributesHash();
@@ -570,7 +619,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch Binding Group Layout (instance)");
         layout.begin();
         layout.addBuffer(0, WGPUShaderStage.Vertex, WGPUBufferBindingType.ReadOnlyStorage,
-                2 * 16 * Float.BYTES * config.maxInstances, false);
+                (2 * 16 + 8) * Float.BYTES * config.maxInstances, false);
         layout.end();
         return layout;
     }
