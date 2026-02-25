@@ -38,6 +38,8 @@ struct FrameUniforms {
 struct ModelUniforms {
     modelMatrix: mat4x4f,
     normalMatrix: mat4x4f,
+    morphWeights: vec4f,
+    morphWeights2: vec4f,
 };
 
 struct MaterialUniforms {
@@ -104,6 +106,32 @@ struct VertexInput {
     @location(6) joints: vec4f,
     @location(7) weights: vec4f,
 #endif
+#ifdef MORPH
+#ifdef MORPH_0
+    @location(8) morph_pos0: vec3f,
+#endif
+#ifdef MORPH_1
+    @location(9) morph_pos1: vec3f,
+#endif
+#ifdef MORPH_2
+    @location(10) morph_pos2: vec3f,
+#endif
+#ifdef MORPH_3
+    @location(11) morph_pos3: vec3f,
+#endif
+#ifdef MORPH_4
+    @location(12) morph_pos4: vec3f,
+#endif
+#ifdef MORPH_5
+    @location(13) morph_pos5: vec3f,
+#endif
+#ifdef MORPH_6
+    @location(14) morph_pos6: vec3f,
+#endif
+#ifdef MORPH_7
+    @location(15) morph_pos7: vec3f,
+#endif
+#endif
 
 };
 
@@ -131,6 +159,38 @@ const pi : f32 = 3.14159265359;
 fn vs_main(in: VertexInput, @builtin(instance_index) instance: u32) -> VertexOutput {
    var out: VertexOutput;
 
+   var pos = in.position;
+#ifdef MORPH
+#ifdef MORPH_0
+   pos += instances[instance].morphWeights[0] * in.morph_pos0;
+#endif
+#ifdef MORPH_1
+   pos += instances[instance].morphWeights[1] * in.morph_pos1;
+#endif
+#ifdef MORPH_2
+   pos += instances[instance].morphWeights[2] * in.morph_pos2;
+#endif
+#ifdef MORPH_3
+   pos += instances[instance].morphWeights[3] * in.morph_pos3;
+#endif
+#ifdef MORPH_4
+   pos += instances[instance].morphWeights2[0] * in.morph_pos4;
+#endif
+#ifdef MORPH_5
+   pos += instances[instance].morphWeights2[1] * in.morph_pos5;
+#endif
+#ifdef MORPH_6
+   pos += instances[instance].morphWeights2[2] * in.morph_pos6;
+#endif
+#ifdef MORPH_7
+   pos += instances[instance].morphWeights2[3] * in.morph_pos7;
+#endif
+#endif
+
+   var normal_attr = vec3f(0,1,0);
+#ifdef NORMAL
+   normal_attr = in.normal;
+#endif
 
 #ifdef SKIN
      // Get relevant 4 bone matrices
@@ -148,9 +208,9 @@ fn vs_main(in: VertexInput, @builtin(instance_index) instance: u32) -> VertexOut
        joint3 * in.weights[3];
 
      // Bone transformed mesh
-   let worldPosition =   instances[instance].modelMatrix * skinMatrix * vec4f(in.position, 1.0);
+   let worldPosition =   instances[instance].modelMatrix * skinMatrix * vec4f(pos, 1.0);
 #else
-   let worldPosition =  instances[instance].modelMatrix * vec4f(in.position, 1.0);
+   let worldPosition =  instances[instance].modelMatrix * vec4f(pos, 1.0);
 #endif
 
    out.position =   uFrame.projectionViewTransform * worldPosition;
@@ -171,7 +231,7 @@ fn vs_main(in: VertexInput, @builtin(instance_index) instance: u32) -> VertexOut
 
 #ifdef NORMAL
    // transform model normal to a world normal
-   let normal = normalize((instances[instance].normalMatrix * vec4f(in.normal, 0.0)).xyz);
+   let normal = normalize((instances[instance].normalMatrix * vec4f(normal_attr, 0.0)).xyz);
 #else
    let normal = vec3f(0,1,0);
 #endif
