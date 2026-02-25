@@ -266,8 +266,8 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
         modelData.materials.add(modelMaterial);
         fallbackMaterialId = modelData.materials.size - 1;
 
-//        long endLoad = System.currentTimeMillis();
-//        System.out.println("Material loading/generation time (ms): " + (endLoad - startLoad));
+        // long endLoad = System.currentTimeMillis();
+        // System.out.println("Material loading/generation time (ms): " + (endLoad - startLoad));
     }
 
     private void loadMeshes(ModelData modelData, GLTF gltf) {
@@ -279,8 +279,8 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
             buildMesh(modelData, gltf, gltfMesh);
         }
 
-//        long endLoad = System.currentTimeMillis();
-//        System.out.println("Mesh loading time (ms): " + (endLoad - startLoad));
+        // long endLoad = System.currentTimeMillis();
+        // System.out.println("Mesh loading time (ms): " + (endLoad - startLoad));
     }
 
     /** convert all nodes, but does not yet create a node hierarchy */
@@ -401,12 +401,15 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                             }
                             childAnim.translation.add(kf);
                         }
-                        // System.out.println("    Loaded " + childAnim.translation.size + " keyframes for morph target " + i + " of node " + nodeId);
+                        // System.out.println(" Loaded " + childAnim.translation.size + " keyframes for morph target " +
+                        // i + " of node " + nodeId);
                     }
                     continue;
                 }
 
-                int componentsPerValue = outAccessor.type.contentEquals("VEC3") ? 3 : (outAccessor.type.contentEquals("VEC4") ? 4 : (outAccessor.type.contentEquals("SCALAR") ? 1 : 0));
+                int componentsPerValue = outAccessor.type.contentEquals("VEC3") ? 3
+                        : (outAccessor.type.contentEquals("VEC4") ? 4
+                                : (outAccessor.type.contentEquals("SCALAR") ? 1 : 0));
                 float[] floats = new float[outAccessor.count * componentsPerValue];
                 floatBuf.get(floats);
 
@@ -758,7 +761,7 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
                     for (int i = 0; i < indexAccessor.count; i++) {
                         modelMeshPart.indices32[i] = rawBuffer.byteBuffer.getInt();
                     }
-//                    System.out.println("Using 32 bit indices:  " + indexAccessor.count);
+                    // System.out.println("Using 32 bit indices: " + indexAccessor.count);
                 }
             }
 
@@ -1091,7 +1094,8 @@ public class WgGLTFModelLoader extends WgModelLoader<WgModelLoader.ModelParamete
 
         for (int j = 0; j < numIndices; j += 3) { // for each triangle
             for (int i = 0; i < 3; i++) { // for each corner
-                int index = (modelData.indices != null) ? (modelData.indices[j + i] & 0xFFFF) : modelData.indices32[j + i];
+                int index = (modelData.indices != null) ? (modelData.indices[j + i] & 0xFFFF)
+                        : modelData.indices32[j + i];
 
                 corners[i].position = positions.get(index);
                 corners[i].normal = normals.get(index);

@@ -186,7 +186,8 @@ public class ParserGLTF {
                                 ArrayList<GLTFAttribute> target = new ArrayList<>();
                                 JsonValue targetAttrib = trg.child;
                                 while (targetAttrib != null) {
-                                    GLTFAttribute attribute = new GLTFAttribute(targetAttrib.name, targetAttrib.asInt());
+                                    GLTFAttribute attribute = new GLTFAttribute(targetAttrib.name,
+                                            targetAttrib.asInt());
                                     target.add(attribute);
                                     targetAttrib = targetAttrib.next;
                                 }

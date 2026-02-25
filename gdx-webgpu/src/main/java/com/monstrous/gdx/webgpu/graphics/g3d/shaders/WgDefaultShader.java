@@ -504,7 +504,6 @@ public class WgDefaultShader extends WgShader implements Disposable {
             }
         }
 
-
         // Update weights in the buffer
         for (int i = 0; i < 8; i++) {
             instanceBuffer.set(offset + 32 * Float.BYTES + i * Float.BYTES, tmpWeights[i]);
