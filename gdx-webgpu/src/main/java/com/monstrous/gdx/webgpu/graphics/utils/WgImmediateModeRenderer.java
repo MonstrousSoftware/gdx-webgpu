@@ -55,9 +55,10 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
     private WebGPUVertexBuffer vertexBuffer;
     private WebGPUUniformBuffer uniformBuffer;
     private int uniformBufferSize;
-    private final WebGPUBindGroupLayout bindGroupLayout;
+    private WebGPUBindGroupLayout bindGroupLayout;
     private WGPUPipelineLayout pipelineLayout;
     private final PipelineCache pipelines;
+    private final BindGroupCache bindGroupCache;
     private final PipelineSpecification pipelineSpec;
     private WgTexture texture;
     private WebGPURenderPass renderPass;
@@ -109,6 +110,7 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
         pipelineLayout = createPipelineLayout("ImmediateModeRenderer pipeline layout", bindGroupLayout);
 
         pipelines = new PipelineCache();
+        bindGroupCache = new BindGroupCache();
         pipelineSpec = new PipelineSpecification("ImmediateModeRenderer pipeline", vertexAttributes,
                 defaultShaderSource());
         // define locations of vertex attributes in line with shader code
@@ -242,8 +244,6 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 
         renderPass.draw(numVertices);
 
-        bg.dispose(); // done with bind group
-
         // Prepare for next batch/flush
         vbOffset += numBytes;
         numVertices = 0;
@@ -255,6 +255,7 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
     public void end() {
         flush();
         uniformBuffer.endSlices();
+        bindGroupCache.reset(); // reset bind groups for reuse next frame
         renderPass.end();
         renderPass = null;
     }
@@ -325,13 +326,8 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 
     private WebGPUBindGroup makeBindGroup(WebGPUBindGroupLayout bindGroupLayout, WebGPUBuffer uniformBuffer,
             WgTexture texture, int uOffset, int uSize) {
-        WebGPUBindGroup bg = new WebGPUBindGroup(bindGroupLayout);
-        bg.begin();
-        bg.setBuffer(0, uniformBuffer, uOffset, uSize);
-        bg.setTexture(1, texture.getTextureView());
-        bg.setSampler(2, texture.getSampler());
-        bg.end();
-        return bg;
+        return bindGroupCache.getBindGroup(bindGroupLayout, uniformBuffer, uOffset, uSize, texture.getTextureView(),
+                texture.getSampler());
     }
 
     // create or reuse pipeline on demand to match the pipeline spec
@@ -360,6 +356,7 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
     @Override
     public void dispose() {
         pipelines.dispose();
+        bindGroupCache.dispose();
         vertexBuffer.dispose();
         texture.dispose();
 

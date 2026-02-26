@@ -36,6 +36,7 @@ import com.monstrous.gdx.webgpu.application.WgGraphics;
  */
 public class WebGPUBindGroup implements Disposable {
     private WGPUBindGroup bindGroup = null;
+    private boolean isReleased;
     private final WebGPUContext webgpu;
 
     private final WGPUBindGroupDescriptor bindGroupDescriptor;
@@ -69,7 +70,26 @@ public class WebGPUBindGroup implements Disposable {
     }
 
     public void begin() {
-        bindGroup = null;
+    }
+
+    /**
+     * Reset the bind group for reuse in the object pool. Clears all bindings without disposing native objects,
+     * preparing for reuse.
+     */
+    public void reset() {
+        // Clear the binding index to allow rebinding from scratch
+        bindingIndex.clear();
+        // Reset all entries to defaults
+        for (int i = 0; i < numEntries; i++) {
+            setDefault(entryArray[i]);
+        }
+        // Mark as dirty so it will be rebuilt on next create()
+        dirty = true;
+        // Release the native bind group object but keep the JNI wrapper for reuse
+        if (bindGroup != null && !isReleased) {
+            bindGroup.release();
+            isReleased = true;
+        }
     }
 
     /** creates the bind group */
@@ -132,16 +152,17 @@ public class WebGPUBindGroup implements Disposable {
     /** creates the bind group. (also implicitly called by getHandle()) */
     public WGPUBindGroup create() {
         if (dirty) {
-            if (bindGroup != null) {
-                // System.out.println("Releasing bind group");
-                bindGroup.release();
-                // don't dispose, because we will reuse the object.
-            }
-            if (bindGroup == null) { // lazy allocation
+            // Lazy allocation - create the JNI wrapper only once
+            if (bindGroup == null) {
                 bindGroup = new WGPUBindGroup();
-                // System.out.println("Creating bind group wrapper");
+                isReleased = true;
+            } else if (!isReleased) {
+                // Release the previous native bind group object before creating a new one
+                bindGroup.release();
+                isReleased = true;
             }
 
+            // Recreate native bind group with new bindings
             WGPUVectorBindGroupEntry entryVector = WGPUVectorBindGroupEntry.obtain();
             for (int i = 0; i < numEntries; i++) {
                 entryVector.push_back(entryArray[i]);
@@ -149,6 +170,7 @@ public class WebGPUBindGroup implements Disposable {
             bindGroupDescriptor.setEntries(entryVector);
 
             webgpu.device.createBindGroup(bindGroupDescriptor, bindGroup);
+            isReleased = false;
             dirty = false;
         }
         return bindGroup;
@@ -164,7 +186,10 @@ public class WebGPUBindGroup implements Disposable {
     public void dispose() {
         if (bindGroup != null) {
             // System.out.println("Releasing bind group");
-            bindGroup.release();
+            if (!isReleased) {
+                bindGroup.release();
+                isReleased = true;
+            }
             bindGroup.dispose();
             bindGroup = null;
         }
