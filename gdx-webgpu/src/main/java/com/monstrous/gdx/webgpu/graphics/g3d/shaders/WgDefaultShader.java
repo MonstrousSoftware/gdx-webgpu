@@ -491,7 +491,8 @@ public class WgDefaultShader extends WgShader implements Disposable {
                 int morphIdx = childId.indexOf(".morph.");
                 if (morphIdx >= 0) {
                     try {
-                        int index = Integer.parseInt(childId.substring(morphIdx + 7));
+                        // Parse integer directly from string without creating substring to avoid GC overhead
+                        int index = Integer.parseInt(childId, morphIdx + 7, childId.length(), 10);
                         if (index < 8) {
                             // Read from localTransform because AnimationController updates localTransform,
                             // not the node.translation field

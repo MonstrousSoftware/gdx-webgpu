@@ -18,12 +18,11 @@ package com.monstrous.gdx.webgpu.wrappers;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Disposable;
+import com.badlogic.gdx.utils.IntIntMap;
 import com.github.xpenatan.webgpu.*;
 import com.github.xpenatan.webgpu.WGPUBindGroupEntry;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Encapsulated bind group. Used to bind values to a shader.
@@ -40,7 +39,7 @@ public class WebGPUBindGroup implements Disposable {
     private final WebGPUContext webgpu;
 
     private final WGPUBindGroupDescriptor bindGroupDescriptor;
-    private final Map<Integer, Integer> bindingIndex; // array index per bindingId (bindingId's can skip numbers)
+    private final IntIntMap bindingIndex; // array index per bindingId (bindingId's can skip numbers)
     private final WGPUBindGroupEntry[] entryArray;
     private final int numEntries;
     private boolean dirty; // has an entry changed? Then we need to rebuild the bind group
@@ -66,7 +65,7 @@ public class WebGPUBindGroup implements Disposable {
         bindGroupDescriptor.setNextInChain(WGPUChainedStruct.NULL);
         bindGroupDescriptor.setLayout(layout.getLayout());
 
-        bindingIndex = new HashMap<>();
+        bindingIndex = new IntIntMap();
     }
 
     public void begin() {
@@ -86,9 +85,9 @@ public class WebGPUBindGroup implements Disposable {
     /** find index of bindingId or create a new index of this is a new bindingId */
     private int findIndex(int bindingId) {
         // should we check against the binding id's from the layout?
-        Integer index = bindingIndex.get(bindingId);
-        if (index == null) {
-            index = bindingIndex.size();
+        int index = bindingIndex.get(bindingId, -1);
+        if (index == -1) {
+            index = bindingIndex.size;
             if (index >= numEntries)
                 throw new ArrayIndexOutOfBoundsException("Too many entries. See BindGroupLayout");
             bindingIndex.put(bindingId, index);
