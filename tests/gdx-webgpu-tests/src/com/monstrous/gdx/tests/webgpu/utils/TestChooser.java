@@ -10,12 +10,12 @@ import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.input.NativeInputConfiguration;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
-import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.monstrous.gdx.tests.webgpu.WebGPUTests;
 import com.monstrous.gdx.webgpu.scene2d.WgSkin;
@@ -28,30 +28,23 @@ public class TestChooser extends ApplicationAdapter {
     private ApplicationListener test;
     boolean dispose = false;
 
-    // Tunable UI scale factors
-    private float uiScale = 1f;
-    private float buttonHeight = 32f;
-    private float buttonPad = 4f;
-    private float fontScale = 1f;
-
     // Mobile detection so we can add a touch-close hotspot only on mobile.
     private boolean mobile = false;
+    private float uiScale = 1f;
 
     public void create() {
         final Preferences prefs = Gdx.app.getPreferences("webgpu-tests");
 
         mobile = Gdx.app.getType() == Application.ApplicationType.Android
                 || Gdx.app.getType() == Application.ApplicationType.iOS;
+
+        float buttonHeight;
         if (mobile) {
-            uiScale = 1.8f;
-            buttonHeight = 54f;
-            buttonPad = 8f;
-            fontScale = 1.3f;
+            uiScale = 3.5f;
+            buttonHeight = 80f;
         } else {
             uiScale = 1.0f;
             buttonHeight = 32f;
-            buttonPad = 4f;
-            fontScale = 1.0f;
         }
 
         stage = new WgStage(new ScreenViewport());
@@ -88,6 +81,14 @@ public class TestChooser extends ApplicationAdapter {
 
         skin = new WgSkin(Gdx.files.internal("data/uiskin.json"));
 
+        // Scale font sizes on mobile
+        float fontScale = mobile ? 2.0f : 1.0f;
+        if (mobile) {
+            for (BitmapFont font : skin.getAll(BitmapFont.class).values()) {
+                font.getData().setScale(fontScale);
+            }
+        }
+
         Table container = new Table();
         stage.addActor(container);
         container.setFillParent(true);
@@ -99,14 +100,17 @@ public class TestChooser extends ApplicationAdapter {
         scroll.setFadeScrollBars(false);
         stage.setScrollFocus(scroll);
 
-        int tableSpace = 4;
-        table.pad(10).defaults().expandX().space(tableSpace);
-        table.add(new Label("Start a test (Escape to close a test)", skin));
+        int tableSpace = (int) (4 * uiScale);
+        float tablePad = 10 * uiScale;
+        float buttonWidth = 300 * uiScale;
+
+        table.pad(tablePad).defaults().expandX().space(tableSpace);
+        table.add(new Label("Start a test (Escape to close a test)", skin)).padBottom(20 * uiScale);
         table.row();
         for (final String testName : WebGPUTests.getNames()) {
             final TextButton testButton = new TextButton(testName, skin);
             testButton.setName(testName);
-            table.add(testButton).width(300);
+            table.add(testButton).width(buttonWidth).height(buttonHeight);
             table.row();
             testButton.addListener(new ChangeListener() {
                 @Override
