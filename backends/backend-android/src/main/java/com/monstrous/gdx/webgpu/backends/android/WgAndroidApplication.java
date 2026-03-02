@@ -146,7 +146,7 @@ public class WgAndroidApplication extends Activity implements AndroidApplication
         final Object lock = new Object();
         final boolean[] done = {false};
         final boolean[] success = {false};
-        final Exception[] error = {null};
+        final Throwable[] error = {null};
 
         JWebGPULoader.init((isSuccess, e) -> {
             synchronized (lock) {
