@@ -11,7 +11,7 @@ android {
 
     defaultConfig {
         applicationId = "com.monstrous.gdx.tests.webgpu"
-        minSdk = 26
+        minSdk = 29
         versionCode = 1
         versionName = "0.0.1"
     }
