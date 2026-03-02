@@ -66,6 +66,7 @@ public class WgModelBatch implements Disposable {
         public int maxRigged; // max number of instances that are rigged
         public boolean usePBR; // use physics based rendering
         public MaterialsCache materials;
+        public RenderPassType defaultPassType;
 
         public Config() {
             this.maxInstances = 1024;
@@ -76,6 +77,7 @@ public class WgModelBatch implements Disposable {
             this.maxRigged = 20;
             this.usePBR = true;
             this.materials = new MaterialsCache(256);
+            this.defaultPassType = RenderPassType.COLOR_AND_DEPTH;
         }
     }
 
@@ -129,19 +131,19 @@ public class WgModelBatch implements Disposable {
     }
 
     public void begin(final Camera camera) {
-        begin(camera, null, false, RenderPassType.COLOR_AND_DEPTH);
+        begin(camera, null, false, config.defaultPassType);
     }
 
     public void begin(final Camera camera, final Color clearColor) {
-        begin(camera, clearColor, false, RenderPassType.COLOR_AND_DEPTH);
+        begin(camera, clearColor, false, config.defaultPassType);
     }
 
     public void begin(final Camera camera, final Color clearColor, boolean clearDepth) {
-        begin(camera, clearColor, clearDepth, RenderPassType.COLOR_AND_DEPTH);
+        begin(camera, clearColor, clearDepth, config.defaultPassType);
     }
 
     public void begin(final Camera camera, final Color clearColor, boolean clearDepth, int numSamples) {
-        begin(camera, clearColor, clearDepth, RenderPassType.COLOR_AND_DEPTH, numSamples);
+        begin(camera, clearColor, clearDepth, config.defaultPassType, numSamples);
     }
 
     // extra param for now to identify depth pass so that render pass is created without color attachment
