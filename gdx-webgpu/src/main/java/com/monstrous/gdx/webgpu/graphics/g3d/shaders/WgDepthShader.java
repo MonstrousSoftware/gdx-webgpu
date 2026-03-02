@@ -336,6 +336,7 @@ public class WgDepthShader extends WgShader {
         binder.dispose();
         instanceBuffer.dispose();
         uniformBuffer.dispose();
+        pipeline.dispose();
     }
 
 }
