@@ -5,6 +5,7 @@ import com.monstrous.gdx.tests.webgpu.ASimpleGame;
 import com.monstrous.gdx.tests.webgpu.ComputeMoldSlime;
 import com.monstrous.gdx.tests.webgpu.LightingTest;
 import com.monstrous.gdx.tests.webgpu.LoadModelTest;
+import com.monstrous.gdx.tests.webgpu.utils.TestChooser;
 import com.monstrous.gdx.webgpu.backends.teavm.WgTeaApplication;
 import com.monstrous.gdx.webgpu.backends.teavm.WgTeaPreloadApplicationListener;
 
