@@ -1,6 +1,5 @@
 plugins {
     id("com.android.library")
-    id("kotlin-android")
 }
 
 val javaVersion = project.property("java") as String
@@ -23,29 +22,36 @@ android {
         sourceCompatibility = JavaVersion.toVersion(javaVersion)
         targetCompatibility = JavaVersion.toVersion(javaVersion)
     }
+
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
 }
 
 dependencies {
     val gdxVersion = project.property("gdxVersion") as String
+    val jWebGPUVVersion = project.property("jWebGPUVVersion") as String
 
     implementation(project(":gdx-webgpu"))
-    api("com.github.xpenatan.jWebGPU:webgpu-core:-SNAPSHOT")
-    api("com.github.xpenatan.jWebGPU:webgpu-android:-SNAPSHOT")
+    api("com.github.xpenatan.jWebGPU:webgpu-core:$jWebGPUVVersion")
+    api("com.github.xpenatan.jWebGPU:webgpu-android:$jWebGPUVVersion")
 
     api("com.badlogicgames.gdx:gdx:${gdxVersion}")
     api("com.badlogicgames.gdx:gdx-backend-android:$gdxVersion")
 }
 
-
-//publishing {
-//    publications {
-//        create<MavenPublication>("maven") {
-//            artifactId = "backend-android"
-//            group = LibExt.groupId
-//            version = LibExt.libVersion
-//            afterEvaluate {
-//                from(components["release"])
-//            }
-//        }
-//    }
-//}
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            artifactId = "backend-android"
+            group = LibExt.groupId
+            version = LibExt.libVersion
+            afterEvaluate {
+                from(components["release"])
+            }
+        }
+    }
+}

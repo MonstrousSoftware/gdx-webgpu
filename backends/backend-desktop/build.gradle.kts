@@ -31,6 +31,11 @@ dependencies {
     api("com.github.xpenatan.jWebGPU:webgpu-desktop:$jWebGPUVVersion:mac_64_wgpu")
 }
 
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
 publishing {
     publications {
         create<MavenPublication>("maven") {

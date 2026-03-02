@@ -22,6 +22,11 @@ dependencies {
     implementation(project(":gdx-webgpu"))
 }
 
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
 publishing {
     publications {
         create<MavenPublication>("maven") {

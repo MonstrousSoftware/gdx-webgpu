@@ -15,6 +15,9 @@ buildscript {
 
 plugins {
     id("com.diffplug.spotless") version "6.25.0" apply false
+    id("java")
+    id("maven-publish")
+    id("signing")
 }
 
 
