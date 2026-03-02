@@ -17,7 +17,7 @@ dependencies {
 
 
     //implementation("com.badlogicgames.gdx:gdx:$gdxVersion")
-    implementation("com.github.xpenatan.gdx-teavm:backend-teavm:$gdxTeaVMVersion")
+    implementation("com.github.xpenatan.gdx-teavm:backend-web:$gdxTeaVMVersion")
     implementation("com.github.xpenatan.jWebGPU:webgpu-teavm:${jWebGPUVVersion}")
     implementation(project(":gdx-webgpu"))
 }

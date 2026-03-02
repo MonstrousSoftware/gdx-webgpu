@@ -53,7 +53,8 @@ public class WebGPUTestStarter {
         config.enableGPUtiming = true;
         config.backend = WebGPUContext.Backend.DEFAULT;
         config.backendWebGPU = JWebGPUBackend.DAWN; // WGPU or DAWN
-        config.samples = 4; // anti-aliasing
+        config.samples = 4; // anti-aliasing (4) or not (1)
+        config.useVsync(true);
 
         new WgDesktopApplication(new TestChooser(), config);
     }

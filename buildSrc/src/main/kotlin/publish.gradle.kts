@@ -9,6 +9,8 @@ var libProjects = mutableSetOf(
 )
 
 LibExt.isRelease = gradle.startParameter.taskNames.any { it == "publishRelease" }
+LibExt.overrideGroup = project.findProperty("group") as String?
+LibExt.overrideVersion = project.findProperty("version") as String?
 
 println("Library Version: " + LibExt.libVersion)
 
@@ -21,20 +23,22 @@ configure(libProjects) {
     version = LibExt.libVersion
 
     extensions.configure<PublishingExtension> {
-        repositories {
-            maven {
-                val isSnapshot = LibExt.libVersion.endsWith("-SNAPSHOT")
-                url = if (isSnapshot) {
-                    uri("https://central.sonatype.com/repository/maven-snapshots/")
-                } else {
-                    uri(rootProject.layout.buildDirectory.dir("staging-deploy"))
-                }
-                if(isSnapshot) {
-                    val user = System.getenv("CENTRAL_PORTAL_USERNAME")
-                    val pass = System.getenv("CENTRAL_PORTAL_PASSWORD")
-                    credentials {
-                        username = user
-                        password = pass
+        if (!gradle.startParameter.taskNames.contains("publishToMavenLocal")) {
+            repositories {
+                maven {
+                    val isSnapshot = LibExt.libVersion.endsWith("-SNAPSHOT")
+                    url = if (isSnapshot) {
+                        uri("https://central.sonatype.com/repository/maven-snapshots/")
+                    } else {
+                        uri(rootProject.layout.buildDirectory.dir("staging-deploy"))
+                    }
+                    if(isSnapshot) {
+                        val user = System.getenv("CENTRAL_PORTAL_USERNAME")
+                        val pass = System.getenv("CENTRAL_PORTAL_PASSWORD")
+                        credentials {
+                            username = user
+                            password = pass
+                        }
                     }
                 }
             }
@@ -87,7 +91,7 @@ configure(libProjects) {
     }
 }
 
-if(!LibExt.libVersion.endsWith("-SNAPSHOT")) {
+if(!LibExt.libVersion.endsWith("-SNAPSHOT") && !gradle.startParameter.taskNames.contains("publishToMavenLocal")) {
     tasks.register<Zip>("zipStagingDeploy") {
         dependsOn(libProjects.map { it.tasks.named("publish") })
         from(rootProject.layout.buildDirectory.dir("staging-deploy"))

@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.GdxRuntimeException;
+import com.badlogic.gdx.utils.IntMap;
 import com.badlogic.gdx.utils.Null;
 import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.webgpu.graphics.Binder;
@@ -18,8 +19,6 @@ import com.monstrous.gdx.webgpu.graphics.g3d.attributes.PBRTextureAttribute;
 import com.monstrous.gdx.webgpu.wrappers.WebGPUBindGroupLayout;
 import com.monstrous.gdx.webgpu.wrappers.WebGPURenderPass;
 import com.monstrous.gdx.webgpu.wrappers.WebGPUUniformBuffer;
-import java.util.HashMap;
-import java.util.Map;
 
 import static com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888;
 
@@ -42,7 +41,7 @@ public class MaterialsCache implements Disposable {
     private WgTexture defaultTexture;
     private WgTexture defaultNormalTexture;
     private WgTexture defaultBlackTexture;
-    private final Map<Integer, MaterialEntry> cache;
+    private final IntMap<MaterialEntry> cache;
     private MaterialEntry boundEntry;
     private int bindCount;
 
@@ -52,7 +51,7 @@ public class MaterialsCache implements Disposable {
 
         group = 1;
 
-        cache = new HashMap<>();
+        cache = new IntMap<>();
         boundEntry = null;
 
         defineDefaultTextures();

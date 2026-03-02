@@ -116,13 +116,14 @@ Apart from the graphics platform, gdx-webgpu offers some new features with regar
 
 ## Dependencies (software bill of materials)
 
-| gdx-webgpu | libgdx | gdx-teavm  | jWebGPU |
-|------------|--------|------------|---------|
-| -SNAPSHOT  |1.14.0  | 1.4.0      | 0.1.12  |
-| 0.7.2      |1.14.0  | 1.4.0      | 0.1.11  |
-| 0.7.1      |1.14.0  | 1.4.0      | 0.1.9   |
-| 0.7        |1.14.0  | 1.4.0      | 0.1.9   |
-| 0.6        |1.13.5  | 1.3.0      | 0.1.6   |
+| gdx-webgpu | libgdx | gdx-teavm | jWebGPU |
+|------------|--------|-----------|---------|
+| -SNAPSHOT  |1.14.0  | 1.5.0     | 0.1.13 |
+| 0.8        |1.14.0  | 1.5.0     | 0.1.13  |
+| 0.7.2      |1.14.0  | 1.4.0     | 0.1.11  |
+| 0.7.1      |1.14.0  | 1.4.0     | 0.1.9   |
+| 0.7        |1.14.0  | 1.4.0     | 0.1.9   |
+| 0.6        |1.13.5  | 1.3.0     | 0.1.6   |
 
 ## How to get it
 
@@ -138,9 +139,9 @@ The library is available via Maven Central. Make sure the following section is i
 
 Define the version you want to use in the `gradle.properties` file, e.g. 
 
-    gdxWebGPUVersion=0.7.2
+    gdxWebGPUVersion=0.8
 
-You can refer to the latest stable release number, e.g. `0.7.2` or use `-SNAPSHOT` to follow the very latest developments. 
+You can refer to the latest stable release number, e.g. `0.8` or use `-SNAPSHOT` to follow the very latest developments. 
 (Beware when using a snapshot version, that functions may break without notice. Use a stable version by preference).
 
 To include the library in your project add the following lines to your `build.gradle` file in the `core` module:
@@ -201,7 +202,7 @@ WgTexture instead of Texture, WgScreenUtils instead of ScreenUtils, etcetera.
 If you want to use the Web TeaVM platform, set the dependencies as follows in `build.gradle` of the `teavm` module:
 
     dependencies {
-        implementation "com.github.xpenatan.gdx-teavm:backend-teavm:$gdxTeaVMVersion"
+        implementation "com.github.xpenatan.gdx-teavm:backend-web:$gdxTeaVMVersion"
         implementation "io.github.monstroussoftware.gdx-webgpu:backend-teavm:$gdxWebGPUVersion"
         implementation "io.github.monstroussoftware.gdx-webgpu:backend-teavm:$gdxWebGPUVersion:sources"
 

@@ -23,7 +23,10 @@ import com.badlogic.gdx.graphics.g3d.attributes.*;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
+import com.badlogic.gdx.graphics.g3d.model.Node;
+import com.badlogic.gdx.graphics.g3d.model.NodePart;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector4;
@@ -37,13 +40,8 @@ import com.monstrous.gdx.webgpu.graphics.Binder;
 import com.monstrous.gdx.webgpu.graphics.WgMesh;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
-import com.monstrous.gdx.webgpu.graphics.g3d.attributes.PBRFloatAttribute;
-import com.monstrous.gdx.webgpu.graphics.g3d.attributes.PBRTextureAttribute;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute;
-import com.monstrous.gdx.webgpu.graphics.g3d.environment.ibl.IBLGenerator;
 import com.monstrous.gdx.webgpu.wrappers.*;
-
-import static com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888;
 
 /** Default shader to render renderables */
 public class WgDefaultShader extends WgShader implements Disposable {
@@ -60,7 +58,10 @@ public class WgDefaultShader extends WgShader implements Disposable {
     private MaterialsCache materials;
     private int numRigged;
     private int rigSize; // bytes per rigged instance
-    private final WebGPUPipeline pipeline; // a shader has one pipeline
+    private final PipelineCache pipelineCache; // cache of pipelines for different render targets
+    private final float[] tmpWeights = new float[8];
+    private final WGPUPipelineLayout pipelineLayout;
+    private final PipelineSpecification pipelineSpec;
     private WebGPURenderPass renderPass;
     private final VertexAttributes vertexAttributes;
     private final Matrix4 combined;
@@ -84,28 +85,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
     private int instanceIndex;
     private Color linearFogColor;
     private final WgTexture brdfLUT;
-
-    // public static class Config {
-    // public int maxInstances;
-    // public int maxMaterials;
-    // public int maxDirectionalLights;
-    // public int maxPointLights;
-    // public int numBones; // max bone count per rigged instance
-    // public int maxRigged; // max number of instances that are rigged
-    // public boolean usePBR; // use physics based rendering
-    // public MaterialsCache materials;
-    //
-    // public Config() {
-    // this.maxInstances = 1024;
-    // this.maxMaterials = 512;
-    // this.maxDirectionalLights = 3;
-    // this.maxPointLights = 3;
-    // this.numBones = 48; // todo
-    // this.maxRigged = 20;
-    // this.usePBR = true;
-    // this.materials = null;
-    // }
-    // }
+    private int maxRenderPassesPerFrame = 16; // Support up to 16 render passes per frame with this shader
 
     public WgDefaultShader(final Renderable renderable) {
         this(renderable, new WgModelBatch.Config());
@@ -133,9 +113,12 @@ public class WgDefaultShader extends WgShader implements Disposable {
                 && renderable.environment.has(WgCubemapAttribute.SpecularCubeMap);
 
         // Create uniform buffer for global (per-frame) uniforms, e.g. projection matrix, camera position, etc.
+        // Use multiple slices to support multiple render passes per frame with different camera/lighting state
         uniformBufferSize = (16 + 16 + 4 + 4 + 4 + 4 + +32 + 8 * config.maxDirectionalLights
                 + 12 * config.maxPointLights) * Float.BYTES;
-        uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Uniform));
+
+        uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Uniform),
+                maxRenderPassesPerFrame);
 
         rigSize = config.numBones * 16 * Float.BYTES;
 
@@ -180,6 +163,14 @@ public class WgDefaultShader extends WgShader implements Disposable {
         binder.defineBinding("instanceUniforms", 2, 0);
 
         binder.defineBinding("jointMatrices", 3, 0);
+
+        boolean hasMorph = false;
+        for (VertexAttribute attr : renderable.meshPart.mesh.getVertexAttributes()) {
+            if (attr.alias.startsWith("a_position_morph_")) {
+                hasMorph = true;
+                break;
+            }
+        }
 
         // define uniforms in uniform buffers with their offset
         // frame uniforms
@@ -240,7 +231,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
         // binder.setBuffer("materialUniforms", materialBuffer, 0, materialSize);
 
-        int instanceSize = 2 * 16 * Float.BYTES; // data size per instance
+        int instanceSize = (2 * 16 + 8) * Float.BYTES; // 2 matrices + 8 morph weights
 
         // for now we use a uniform buffer, but we organize data as an array of modelMatrix
         // we are not using dynamic offsets, but we will index the array in teh shader code using the instance_index
@@ -268,12 +259,22 @@ public class WgDefaultShader extends WgShader implements Disposable {
         environmentMask = renderable.environment == null ? 0 : renderable.environment.getMask();
 
         // get pipeline layout which aggregates all the bind group layouts
-        WGPUPipelineLayout pipelineLayout = binder.getPipelineLayout("ModelBatch pipeline layout");
+        pipelineLayout = binder.getPipelineLayout("ModelBatch pipeline layout");
 
         // vertexAttributes will be set from the renderable
         vertexAttributes = renderable.meshPart.mesh.getVertexAttributes();
-        PipelineSpecification pipelineSpec = new PipelineSpecification(vertexAttributes, getDefaultShaderSource());
-        pipelineSpec.name = "ModelBatch pipeline";
+        pipelineSpec = new PipelineSpecification("ModelBatch pipeline", vertexAttributes, getDefaultShaderSource());
+        // define locations of vertex attributes in line with shader code
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.POSITION_ATTRIBUTE, 0);
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.NORMAL_ATTRIBUTE, 2);
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.COLOR_ATTRIBUTE, 5);
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.TEXCOORD_ATTRIBUTE + "0", 1);
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.TANGENT_ATTRIBUTE, 3);
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.BINORMAL_ATTRIBUTE, 4);
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.BONEWEIGHT_ATTRIBUTE, 7);
+        for (int i = 0; i < 8; i++) {
+            pipelineSpec.vertexLayout.setVertexAttributeLocation("a_position_morph_" + i, 8 + i);
+        }
 
         // default blending values
         blended = renderable.material.has(BlendingAttribute.Type)
@@ -297,7 +298,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         pipelineSpec.usePBR = config.usePBR;
         // System.out.println("pipeline spec: "+pipelineSpec.hashCode()+pipelineSpec.vertexAttributes);
 
-        pipeline = new WebGPUPipeline(pipelineLayout, pipelineSpec);
+        pipelineCache = new PipelineCache();
 
         directionalLights = new DirectionalLight[config.maxDirectionalLights];
         for (int i = 0; i < config.maxDirectionalLights; i++)
@@ -328,6 +329,20 @@ public class WgDefaultShader extends WgShader implements Disposable {
     public void begin(Camera camera, Renderable renderable, WebGPURenderPass renderPass) {
         this.renderPass = renderPass;
 
+        // Reset buffer slices at the start of each frame
+        if (webgpu.frameNumber != this.frameNumber) {
+            instanceIndex = 0;
+            numRigged = 0;
+            this.frameNumber = webgpu.frameNumber;
+            uniformBuffer.beginSlices(); // Reset uniform buffer slices for new frame
+            if (jointMatricesBuffer != null)
+                jointMatricesBuffer.beginSlices();
+        }
+
+        // Get a new slice of the uniform buffer for this render pass
+        // This ensures each render pass has its own independent camera/lighting data
+        int dynamicOffset = uniformBuffer.nextSlice();
+
         // set global uniforms, that do not depend on renderables
         // e.g. camera, lighting, environment uniforms
         //
@@ -343,8 +358,6 @@ public class WgDefaultShader extends WgShader implements Disposable {
         tmpVec4.set(camera.position.x, camera.position.y, camera.position.z, 1.1881f / (camera.far * camera.far));
         binder.setUniform("cameraPosition", tmpVec4);
 
-        // note: if we call WgModelBatch multiple times per frame with a different camera, the old ones are lost
-
         // todo: different shaders may overwrite lighting uniforms if renderables have other environments ...
         bindLights(renderable.environment);
 
@@ -353,24 +366,27 @@ public class WgDefaultShader extends WgShader implements Disposable {
         // now that we've set all the uniforms (camera,lights, etc.) write the buffer to the gpu
         uniformBuffer.flush();
 
-        // bind group 0 (frame) once per frame
-        binder.bindGroup(renderPass, 0);
+        // bind group 0 (frame) with dynamic offset for this render pass
+        binder.bindGroup(renderPass, 0, dynamicOffset);
 
         // idem for group 2 (instances), we will fill in the buffer as we go
         binder.bindGroup(renderPass, 2);
 
-        if (webgpu.frameNumber != this.frameNumber) { // reset at the start of a frame
-            instanceIndex = 0;
-            numRigged = 0;
-            this.frameNumber = webgpu.frameNumber;
-            if (jointMatricesBuffer != null)
-                jointMatricesBuffer.beginSlices();
-        }
         numRenderables = 0;
         drawCalls = 0;
         prevRenderable = null; // to store renderable that still needs to be rendered
         appliedMaterialHash = -1;
 
+        materials.start(); // indicate that no material is currently bound
+
+        // Update pipeline spec to match the current render pass's format and sample count
+        // This is crucial when rendering to framebuffers with different formats than the screen
+        pipelineSpec.colorFormat = renderPass.getColorFormat();
+        pipelineSpec.numSamples = renderPass.getSampleCount();
+        pipelineSpec.invalidateHashCode();
+
+        // Get or create a pipeline that matches the current render target
+        WebGPUPipeline pipeline = pipelineCache.findPipeline(pipelineLayout, pipelineSpec);
         renderPass.setPipeline(pipeline);
     }
 
@@ -453,11 +469,46 @@ public class WgDefaultShader extends WgShader implements Disposable {
         // renderable-specific data
 
         // add instance data to instance buffer (instance transform)
-        int offset = instanceIndex * 2 * 16 * Float.BYTES;
+        int offset = instanceIndex * (2 * 16 + 8) * Float.BYTES;
         // set world transform for this instance
         instanceBuffer.set(offset, renderable.worldTransform);
         // normal matrix is transpose of inverse of world transform
         instanceBuffer.set(offset + 16 * Float.BYTES, tmpM.set(renderable.worldTransform).inv().tra());
+
+        // Clear previous weights
+        for (int i = 0; i < 8; i++)
+            tmpWeights[i] = 0;
+
+        int numWeights = 0;
+        Node node = null;
+        if (renderable.userData instanceof Node) {
+            node = (Node) renderable.userData;
+        }
+
+        if (node != null) {
+            for (Node child : node.getChildren()) {
+                String childId = child.id;
+                int morphIdx = childId.indexOf(".morph.");
+                if (morphIdx >= 0) {
+                    try {
+                        // Parse integer directly from string without creating substring to avoid GC overhead
+                        int index = Integer.parseInt(childId, morphIdx + 7, childId.length(), 10);
+                        if (index < 8) {
+                            // Read from localTransform because AnimationController updates localTransform,
+                            // not the node.translation field
+                            tmpWeights[index] = child.localTransform.val[Matrix4.M03];
+                            numWeights = Math.max(numWeights, index + 1);
+                        }
+                    } catch (NumberFormatException e) {
+                    }
+                }
+            }
+        }
+
+        // Update weights in the buffer
+        for (int i = 0; i < 8; i++) {
+            instanceBuffer.set(offset + 32 * Float.BYTES + i * Float.BYTES, tmpWeights[i]);
+        }
 
         // don't use Material.hashCode() because that also looks at the id which is not relevant
         int materialHash = renderable.material.attributesHash();
@@ -491,6 +542,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
     // to combine instances in single draw call if they have same mesh part
     private void renderBatch(MeshPart meshPart, int numInstances, int numRenderables) {
+
         // System.out.println("numInstances: "+numInstances);
         final WgMesh mesh = (WgMesh) meshPart.mesh;
         // use an instance offset to find the right modelMatrix in the instanceBuffer
@@ -534,7 +586,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch bind group layout (frame)");
         layout.begin();
         layout.addBuffer(0, WGPUShaderStage.Vertex.or(WGPUShaderStage.Fragment), WGPUBufferBindingType.Uniform,
-                uniformBufferSize, false);
+                uniformBufferSize, true); // Enable dynamic offset for multiple render passes per frame
         if (hasShadowMap) {
             layout.addTexture(1, WGPUShaderStage.Fragment, WGPUTextureSampleType.Depth, WGPUTextureViewDimension._2D,
                     false);
@@ -567,7 +619,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch Binding Group Layout (instance)");
         layout.begin();
         layout.addBuffer(0, WGPUShaderStage.Vertex, WGPUBufferBindingType.ReadOnlyStorage,
-                2 * 16 * Float.BYTES * config.maxInstances, false);
+                (2 * 16 + 8) * Float.BYTES * config.maxInstances, false);
         layout.end();
         return layout;
     }
@@ -596,6 +648,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         binder.dispose();
         instanceBuffer.dispose();
         uniformBuffer.dispose();
+        pipelineCache.dispose();
         if (brdfLUT != null)
             brdfLUT.dispose();
     }

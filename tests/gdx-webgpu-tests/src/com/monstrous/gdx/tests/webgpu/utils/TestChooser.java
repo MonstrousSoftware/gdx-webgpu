@@ -13,10 +13,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.input.NativeInputConfiguration;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
@@ -102,23 +99,15 @@ public class TestChooser extends ApplicationAdapter {
         scroll.setFadeScrollBars(false);
         stage.setScrollFocus(scroll);
 
-        int tableSpace = (int)(buttonPad * uiScale);
-        table.pad(10 * uiScale).defaults()
-                .expandX()
-                .space(tableSpace)
-                .height(buttonHeight * uiScale);
-
+        int tableSpace = 4;
+        table.pad(10).defaults().expandX().space(tableSpace);
+        table.add(new Label("Start a test (Escape to close a test)", skin));
+        table.row();
         for (final String testName : WebGPUTests.getNames()) {
             final TextButton testButton = new TextButton(testName, skin);
             testButton.setName(testName);
-
-            // Center text and apply larger font scale on mobile for readability.
-            testButton.getLabel().setAlignment(Align.center);
-            testButton.getLabel().setFontScale(fontScale);
-
-            table.add(testButton).fillX();
+            table.add(testButton).width(300);
             table.row();
-
             testButton.addListener(new ChangeListener() {
                 @Override
                 public void changed(ChangeEvent event, Actor actor) {

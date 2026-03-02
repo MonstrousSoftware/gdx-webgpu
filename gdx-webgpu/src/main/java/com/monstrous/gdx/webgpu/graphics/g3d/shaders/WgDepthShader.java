@@ -25,6 +25,7 @@ import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.github.xpenatan.webgpu.*;
@@ -57,6 +58,15 @@ public class WgDepthShader extends WgShader {
     }
 
     public WgDepthShader(final Renderable renderable, WgModelBatch.Config config) {
+        this(renderable, config, getDefaultShaderSource());
+    }
+
+    protected WgDepthShader(final Renderable renderable, WgModelBatch.Config config, String shaderSource) {
+        this(renderable, config, shaderSource, null); // null = no fragment shader for normal depth rendering
+    }
+
+    protected WgDepthShader(final Renderable renderable, WgModelBatch.Config config, String shaderSource,
+            String fragmentEntryPoint) {
         this.config = config;
 
         // Create uniform buffer for global (per-frame) uniforms, i.e. projection matrix
@@ -117,11 +127,23 @@ public class WgDepthShader extends WgShader {
 
         // vertexAttributes will be set from the renderable
         vertexAttributes = renderable.meshPart.mesh.getVertexAttributes();
-        PipelineSpecification pipelineSpec = new PipelineSpecification(vertexAttributes, getDefaultShaderSource());
-        pipelineSpec.name = "DepthBatch pipeline";
-        // no fragment shader
-        pipelineSpec.colorFormat = WGPUTextureFormat.Undefined;
-        pipelineSpec.fragmentShaderEntryPoint = null;
+        PipelineSpecification pipelineSpec = new PipelineSpecification("DepthBatch pipeline", vertexAttributes,
+                shaderSource);
+        // define locations of vertex attributes in line with shader code
+        // we're only using position and bones for depth shading but the vertex buffer is shared with the renderer
+        // so we have to cover all possible vertex attributes
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.POSITION_ATTRIBUTE, 0);
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.NORMAL_ATTRIBUTE, 2);
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.COLOR_ATTRIBUTE, 5);
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.TEXCOORD_ATTRIBUTE + "0", 1);
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.TANGENT_ATTRIBUTE, 3);
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.BINORMAL_ATTRIBUTE, 4);
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.BONEWEIGHT_ATTRIBUTE, 7);
+
+        // Fragment shader entry point (null for normal depth rendering, "fs_main" for masking)
+        pipelineSpec.colorFormat = WGPUTextureFormat.Undefined; // No color output
+        pipelineSpec.fragmentShaderEntryPoint = fragmentEntryPoint;
+        pipelineSpec.isDepthPass = true; // Mark this as a depth pass
 
         // default blending values
         pipelineSpec.enableBlending();
@@ -302,7 +324,7 @@ public class WgDepthShader extends WgShader {
         return layout;
     }
 
-    private String getDefaultShaderSource() {
+    protected static String getDefaultShaderSource() {
         if (defaultShader == null) {
             defaultShader = Gdx.files.classpath("shaders/depthshader.wgsl").readString();
         }
@@ -314,6 +336,7 @@ public class WgDepthShader extends WgShader {
         binder.dispose();
         instanceBuffer.dispose();
         uniformBuffer.dispose();
+        pipeline.dispose();
     }
 
 }

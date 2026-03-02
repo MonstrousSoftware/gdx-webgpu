@@ -32,7 +32,7 @@ public class WgIndexBuffer implements IndexData {
      */
     public WgIndexBuffer(boolean isStatic, int maxIndices) {
         // use wide indices (i.e. int rather than short) is maxIndices is too large for shorts
-        this(isStatic, maxIndices, (maxIndices >= Short.MAX_VALUE));
+        this(isStatic, maxIndices, (maxIndices >= 65535)); // Short.MAX_VALUE));
     }
 
     /**
@@ -151,9 +151,8 @@ public class WgIndexBuffer implements IndexData {
             indexBuffer.setIndices(byteBuffer); // write to GPU buffer
             isDirty = false;
 
-            // if this is a static buffer, we can release the backing buffer.
+            // if this is a static buffer, we can freeze it
             if (isStatic) {
-                BufferUtils.disposeUnsafeByteBuffer(byteBuffer);
                 isFrozen = true; // no more modifications allowed
             }
         }
@@ -180,7 +179,6 @@ public class WgIndexBuffer implements IndexData {
     @Override
     public void dispose() {
         indexBuffer.dispose();
-        if (!isFrozen)
-            BufferUtils.disposeUnsafeByteBuffer(byteBuffer);
+        BufferUtils.disposeUnsafeByteBuffer(byteBuffer);
     }
 }

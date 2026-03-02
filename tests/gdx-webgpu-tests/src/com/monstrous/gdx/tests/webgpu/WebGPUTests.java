@@ -51,8 +51,9 @@ public class WebGPUTests {
                     // @off
                     AssetManagerTest.class, ClearScreen.class, SpriteBatchTest.class, StageTest.class, ColorTest.class,
                     FontTest.class, Scene2dTest.class, ImmediateModeRendererTest.class, ShapeRendererTest.class,
-                    ShapeRenderer2DTest.class, NinePatchTest.class, ModelBatchTest.class, WrapAndFilterTest.class,
-                    LoadObjTest.class, LoadG3DJTest.class, LoadModelTest.class, LoadGLTFTest.class, LightingTest.class,
+                    ShapeRenderer2DTest.class, NinePatchTest.class, ModelBatchTest.class, ModelBatchMaskingTest.class,
+                    ModelBatchOutlineTest.class, SpriteHighlightTest.class, WrapAndFilterTest.class, LoadObjTest.class,
+                    LoadG3DJTest.class, LoadModelTest.class, LoadGLTFTest.class, LightingTest.class,
                     InstancingTest.class, ViewportTest.class, ScissorTest.class, ASimpleGame.class,
                     ParticleEmitterTest.class, ParticleEmittersTest.class, HeightMapTest.class, FullScreenTest.class,
                     GPUTimerTest.class, FrameBufferTest.class, PostProcessing.class, SuperKoalio.class,
@@ -63,8 +64,9 @@ public class WebGPUTests {
                     SpriteBatchClear.class, SpriteBatchDraw.class, SpriteBatchLimit.class, SpriteBatchTextures.class,
                     SpriteBatchCount.class, EnvironmentMapTest.class, Gamma3D.class, TextureArrayTest.class,
                     SkyBoxTest.class, DuckField.class, IBL_Sliders.class, IBL_Spheres.class, IBL_GenerateOutdoor.class,
-                    GLTFAnimation.class, GLTFSkinning.class, Scene2dTestScrollPane.class, GLTFSkinningMultiple.class,
-                    GLTFSkinningShadow.class
+                    GLTFAnimation.class, GLTFMorphAnimation.class, GLTFSkinning.class, Scene2dTestScrollPane.class,
+                    GLTFSkinningMultiple.class, GLTFSkinningShadow.class, ParticleControllerTest.class,
+                    Particles3D.class, Particles3DSnow.class, Particles3DmodelInstance.class, ScreenReaderTest.class
 
             // @on
 

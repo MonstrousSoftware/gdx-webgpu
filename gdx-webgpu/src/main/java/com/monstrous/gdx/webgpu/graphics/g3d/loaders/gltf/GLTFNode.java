@@ -16,6 +16,7 @@ public class GLTFNode {
     public Quaternion rotation;
     public Vector3 scale;
     public Vector3 translation;
+    public float[] weights;
 
     public GLTFNode() {
         children = new ArrayList<>();

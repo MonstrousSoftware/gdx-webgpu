@@ -18,6 +18,7 @@ import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.Binder;
 import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
+import com.monstrous.gdx.webgpu.graphics.utils.BlendMapper;
 import com.monstrous.gdx.webgpu.wrappers.*;
 
 import java.nio.*;
@@ -60,8 +61,6 @@ public class WgSpriteBatch implements Batch {
     private WebGPURenderPass renderPass;
     private int vbOffset;
     private final PipelineCache pipelines;
-    private WebGPUPipeline currentPipeline;
-    private WebGPUPipeline initialPipeline;
     public int maxSpritesInBatch; // most nr of sprites in the batch over its lifetime
     public int renderCalls;
     public int pipelineCount;
@@ -69,8 +68,6 @@ public class WgSpriteBatch implements Batch {
     public int maxFlushes;
     private float invTexWidth;
     private float invTexHeight;
-    private final Map<Integer, WGPUBlendFactor> blendConstantMap = new HashMap<>(); // mapping GL vs WebGPU constants
-    private final Map<WGPUBlendFactor, Integer> blendGLConstantMap = new HashMap<>(); // vice versa
     private final Binder binder;
     private static String defaultShader;
     private int frameNumber;
@@ -106,13 +103,12 @@ public class WgSpriteBatch implements Batch {
         this.specificShader = specificShader;
 
         vertexAttributes = new VertexAttributes(
-                new VertexAttribute(VertexAttributes.Usage.Position, 2, ShaderProgram.POSITION_ATTRIBUTE),
+                new VertexAttribute(VertexAttributes.Usage.Position, 2, ShaderProgram.POSITION_ATTRIBUTE), // 2D
+                                                                                                           // position
                 VertexAttribute.ColorPacked(), VertexAttribute.TexCoords(0));
 
         // vertex: x, y, rgba, u, v
         vertexSize = vertexAttributes.vertexSize; // bytes
-
-        initBlendMap(); // fill constants mapping table
 
         // allow for a different projectionView matrix per flush.
         this.maxFlushes = maxFlushes;
@@ -161,15 +157,17 @@ public class WgSpriteBatch implements Batch {
         pipelineLayout = binder.getPipelineLayout("SpriteBatch pipeline layout");
 
         pipelines = new PipelineCache();
-        pipelineSpec = new PipelineSpecification(vertexAttributes, this.specificShader);
-        pipelineSpec.name = "SpriteBatch pipeline";
+        pipelineSpec = new PipelineSpecification("SpriteBatch pipeline", vertexAttributes, this.specificShader);
+        // define locations of vertex attributes in line with shader code
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.POSITION_ATTRIBUTE, 0);
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.COLOR_ATTRIBUTE, 5);
+        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.TEXCOORD_ATTRIBUTE + "0", 1);
 
         // default blending values
         pipelineSpec.enableBlending();
         pipelineSpec.setBlendFactor(WGPUBlendFactor.SrcAlpha, WGPUBlendFactor.OneMinusSrcAlpha);
         pipelineSpec.disableDepthTest();
 
-        pipelineSpec.vertexAttributes = vertexAttributes;
         pipelineSpec.numSamples = webgpu.getSamples();
 
         // use provided (compiled) shader or else use default shader (source)
@@ -178,9 +176,6 @@ public class WgSpriteBatch implements Batch {
         if (specificShader == null) {
             pipelineSpec.shaderSource = getDefaultShaderSource();
         }
-
-        setPipeline();
-        initialPipeline = currentPipeline;
 
         projectionMatrix.setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), 0, 100);
         transformMatrix.idt();
@@ -252,7 +247,8 @@ public class WgSpriteBatch implements Batch {
 
         flush();
         pipelineSpec.setBlendFactorSeparate(srcFuncColor, dstFuncColor, srcFuncAlpha, dstFuncAlpha);
-        setPipeline();
+        if (drawing)
+            setPipeline(renderPass);
     }
 
     public WGPUBlendFactor getBlendSrcFactor() {
@@ -277,10 +273,10 @@ public class WgSpriteBatch implements Batch {
     }
 
     public void setBlendFunctionSeparate(int srcFuncColor, int dstFuncColor, int srcFuncAlpha, int dstFuncAlpha) {
-        WGPUBlendFactor srcFactorColor = blendConstantMap.get(srcFuncColor);
-        WGPUBlendFactor dstFactorColor = blendConstantMap.get(dstFuncColor);
-        WGPUBlendFactor srcFactorAlpha = blendConstantMap.get(srcFuncAlpha);
-        WGPUBlendFactor dstFactorAlpha = blendConstantMap.get(dstFuncAlpha);
+        WGPUBlendFactor srcFactorColor = BlendMapper.blendFactor(srcFuncColor);
+        WGPUBlendFactor dstFactorColor = BlendMapper.blendFactor(dstFuncColor);
+        WGPUBlendFactor srcFactorAlpha = BlendMapper.blendFactor(srcFuncAlpha);
+        WGPUBlendFactor dstFactorAlpha = BlendMapper.blendFactor(dstFuncAlpha);
         if (pipelineSpec.getBlendSrcFactor() == srcFactorColor && pipelineSpec.getBlendDstFactor() == dstFactorColor
                 && pipelineSpec.getBlendSrcFactorAlpha() == srcFactorAlpha
                 && pipelineSpec.getBlendDstFactorAlpha() == dstFactorAlpha)
@@ -288,23 +284,24 @@ public class WgSpriteBatch implements Batch {
 
         flush();
         pipelineSpec.setBlendFactorSeparate(srcFactorColor, dstFactorColor, srcFactorAlpha, dstFactorAlpha);
-        setPipeline();
+        if (drawing)
+            setPipeline(renderPass);
     }
 
     public int getBlendSrcFunc() {
-        return blendGLConstantMap.get(pipelineSpec.getBlendSrcFactor());
+        return BlendMapper.blendFunction(pipelineSpec.getBlendSrcFactor());
     }
 
     public int getBlendDstFunc() {
-        return blendGLConstantMap.get(pipelineSpec.getBlendDstFactor());
+        return BlendMapper.blendFunction(pipelineSpec.getBlendDstFactor());
     }
 
     public int getBlendSrcFuncAlpha() {
-        return blendGLConstantMap.get(pipelineSpec.getBlendSrcFactorAlpha());
+        return BlendMapper.blendFunction(pipelineSpec.getBlendSrcFactorAlpha());
     }
 
     public int getBlendDstFuncAlpha() {
-        return blendGLConstantMap.get(pipelineSpec.getBlendDstFactorAlpha());
+        return BlendMapper.blendFunction(pipelineSpec.getBlendDstFactorAlpha());
     }
 
     public void enableBlending() {
@@ -312,7 +309,8 @@ public class WgSpriteBatch implements Batch {
             return;
         flush();
         pipelineSpec.enableBlending();
-        setPipeline();
+        if (drawing)
+            setPipeline(renderPass);
     }
 
     public void disableBlending() {
@@ -320,7 +318,8 @@ public class WgSpriteBatch implements Batch {
             return;
         flush();
         pipelineSpec.disableBlending();
-        setPipeline();
+        if (drawing)
+            setPipeline(renderPass);
     }
 
     /** Apply a scissor rectangle for further sprites. */
@@ -346,20 +345,10 @@ public class WgSpriteBatch implements Batch {
     public void begin(Color clearColor) {
         if (drawing)
             throw new RuntimeException("Must end() before begin()");
+        drawing = true;
 
         renderPass = RenderPassBuilder.create("SpriteBatch", clearColor, webgpu.getSamples());
-
-        // default blending values
-        pipelineSpec.enableBlending();
-        pipelineSpec.setBlendFactor(WGPUBlendFactor.SrcAlpha, WGPUBlendFactor.OneMinusSrcAlpha);
-        pipelineSpec.disableDepthTest();
-
-        // if the pipeline was never changed (no shader changes, no blending changes)
-        // continue with the one from the constructor, and we can avoid a cache lookup
-        if (currentPipeline == initialPipeline)
-            renderPass.setPipeline(currentPipeline);
-        else
-            setPipeline();
+        setPipeline(renderPass);
 
         // First begin() call in this render frame?
         if (webgpu.frameNumber != this.frameNumber) {
@@ -386,7 +375,6 @@ public class WgSpriteBatch implements Batch {
         // don't reset the matrices because setProjectionMatrix() and setTransformMatrix()
         // may be called before begin() and need to be respected.
 
-        drawing = true;
     }
 
     protected void switchTexture(Texture texture) {
@@ -402,6 +390,8 @@ public class WgSpriteBatch implements Batch {
     }
 
     public void flush() {
+        if (!drawing)
+            return;
         if (numSpritesPerFlush == 0)
             return;
         if (numSpritesPerFlush > maxSpritesInBatch)
@@ -446,22 +436,25 @@ public class WgSpriteBatch implements Batch {
     public void end() {
         if (!drawing) // catch incorrect usage
             throw new RuntimeException("Cannot end() without begin()");
-        drawing = false;
+
         flush();
         uniformBuffer.endSlices();
         renderPass.end();
         renderPass = null;
         pipelineCount = pipelines.size(); // statistics
+        drawing = false;
     }
 
     // create or reuse pipeline on demand to match the pipeline spec
-    private void setPipeline() {
+    private void setPipeline(WebGPURenderPass pass) {
+        // Update pipeline spec to match the current render pass's format and sample count
+        // This is crucial when rendering to framebuffers with different formats than the screen
+        pipelineSpec.colorFormat = pass.getColorFormat();
+        pipelineSpec.numSamples = pass.getSampleCount();
+        pipelineSpec.invalidateHashCode();
+
         WebGPUPipeline pipeline = pipelines.findPipeline(pipelineLayout, pipelineSpec);
-        if (pipeline != currentPipeline) { // avoid unneeded switches
-            if (renderPass != null)
-                renderPass.setPipeline(pipeline);
-            currentPipeline = pipeline;
-        }
+        pass.setPipeline(pipeline);
     }
 
     /**
@@ -482,7 +475,8 @@ public class WgSpriteBatch implements Batch {
             pipelineSpec.shaderSource = "precompiled"; // shaderProgram.getName(); // todo
         }
         pipelineSpec.invalidateHashCode();
-        setPipeline();
+        if (drawing)
+            setPipeline(renderPass);
     }
 
     @Override
@@ -1068,7 +1062,16 @@ public class WgSpriteBatch implements Batch {
         uniformBuffer.dispose();
         bindGroupLayout.dispose();
         // pipelineLayout.dispose();
+    }
 
+    /**
+     * Clear the pipeline cache, forcing all pipelines to be rebuilt. Useful when changing shader parameters at runtime.
+     */
+    public void clearPipelineCache() {
+        if (drawing) {
+            flush();
+        }
+        pipelines.clear();
     }
 
     private String getDefaultShaderSource() {
@@ -1077,23 +1080,4 @@ public class WgSpriteBatch implements Batch {
         return defaultShader;
     }
 
-    private void initBlendMap() {
-        blendConstantMap.put(GL20.GL_ZERO, WGPUBlendFactor.Zero);
-        blendConstantMap.put(GL20.GL_ONE, WGPUBlendFactor.One);
-        blendConstantMap.put(GL20.GL_SRC_ALPHA, WGPUBlendFactor.SrcAlpha);
-        blendConstantMap.put(GL20.GL_ONE_MINUS_SRC_ALPHA, WGPUBlendFactor.OneMinusSrcAlpha);
-        blendConstantMap.put(GL20.GL_DST_ALPHA, WGPUBlendFactor.DstAlpha);
-        blendConstantMap.put(GL20.GL_ONE_MINUS_DST_ALPHA, WGPUBlendFactor.OneMinusDstAlpha);
-        blendConstantMap.put(GL20.GL_SRC_COLOR, WGPUBlendFactor.Src);
-        blendConstantMap.put(GL20.GL_ONE_MINUS_SRC_COLOR, WGPUBlendFactor.OneMinusSrc);
-        blendConstantMap.put(GL20.GL_DST_COLOR, WGPUBlendFactor.Dst);
-        blendConstantMap.put(GL20.GL_ONE_MINUS_DST_COLOR, WGPUBlendFactor.OneMinusDst);
-        blendConstantMap.put(GL20.GL_SRC_ALPHA_SATURATE, WGPUBlendFactor.SrcAlphaSaturated);
-
-        // and build the inverse mapping
-        for (int key : blendConstantMap.keySet()) {
-            WGPUBlendFactor factor = blendConstantMap.get(key);
-            blendGLConstantMap.put(factor, key);
-        }
-    }
 }

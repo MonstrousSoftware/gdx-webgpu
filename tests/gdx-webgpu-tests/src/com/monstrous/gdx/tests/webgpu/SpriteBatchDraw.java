@@ -66,7 +66,7 @@ public class SpriteBatchDraw extends GdxTest {
         //
         //
         // sprite.draw(batch);
-
+        batch.enableBlending();
         batch.end();
     }
 

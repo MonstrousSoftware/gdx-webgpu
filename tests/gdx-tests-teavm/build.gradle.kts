@@ -1,12 +1,6 @@
 plugins {
     id("java")
-    id("org.gretty") version("4.1.10")
     id("com.diffplug.spotless")
-}
-
-project.extra["webAppDir"] = File(projectDir, "build/dist/webapp")
-gretty {
-    contextPath = "/"
 }
 
 dependencies {
@@ -15,8 +9,8 @@ dependencies {
 //    val teaVMVersion = project.property("teaVMVersion") as String
 
     //implementation("com.badlogicgames.gdx:gdx:$gdxVersion")
-    implementation("com.github.xpenatan.gdx-teavm:backend-teavm:$gdxTeaVMVersion")
-    implementation("com.github.xpenatan.gdx-teavm:backend-teavm:$gdxTeaVMVersion:sources")
+    implementation("com.github.xpenatan.gdx-teavm:backend-web:$gdxTeaVMVersion")
+    implementation("com.github.xpenatan.gdx-teavm:backend-web:$gdxTeaVMVersion:sources")
 
 //    implementation("org.teavm:teavm-classlib:${teaVMVersion}")
 //    implementation("org.teavm:teavm-core:${teaVMVersion}")

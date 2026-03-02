@@ -102,13 +102,13 @@ public class WgVertexBuffer implements VertexData {
     @Override
     public void bind(ShaderProgram shader) {
         if (isDirty) {
+            ((Buffer) floatBuffer).flip();
             int numBytes = ((Buffer) floatBuffer).limit() * Float.BYTES;
             ((Buffer) byteBuffer).limit(numBytes);
             ((Buffer) byteBuffer).position(0);
             vertexBuffer.setVertices(byteBuffer);
             isDirty = false;
             if (isStatic) {
-                BufferUtils.disposeUnsafeByteBuffer(byteBuffer); // release memory of backing buffer
                 isFrozen = true; // no more changes allowed
             }
         }
@@ -145,7 +145,6 @@ public class WgVertexBuffer implements VertexData {
         // Gdx.app.log("WebGPUVertexData", "dispose"+getNumMaxVertices());
 
         vertexBuffer.dispose();
-        if (!isFrozen)
-            BufferUtils.disposeUnsafeByteBuffer(byteBuffer); // release memory of backing buffer
+        BufferUtils.disposeUnsafeByteBuffer(byteBuffer); // release memory of backing buffer
     }
 }

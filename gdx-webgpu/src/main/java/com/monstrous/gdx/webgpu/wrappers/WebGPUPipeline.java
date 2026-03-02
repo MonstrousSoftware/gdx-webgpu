@@ -47,8 +47,13 @@ public class WebGPUPipeline implements Disposable {
         }
         this.specification = new PipelineSpecification(spec);
 
-        WGPUVertexBufferLayout vertexBufferLayout = spec.vertexAttributes == null ? null
-                : WebGPUVertexLayout.buildVertexBufferLayout(spec.vertexAttributes);
+        WGPUVertexBufferLayout vertexBufferLayout;
+        if (spec.vertexLayout == null) {
+            // could happen, e.g. for the skybox pipeline
+            vertexBufferLayout = null;
+        } else {
+            vertexBufferLayout = spec.vertexLayout.getVertexBufferLayout();
+        }
 
         WGPURenderPipelineDescriptor pipelineDesc = WGPURenderPipelineDescriptor.obtain();
         pipelineDesc.setNextInChain(WGPUChainedStruct.NULL);
@@ -99,6 +104,20 @@ public class WebGPUPipeline implements Disposable {
             fragmentState.setTargets(colorStateTargets);
 
             pipelineDesc.setFragment(fragmentState);
+        } else if (spec.isDepthPass && spec.fragmentShaderEntryPoint != null) {
+            // Depth-only pass with fragment shader (for custom depth output like masking)
+            // isDepthPass indicates this is a depth pass, fragmentShaderEntryPoint means it has custom depth logic
+            WGPUFragmentState fragmentState = WGPUFragmentState.obtain();
+            fragmentState.setNextInChain(WGPUChainedStruct.NULL);
+            fragmentState.setModule(shader.getShaderModule());
+            fragmentState.setEntryPoint(spec.fragmentShaderEntryPoint);
+            fragmentState.setConstants(WGPUVectorConstantEntry.NULL);
+
+            // Empty color targets - no color output
+            WGPUVectorColorTargetState colorStateTargets = WGPUVectorColorTargetState.obtain();
+            fragmentState.setTargets(colorStateTargets);
+
+            pipelineDesc.setFragment(fragmentState);
         }
 
         WGPUDepthStencilState depthStencilState = WGPUDepthStencilState.obtain();
@@ -107,6 +126,11 @@ public class WebGPUPipeline implements Disposable {
         if (spec.isSkyBox) {
             depthStencilState.setDepthCompare(WGPUCompareFunction.LessEqual);// we are clearing to 1.0 and rendering at
                                                                              // 1.0, i.e. at max distance
+            depthStencilState.setDepthWriteEnabled(WGPUOptionalBool.True);
+        } else if (spec.isDepthPass && spec.fragmentShaderEntryPoint != null) {
+            // Depth-only masking pass with fragment shader: use proper depth testing
+            // Fragment shader outputs actual depth so only fragments behind are masked
+            depthStencilState.setDepthCompare(WGPUCompareFunction.LessEqual);
             depthStencilState.setDepthWriteEnabled(WGPUOptionalBool.True);
         } else {
             if (!spec.useDepthTest) {

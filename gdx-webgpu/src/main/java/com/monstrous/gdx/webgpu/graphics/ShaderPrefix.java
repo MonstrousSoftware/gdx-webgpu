@@ -56,6 +56,21 @@ public class ShaderPrefix {
             if ((mask & VertexAttributes.Usage.BoneWeight) != 0) {
                 sb.append("#define SKIN\n");
             }
+            boolean hasMorph = false;
+            int morphCount = 0;
+            for (int i = 0; i < vertexAttributes.size(); i++) {
+                if (vertexAttributes.get(i).alias.startsWith("a_position_morph_")) {
+                    hasMorph = true;
+                    morphCount++;
+                }
+            }
+            if (hasMorph) {
+                sb.append("#define MORPH\n");
+                // emit one define per target so the shader can guard each slot individually
+                for (int i = 0; i < morphCount; i++) {
+                    sb.append("#define MORPH_").append(i).append('\n');
+                }
+            }
             // todo this is a very crude test
             if ((mask & VertexAttributes.Usage.Normal) != 0 && environment != null) {
                 // only perform lighting calculations if we have vertex normals and an environment
@@ -94,14 +109,17 @@ public class ShaderPrefix {
         // }
 
         // Add gamma correction if surface format is not Srgb
-
-        WgGraphics gfx = (WgGraphics) Gdx.graphics;
-        WebGPUContext webgpu = gfx.getContext();
-        if (!webgpu.hasLinearOutput()) {
+        if (!hasLinearOutput()) {
             sb.append("#define GAMMA_CORRECTION\n");
         }
 
         // System.out.println("Prefix: "+sb.toString());
         return sb.toString();
+    }
+
+    public static boolean hasLinearOutput() {
+        WgGraphics gfx = (WgGraphics) Gdx.graphics;
+        WebGPUContext webgpu = gfx.getContext();
+        return webgpu.hasLinearOutput();
     }
 }
