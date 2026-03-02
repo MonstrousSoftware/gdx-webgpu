@@ -63,15 +63,14 @@ public class WebGPUApplication extends WebGPUContext implements WebGPUInitializa
     }
 
     public boolean isError() {
-        return initState == WebGPUInitState.INSTANCE_NOT_VALID ||
-            initState == WebGPUInitState.ADAPTER_NOT_VALID ||
-            initState == WebGPUInitState.DEVICE_NOT_VALID;
+        return initState == WebGPUInitState.INSTANCE_NOT_VALID || initState == WebGPUInitState.ADAPTER_NOT_VALID
+                || initState == WebGPUInitState.DEVICE_NOT_VALID;
     }
 
     @Override
     public void onInit(WebGPUInitState initState, WGPUAdapter adapter, WGPUDevice device) {
         this.initState = initState;
-        if(isReady()) {
+        if (isReady()) {
             this.device = device;
             this.queue = device.getQueue();
 
@@ -93,8 +92,7 @@ public class WebGPUApplication extends WebGPUContext implements WebGPUInitializa
             surfaceTextureTexture = new WGPUTexture();
 
             gpuTimer = new GPUTimer(device, config.gpuTimingEnabled);
-        }
-        else {
+        } else {
             throw new RuntimeException("Failed to initialize WebGPU: " + initState);
         }
     }
@@ -334,7 +332,8 @@ public class WebGPUApplication extends WebGPUContext implements WebGPUInitializa
 
     @Override
     public void dispose() {
-        if (disposed) return;
+        if (disposed)
+            return;
         disposed = true;
 
         // Guard against partial initialization
@@ -344,10 +343,14 @@ public class WebGPUApplication extends WebGPUContext implements WebGPUInitializa
             swapChainActive = false;
         }
 
-        if (command != null) command.dispose();
-        if (encoder != null) encoder.dispose();
-        if (textureViewOut != null) textureViewOut.dispose();
-        if (surfaceTextureTexture != null) surfaceTextureTexture.dispose();
+        if (command != null)
+            command.dispose();
+        if (encoder != null)
+            encoder.dispose();
+        if (textureViewOut != null)
+            textureViewOut.dispose();
+        if (surfaceTextureTexture != null)
+            surfaceTextureTexture.dispose();
 
         if (surface != null) {
             surface.release();

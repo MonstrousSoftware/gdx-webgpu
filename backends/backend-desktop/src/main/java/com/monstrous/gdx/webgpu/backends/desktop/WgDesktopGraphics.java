@@ -82,15 +82,15 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
         app = (WgDesktopApplication) Gdx.app;
 
         WebGPUApplication.Configuration config = new WebGPUApplication.Configuration(app.getConfiguration().samples,
-            app.getConfiguration().vSyncEnabled, app.getConfiguration().enableGPUtiming,
-            app.getConfiguration().backend);
+                app.getConfiguration().vSyncEnabled, app.getConfiguration().enableGPUtiming,
+                app.getConfiguration().backend);
 
         WGPUSurface surface = createSurface(instance, windowHandle);
         this.context = new WebGPUApplication(config, instance, surface);
         WGPUBackendType backendType = WebGPUApplication.convertBackendType(config.requestedBackendType);
         WebGPUInitialization.setup(instance, WGPUPowerPreference.HighPerformance, backendType, context);
         while (!context.isReady()) {
-            if(context.isError()) {
+            if (context.isError()) {
                 throw new RuntimeException("Failed to initialize WebGPU");
             }
             instance.processEvents();
@@ -106,7 +106,6 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
 
         Gdx.graphics = this;
         Gdx.gl = this.gl20;
-
 
         // this.context = new WebGPUApplication(config, new WebGPUApplication.OnInitCallback() {
         // @Override

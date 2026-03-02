@@ -71,7 +71,7 @@ public class TestChooser extends ApplicationAdapter {
             @Override
             public boolean touchDown(int screenX, int screenY, int pointer, int button) {
                 if (mobile && test != null) {
-                    int hotspotSize = (int)(80 * uiScale); // ~80dp scaled
+                    int hotspotSize = (int) (80 * uiScale); // ~80dp scaled
                     boolean inHotspot = (Gdx.graphics.getWidth() - screenX) < hotspotSize
                             && (Gdx.graphics.getHeight() - screenY) < hotspotSize;
                     if (inHotspot) {

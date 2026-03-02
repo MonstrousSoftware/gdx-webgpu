@@ -23,10 +23,12 @@ public class WebGPUInitialization {
     private final static int WGPU_LIMIT_U32_UNDEFINED = -1;
     private final static int WGPU_LIMIT_U64_UNDEFINED = -1;
 
-    private WebGPUInitialization() {}
+    private WebGPUInitialization() {
+    }
 
-    public static void setup(WGPUInstance instance, WGPUPowerPreference powerPreference, WGPUBackendType backendType, OnSetupCallback initCallback) {
-        if(!instance.isValid()) {
+    public static void setup(WGPUInstance instance, WGPUPowerPreference powerPreference, WGPUBackendType backendType,
+            OnSetupCallback initCallback) {
+        if (!instance.isValid()) {
             initCallback.onInit(WebGPUInitState.INSTANCE_NOT_VALID, null, null);
             return;
         }
@@ -135,6 +137,7 @@ public class WebGPUInitialization {
 
     public interface OnSetupCallback {
         void onInit(WebGPUInitState initState, WGPUAdapter adapter, WGPUDevice device);
+
         void onError(WGPUErrorType errorType, String message);
     }
 }
