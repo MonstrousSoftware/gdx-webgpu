@@ -11,6 +11,7 @@ import com.github.xpenatan.gdx.teavm.backends.web.dom.impl.WebWindow;
 import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.webgpu.application.WebGPUApplication;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WebGPUInitialization;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.utils.WgGL20;
 import org.teavm.jso.dom.html.HTMLCanvasElement;
@@ -64,6 +65,8 @@ public class WgTeaGraphics extends WebGraphics implements WgGraphics {
         }
 
         this.context = new WebGPUApplication(configg, instance, surface);
+
+        WebGPUInitialization.setup(instance, WGPUPowerPreference.HighPerformance, WGPUBackendType.WebGPU, context);
 
         // listen to fullscreen changes
         addFullscreenChangeListener(canvas, new FullscreenChanged() {

@@ -5,7 +5,8 @@ import java.net.URLEncoder
 var libProjects = mutableSetOf(
     project(":gdx-webgpu"),
     project(":backends:backend-desktop"),
-    project(":backends:backend-teavm")
+    project(":backends:backend-teavm"),
+    project(":backends:backend-android")
 )
 
 LibExt.isRelease = gradle.startParameter.taskNames.any { it == "publishRelease" }
@@ -15,7 +16,6 @@ LibExt.overrideVersion = project.findProperty("version") as String?
 println("Library Version: " + LibExt.libVersion)
 
 configure(libProjects) {
-    apply(plugin = "java")
     apply(plugin = "signing")
     apply(plugin = "maven-publish")
 
@@ -74,11 +74,6 @@ configure(libProjects) {
     tasks.withType<Javadoc> {
         options.encoding = "UTF-8"
         (options as StandardJavadocDocletOptions).addStringOption("Xdoclint:none", "-quiet")
-    }
-
-    extensions.configure<org.gradle.api.plugins.JavaPluginExtension> {
-        withJavadocJar()
-        withSourcesJar()
     }
 
     val signingKey = System.getenv("SIGNING_KEY").orEmpty()
