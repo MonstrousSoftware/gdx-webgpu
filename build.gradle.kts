@@ -9,12 +9,10 @@ buildscript {
     dependencies {
         classpath("com.android.tools.build:gradle:8.12.3")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
-        classpath("com.diffplug.spotless:spotless-plugin-gradle:6.25.0")
     }
 }
 
 plugins {
-    id("com.diffplug.spotless") version "6.25.0" apply false
     id("java")
     id("maven-publish")
     id("signing")

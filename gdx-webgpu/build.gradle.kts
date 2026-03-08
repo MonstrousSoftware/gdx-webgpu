@@ -2,7 +2,6 @@ plugins {
     id("java")
     id("java-library")
     id("maven-publish")
-    id("com.diffplug.spotless")
 }
 
 val javaVersion = JavaVersion.toVersion(project.property("java") as String)
@@ -29,11 +28,5 @@ publishing {
             artifactId = "gdx-webgpu"
             from(components["java"])
         }
-    }
-}
-
-spotless {
-    java {
-        eclipse().configFile(rootProject.file("intellij-java-style.xml"))
     }
 }
