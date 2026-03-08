@@ -53,7 +53,9 @@ www-test/
 # Not sure yet...
 
 ## IntelliJ, Android Studio:
-.idea/
+# Ignore most of .idea, but keep project-level code style settings so they are shared
+.idea/*
+!.idea/codeStyles/
 *.ipr
 *.iws
 *.iml
