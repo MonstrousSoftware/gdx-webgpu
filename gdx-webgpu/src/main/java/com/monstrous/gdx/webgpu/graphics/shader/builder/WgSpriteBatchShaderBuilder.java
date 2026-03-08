@@ -82,83 +82,82 @@ public final class WgSpriteBatchShaderBuilder {
     // CHUNK SOURCES
     // =========================================================================
 
-    public static final WgShaderChunk UNIFORMS_STRUCT_CHUNK = new WgShaderChunk(UNIFORMS_STRUCT,
-            "struct Uniforms {\n"
-          + "    projectionViewTransform: mat4x4f,\n"
-          + "};\n");
+    public static final WgShaderChunk UNIFORMS_STRUCT_CHUNK =
+        WgShaderChunk.struct(UNIFORMS_STRUCT, "Uniforms")
+            .field("projectionViewTransform", "    projectionViewTransform: mat4x4f,\n")
+            .build();
 
-    public static final WgShaderChunk BINDINGS_CHUNK = new WgShaderChunk(BINDINGS,
-            "@group(0) @binding(0) var<uniform> uniforms: Uniforms;\n"
-          + "@group(0) @binding(1) var texture: texture_2d<f32>;\n"
-          + "@group(0) @binding(2) var textureSampler: sampler;\n");
+    public static final WgShaderChunk BINDINGS_CHUNK =
+        WgShaderChunk.block(BINDINGS, "// sprite bindings\n", "")
+            .line("uniforms",        "@group(0) @binding(0) var<uniform> uniforms: Uniforms;\n")
+            .line("texture",         "@group(0) @binding(1) var texture: texture_2d<f32>;\n")
+            .line("texture_sampler", "@group(0) @binding(2) var textureSampler: sampler;\n")
+            .build();
 
-    public static final WgShaderChunk VERTEX_INPUT_CHUNK = new WgShaderChunk(VERTEX_INPUT,
-            "struct VertexInput {\n"
-          + "    @location(0) position: vec2f,\n"
-          + "#ifdef TEXTURE_COORDINATE\n"
-          + "    @location(1) uv: vec2f,\n"
-          + "#endif\n"
-          + "#ifdef COLOR\n"
-          + "    @location(5) color: vec4f,\n"
-          + "#endif\n"
-          + "};\n");
+    public static final WgShaderChunk VERTEX_INPUT_CHUNK =
+        WgShaderChunk.struct(VERTEX_INPUT, "VertexInput")
+            .field("position", "    @location(0) position: vec2f,\n")
+            .sub(WgShaderChunk.block("uv_block", "#ifdef TEXTURE_COORDINATE\n", "#endif\n")
+                .field("uv", "    @location(1) uv: vec2f,\n").build())
+            .sub(WgShaderChunk.block("color_block", "#ifdef COLOR\n", "#endif\n")
+                .field("color", "    @location(5) color: vec4f,\n").build())
+            .build();
 
-    public static final WgShaderChunk VERTEX_OUTPUT_CHUNK = new WgShaderChunk(VERTEX_OUTPUT,
-            "struct VertexOutput {\n"
-          + "    @builtin(position) position: vec4f,\n"
-          + "#ifdef TEXTURE_COORDINATE\n"
-          + "    @location(0) uv : vec2f,\n"
-          + "#endif\n"
-          + "    @location(1) color: vec4f,\n"
-          + "};\n");
+    public static final WgShaderChunk VERTEX_OUTPUT_CHUNK =
+        WgShaderChunk.struct(VERTEX_OUTPUT, "VertexOutput")
+            .field("position", "    @builtin(position) position: vec4f,\n")
+            .sub(WgShaderChunk.block("uv_block", "#ifdef TEXTURE_COORDINATE\n", "#endif\n")
+                .field("uv", "    @location(0) uv : vec2f,\n").build())
+            .field("color", "    @location(1) color: vec4f,\n")
+            .build();
 
-    public static final WgShaderChunk VS_OPEN_CHUNK = new WgShaderChunk(VS_OPEN,
-            "@vertex\n"
-          + "fn vs_main(in: VertexInput) -> VertexOutput {\n"
-          + "   var out: VertexOutput;\n");
+    public static final WgShaderChunk VS_OPEN_CHUNK =
+        WgShaderChunk.block(VS_OPEN,
+            "@vertex\nfn vs_main(in: VertexInput) -> VertexOutput {\n", "")
+            .line("out_decl", "   var out: VertexOutput;\n")
+            .build();
 
     public static final WgShaderChunk VS_POS_CHUNK = new WgShaderChunk(VS_POS,
             "   out.position = uniforms.projectionViewTransform * vec4f(in.position, 0.0, 1.0);\n");
 
-    public static final WgShaderChunk VS_UV_CHUNK = new WgShaderChunk(VS_UV,
-            "#ifdef TEXTURE_COORDINATE\n"
-          + "   out.uv = in.uv;\n"
-          + "#endif\n");
+    public static final WgShaderChunk VS_UV_CHUNK =
+        WgShaderChunk.block(VS_UV, "#ifdef TEXTURE_COORDINATE\n", "#endif\n")
+            .line("write_uv", "   out.uv = in.uv;\n")
+            .build();
 
-    public static final WgShaderChunk VS_COLOR_CHUNK = new WgShaderChunk(VS_COLOR,
-            "#ifdef COLOR\n"
-          + "   let color:vec4f = vec4f(pow(in.color.rgb, vec3f(2.2)), in.color.a);\n"
-          + "#else\n"
-          + "   let color:vec4f = vec4f(1,1,1,1);\n"
-          + "#endif\n"
-          + "   out.color = color;\n");
+    public static final WgShaderChunk VS_COLOR_CHUNK =
+        WgShaderChunk.block(VS_COLOR, "", "")
+            .sub(WgShaderChunk.block("color_read", "#ifdef COLOR\n", "#endif\n")
+                .line("gamma_expand", "   let color:vec4f = vec4f(pow(in.color.rgb, vec3f(2.2)), in.color.a);\n")
+                .sub(WgShaderChunk.block("else_block", "#else\n", "")
+                    .line("white", "   let color:vec4f = vec4f(1,1,1,1);\n").build())
+                .build())
+            .line("write_out", "   out.color = color;\n")
+            .build();
 
     public static final WgShaderChunk VS_RETURN_CHUNK = new WgShaderChunk(VS_RETURN,
-            "   return out;\n"
-          + "}\n");
+            "   return out;\n}\n");
 
     /** Replace this to change the return type (e.g. for MRT). */
     public static final WgShaderChunk FS_SIGNATURE_CHUNK = new WgShaderChunk(FS_SIGNATURE,
-            "@fragment\n"
-          + "fn fs_main(in : VertexOutput) -> @location(0) vec4f {\n");
+            "@fragment\nfn fs_main(in : VertexOutput) -> @location(0) vec4f {\n");
 
-    public static final WgShaderChunk FS_BASE_COLOR_CHUNK = new WgShaderChunk(FS_BASE_COLOR,
-            "#ifdef TEXTURE_COORDINATE\n"
-          + "    var color = in.color * textureSample(texture, textureSampler, in.uv);\n"
-          + "#else\n"
-          + "    var color = in.color;\n"
-          + "#endif\n");
+    public static final WgShaderChunk FS_BASE_COLOR_CHUNK =
+        WgShaderChunk.block(FS_BASE_COLOR, "#ifdef TEXTURE_COORDINATE\n", "#endif\n")
+            .line("sample_color", "    var color = in.color * textureSample(texture, textureSampler, in.uv);\n")
+            .sub(WgShaderChunk.block("else_block", "#else\n", "")
+                .line("pass_color", "    var color = in.color;\n").build())
+            .build();
 
-    public static final WgShaderChunk FS_GAMMA_CHUNK = new WgShaderChunk(FS_GAMMA,
-            "#ifdef GAMMA_CORRECTION\n"
-          + "    let linearColor: vec3f = pow(color.rgb, vec3f(1/2.2));\n"
-          + "    color = vec4f(linearColor, color.a);\n"
-          + "#endif\n");
+    public static final WgShaderChunk FS_GAMMA_CHUNK =
+        WgShaderChunk.block(FS_GAMMA, "#ifdef GAMMA_CORRECTION\n", "#endif\n")
+            .line("linear_color", "    let linearColor: vec3f = pow(color.rgb, vec3f(1/2.2));\n")
+            .line("apply_gamma",  "    color = vec4f(linearColor, color.a);\n")
+            .build();
 
     /** Replace this (together with {@link #FS_SIGNATURE}) to implement MRT. */
     public static final WgShaderChunk FS_RETURN_CHUNK = new WgShaderChunk(FS_RETURN,
-            "    return color;\n"
-          + "};\n");
+            "    return color;\n};\n");
 
     // =========================================================================
     // FACTORY METHOD
