@@ -35,6 +35,13 @@ public class WebGPUApplication extends WebGPUContext implements WebGPUInitializa
     private boolean swapChainActive = false;
     private boolean disposed = false;
 
+    private WGPUTextureView[] defaultTargetViews;
+    private WGPUTextureFormat[] defaultSurfaceFormats;
+
+    // Pre-allocated scratch arrays used by the single-target pushTargetView overload to avoid per-call heap allocation
+    private final WGPUTextureView[] singleTargetViewScratch = new WGPUTextureView[1];
+    private final WGPUTextureFormat[] singleTargetFormatScratch = new WGPUTextureFormat[1];
+
     public static class Configuration {
         public int numSamples;
         public boolean vSyncEnabled;
@@ -82,10 +89,15 @@ public class WebGPUApplication extends WebGPUContext implements WebGPUInitializa
             if (formats.size() == 0) {
                 throw new RuntimeException("Adapter has no surface formats available");
             }
-            surfaceFormat = formats.get(0);
+            WGPUTextureFormat surfaceFormat = formats.get(0);
             // System.out.println("surfaceFormat: " + surfaceFormat);
 
             // allocate some objects we will reuse a lot
+            defaultTargetViews = new WGPUTextureView[1];
+            defaultSurfaceFormats = new WGPUTextureFormat[] {surfaceFormat};
+            targetViews = defaultTargetViews;
+            surfaceFormats = defaultSurfaceFormats;
+
             encoder = new WGPUCommandEncoder();
             command = new WGPUCommandBuffer();
             textureViewOut = new WGPUTextureView();
@@ -125,9 +137,15 @@ public class WebGPUApplication extends WebGPUContext implements WebGPUInitializa
     }
 
     public void renderFrame(ApplicationListener listener) {
-        targetView = getNextSurfaceTextureView();
+        WGPUTextureView targetView = getNextSurfaceTextureView();
+
         if (targetView == null)
             return;
+
+        defaultTargetViews[0] = targetView;
+        // defaultSurfaceFormats[0] is already set to surface format
+        targetViews = defaultTargetViews;
+        surfaceFormats = defaultSurfaceFormats;
 
         WGPUCommandEncoderDescriptor encoderDesc = WGPUCommandEncoderDescriptor.obtain();
         encoderDesc.setLabel("The Command Encoder");
@@ -248,7 +266,7 @@ public class WebGPUApplication extends WebGPUContext implements WebGPUInitializa
         if (config.numSamples > 1) {
             if (multiSamplingTexture != null)
                 multiSamplingTexture.dispose();
-            multiSamplingTexture = new WgTexture("multisampling", width, height, false, true, surfaceFormat,
+            multiSamplingTexture = new WgTexture("multisampling", width, height, false, true, defaultSurfaceFormats[0],
                     config.numSamples);
         }
 
@@ -303,7 +321,7 @@ public class WebGPUApplication extends WebGPUContext implements WebGPUInitializa
         WGPUSurfaceConfiguration config = WGPUSurfaceConfiguration.obtain();
         config.setWidth(width);
         config.setHeight(height);
-        config.setFormat(surfaceFormat);
+        config.setFormat(defaultSurfaceFormats[0]);
         config.setViewFormats(WGPUVectorTextureFormat.NULL);
         config.setUsage(WGPUTextureUsage.RenderAttachment);
         config.setDevice(device);
@@ -386,35 +404,48 @@ public class WebGPUApplication extends WebGPUContext implements WebGPUInitializa
 
     @Override
     public WGPUTextureFormat getSurfaceFormat() {
-        return surfaceFormat;
+        return surfaceFormats[0];
     }
 
     @Override
     public WGPUTextureView getTargetView() {
-        return targetView;
+        return targetViews[0];
+    }
+
+    @Override
+    public WGPUTextureView[] getTargetViews() {
+        return targetViews;
     }
 
     /** Push a texture view to use for output, instead of the screen. */
     @Override
-    public RenderOutputState pushTargetView(WGPUTextureView textureView, WGPUTextureFormat textureFormat, int width,
-            int height, WgTexture depthTex) {
-        RenderOutputState state = new RenderOutputState(targetView, surfaceFormat, depthTexture, getViewportRectangle(),
-                getSamples());
-        targetView = textureView;
-        surfaceFormat = textureFormat;
+    public RenderOutputState pushTargetView(RenderOutputState outState, WGPUTextureView textureView,
+            WGPUTextureFormat textureFormat, int width, int height, WgTexture depthTex) {
+        singleTargetViewScratch[0] = textureView;
+        singleTargetFormatScratch[0] = textureFormat;
+        return pushTargetView(outState, singleTargetViewScratch, singleTargetFormatScratch, width, height, depthTex);
+    }
+
+    @Override
+    public RenderOutputState pushTargetView(RenderOutputState outState, WGPUTextureView[] textureViews,
+            WGPUTextureFormat[] textureFormats, int width, int height, WgTexture depthTex) {
+        outState.set(targetViews, surfaceFormats, depthTexture, getViewportRectangle(), getSamples());
+        targetViews = textureViews;
+        surfaceFormats = textureFormats;
+
         config.numSamples = 1; // no antialiasing to texture output
         if (depthTex != null) {
             depthTexture = depthTex;
         }
-        setViewportRectangle(0, 0, width, height); // scissors too?
-        return state;
+        setViewportRectangle(0, 0, width, height);
+        return outState;
     }
 
     @Override
     public void popTargetView(RenderOutputState prevState) {
         setViewportRectangle(prevState.viewport);
-        targetView = prevState.targetView;
-        surfaceFormat = prevState.surfaceFormat;
+        targetViews = prevState.targetViews;
+        surfaceFormats = prevState.surfaceFormats;
         depthTexture = prevState.depthTexture;
         config.numSamples = prevState.numSamples;
     }
@@ -443,7 +474,7 @@ public class WebGPUApplication extends WebGPUContext implements WebGPUInitializa
     // }
 
     public boolean hasLinearOutput() {
-        switch (surfaceFormat) {
+        switch (surfaceFormats[0]) {
             case RGBA8UnormSrgb:
             case BGRA8UnormSrgb:
             case BC2RGBAUnormSrgb:
@@ -461,7 +492,7 @@ public class WebGPUApplication extends WebGPUContext implements WebGPUInitializa
                 // some more exotic formats to add...
                 return false;
             default:
-                Gdx.app.error("hasLinearOutput", "surfaceFormat not known: " + surfaceFormat);
+                Gdx.app.error("hasLinearOutput", "surfaceFormat not known: " + surfaceFormats[0]);
         }
         return true;
     }

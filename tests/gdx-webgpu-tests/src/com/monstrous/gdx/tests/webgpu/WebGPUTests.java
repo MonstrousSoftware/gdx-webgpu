@@ -66,7 +66,8 @@ public class WebGPUTests {
                     SkyBoxTest.class, DuckField.class, IBL_Sliders.class, IBL_Spheres.class, IBL_GenerateOutdoor.class,
                     GLTFAnimation.class, GLTFMorphAnimation.class, GLTFSkinning.class, Scene2dTestScrollPane.class,
                     GLTFSkinningMultiple.class, GLTFSkinningShadow.class, ParticleControllerTest.class,
-                    Particles3D.class, Particles3DSnow.class, Particles3DmodelInstance.class, ScreenReaderTest.class
+                    Particles3D.class, Particles3DSnow.class, Particles3DmodelInstance.class, ScreenReaderTest.class,
+                    MRTTest2D.class, MRTTest3D.class
 
             // @on
 

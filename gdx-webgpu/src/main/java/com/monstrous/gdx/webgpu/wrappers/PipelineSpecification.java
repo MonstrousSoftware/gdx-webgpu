@@ -23,6 +23,7 @@ import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 // todo Environment
@@ -46,6 +47,8 @@ public class PipelineSpecification {
     public boolean afterDepthPrepass;
     public int numSamples;
 
+    public WGPUTextureFormat[] colorFormats; // MRT support
+
     public boolean blendingEnabled;
     public WGPUBlendFactor blendSrcColor;
     public WGPUBlendFactor blendDstColor;
@@ -55,11 +58,11 @@ public class PipelineSpecification {
     public WGPUBlendOperation blendOpAlpha;
     public WGPUCullMode cullMode;
 
-    public WGPUTextureFormat colorFormat;
     public WGPUTextureFormat depthFormat;
     public int maxDirLights;
     public int maxPointLights;
     public boolean usePBR;
+    public String customPrefix; // To add extra defines e.g. for MRT
     private int hash;
     private boolean dirty; // does hash need to be recalculated?
 
@@ -80,7 +83,7 @@ public class PipelineSpecification {
         topology = WGPUPrimitiveTopology.TriangleList;
         isDepthPass = false;
         WgGraphics gfx = (WgGraphics) Gdx.graphics;
-        colorFormat = gfx.getContext().getSurfaceFormat();
+        colorFormats = new WGPUTextureFormat[] {gfx.getContext().getSurfaceFormat()};
         depthFormat = WGPUTextureFormat.Depth24Plus; // todo get from adapter?
         numSamples = gfx.getContext().getSamples(); // take from window
         isSkyBox = false;
@@ -131,7 +134,11 @@ public class PipelineSpecification {
         this.isSkyBox = spec.isSkyBox;
         this.afterDepthPrepass = spec.afterDepthPrepass;
 
-        this.colorFormat = spec.colorFormat;
+        if (spec.colorFormats != null)
+            this.colorFormats = spec.colorFormats.clone();
+        else
+            this.colorFormats = null;
+
         this.depthFormat = spec.depthFormat;
         this.numSamples = spec.numSamples;
         this.maxDirLights = spec.maxDirLights;
@@ -139,6 +146,7 @@ public class PipelineSpecification {
         this.usePBR = spec.usePBR;
         this.fragmentShaderEntryPoint = spec.fragmentShaderEntryPoint;
         this.vertexShaderEntryPoint = spec.vertexShaderEntryPoint;
+        this.customPrefix = spec.customPrefix;
         this.dirty = true;
     }
 
@@ -213,51 +221,34 @@ public class PipelineSpecification {
             return true;
         if (o == null || getClass() != o.getClass())
             return false;
-        return hash == ((PipelineSpecification) o).hash;
+        PipelineSpecification that = (PipelineSpecification) o;
+        return useDepthTest == that.useDepthTest && noDepthAttachment == that.noDepthAttachment
+                && isSkyBox == that.isSkyBox && isDepthPass == that.isDepthPass
+                && afterDepthPrepass == that.afterDepthPrepass && numSamples == that.numSamples
+                && blendingEnabled == that.blendingEnabled && Objects.equals(name, that.name)
+                && Objects.equals(vertexAttributes, that.vertexAttributes)
+                && Objects.equals(vertexLayout, that.vertexLayout) && vertexStepMode == that.vertexStepMode
+                && indexFormat == that.indexFormat && topology == that.topology
+                && Objects.equals(environment, that.environment) && Objects.equals(shaderSource, that.shaderSource)
+                && Objects.equals(vertexShaderEntryPoint, that.vertexShaderEntryPoint)
+                && Objects.equals(fragmentShaderEntryPoint, that.fragmentShaderEntryPoint)
+                && Objects.equals(shader, that.shader) && Arrays.equals(colorFormats, that.colorFormats)
+                && blendSrcColor == that.blendSrcColor && blendDstColor == that.blendDstColor
+                && blendOpColor == that.blendOpColor && blendSrcAlpha == that.blendSrcAlpha
+                && blendDstAlpha == that.blendDstAlpha && blendOpAlpha == that.blendOpAlpha && cullMode == that.cullMode
+                && depthFormat == that.depthFormat && maxDirLights == that.maxDirLights
+                && maxPointLights == that.maxPointLights && usePBR == that.usePBR
+                && Objects.equals(customPrefix, that.customPrefix);
     }
 
     @Override
     public int hashCode() {
-        if (dirty)
-            recalcHash();
-        return hash;
+        int result = Objects.hash(name, vertexAttributes, vertexLayout, vertexStepMode, indexFormat, topology,
+                environment, shaderSource, vertexShaderEntryPoint, fragmentShaderEntryPoint, shader, useDepthTest,
+                noDepthAttachment, isSkyBox, isDepthPass, afterDepthPrepass, numSamples, blendingEnabled, blendSrcColor,
+                blendDstColor, blendOpColor, blendSrcAlpha, blendDstAlpha, blendOpAlpha, cullMode, depthFormat,
+                maxDirLights, maxPointLights, usePBR, customPrefix);
+        result = 31 * result + Arrays.hashCode(colorFormats);
+        return result;
     }
-
-    /**
-     * to be called whenever relevant content changes (to avoid doing this in hashCode which is called a lot). Also:
-     * avoid Objects.hash() to avoid lots of little allocations.
-     */
-    private void recalcHash() {
-        // System.out.println("Recalc pipe spec hash "+((WgGraphics)Gdx.graphics).getFrameId());
-        hash = 1;
-        hash = 31 * hash + (vertexAttributes == null ? 0 : vertexAttributes.hashCode());
-        hash = 31 * hash + (shaderSource == null ? 0 : shaderSource.hashCode());
-        hash = 31 * hash + (isDepthPass ? 1231 : 1237);
-        hash = 31 * hash + (afterDepthPrepass ? 1231 : 1237);
-        hash = 31 * hash + (useDepthTest ? 1231 : 1237);
-        hash = 31 * hash + (noDepthAttachment ? 1231 : 1237);
-        hash = 31 * hash + (topology == null ? 0 : topology.hashCode());
-        hash = 31 * hash + (indexFormat == null ? 0 : indexFormat.hashCode());
-        hash = 31 * hash + (blendingEnabled ? 1231 : 1237);
-        if (blendingEnabled) {
-            hash = 31 * hash + (blendSrcColor == null ? 0 : blendSrcColor.hashCode());
-            hash = 31 * hash + (blendDstColor == null ? 0 : blendDstColor.hashCode());
-            hash = 31 * hash + (blendOpColor == null ? 0 : blendOpColor.hashCode());
-            hash = 31 * hash + (blendSrcAlpha == null ? 0 : blendSrcAlpha.hashCode());
-            hash = 31 * hash + (blendDstAlpha == null ? 0 : blendDstAlpha.hashCode());
-            hash = 31 * hash + (blendOpAlpha == null ? 0 : blendOpAlpha.hashCode());
-        }
-        hash = 31 * hash + numSamples;
-        hash = 31 * hash + (cullMode == null ? 0 : cullMode.hashCode());
-        hash = 31 * hash + (isSkyBox ? 1231 : 1237);
-        hash = 31 * hash + (depthFormat == null ? 0 : depthFormat.hashCode());
-        hash = 31 * hash + numSamples;
-        hash = 31 * hash + maxDirLights;
-        hash = 31 * hash + maxPointLights;
-        hash = 31 * hash + (usePBR ? 1231 : 1237);
-    }
-
-    // note: don't include compiled shader in the hash because this would force new compiles every frame since a spec of
-    // an uncompiled shader <> compiled shader
-
 }

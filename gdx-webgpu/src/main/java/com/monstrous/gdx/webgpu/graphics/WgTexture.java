@@ -20,7 +20,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.TextureArrayData;
 import com.badlogic.gdx.graphics.TextureData;
 import com.badlogic.gdx.graphics.glutils.PixmapTextureData;
 import com.badlogic.gdx.utils.BufferUtils;
@@ -73,7 +72,6 @@ public class WgTexture extends Texture {
         this.data = new WgTextureData(width, height, useMipMaps, 0, 0);
         this.label = label;
         this.numSamples = numSamples;
-        this.format = format;
         create(label, useMipMaps, textureUsage, format, 1, numSamples, viewFormat);
     }
 
@@ -85,9 +83,9 @@ public class WgTexture extends Texture {
 
         this.numSamples = 1;
 
-        WGPUTextureFormat format = isColor ? WGPUTextureFormat.RGBA8UnormSrgb : WGPUTextureFormat.RGBA8Unorm;
+        WGPUTextureFormat fmt = isColor ? WGPUTextureFormat.RGBA8UnormSrgb : WGPUTextureFormat.RGBA8Unorm;
 
-        create(label, useMipMaps, textureUsage, format, numLayers, numSamples, null);
+        create(label, useMipMaps, textureUsage, fmt, numLayers, numSamples, null);
     }
 
     /*
@@ -153,16 +151,15 @@ public class WgTexture extends Texture {
         if (!data.isPrepared())
             data.prepare();
 
-        // mipLevelCount = data.useMipMaps() ? Math.max(1, bitWidth(Math.min(data.getWidth(), data.getHeight()))) : 1;
         numSamples = 1;
 
         // for color textures set format to Srgb so that on sampling it will be inverse gamma corrected to provide a
         // linear color value
         // for non-color texture, e.g. normal map, leave content as is.
-        format = isColor ? WGPUTextureFormat.RGBA8UnormSrgb : WGPUTextureFormat.RGBA8Unorm;
+        WGPUTextureFormat fmt = isColor ? WGPUTextureFormat.RGBA8UnormSrgb : WGPUTextureFormat.RGBA8Unorm;
 
         WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst);
-        create(label, data.useMipMaps(), textureUsage, format, 1, numSamples, null);
+        create(label, data.useMipMaps(), textureUsage, fmt, 1, numSamples, null);
         Pixmap pixmap = data.consumePixmap();
         boolean mustDisposePixmap = data.disposePixmap();
 
@@ -188,15 +185,6 @@ public class WgTexture extends Texture {
         if (mustDisposePixmap)
             pixmap.dispose();
     }
-
-    // public void load(TextureArrayData data, String label){
-    // this.label = label;
-    // this.format = WGPUTextureFormat.RGBA8Unorm; // force format
-    // if (!data.isPrepared()) data.prepare();
-    //
-    // // this will create a WebGPU texture and upload the images
-    // data.consumeTextureArrayData();
-    // }
 
     @Override
     public int getWidth() {
@@ -267,32 +255,16 @@ public class WgTexture extends Texture {
 
         this.mipLevelCount = useMipMaps ? Math.max(1, bitWidth(Math.min(data.getWidth(), data.getHeight()))) : 1;
 
-        texture = createTexture(label, data.getWidth(), data.getHeight(), mipLevelCount, textureUsage, format,
+        this.texture = createTexture(label, data.getWidth(), data.getHeight(), mipLevelCount, textureUsage, format,
                 numLayers, numSamples, viewFormat);
         this.label = label;
         this.format = format;
-
-        // System.out.println("dimensions: "+textureDesc.getSize().getDepthOrArrayLayers());
 
         // Create the view of the texture manipulated by the rasterizer
         WGPUTextureViewDimension dimension = (numLayers == 1 ? WGPUTextureViewDimension._2D
                 : (numLayers == 6 ? WGPUTextureViewDimension.Cube : WGPUTextureViewDimension._2DArray));
 
-        // if this is a depth format, use only the depth aspect for the texture view
-        WGPUTextureAspect aspect;
-        switch (format) {
-            case Depth24Plus:
-            case Depth32Float:
-            case Depth24PlusStencil8:
-            case Depth16Unorm:
-            case Depth32FloatStencil8:
-                aspect = WGPUTextureAspect.DepthOnly;
-                break;
-            default:
-                aspect = WGPUTextureAspect.All;
-                break;
-        }
-        textureView = buildTextureView(dimension, format, 0, mipLevelCount, 0, numLayers);
+        this.textureView = buildTextureView(dimension, format, 0, mipLevelCount, 0, numLayers);
     }
 
     public static WGPUTexture createTexture(String label, int width, int height, int mipLevelCount,
@@ -313,18 +285,15 @@ public class WgTexture extends Texture {
         textureDesc.setUsage(textureUsage);
         WGPUVectorTextureFormat viewFormats = WGPUVectorTextureFormat.obtain();
 
-        // viewFormats.push_back(((WgGraphics)Gdx.graphics).getContext().surfaceFormat); // add surface format in any
-        // case
         if (viewFormat != null) {
             viewFormats.push_back(viewFormat);
         }
         textureDesc.setViewFormats(viewFormats);
 
-        WGPUTexture texture = new WGPUTexture();
+        WGPUTexture tex = new WGPUTexture();
         WebGPUContext webgpu = ((WgGraphics) Gdx.graphics).getContext();
-        // System.out.println("Create texture "+label);
-        webgpu.device.createTexture(textureDesc, texture);
-        return texture;
+        webgpu.device.createTexture(textureDesc, tex);
+        return tex;
     }
 
     public WGPUTextureView buildTextureView(WGPUTextureViewDimension dimension, WGPUTextureFormat format,
@@ -338,24 +307,20 @@ public class WgTexture extends Texture {
         textureViewDesc.setBaseMipLevel(baseMipLevel);
         textureViewDesc.setMipLevelCount(mipLevelCount);
         textureViewDesc.setDimension(dimension);
-        textureViewDesc.setFormat(format); // should this match surface format instead?
-        textureView = new WGPUTextureView();
-        texture.createView(textureViewDesc, textureView);
-        return textureView;
+        textureViewDesc.setFormat(format);
+        WGPUTextureView view = new WGPUTextureView();
+        texture.createView(textureViewDesc, view);
+        return view;
     }
 
     public WGPUSampler getSampler() {
         if (sampler == null) {
-            // System.out.println("create Sampler: "+label + " : "+uWrap);
-            // Create a sampler
-            //
             WGPUSamplerDescriptor samplerDesc = WGPUSamplerDescriptor.obtain();
             samplerDesc.setLabel("Standard texture sampler");
             samplerDesc.setAddressModeU(convertWrap(uWrap));
             samplerDesc.setAddressModeV(convertWrap(vWrap));
             samplerDesc.setAddressModeW(WGPUAddressMode.Repeat);
-            samplerDesc.setMagFilter(convertFilter(magFilter)); // default filter in LibGDX is nearest for min and mag
-                                                                // filter
+            samplerDesc.setMagFilter(convertFilter(magFilter));
             samplerDesc.setMinFilter(convertFilter(minFilter));
             samplerDesc.setMipmapFilter(WGPUMipmapFilterMode.Linear); // todo
 
@@ -371,7 +336,6 @@ public class WgTexture extends Texture {
 
     public WGPUSampler getDepthSampler() {
         if (depthSampler == null) {
-            // Create a sampler
             WGPUSamplerDescriptor samplerDesc = WGPUSamplerDescriptor.obtain();
             samplerDesc.setAddressModeU(WGPUAddressMode.ClampToEdge);
             samplerDesc.setAddressModeV(WGPUAddressMode.ClampToEdge);
@@ -477,7 +441,7 @@ public class WgTexture extends Texture {
     /**
      * Load pixel data into texture.
      *
-     * @param pixelPtr
+     * @param pixelPtr pixel data
      * @param layer which layer to load in case of a 3d texture, otherwise 0
      */
     public void load(ByteBuffer pixelPtr, int width, int height, int layer) {
@@ -501,7 +465,6 @@ public class WgTexture extends Texture {
             if (mipLevel != 0) {
 
                 // todo with compute shader
-                int offset = 0;
                 for (int y = 0; y < mipLevelHeight; y++) {
                     for (int x = 0; x < mipLevelWidth; x++) {
 
@@ -538,17 +501,11 @@ public class WgTexture extends Texture {
             if (prev != null && prev != pixelPtr) {
                 BufferUtils.disposeUnsafeByteBuffer(prev);
             }
-            // if(mipLevel == mipLevelCount-1)
-            // break;
             // todo we should be able to avoid one malloc/free
             prev = next;
             next = BufferUtils.newUnsafeByteBuffer(mipLevelWidth * mipLevelHeight * 4);
         }
 
-        // todo check this logic
-        // if(prev != pixelPtr) {
-        // BufferUtils.disposeUnsafeByteBuffer(prev);
-        // }
         if (next != pixelPtr) {
             BufferUtils.disposeUnsafeByteBuffer(next);
         }
@@ -556,7 +513,6 @@ public class WgTexture extends Texture {
 
     /**
      * Load image data into a specific layer and mip level
-     *
      */
     public void loadMipLevel(ByteBuffer data, int width, int height, int layer, int mipLevel) {
 
@@ -587,8 +543,6 @@ public class WgTexture extends Texture {
     // use at own risk
     public void load(ByteBuffer pixels) {
 
-        // Arguments telling which part of the texture we upload to
-        // (together with the last argument of writeTexture)
         WGPUTexelCopyTextureInfo destination = WGPUTexelCopyTextureInfo.obtain();
         destination.setTexture(texture);
         destination.setMipLevel(0);
@@ -641,16 +595,15 @@ public class WgTexture extends Texture {
 
     @Override
     public void dispose() {
-        // System.out.println("Dispose texture : "+label);
-
         if (texture != null) { // guard against double dispose
-            // System.out.println("Destroy texture " + label);
             if (sampler != null) {
                 sampler.release();
                 sampler.dispose();
             }
-            textureView.release();
-            textureView.dispose();
+            if (textureView != null) {
+                textureView.release();
+                textureView.dispose();
+            }
             texture.destroy();
             texture.dispose();
             texture = null;

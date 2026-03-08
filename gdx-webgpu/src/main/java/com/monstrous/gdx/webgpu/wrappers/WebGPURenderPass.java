@@ -23,10 +23,11 @@ import com.github.xpenatan.webgpu.*;
 public class WebGPURenderPass implements Disposable {
     private WGPURenderPassEncoder renderPass; // handle used by WebGPU
     public RenderPassType type;
-    private WGPUTextureFormat textureFormat;
+    private WGPUTextureFormat[] textureFormats;
     private WGPUTextureFormat depthFormat;
     public int targetWidth, targetHeight;
     private int sampleCount;
+    private final WGPUTextureFormat[] singleFormatArray = new WGPUTextureFormat[1];
 
     private static final Pool<WebGPURenderPass> renderPassPool = new Pool<WebGPURenderPass>() {
         @Override
@@ -57,8 +58,40 @@ public class WebGPURenderPass implements Disposable {
     public void begin(WGPUCommandEncoder encoder, WGPURenderPassDescriptor renderPassDescriptor, RenderPassType type,
             WGPUTextureFormat textureFormat, WGPUTextureFormat depthFormat, int sampleCount, int targetWidth,
             int targetHeight) {
+        singleFormatArray[0] = textureFormat;
+        begin(encoder, renderPassDescriptor, type, singleFormatArray, depthFormat, sampleCount, targetWidth,
+                targetHeight);
+    }
+
+    public void begin(WGPUCommandEncoder encoder, WGPURenderPassDescriptor renderPassDescriptor, RenderPassType type,
+            WGPUTextureFormat[] textureFormats, WGPUTextureFormat depthFormat, int sampleCount, int targetWidth,
+            int targetHeight) {
+        int count = textureFormats == null ? 0 : textureFormats.length;
+        begin(encoder, renderPassDescriptor, type, textureFormats, count, depthFormat, sampleCount, targetWidth,
+                targetHeight);
+    }
+
+    public void begin(WGPUCommandEncoder encoder, WGPURenderPassDescriptor renderPassDescriptor, RenderPassType type,
+            WGPUTextureFormat[] textureFormats, int count, WGPUTextureFormat depthFormat, int sampleCount,
+            int targetWidth, int targetHeight) {
         this.type = type;
-        this.textureFormat = textureFormat;
+
+        // Optimization for single render target (most common case)
+        if (count == 1) {
+            singleFormatArray[0] = textureFormats[0];
+            this.textureFormats = singleFormatArray;
+        } else {
+            // For MRT, valid count > 1
+            // We must copy the array content because the passed array might be a shared scratch buffer
+            if (this.textureFormats == null || this.textureFormats.length != count
+                    || this.textureFormats == singleFormatArray) {
+                this.textureFormats = new WGPUTextureFormat[count];
+            }
+            if (count > 0) {
+                System.arraycopy(textureFormats, 0, this.textureFormats, 0, count);
+            }
+        }
+
         this.depthFormat = depthFormat;
         this.sampleCount = sampleCount;
         this.targetWidth = targetWidth;
@@ -77,7 +110,14 @@ public class WebGPURenderPass implements Disposable {
     }
 
     public WGPUTextureFormat getColorFormat() {
-        return textureFormat;
+        if (textureFormats == null || textureFormats.length == 0)
+            return WGPUTextureFormat.Undefined;
+
+        return textureFormats[0];
+    }
+
+    public WGPUTextureFormat[] getColorFormats() {
+        return textureFormats;
     }
 
     public WGPUTextureFormat getDepthFormat() {

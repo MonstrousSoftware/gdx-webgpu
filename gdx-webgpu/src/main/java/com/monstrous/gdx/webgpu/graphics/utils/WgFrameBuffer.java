@@ -17,11 +17,9 @@ package com.monstrous.gdx.webgpu.graphics.utils;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Disposable;
 import com.github.xpenatan.webgpu.WGPUTextureFormat;
 import com.github.xpenatan.webgpu.WGPUTextureUsage;
-import com.github.xpenatan.webgpu.WGPUTextureView;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
@@ -31,8 +29,10 @@ public class WgFrameBuffer implements Disposable {
 
     private final WebGPUContext webgpu;
     private final WgTexture colorTexture;
+    private final WgTexture[] colorTextures;
     private final WgTexture depthTexture;
-    private WebGPUContext.RenderOutputState prevState;
+    // Pre-allocated to avoid per-frame heap allocation in begin()
+    private final WebGPUContext.RenderOutputState prevState = new WebGPUContext.RenderOutputState();
 
     public WgFrameBuffer(int width, int height, boolean hasDepth) {
         this(WGPUTextureFormat.RGBA8UnormSrgb, width, height, hasDepth);
@@ -40,12 +40,23 @@ public class WgFrameBuffer implements Disposable {
 
     /** note: requires WGPUTextureFormat instead of Pixmap.Format. */
     public WgFrameBuffer(WGPUTextureFormat format, int width, int height, boolean hasDepth) {
+        this(new WGPUTextureFormat[] {format}, width, height, hasDepth);
+    }
+
+    public WgFrameBuffer(WGPUTextureFormat[] formats, int width, int height, boolean hasDepth) {
         WgGraphics gfx = (WgGraphics) Gdx.graphics;
         webgpu = gfx.getContext();
 
         final WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst)
                 .or(WGPUTextureUsage.RenderAttachment).or(WGPUTextureUsage.CopySrc);
-        colorTexture = new WgTexture("fbo color", width, height, false, textureUsage, format, 1, format);
+
+        colorTextures = new WgTexture[formats.length];
+        for (int i = 0; i < formats.length; i++) {
+            colorTextures[i] = new WgTexture("fbo color " + i, width, height, false, textureUsage, formats[i], 1,
+                    formats[i]);
+        }
+        colorTexture = colorTextures[0];
+
         if (hasDepth)
             depthTexture = new WgTexture("fbo depth", width, height, false, textureUsage, WGPUTextureFormat.Depth24Plus,
                     1, WGPUTextureFormat.Depth24Plus);
@@ -54,8 +65,10 @@ public class WgFrameBuffer implements Disposable {
     }
 
     public void begin() {
-        prevState = webgpu.pushTargetView(colorTexture.getTextureView(), colorTexture.getFormat(),
-                colorTexture.getWidth(), colorTexture.getHeight(), depthTexture);
+        // WebGPUContext.pushTargetView(WgTexture[]) manages its own internal scratch arrays —
+        // no allocation occurs here whether this is a single-target or MRT framebuffer.
+        webgpu.pushTargetView(prevState, colorTextures, colorTexture.getWidth(), colorTexture.getHeight(),
+                depthTexture);
     }
 
     public void end() {
@@ -64,6 +77,10 @@ public class WgFrameBuffer implements Disposable {
 
     public Texture getColorBufferTexture() {
         return colorTexture;
+    }
+
+    public Texture getColorBufferTexture(int index) {
+        return colorTextures[index];
     }
 
     public Texture getDepthTexture() {
@@ -80,7 +97,9 @@ public class WgFrameBuffer implements Disposable {
 
     @Override
     public void dispose() {
-        colorTexture.dispose();
+        for (WgTexture tex : colorTextures) {
+            tex.dispose();
+        }
         if (depthTexture != null)
             depthTexture.dispose();
     }

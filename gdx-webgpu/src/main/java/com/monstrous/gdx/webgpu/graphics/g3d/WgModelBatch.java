@@ -67,6 +67,7 @@ public class WgModelBatch implements Disposable {
         public boolean usePBR; // use physics based rendering
         public MaterialsCache materials;
         public RenderPassType defaultPassType;
+        public String shaderSource;
 
         public Config() {
             this.maxInstances = 1024;
