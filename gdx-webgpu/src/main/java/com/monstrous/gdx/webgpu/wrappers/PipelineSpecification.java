@@ -107,14 +107,11 @@ public class PipelineSpecification {
         this.shader = shader;
     }
 
-    public void setVertexAttributes(VertexAttributes vertexAttributes) {
-        this.vertexAttributes = vertexAttributes;
-        this.vertexLayout = new WebGPUVertexLayout(vertexAttributes);
-    }
-
     public PipelineSpecification(PipelineSpecification spec) {
         this.name = spec.name;
-        setVertexAttributes(spec.vertexAttributes);// should be deep copy
+        this.vertexAttributes = spec.vertexAttributes;
+        this.vertexLayout = spec.vertexLayout; // share the same layout instance (value-equal by equals/hashCode)
+        this.vertexStepMode = spec.vertexStepMode;
         this.environment = spec.environment;
         this.shaderSource = spec.shaderSource;
         this.shader = spec.shader;
@@ -148,6 +145,11 @@ public class PipelineSpecification {
         this.vertexShaderEntryPoint = spec.vertexShaderEntryPoint;
         this.customPrefix = spec.customPrefix;
         this.dirty = true;
+    }
+
+    public void setVertexAttributes(VertexAttributes vertexAttributes) {
+        this.vertexAttributes = vertexAttributes;
+        this.vertexLayout = new WebGPUVertexLayout(vertexAttributes);
     }
 
     /** call this whenever changing a field directly to force a recalculation of the hash code. */
@@ -243,12 +245,16 @@ public class PipelineSpecification {
 
     @Override
     public int hashCode() {
+        if (!dirty)
+            return hash;
         int result = Objects.hash(name, vertexAttributes, vertexLayout, vertexStepMode, indexFormat, topology,
                 environment, shaderSource, vertexShaderEntryPoint, fragmentShaderEntryPoint, shader, useDepthTest,
                 noDepthAttachment, isSkyBox, isDepthPass, afterDepthPrepass, numSamples, blendingEnabled, blendSrcColor,
                 blendDstColor, blendOpColor, blendSrcAlpha, blendDstAlpha, blendOpAlpha, cullMode, depthFormat,
                 maxDirLights, maxPointLights, usePBR, customPrefix);
         result = 31 * result + Arrays.hashCode(colorFormats);
-        return result;
+        hash = result;
+        dirty = false;
+        return hash;
     }
 }

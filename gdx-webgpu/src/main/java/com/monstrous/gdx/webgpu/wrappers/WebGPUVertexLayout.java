@@ -23,6 +23,8 @@ import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.ObjectIntMap;
 import com.github.xpenatan.webgpu.*;
 
+import java.util.Objects;
+
 /* Adapted to allow different vertex layouts depending on the context, e.g. different meshes.
 * Instead of just static methods, this now becomes an object in its own right. */
 public class WebGPUVertexLayout {
@@ -237,5 +239,26 @@ public class WebGPUVertexLayout {
     // }
     // return loc;
     // }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        WebGPUVertexLayout that = (WebGPUVertexLayout) o;
+        return stepMode == that.stepMode
+                && Objects.equals(attributes, that.attributes)
+                && attributeLocations.equals(that.attributeLocations);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(attributes, stepMode);
+        // Include attributeLocations entries in a order-stable way
+        for (ObjectIntMap.Entry<String> entry : attributeLocations) {
+            result = 31 * result + entry.key.hashCode();
+            result = 31 * result + entry.value;
+        }
+        return result;
+    }
 
 }
