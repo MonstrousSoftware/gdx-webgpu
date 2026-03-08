@@ -133,7 +133,7 @@ public class IBLShader extends WgShader implements Disposable {
         WgGraphics gfx = (WgGraphics) Gdx.graphics;
         WebGPUContext webgpu = gfx.getContext();
 
-        pipelineSpec.colorFormat = webgpu.surfaceFormat; // WGPUTextureFormat.BGRA8Unorm;
+        pipelineSpec.colorFormats = new WGPUTextureFormat[] {webgpu.getSurfaceFormat()};
 
         pipeline = new WebGPUPipeline(pipelineLayout, pipelineSpec);
     }

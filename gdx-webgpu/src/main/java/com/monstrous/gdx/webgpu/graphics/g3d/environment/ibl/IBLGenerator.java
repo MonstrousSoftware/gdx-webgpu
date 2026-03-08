@@ -150,6 +150,9 @@ public class IBLGenerator {
         // disable gpu timing before we do lots of passes to avoid overflow
         boolean timerEnabled = webgpu.getGPUTimer().setEnabled(false);
 
+        // Pre-allocate once outside the loops to avoid per-mip-level allocation
+        WebGPUContext.RenderOutputState prevState = new WebGPUContext.RenderOutputState();
+
         for (int mipLevel = 0; mipLevel < numLevels; mipLevel++) {
 
             final WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst)
@@ -179,8 +182,7 @@ public class IBLGenerator {
                 encoderDesc.setLabel("encoder");
                 webgpu.device.createCommandEncoder(encoderDesc, webgpu.encoder);
 
-                WebGPUContext.RenderOutputState prevState = webgpu.pushTargetView(colorTexture.getTextureView(), format,
-                        size, size, depthTexture);
+                webgpu.pushTargetView(prevState, colorTexture.getTextureView(), format, size, size, depthTexture);
 
                 mapBatch.begin(snapCam, Color.GREEN, true, 1);
                 mapBatch.render(instance, environment);
@@ -244,6 +246,7 @@ public class IBLGenerator {
         webgpu.setViewportRectangle(0, 0, size, size);
 
         boolean timerEnabled = webgpu.getGPUTimer().setEnabled(false);
+        WebGPUContext.RenderOutputState prevState = new WebGPUContext.RenderOutputState();
         for (int side = 0; side < 6; side++) {
             // point the camera at one of the cube sides
             snapCam.direction.set(directions[side]);
@@ -260,8 +263,7 @@ public class IBLGenerator {
             encoderDesc.setLabel("encoder");
             webgpu.device.createCommandEncoder(encoderDesc, webgpu.encoder);
 
-            WebGPUContext.RenderOutputState prevState = webgpu.pushTargetView(colorTexture.getTextureView(), format,
-                    size, size, depthTexture);
+            webgpu.pushTargetView(prevState, colorTexture.getTextureView(), format, size, size, depthTexture);
 
             mapBatch.begin(snapCam, Color.BLACK, true, 1);
             mapBatch.render(instance);

@@ -141,7 +141,7 @@ public class WgDepthShader extends WgShader {
         pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.BONEWEIGHT_ATTRIBUTE, 7);
 
         // Fragment shader entry point (null for normal depth rendering, "fs_main" for masking)
-        pipelineSpec.colorFormat = WGPUTextureFormat.Undefined; // No color output
+        pipelineSpec.colorFormats = null; // No color output
         pipelineSpec.fragmentShaderEntryPoint = fragmentEntryPoint;
         pipelineSpec.isDepthPass = true; // Mark this as a depth pass
 

@@ -379,15 +379,24 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
         materials.start(); // indicate that no material is currently bound
 
-        // Update pipeline spec to match the current render pass's format and sample count
-        // This is crucial when rendering to framebuffers with different formats than the screen
-        pipelineSpec.colorFormat = renderPass.getColorFormat();
-        pipelineSpec.numSamples = renderPass.getSampleCount();
+        setPipeline(renderPass);
+    }
+
+    private void setPipeline(WebGPURenderPass pass) {
+        // Update pipeline spec to match the current render pass's format and sample count.
+        // Clone the formats array — getColorFormats() returns the render pass's internal array,
+        // which could be mutated when the pooled pass is reused, corrupting the cached spec.
+        WGPUTextureFormat[] formats = pass.getColorFormats();
+        if (pipelineSpec.colorFormats == null || pipelineSpec.colorFormats.length != formats.length) {
+            pipelineSpec.colorFormats = formats.clone();
+        } else {
+            System.arraycopy(formats, 0, pipelineSpec.colorFormats, 0, formats.length);
+        }
+        pipelineSpec.numSamples = pass.getSampleCount();
         pipelineSpec.invalidateHashCode();
 
-        // Get or create a pipeline that matches the current render target
         WebGPUPipeline pipeline = pipelineCache.findPipeline(pipelineLayout, pipelineSpec);
-        renderPass.setPipeline(pipeline);
+        pass.setPipeline(pipeline);
     }
 
     @Override
@@ -636,6 +645,9 @@ public class WgDefaultShader extends WgShader implements Disposable {
     // todo vertex attributes are hardcoded, should use conditional compilation.
 
     private String getDefaultShaderSource() {
+        if (config.shaderSource != null)
+            return config.shaderSource;
+
         if (defaultShader == null) {
             defaultShader = Gdx.files.classpath("shaders/modelbatch.wgsl").readString();
         }

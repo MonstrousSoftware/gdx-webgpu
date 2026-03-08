@@ -68,7 +68,7 @@ public class SkyBox implements Disposable {
         pipelineSpec.shaderSource = Gdx.files.internal("shaders/skybox.wgsl").readString();
         pipelineSpec.enableDepthTest();
         pipelineSpec.setCullMode(WGPUCullMode.Back);
-        pipelineSpec.colorFormat = webgpu.getSurfaceFormat();
+        pipelineSpec.colorFormats = new WGPUTextureFormat[] {webgpu.getSurfaceFormat()};
         pipelineSpec.depthFormat = WGPUTextureFormat.Depth24Plus;
         pipelineSpec.numSamples = webgpu.getSamples();
         pipelineSpec.isSkyBox = true;

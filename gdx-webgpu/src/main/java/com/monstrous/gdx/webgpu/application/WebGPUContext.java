@@ -11,18 +11,23 @@ public abstract class WebGPUContext {
     }
 
     static public class RenderOutputState {
-        WGPUTextureView targetView;
-        WGPUTextureFormat surfaceFormat;
+        WGPUTextureView[] targetViews;
+        WGPUTextureFormat[] surfaceFormats;
         WgTexture depthTexture;
-        Rectangle viewport;
+        Rectangle viewport = new Rectangle();
         int numSamples;
 
-        public RenderOutputState(WGPUTextureView targetView, WGPUTextureFormat surfaceFormat, WgTexture depthTexture,
+        /** Default constructor for pre-allocation and reuse. Use set() to fill the fields. */
+        public RenderOutputState() {
+        }
+
+        /** Fill this instance with the given state. Copies the viewport rectangle by value. */
+        public void set(WGPUTextureView[] targetViews, WGPUTextureFormat[] surfaceFormats, WgTexture depthTexture,
                 Rectangle viewport, int numSamples) {
-            this.targetView = targetView;
-            this.surfaceFormat = surfaceFormat;
+            this.targetViews = targetViews;
+            this.surfaceFormats = surfaceFormats;
             this.depthTexture = depthTexture;
-            this.viewport = new Rectangle(viewport);
+            this.viewport.set(viewport);
             this.numSamples = numSamples;
         }
     }
@@ -32,10 +37,15 @@ public abstract class WebGPUContext {
     public WGPUSurface surface;
     public WGPUQueue queue;
     public WGPUCommandEncoder encoder;
-    public WGPUTextureFormat surfaceFormat;
-    public WGPUTextureView targetView;
+    public WGPUTextureFormat[] surfaceFormats; // MRT support
+    public WGPUTextureView[] targetViews; // MRT support
     public WgTexture depthTexture;
     public int frameNumber;
+
+    // Pre-allocated scratch arrays for pushTargetView(WgTexture[]) to avoid per-call heap allocation.
+    // Sized to the actual number of textures; grown as needed so length always equals the valid element count.
+    private WGPUTextureView[] texturePushViewScratch = new WGPUTextureView[1];
+    private WGPUTextureFormat[] texturePushFormatScratch = new WGPUTextureFormat[1];
 
     abstract WGPUDevice getDevice();
 
@@ -47,14 +57,36 @@ public abstract class WebGPUContext {
 
     public abstract WGPUTextureView getTargetView();
 
+    public abstract WGPUTextureView[] getTargetViews(); // MRT
+
     /**
      * Use provided texture for output (must have usage RenderAttachment).
      *
-     * @return Render output state, to restore current output state with popTargetView().
+     * @param outState pre-allocated state object that will be filled with the current output state for later restore.
+     * @return outState (for convenience)
      */
     // public abstract RenderOutputState pushTargetView(WgTexture texture, WgTexture depthTexture);
-    public abstract RenderOutputState pushTargetView(WGPUTextureView textureView, WGPUTextureFormat textureFormat,
-            int width, int height, WgTexture depthTexture);
+    public abstract RenderOutputState pushTargetView(RenderOutputState outState, WGPUTextureView textureView,
+            WGPUTextureFormat textureFormat, int width, int height, WgTexture depthTexture);
+
+    public abstract RenderOutputState pushTargetView(RenderOutputState outState, WGPUTextureView[] textureViews,
+            WGPUTextureFormat[] textureFormats, int width, int height, WgTexture depthTexture);
+
+    public RenderOutputState pushTargetView(RenderOutputState outState, WgTexture[] textures, int width, int height,
+            WgTexture depthTexture) {
+        int count = textures.length;
+        // Reallocate only when count has grown — arrays are always exactly count elements,
+        // so that when WebGPUApplication assigns targetViews = textureViews the length is correct.
+        if (count != texturePushViewScratch.length) {
+            texturePushViewScratch = new WGPUTextureView[count];
+            texturePushFormatScratch = new WGPUTextureFormat[count];
+        }
+        for (int i = 0; i < count; i++) {
+            texturePushViewScratch[i] = textures[i].getTextureView();
+            texturePushFormatScratch[i] = textures[i].getFormat();
+        }
+        return pushTargetView(outState, texturePushViewScratch, texturePushFormatScratch, width, height, depthTexture);
+    }
 
     /**
      * Restore previous output target.

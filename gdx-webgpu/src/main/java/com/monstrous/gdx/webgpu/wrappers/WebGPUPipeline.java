@@ -75,32 +75,35 @@ public class WebGPUPipeline implements Disposable {
         pipelineDesc.getPrimitive().setFrontFace(WGPUFrontFace.CCW);
         pipelineDesc.getPrimitive().setCullMode(spec.cullMode);
 
-        if (spec.colorFormat != WGPUTextureFormat.Undefined) { // if there is a color attachment
+        if (spec.colorFormats != null && spec.colorFormats.length > 0) { // if there is a color attachment
             WGPUFragmentState fragmentState = WGPUFragmentState.obtain();
             fragmentState.setNextInChain(WGPUChainedStruct.NULL);
             fragmentState.setModule(shader.getShaderModule());
             fragmentState.setEntryPoint(spec.fragmentShaderEntryPoint);
             fragmentState.setConstants(WGPUVectorConstantEntry.NULL);
 
-            // blending
-            WGPUBlendState blendState = WGPUBlendState.NULL;
-            if (spec.blendingEnabled) {
-                blendState = WGPUBlendState.obtain();
-                blendState.getColor().setSrcFactor(spec.blendSrcColor);
-                blendState.getColor().setDstFactor(spec.blendDstColor);
-                blendState.getColor().setOperation(spec.blendOpColor);
-                blendState.getAlpha().setSrcFactor(spec.blendSrcAlpha);
-                blendState.getAlpha().setDstFactor(spec.blendDstAlpha);
-                blendState.getAlpha().setOperation(spec.blendOpAlpha);
-            }
-
-            WGPUColorTargetState colorTarget = WGPUColorTargetState.obtain();
-            colorTarget.setFormat(spec.colorFormat);
-            colorTarget.setBlend(blendState);
-            colorTarget.setWriteMask(WGPUColorWriteMask.All);
-
             WGPUVectorColorTargetState colorStateTargets = WGPUVectorColorTargetState.obtain();
-            colorStateTargets.push_back(colorTarget);
+
+            for (WGPUTextureFormat format : spec.colorFormats) {
+                // blending
+                WGPUBlendState blendState = WGPUBlendState.NULL;
+                if (spec.blendingEnabled) {
+                    blendState = WGPUBlendState.obtain();
+                    blendState.getColor().setSrcFactor(spec.blendSrcColor);
+                    blendState.getColor().setDstFactor(spec.blendDstColor);
+                    blendState.getColor().setOperation(spec.blendOpColor);
+                    blendState.getAlpha().setSrcFactor(spec.blendSrcAlpha);
+                    blendState.getAlpha().setDstFactor(spec.blendDstAlpha);
+                    blendState.getAlpha().setOperation(spec.blendOpAlpha);
+                }
+
+                WGPUColorTargetState colorTarget = WGPUColorTargetState.obtain();
+                colorTarget.setFormat(format);
+                colorTarget.setBlend(blendState);
+                colorTarget.setWriteMask(WGPUColorWriteMask.All);
+
+                colorStateTargets.push_back(colorTarget);
+            }
             fragmentState.setTargets(colorStateTargets);
 
             pipelineDesc.setFragment(fragmentState);
