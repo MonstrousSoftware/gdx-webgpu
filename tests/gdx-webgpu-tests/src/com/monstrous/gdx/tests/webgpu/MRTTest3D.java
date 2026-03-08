@@ -17,6 +17,8 @@ import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelInstance;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLTFModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgModelLoader;
+import com.monstrous.gdx.webgpu.graphics.shader.builder.WgModelBatchShaderBuilder;
+import com.monstrous.gdx.webgpu.graphics.shader.builder.WgShaderChunk;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDefaultShaderProvider;
 import com.monstrous.gdx.webgpu.graphics.utils.WgFrameBuffer;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
@@ -26,6 +28,7 @@ import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
  * and Normal attachments.
  */
 public class MRTTest3D extends GdxTest {
+
 
     WgModelBatch modelBatch;
     PerspectiveCamera cam;
@@ -50,10 +53,35 @@ public class MRTTest3D extends GdxTest {
         };
         mrtFbo = new WgFrameBuffer(formats, WIDTH, HEIGHT, true);
 
-        // Setup ModelBatch with custom MRT Shader via high-level Config
+        // Build MRT shader: only 3 targeted changes on top of the standard model-batch shader.
+        // 1. Insert the FragmentOutput struct declaration before the fs_main signature.
+        // 2. Replace the signature to return FragmentOutput instead of @location(0) vec4f.
+        // 3. Replace the return statement to write both color and normal outputs.
         WgModelBatch.Config config = new WgModelBatch.Config();
         config.numBones = 100; // Increase bone limit for SillyDancing model (65 bones)
-        config.shaderSource = Gdx.files.internal("shaders/modelbatch_mrt.wgsl").readString();
+        config.shaderSource = WgModelBatchShaderBuilder.defaultModelBatch()
+                .insertBefore(WgModelBatchShaderBuilder.FS_SIGNATURE,
+                        new WgShaderChunk("mrt_output_struct",
+                                "struct FragmentOutput {\n"
+                              + "    @location(0) color : vec4f,\n"
+                              + "    @location(1) normal : vec4f,\n"
+                              + "};\n"))
+                .replaceChunk(WgModelBatchShaderBuilder.FS_SIGNATURE,
+                        new WgShaderChunk(WgModelBatchShaderBuilder.FS_SIGNATURE,
+                                "@fragment\n"
+                              + "fn fs_main(in : VertexOutput) -> FragmentOutput {\n"))
+                .replaceChunk(WgModelBatchShaderBuilder.FS_RETURN,
+                        new WgShaderChunk(WgModelBatchShaderBuilder.FS_RETURN,
+                                "    var fragOut: FragmentOutput;\n"
+                              + "    fragOut.color = color;\n"
+                              + "    #ifdef LIGHTING\n"
+                              + "       fragOut.normal = vec4f(normal * 0.5 + 0.5, 1.0);\n"
+                              + "    #else\n"
+                              + "       fragOut.normal = vec4f(normalize(in.normal) * 0.5 + 0.5, 1.0);\n"
+                              + "    #endif\n"
+                              + "    return fragOut;\n"
+                              + "};\n"))
+                .build();
 
         modelBatch = new WgModelBatch(new WgDefaultShaderProvider(config));
 
