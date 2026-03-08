@@ -16,6 +16,8 @@
 
 package com.monstrous.gdx.webgpu.graphics.shader.builder;
 
+import com.monstrous.gdx.webgpu.graphics.ShaderPrefix;
+
 /**
  * Pre-defined {@link WgShaderChunk}s and factory methods that reproduce the built-in sprite-batch
  * shader, equivalent to {@code spritebatch.wgsl}.
@@ -167,7 +169,21 @@ public final class WgSpriteBatchShaderBuilder {
      * correct WGSL declaration order, equivalent to {@code spritebatch.wgsl}.
      */
     public static WgShaderBuilder defaultSpriteBatch() {
-        return new WgShaderBuilder()
+        WgShaderBuilder builder = new WgShaderBuilder()
+            // A sprite batch always has texture coordinates and packed colour.
+            // Define them here so the #ifdef guards in the chunks resolve correctly
+            // when the shader is compiled directly as a WgShaderProgram (bypassing
+            // the normal ShaderPrefix.buildPrefix() path).
+            .define("TEXTURE_COORDINATE")
+            .define("COLOR");
+
+        // Mirror what ShaderPrefix.buildPrefix() does: add GAMMA_CORRECTION when
+        // the surface format is not already linear.
+        if (!ShaderPrefix.hasLinearOutput()) {
+            builder.define("GAMMA_CORRECTION");
+        }
+
+        return builder
             .addChunk(UNIFORMS_STRUCT_CHUNK)
             .addChunk(BINDINGS_CHUNK)
             .addChunk(VERTEX_INPUT_CHUNK)

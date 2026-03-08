@@ -47,6 +47,10 @@ public class WgShaderProgram implements Disposable {
         compile(name, prefix + shaderSource);
     }
 
+    public WgShaderProgram(String name, String shaderSource) {
+        compile(name, shaderSource);
+    }
+
     private void compile(String name, String shaderSource) {
         this.name = name;
 
