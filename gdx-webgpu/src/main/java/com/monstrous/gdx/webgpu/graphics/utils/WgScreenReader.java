@@ -42,7 +42,19 @@ public class WgScreenReader implements Disposable {
     }
 
     public void readPixelAsync(WgFrameBuffer framebuffer, int x, int y, PixelReadCallback callback) {
-        WGPUTexture texture = ((WgTexture) framebuffer.getColorBufferTexture()).getHandle();
+        readPixelAsync(framebuffer, 0, x, y, callback);  // Default to target 0
+    }
+
+    /**
+     * Read a pixel from a specific color attachment (MRT target).
+     * @param framebuffer The framebuffer to read from
+     * @param attachmentIndex The color attachment index (0 for first target, 1 for second, etc.)
+     * @param x The x coordinate
+     * @param y The y coordinate
+     * @param callback The callback to receive the pixel data
+     */
+    public void readPixelAsync(WgFrameBuffer framebuffer, int attachmentIndex, int x, int y, PixelReadCallback callback) {
+        WGPUTexture texture = ((WgTexture) framebuffer.getColorBufferTexture(attachmentIndex)).getHandle();
 
         // WebGPU requires bytesPerRow to be a multiple of 256
         int bytesPerRow = 256; // For 1 pixel, minimum multiple of 256
