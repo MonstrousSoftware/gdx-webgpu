@@ -140,14 +140,8 @@ public class WgSpriteBatch implements Batch {
         bindGroupLayout = createBindGroupLayout();
 
         binder = new Binder();
-        // define group
         binder.defineGroup(0, bindGroupLayout);
-        // define bindings in the group
-        binder.defineBinding("uniforms", 0, 0);
-        binder.defineBinding("texture", 0, 1);
-        binder.defineBinding("textureSampler", 0, 2);
-        // define uniforms in uniform buffer (binding 0) with their offset
-        binder.defineUniform("projectionViewTransform", 0, 0, 0);
+        defineBindings(binder);
 
         // set binding 0 to uniform buffer
         binder.setBuffer("uniforms", uniformBuffer, 0, uniformBufferSize);
@@ -1036,22 +1030,100 @@ public class WgSpriteBatch implements Batch {
 
         // Create uniform buffer with dynamic offset for the view projection matrix
         // dynamic offset will be incremented per flush so that it can have a specific view projection matrix
-        uniformBufferSize = 16 * Float.BYTES;
+        uniformBufferSize = getUniformBufferSize();
         uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Uniform),
                 maxFlushes);
     }
 
     private Matrix4 prevMatrix = new Matrix4();
 
-    private void updateMatrices() {
+    /**
+     * Write per-flush uniforms into the binder.
+     *
+     * The default writes only the combined projection-view-transform matrix.
+     * Override to write additional uniforms that change per-flush (e.g. a time value,
+     * a custom parameter). Call {@code super.updateMatrices()} first to keep the
+     * standard matrix.
+     *
+     * Example:
+     *   {@literal @}Override
+     *   protected void updateMatrices() {
+     *       super.updateMatrices();
+     *       binder.setUniform("time", (float) TimeUtils.millis() / 1000f);
+     *   }
+     */
+    protected void updateMatrices() {
         combinedMatrix.set(shiftDepthMatrix).mul(projectionMatrix).mul(transformMatrix);
         binder.setUniform("projectionViewTransform", combinedMatrix);
     }
 
-    private WebGPUBindGroupLayout createBindGroupLayout() {
+    /**
+     * Returns the byte size of the uniform buffer (binding 0).
+     *
+     * The default is 16 floats (one mat4x4). Override to increase the size when you
+     * add extra uniforms via {@link #defineBindings(Binder)}.
+     *
+     * Example — adding a vec4 "tintOverride" and a float "time" (4 + 1 = 5 extra floats,
+     * padded to 16-byte boundary = 8 extra floats):
+     *   {@literal @}Override
+     *   protected int getUniformBufferSize() {
+     *       return super.getUniformBufferSize() + 8 * Float.BYTES;
+     *   }
+     */
+    protected int getUniformBufferSize() {
+        return 16 * Float.BYTES; // one mat4x4
+    }
+
+    /**
+     * Declare all binder bindings and uniform offsets for group 0.
+     *
+     * The default declares the three standard slots (uniforms buffer, texture, sampler)
+     * and the projectionViewTransform uniform at offset 0.
+     *
+     * Override to add extra bindings — call {@code super.defineBindings(binder)} first,
+     * then add yours at the next available binding id and uniform offset.
+     *
+     * Example — adding a "time" float uniform after the matrix (offset = 16 * Float.BYTES):
+     *   {@literal @}Override
+     *   protected void defineBindings(Binder binder) {
+     *       super.defineBindings(binder);
+     *       binder.defineUniform("time", 0, 0, 16 * Float.BYTES);
+     *   }
+     */
+    protected void defineBindings(Binder binder) {
+        binder.defineBinding("uniforms", 0, 0);
+        binder.defineBinding("texture", 0, 1);
+        binder.defineBinding("textureSampler", 0, 2);
+        binder.defineUniform("projectionViewTransform", 0, 0, 0);
+    }
+
+    /**
+     * Creates the BindGroupLayout for group 0.
+     *
+     * The default layout has binding 0 (uniform buffer), binding 1 (texture2d),
+     * binding 2 (sampler). Override to add extra texture or sampler bindings.
+     *
+     * Call {@code getUniformBufferSize()} for the buffer size — it must match
+     * the value returned by your {@link #getUniformBufferSize()} override.
+     *
+     * Example — adding a second texture at binding 3:
+     *   {@literal @}Override
+     *   protected WebGPUBindGroupLayout createBindGroupLayout() {
+     *       WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("SpriteBatch bind group layout");
+     *       layout.begin();
+     *       layout.addBuffer(0, WGPUShaderStage.Vertex, WGPUBufferBindingType.Uniform, getUniformBufferSize(), true);
+     *       layout.addTexture(1, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D, false);
+     *       layout.addSampler(2, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering);
+     *       layout.addTexture(3, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D, false);
+     *       layout.addSampler(4, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering);
+     *       layout.end();
+     *       return layout;
+     *   }
+     */
+    protected WebGPUBindGroupLayout createBindGroupLayout() {
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("SpriteBatch bind group layout");
         layout.begin();
-        layout.addBuffer(0, WGPUShaderStage.Vertex, WGPUBufferBindingType.Uniform, uniformBufferSize, true);
+        layout.addBuffer(0, WGPUShaderStage.Vertex, WGPUBufferBindingType.Uniform, getUniformBufferSize(), true);
         layout.addTexture(1, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D,
                 false);
         layout.addSampler(2, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering);
