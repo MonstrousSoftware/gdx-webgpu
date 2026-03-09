@@ -88,14 +88,3 @@ public class WgPickingShaderProvider extends WgDefaultShaderProvider {
                 .build();
     }
 }
-
-
-
-
-
-
-
-
-
-
-

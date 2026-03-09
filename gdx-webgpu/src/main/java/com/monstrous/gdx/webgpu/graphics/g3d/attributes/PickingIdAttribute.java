@@ -105,4 +105,3 @@ public class PickingIdAttribute extends Attribute {
         return this.color.toIntBits() - other.color.toIntBits();
     }
 }
-

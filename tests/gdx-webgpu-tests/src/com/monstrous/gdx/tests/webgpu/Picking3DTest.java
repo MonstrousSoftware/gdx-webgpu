@@ -351,6 +351,3 @@ public class Picking3DTest extends GdxTest {
         screenReader.dispose();
     }
 }
-
-
-
