@@ -43,17 +43,11 @@ public class MaterialsCache implements Disposable {
     /** Per-material GPU entry: dynamic offset + one WgTexture per registered texture slot. */
     public static class MaterialEntry {
         int dynamicOffset;
-        WgTexture[] textures; // indexed by position in MaterialUniformLayout.textures
+        WgTexture[] textures; // indexed by registration order in MaterialUniformLayout
 
         MaterialEntry(int numTextures) {
             textures = new WgTexture[numTextures];
         }
-
-        // --- convenience accessors kept for code that still references them by name ---
-        public WgTexture getDiffuseTexture()          { return textures.length > 0 ? textures[0] : null; }
-        public WgTexture getNormalTexture()           { return textures.length > 1 ? textures[1] : null; }
-        public WgTexture getMetallicRoughnessTexture(){ return textures.length > 2 ? textures[2] : null; }
-        public WgTexture getEmissiveTexture()         { return textures.length > 3 ? textures[3] : null; }
     }
 
     // -----------------------------------------------------------------------

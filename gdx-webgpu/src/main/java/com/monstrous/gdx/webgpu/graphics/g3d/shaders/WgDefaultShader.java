@@ -56,6 +56,10 @@ public class WgDefaultShader extends WgShader implements Disposable {
     private final WebGPUUniformBuffer instanceBuffer;
     private final WebGPUUniformBuffer jointMatricesBuffer;
     private MaterialsCache materials;
+    // Fallback textures used when createMaterialLayout() is overridden — owned and disposed here.
+    private WgTexture fallbackWhiteTexture;
+    private WgTexture fallbackNormalTexture;
+    private WgTexture fallbackBlackTexture;
     private int numRigged;
     private int rigSize; // bytes per rigged instance
     private final PipelineCache pipelineCache; // cache of pipelines for different render targets
@@ -101,13 +105,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         //   the cache is built from that layout (caller is responsible for fallback textures
         //   inside their resolvers).
         if (config.materials == null) {
-            MaterialUniformLayout layout = createMaterialLayout();
-            if (layout == null) {
-                // no override — use the clean default constructor
-                config.materials = new MaterialsCache(config.maxMaterials);
-            } else {
-                config.materials = new MaterialsCache(config.maxMaterials, layout);
-            }
+            config.materials = new MaterialsCache(config.maxMaterials, createMaterialLayout());
         }
         this.materials = config.materials;
 
@@ -663,45 +661,33 @@ public class WgDefaultShader extends WgShader implements Disposable {
     /**
      * Declares the material uniform group (group 1) for this shader.
      *
-     * This is the ONE method you override in a subclass to add a new attribute, texture, or uniform
-     * to the material. The returned layout is used to auto-configure MaterialsCache — you never
-     * have to touch MaterialsCache directly.
+     * The base implementation creates per-instance fallback textures (owned by this shader
+     * and disposed with it) and returns the complete standard PBR layout.
      *
-     * Example — adding an extra "tintColor" uniform and a "detailTexture":
+     * Override to add custom uniforms or textures — call {@code super.createMaterialLayout()}
+     * to get the standard layout, then chain your additions:
      *
      *   {@literal @}Override
      *   protected MaterialUniformLayout createMaterialLayout() {
-     *       return super.createMaterialLayout()           // keep all standard PBR slots
-     *               .registerUniform("tintColor",   MaterialUniformLayout.TYPE_VEC4)
-     *               .registerTexture("detailTexture", "detailSampler");
+     *       return super.createMaterialLayout()
+     *           .registerUniform("tintColor", TYPE_VEC4,
+     *               (mat, b, n) -> b.setUniform(n, Color.WHITE))
+     *           .registerTexture("detailTexture", "detailSampler",
+     *               mat -> myDetailTexture);
      *   }
      *
-     * Then in your WGSL shader add the matching struct fields and bindings — that's it.
-     */
-    /**
-     * Declares the material uniform group (group 1) for this shader.
-     *
-     * Return null (the default) to use the standard PBR layout with correctly managed
-     * per-instance fallback textures via {@code new MaterialsCache(maxMaterials)}.
-     *
-     * Override and return a non-null layout only when adding custom uniforms or textures.
-     * In that case your layout must include all standard slots (call
-     * {@code MaterialsCache.buildDefaultLayout(defaultTex, normalTex, blackTex)} as a base)
-     * plus your additions. You are responsible for the lifecycle of any fallback textures
-     * your resolvers reference.
-     *
-     * Example:
-     *   {@literal @}Override
-     *   protected MaterialUniformLayout createMaterialLayout() {
-     *       // create your fallback textures (store as fields for disposal)
-     *       myFallback = new WgTexture(...);
-     *       return MaterialsCache.buildDefaultLayout(whiteTex, normalTex, blackTex)
-     *               .registerUniform("tintColor", TYPE_VEC4, (mat, b, n) -> ...)
-     *               .registerTexture("detailTexture", "detailSampler", mat -> ...);
-     *   }
+     * Then add the matching fields and bindings in your WGSL — that is all.
      */
     protected MaterialUniformLayout createMaterialLayout() {
-        return null; // null = use MaterialsCache(int) default constructor
+        Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
+        pixmap.setColor(Color.WHITE);  pixmap.fill();
+        fallbackWhiteTexture  = new WgTexture(pixmap, "default (white)");
+        pixmap.setColor(Color.GREEN);  pixmap.fill();
+        fallbackNormalTexture = new WgTexture(pixmap, "default normal texture");
+        pixmap.setColor(Color.BLACK);  pixmap.fill();
+        fallbackBlackTexture  = new WgTexture(pixmap, "default (black)");
+        pixmap.dispose();
+        return MaterialsCache.buildDefaultLayout(fallbackWhiteTexture, fallbackNormalTexture, fallbackBlackTexture);
     }
 
     private String getDefaultShaderSource() {
@@ -723,6 +709,9 @@ public class WgDefaultShader extends WgShader implements Disposable {
         pipelineCache.dispose();
         if (brdfLUT != null)
             brdfLUT.dispose();
+        if (fallbackWhiteTexture  != null) fallbackWhiteTexture.dispose();
+        if (fallbackNormalTexture != null) fallbackNormalTexture.dispose();
+        if (fallbackBlackTexture  != null) fallbackBlackTexture.dispose();
     }
 
     /**
