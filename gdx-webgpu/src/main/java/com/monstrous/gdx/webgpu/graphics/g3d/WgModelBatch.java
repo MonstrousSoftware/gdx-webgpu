@@ -29,7 +29,6 @@ import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.FlushablePool;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.MaterialsCache;
-import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDefaultShader;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDefaultShaderProvider;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgShader;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgDefaultRenderableSorter;
@@ -55,7 +54,8 @@ public class WgModelBatch implements Disposable {
     public int drawCalls;
     public int shaderSwitches;
     // public int numMaterials;
-    public MaterialsCache materials;
+    /** Returns the active MaterialsCache, or null if no renderable has been submitted yet. */
+    public MaterialsCache getMaterials() { return config.materials; }
 
     public static class Config {
         public int maxInstances;
@@ -77,7 +77,7 @@ public class WgModelBatch implements Disposable {
             this.numBones = 48; // todo
             this.maxRigged = 20;
             this.usePBR = true;
-            this.materials = new MaterialsCache(256);
+            this.materials = null; // created lazily by the shader via createMaterialLayout()
             this.defaultPassType = RenderPassType.COLOR_AND_DEPTH;
         }
     }
@@ -121,8 +121,6 @@ public class WgModelBatch implements Disposable {
         this.shaderProvider = shaderProvider == null ? new WgDefaultShaderProvider(this.config) : shaderProvider;
         ownsShaderProvider = shaderProvider == null;
         renderables = new Array<>();
-        materials = new MaterialsCache(this.config.maxMaterials);
-        this.config.materials = materials;
         this.sorter = new WgDefaultRenderableSorter();
         drawing = false;
     }
@@ -167,7 +165,10 @@ public class WgModelBatch implements Disposable {
         renderables.clear();
         shaderSwitches = 0;
         drawCalls = 0;
-        materials.start();
+        // config.materials is populated by the first WgDefaultShader constructed via the shaderProvider.
+        // On the very first begin() call no shader exists yet — that is fine because no material
+        // binding is needed until render() submits renderables.
+        if (config.materials != null) config.materials.start();
     }
 
     public void render(final Renderable renderable) {
@@ -250,11 +251,12 @@ public class WgModelBatch implements Disposable {
     public void dispose() {
         if (ownsShaderProvider)
             shaderProvider.dispose();
-        materials.dispose();
+        if (config.materials != null)
+            config.materials.dispose();
     }
 
     public int getMaterialCount() {
-        return materials.count();
+        return config.materials != null ? config.materials.count() : 0;
     }
 
 }

@@ -93,6 +93,13 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
     public WgDefaultShader(final Renderable renderable, WgModelBatch.Config config) {
         this.config = config;
+
+        // If no custom MaterialsCache has been supplied via config, build one from the layout
+        // declared by this shader class. Subclasses can override createMaterialLayout() to add
+        // extra uniforms/textures without touching MaterialsCache or WgModelBatch at all.
+        if (config.materials == null) {
+            config.materials = new MaterialsCache(config.maxMaterials, createMaterialLayout());
+        }
         this.materials = config.materials;
 
         // System.out.println("Create WgDefaultShader "+renderable.meshPart.id+" vert mask:
@@ -126,7 +133,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         // define groups
         binder.defineGroup(0, createFrameBindGroupLayout(uniformBufferSize, hasShadowMap, hasCubeMap, hasDiffuseCubeMap,
                 hasSpecularCubeMap));
-        binder.defineGroup(1, materials.createMaterialBindGroupLayout());
+        binder.defineGroup(1, materials.getBindGroupLayout());
         binder.defineGroup(2, createInstancingBindGroupLayout());
         if (hasBones)
             binder.defineGroup(3, createSkinningBindGroupLayout(rigSize));
@@ -643,6 +650,28 @@ public class WgDefaultShader extends WgShader implements Disposable {
     }
 
     // todo vertex attributes are hardcoded, should use conditional compilation.
+
+    /**
+     * Declares the material uniform group (group 1) for this shader.
+     *
+     * This is the ONE method you override in a subclass to add a new attribute, texture, or uniform
+     * to the material. The returned layout is used to auto-configure MaterialsCache — you never
+     * have to touch MaterialsCache directly.
+     *
+     * Example — adding an extra "tintColor" uniform and a "detailTexture":
+     *
+     *   {@literal @}Override
+     *   protected MaterialUniformLayout createMaterialLayout() {
+     *       return super.createMaterialLayout()           // keep all standard PBR slots
+     *               .registerUniform("tintColor",   MaterialUniformLayout.TYPE_VEC4)
+     *               .registerTexture("detailTexture", "detailSampler");
+     *   }
+     *
+     * Then in your WGSL shader add the matching struct fields and bindings — that's it.
+     */
+    protected MaterialUniformLayout createMaterialLayout() {
+        return MaterialsCache.buildDefaultLayout();
+    }
 
     private String getDefaultShaderSource() {
         if (config.shaderSource != null)

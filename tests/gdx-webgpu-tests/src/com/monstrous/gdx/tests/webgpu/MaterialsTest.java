@@ -160,8 +160,8 @@ public class MaterialsTest extends GdxTest {
 
         batch.begin();
         font.draw(batch, "FPS: " + Gdx.graphics.getFramesPerSecond(), 10, 110);
-        font.draw(batch, "Materials: " + modelBatch.materials.count(), 10, 80);
-        font.draw(batch, "Material bindings/frame: " + modelBatch.materials.materialBindings(), 10, 50);
+        font.draw(batch, "Materials: " + modelBatch.getMaterialCount(), 10, 80);
+        font.draw(batch, "Material bindings/frame: " + (modelBatch.getMaterials() != null ? modelBatch.getMaterials().materialBindings() : 0), 10, 50);
         font.draw(batch, "(SPACE to spawn more)", 10, 30);
         batch.end();
     }
