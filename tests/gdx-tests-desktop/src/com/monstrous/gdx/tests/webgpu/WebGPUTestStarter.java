@@ -49,7 +49,7 @@ public class WebGPUTestStarter {
     public static void main(String[] argv) {
 
         WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
-        config.setWindowedMode(320, 640);
+        config.setWindowedMode(900, 740);
         config.enableGPUtiming = true;
         config.backend = WebGPUContext.Backend.DEFAULT;
         config.backendWebGPU = JWebGPUBackend.DAWN; // WGPU or DAWN
