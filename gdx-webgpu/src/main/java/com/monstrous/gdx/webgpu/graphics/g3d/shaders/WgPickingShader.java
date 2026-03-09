@@ -38,11 +38,3 @@ public class WgPickingShader extends WgDefaultShader {
         return layout;
     }
 }
-
-
-
-
-
-
-
-
