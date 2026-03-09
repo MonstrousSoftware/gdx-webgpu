@@ -5,10 +5,19 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Pool;
 
 public class WgModelInstance extends ModelInstance {
+
+    public WgModelInstance(Model model, float x, float y, float z) {
+        super(model, x, y, z);
+    }
+
+    public WgModelInstance(Model model, Vector3 position) {
+        super(model, position);
+    }
 
     public WgModelInstance(Model model) {
         super(model);

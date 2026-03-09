@@ -41,6 +41,7 @@ import com.monstrous.gdx.webgpu.graphics.WgMesh;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute;
+import com.monstrous.gdx.webgpu.graphics.g3d.attributes.PBRFloatAttribute;
 import com.monstrous.gdx.webgpu.wrappers.*;
 
 /** Default shader to render renderables */
@@ -788,7 +789,14 @@ public class WgDefaultShader extends WgShader implements Disposable {
             Rectangle rect = webgpu.getViewportRectangle();
             float screenSize = Math.max(rect.width, rect.height);
             binder.setUniform("shadowPcfOffset", 1f / screenSize);
-            binder.setUniform("shadowBias", 0.07f);
+
+            // Get shadow bias from environment attribute, or use default
+            float shadowBias = 0.01f;
+            FloatAttribute shadowBiasAttr = (FloatAttribute) lights.get(PBRFloatAttribute.ShadowBias);
+            if (shadowBiasAttr != null) {
+                shadowBias = shadowBiasAttr.value;
+            }
+            binder.setUniform("shadowBias", shadowBias);
 
         }
 
@@ -821,5 +829,6 @@ public class WgDefaultShader extends WgShader implements Disposable {
             binder.setUniform("numRoughnessLevels", cubeMap.getMipLevelCount());
         }
     }
+
 
 }

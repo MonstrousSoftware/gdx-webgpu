@@ -19,11 +19,13 @@ package com.monstrous.gdx.webgpu.graphics.g3d.shaders;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.Attributes;
 import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
+import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Matrix4;
@@ -102,7 +104,21 @@ public class WgDepthShader extends WgShader {
         // set binding 0 to uniform buffer
         binder.setBuffer("uniforms", uniformBuffer, 0, uniformBufferSize);
 
-        int instanceSize = 16 * Float.BYTES; // data size per instance
+        // Calculate instance size based on whether model has morph targets
+        // ModelUniforms contains: modelMatrix (16 floats) + morphWeights (4 floats) + morphWeights2 (4 floats)
+        boolean hasMorph = false;
+        VertexAttributes meshAttribs = renderable.meshPart.mesh.getVertexAttributes();
+        for (VertexAttribute attr : meshAttribs) {
+            if (attr.alias.startsWith("a_position_morph_")) {
+                hasMorph = true;
+                break;
+            }
+        }
+
+        int instanceSize = 16 * Float.BYTES; // modelMatrix
+        if (hasMorph) {
+            instanceSize += 8 * Float.BYTES; // morphWeights (vec4) + morphWeights2 (vec4)
+        }
 
         // for now we use a uniform buffer, but we organize data as an array of modelMatrix
         // we are not using dynamic offsets, but we will index the array in the shader code using the instance_index
@@ -140,6 +156,20 @@ public class WgDepthShader extends WgShader {
         pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.BINORMAL_ATTRIBUTE, 4);
         pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.BONEWEIGHT_ATTRIBUTE, 7);
 
+        // Add support for morph target attributes - only set locations for attributes that actually exist
+        for (VertexAttribute attr : vertexAttributes) {
+            if (attr.alias.startsWith("a_position_morph_")) {
+                // Extract the morph index from the attribute name (e.g., "a_position_morph_0" -> 0)
+                String indexStr = attr.alias.substring("a_position_morph_".length());
+                try {
+                    int morphIndex = Integer.parseInt(indexStr);
+                    pipelineSpec.vertexLayout.setVertexAttributeLocation(attr.alias, 8 + morphIndex);
+                } catch (NumberFormatException e) {
+                    // Ignore malformed morph attribute names
+                }
+            }
+        }
+
         // Fragment shader entry point (null for normal depth rendering, "fs_main" for masking)
         pipelineSpec.colorFormats = null; // No color output
         pipelineSpec.fragmentShaderEntryPoint = fragmentEntryPoint;
@@ -168,6 +198,21 @@ public class WgDepthShader extends WgShader {
     @Override
     public void begin(Camera camera, Renderable renderable, WebGPURenderPass renderPass) {
         this.renderPass = renderPass;
+
+        // Determine if this renderable has morph targets and calculate instance stride
+        hasMorph = false;
+        for (VertexAttribute attr : vertexAttributes) {
+            if (attr.alias.startsWith("a_position_morph_")) {
+                hasMorph = true;
+                break;
+            }
+        }
+
+        // Calculate instance stride based on whether morph is present
+        instanceStride = 16 * Float.BYTES; // modelMatrix
+        if (hasMorph) {
+            instanceStride += 8 * Float.BYTES; // morphWeights (vec4) + morphWeights2 (vec4)
+        }
 
         // set global uniforms, that do not depend on renderables
         // e.g. camera, lighting, environment uniforms
@@ -229,6 +274,9 @@ public class WgDepthShader extends WgShader {
     private Renderable prevRenderable;
     private int firstInstance;
     private int instanceCount;
+    private final float[] tmpWeights = new float[8];
+    private boolean hasMorph;
+    private int instanceStride; // bytes per instance in the buffer
 
     @Override
     public void render(Renderable renderable, Attributes attributes) {
@@ -239,10 +287,47 @@ public class WgDepthShader extends WgShader {
 
         // renderable-specific data
 
-        // add instance data to instance buffer (instance transform)
-        int offset = numRenderables * 16 * Float.BYTES;
+        // Calculate offset based on instance stride (which includes morph weights if present)
+        int offset = numRenderables * instanceStride;
         instanceBuffer.set(offset, renderable.worldTransform);
-        // depth shader doesn't need normal matrix per instance
+
+        // Write morph weights if this model has morph targets
+        if (hasMorph) {
+            // Clear previous weights
+            for (int i = 0; i < 8; i++)
+                tmpWeights[i] = 0;
+
+            int numWeights = 0;
+            Node node = null;
+            if (renderable.userData instanceof Node) {
+                node = (Node) renderable.userData;
+            }
+
+            if (node != null) {
+                for (Node child : node.getChildren()) {
+                    String childId = child.id;
+                    int morphIdx = childId.indexOf(".morph.");
+                    if (morphIdx >= 0) {
+                        try {
+                            // Parse integer directly from string without creating substring to avoid GC overhead
+                            int index = Integer.parseInt(childId, morphIdx + 7, childId.length(), 10);
+                            if (index < 8) {
+                                // Read from localTransform because AnimationController updates localTransform,
+                                // not the node.translation field
+                                tmpWeights[index] = child.localTransform.val[Matrix4.M03];
+                                numWeights = Math.max(numWeights, index + 1);
+                            }
+                        } catch (NumberFormatException e) {
+                        }
+                    }
+                }
+            }
+
+            // Write weights to buffer (after modelMatrix at offset 16*Float.BYTES)
+            for (int i = 0; i < 8; i++) {
+                instanceBuffer.set(offset + 16 * Float.BYTES + i * Float.BYTES, tmpWeights[i]);
+            }
+        }
 
         if (renderable.bones == null && prevRenderable != null && renderable.meshPart.equals(prevRenderable.meshPart)) {
             // note that renderables get a copy of a mesh part not a reference to the Model's mesh part, so you can just

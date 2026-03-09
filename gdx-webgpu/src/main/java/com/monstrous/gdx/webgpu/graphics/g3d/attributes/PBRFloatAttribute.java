@@ -17,6 +17,13 @@ public class PBRFloatAttribute extends FloatAttribute {
         return new FloatAttribute(Metallic, value);
     }
 
+    public static final String ShadowBiasAlias = "shadowBias";
+    public static final long ShadowBias = register(ShadowBiasAlias);
+
+    public static FloatAttribute createShadowBias(float value) {
+        return new FloatAttribute(ShadowBias, value);
+    }
+
     public PBRFloatAttribute(long type) {
         super(type);
     }
