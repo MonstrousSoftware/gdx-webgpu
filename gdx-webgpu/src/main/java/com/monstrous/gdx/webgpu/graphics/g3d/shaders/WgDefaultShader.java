@@ -94,11 +94,20 @@ public class WgDefaultShader extends WgShader implements Disposable {
     public WgDefaultShader(final Renderable renderable, WgModelBatch.Config config) {
         this.config = config;
 
-        // If no custom MaterialsCache has been supplied via config, build one from the layout
-        // declared by this shader class. Subclasses can override createMaterialLayout() to add
-        // extra uniforms/textures without touching MaterialsCache or WgModelBatch at all.
+        // If no custom MaterialsCache has been supplied via config, create one now.
+        // - Default case (not subclassed): use MaterialsCache(int) directly so the fallback
+        //   textures are per-instance fields owned and disposed by the cache.
+        // - Subclassed case: createMaterialLayout() is overridden to return a custom layout;
+        //   the cache is built from that layout (caller is responsible for fallback textures
+        //   inside their resolvers).
         if (config.materials == null) {
-            config.materials = new MaterialsCache(config.maxMaterials, createMaterialLayout());
+            MaterialUniformLayout layout = createMaterialLayout();
+            if (layout == null) {
+                // no override — use the clean default constructor
+                config.materials = new MaterialsCache(config.maxMaterials);
+            } else {
+                config.materials = new MaterialsCache(config.maxMaterials, layout);
+            }
         }
         this.materials = config.materials;
 
@@ -669,8 +678,30 @@ public class WgDefaultShader extends WgShader implements Disposable {
      *
      * Then in your WGSL shader add the matching struct fields and bindings — that's it.
      */
+    /**
+     * Declares the material uniform group (group 1) for this shader.
+     *
+     * Return null (the default) to use the standard PBR layout with correctly managed
+     * per-instance fallback textures via {@code new MaterialsCache(maxMaterials)}.
+     *
+     * Override and return a non-null layout only when adding custom uniforms or textures.
+     * In that case your layout must include all standard slots (call
+     * {@code MaterialsCache.buildDefaultLayout(defaultTex, normalTex, blackTex)} as a base)
+     * plus your additions. You are responsible for the lifecycle of any fallback textures
+     * your resolvers reference.
+     *
+     * Example:
+     *   {@literal @}Override
+     *   protected MaterialUniformLayout createMaterialLayout() {
+     *       // create your fallback textures (store as fields for disposal)
+     *       myFallback = new WgTexture(...);
+     *       return MaterialsCache.buildDefaultLayout(whiteTex, normalTex, blackTex)
+     *               .registerUniform("tintColor", TYPE_VEC4, (mat, b, n) -> ...)
+     *               .registerTexture("detailTexture", "detailSampler", mat -> ...);
+     *   }
+     */
     protected MaterialUniformLayout createMaterialLayout() {
-        return MaterialsCache.buildDefaultLayout();
+        return null; // null = use MaterialsCache(int) default constructor
     }
 
     private String getDefaultShaderSource() {
