@@ -2,11 +2,11 @@ package com.monstrous.gdx.webgpu.graphics.g3d.shaders;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.IntMap;
@@ -22,275 +22,344 @@ import com.monstrous.gdx.webgpu.wrappers.WebGPUUniformBuffer;
 
 import static com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888;
 
+/**
+ * GPU-side material cache.
+ *
+ * Instead of hardcoding every uniform and texture slot, this class is now driven by a
+ * {@link MaterialUniformLayout} that the shader registers once at construction time.
+ * The BindGroupLayout, the Binder definitions and the uniform buffer size are all derived
+ * automatically from that descriptor.
+ *
+ * To customise the material group, you only have to:
+ *   1. Build your MaterialUniformLayout in your shader subclass.
+ *   2. Pass it to the MaterialsCache constructor.
+ *   3. Override {@link #applyMaterialAttributes(Material, MaterialEntry)} to write your custom values.
+ *   4. Update your WGSL to match the new bindings.
+ *
+ * That is it â€” no changes to this class are needed.
+ */
 public class MaterialsCache implements Disposable {
 
+    /** Per-material GPU entry: dynamic offset + one WgTexture per registered texture slot. */
     public static class MaterialEntry {
-        int dynamicOffset; // offset in uniform buffer
-        WgTexture diffuseTexture;
-        WgTexture normalTexture;
-        WgTexture metallicRoughnessTexture;
-        WgTexture emissiveTexture;
+        int dynamicOffset;
+        WgTexture[] textures; // indexed by registration order in MaterialUniformLayout
+
+        MaterialEntry(int numTextures) {
+            textures = new WgTexture[numTextures];
+        }
     }
+
+    // -----------------------------------------------------------------------
+    // Per-instance fallback textures â€” recreated with each cache instance
+    // so they always belong to the current WebGPU device.
+    // -----------------------------------------------------------------------
+
+    private final WgTexture defaultTexture;
+    private final WgTexture defaultNormalTexture;
+    private final WgTexture defaultBlackTexture;
+
+    // -----------------------------------------------------------------------
+    // Fields
+    // -----------------------------------------------------------------------
 
     private final int maxMaterials;
     private int numMaterials;
-    private final WebGPUUniformBuffer materialBuffer;
-    private final Binder binder;
-    private final int group;
-    private final int materialSize;
-    private WgTexture defaultTexture;
-    private WgTexture defaultNormalTexture;
-    private WgTexture defaultBlackTexture;
-    private final IntMap<MaterialEntry> cache;
+    private WebGPUUniformBuffer materialBuffer;
+    Binder binder;
+    private final int group = 1;
+    private int materialSize;
+    private WebGPUBindGroupLayout bindGroupLayout;
+    private IntMap<MaterialEntry> cache;
     private MaterialEntry boundEntry;
     private int bindCount;
 
+    protected final MaterialUniformLayout uniformLayout;
+
+    // -----------------------------------------------------------------------
+    // Constructors
+    // -----------------------------------------------------------------------
+
+    /** Create a cache using the default PBR material layout. */
     public MaterialsCache(int maxMaterials) {
+        // Create fallback textures first, then build the default layout whose
+        // resolvers close over these per-instance references.
         this.maxMaterials = maxMaterials;
+
+        Pixmap pixmap = new Pixmap(1, 1, RGBA8888);
+        pixmap.setColor(Color.WHITE);  pixmap.fill();
+        defaultTexture = new WgTexture(pixmap, "default (white)");
+        pixmap.setColor(Color.GREEN);  pixmap.fill();
+        defaultNormalTexture = new WgTexture(pixmap, "default normal texture");
+        pixmap.setColor(Color.BLACK);  pixmap.fill();
+        defaultBlackTexture = new WgTexture(pixmap, "default (black)");
+        pixmap.dispose();
+
+        this.uniformLayout = buildDefaultLayout(defaultTexture, defaultNormalTexture, defaultBlackTexture);
+        init();
+    }
+
+    /**
+     * Create a cache driven by a custom {@link MaterialUniformLayout}.
+     * The layout must already contain all resolvers.
+     * If not yet sealed it will be sealed inside this constructor.
+     *
+     * NOTE: if your resolvers reference fallback textures, create them before building
+     * the layout and manage their lifecycle yourself.
+     */
+    public MaterialsCache(int maxMaterials, MaterialUniformLayout layout) {
+        this.maxMaterials = maxMaterials;
+        this.uniformLayout = layout;
+        // No built-in fallback textures for custom layouts â€” the caller owns them.
+        defaultTexture = null;
+        defaultNormalTexture = null;
+        defaultBlackTexture = null;
+        init();
+    }
+
+    /** Shared initialisation after fields are set. */
+    private void init() {
+        if (!uniformLayout.isSealed()) uniformLayout.seal();
+
         numMaterials = 0;
+        cache        = new IntMap<>();
+        boundEntry   = null;
 
-        group = 1;
+        materialSize = uniformLayout.getTotalUniformBytes();
 
-        cache = new IntMap<>();
-        boundEntry = null;
-
-        defineDefaultTextures();
-
-        materialSize = 8 * Float.BYTES; // data size per material (should be enough for now)
-
-        // buffer for uniforms per material, e.g. color, shininess, ...
-        // this does not include textures
-        // todo when a texture is missing we can use a place holder texture, or flag via uniforms that it is not present
-        // to save a binding call.
-
-        // allocate a uniform buffer with dynamic offsets
-        materialBuffer = new WebGPUUniformBuffer(materialSize, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Uniform),
-                maxMaterials);
+        materialBuffer = new WebGPUUniformBuffer(materialSize,
+                WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Uniform), maxMaterials);
         materialBuffer.beginSlices();
 
         binder = new Binder();
-        // define group
-        binder.defineGroup(group, createMaterialBindGroupLayout());
+        bindGroupLayout = createMaterialBindGroupLayout();
+        binder.defineGroup(group, bindGroupLayout);
 
-        // define bindings in the group
         binder.defineBinding("materialUniforms", group, 0);
-        binder.defineBinding("diffuseTexture", group, 1);
-        binder.defineBinding("diffuseSampler", group, 2);
-        binder.defineBinding("normalTexture", group, 3);
-        binder.defineBinding("normalSampler", group, 4);
-        binder.defineBinding("metallicRoughnessTexture", group, 5);
-        binder.defineBinding("metallicRoughnessSampler", group, 6);
-        binder.defineBinding("emissiveTexture", group, 7);
-        binder.defineBinding("emissiveSampler", group, 8);
-
-        // define uniforms
-        int offset = 0;
-        binder.defineUniform("diffuseColor", group, 0, offset);
-        offset += 4 * 4;
-        binder.defineUniform("shininess", group, 0, offset);
-        offset += 4;
-        binder.defineUniform("roughnessFactor", group, 0, offset);
-        offset += 4;
-        binder.defineUniform("metallicFactor", group, 0, offset);
-        offset += 4;
-
         binder.setBuffer("materialUniforms", materialBuffer, 0, materialSize);
+
+        for (MaterialUniformLayout.UniformEntry u : uniformLayout.uniforms)
+            binder.defineUniform(u.name, group, 0, u.byteOffset);
+
+        for (MaterialUniformLayout.TextureEntry t : uniformLayout.textures) {
+            binder.defineBinding(t.textureName, group, t.textureBindingId);
+            binder.defineBinding(t.samplerName, group, t.samplerBindingId);
+        }
     }
 
+    // -----------------------------------------------------------------------
+    // Public API
+    // -----------------------------------------------------------------------
+
     public MaterialEntry addMaterial(Material mat) {
-        MaterialEntry entry = findMaterial(mat); // duplicate?
-        if (entry != null)
-            return entry;
+        MaterialEntry entry = findMaterial(mat);
+        if (entry != null) return entry;
 
         if (numMaterials >= maxMaterials)
             throw new GdxRuntimeException(
                     "Too many materials for MaterialsCache (" + numMaterials + "). Increase maxMaterials.");
-        entry = applyMaterial(mat);
+
+        entry = buildEntry(mat);
         numMaterials++;
         cache.put(hashCode(mat), entry);
-        // System.out.println("Add material: "+numMaterials+" : "+mat.id+ " "+mat.attributesHash());
         return entry;
     }
 
-    /** returns actual number of materials in the cache. */
-    public int count() {
-        return numMaterials;
-    }
-
-    /** returns number of material bindings done since start() was called */
-    public int materialBindings() {
-        return bindCount;
-    }
+    public int count()            { return numMaterials; }
+    public int materialBindings() { return bindCount; }
 
     public @Null MaterialEntry findMaterial(Material mat) {
-        // use attributesHash as key so that we look only at the material contents, not the material's id
         return cache.get(hashCode(mat));
     }
 
-    private int hashCode(Material material) {
-        // ignore material.id
-        int code = material.attributesHash();
-        // just the attributes hash is not sufficient, check if texture is different
-        if (material.has(TextureAttribute.Diffuse)) {
-            TextureAttribute ta = (TextureAttribute) material.get(TextureAttribute.Diffuse);
-            assert ta != null;
-            Texture tex = ta.textureDescription.texture;
-            code += 31 * tex.hashCode();
-        }
-        // assume the other textures are not relevant to distinguish materials
-        return code;
-    }
-
     public void start() {
-        // System.out.println("===== start");
         boundEntry = null;
-        bindCount = 0;
+        bindCount  = 0;
     }
 
     public void bindMaterial(WebGPURenderPass renderPass, Material mat) {
-
         MaterialEntry entry = addMaterial(mat);
-        if (entry == boundEntry)
-            return;
+        if (entry == boundEntry) return;
 
-        // System.out.println("bind "+bindCount+ ": "+mat.attributesHash());
-        binder.setTexture("diffuseTexture", entry.diffuseTexture.getTextureView());
-        binder.setSampler("diffuseSampler", entry.diffuseTexture.getSampler());
-        binder.setTexture("normalTexture", entry.normalTexture.getTextureView());
-        binder.setSampler("normalSampler", entry.normalTexture.getSampler());
-        binder.setTexture("metallicRoughnessTexture", entry.metallicRoughnessTexture.getTextureView());
-        binder.setSampler("metallicRoughnessSampler", entry.metallicRoughnessTexture.getSampler());
-        binder.setTexture("emissiveTexture", entry.emissiveTexture.getTextureView());
-        binder.setSampler("emissiveSampler", entry.emissiveTexture.getSampler());
+        // Bind each texture/sampler pair listed in the layout
+        Array<MaterialUniformLayout.TextureEntry> texEntries = uniformLayout.textures;
+        for (int i = 0; i < texEntries.size; i++) {
+            MaterialUniformLayout.TextureEntry te = texEntries.get(i);
+            WgTexture tex = entry.textures[i];
+            binder.setTexture(te.textureName, tex.getTextureView());
+            binder.setSampler(te.samplerName, tex.getSampler());
+        }
+
         binder.bindGroup(renderPass, group, entry.dynamicOffset);
         boundEntry = entry;
         bindCount++;
     }
 
-    private MaterialEntry applyMaterial(Material material) {
-        MaterialEntry entry = new MaterialEntry();
-
-        // move to new buffer offset for this new material (flushes previous one).
-        entry.dynamicOffset = materialBuffer.nextSlice();
-
-        // diffuse color
-        ColorAttribute diffuse = (ColorAttribute) material.get(ColorAttribute.Diffuse);
-        binder.setUniform("diffuseColor", diffuse == null ? Color.WHITE : diffuse.color);
-
-        final FloatAttribute shiny = material.get(FloatAttribute.class, FloatAttribute.Shininess);
-        binder.setUniform("shininess", shiny == null ? 20f : shiny.value);
-
-        // the following are multiplication factors for the MR texture. If not provided, use 1.0.
-        final FloatAttribute roughness = material.get(PBRFloatAttribute.class, PBRFloatAttribute.Roughness);
-        binder.setUniform("roughnessFactor", roughness == null ? 1f : roughness.value);
-
-        final FloatAttribute metallic = material.get(PBRFloatAttribute.class, PBRFloatAttribute.Metallic);
-        binder.setUniform("metallicFactor", metallic == null ? 1f : metallic.value);
-
-        // diffuse texture
-        WgTexture diffuseTexture;
-        if (material.has(TextureAttribute.Diffuse)) {
-            TextureAttribute ta = (TextureAttribute) material.get(TextureAttribute.Diffuse);
-            assert ta != null;
-            Texture tex = ta.textureDescription.texture;
-            diffuseTexture = (WgTexture) tex;
-            diffuseTexture.setWrap(ta.textureDescription.uWrap, ta.textureDescription.vWrap);
-            diffuseTexture.setFilter(ta.textureDescription.minFilter, ta.textureDescription.magFilter);
-        } else {
-            diffuseTexture = defaultTexture;
-        }
-        entry.diffuseTexture = diffuseTexture;
-
-        // System.out.println("binding diffuse texture:
-        // "+diffuseTexture.getLabel()+diffuseTexture.getUWrap()+diffuseTexture.getVWrap());
-
-        // normal texture
-        WgTexture normalTexture;
-        if (material.has(TextureAttribute.Normal)) {
-            TextureAttribute ta = (TextureAttribute) material.get(TextureAttribute.Normal);
-            assert ta != null;
-            Texture tex = ta.textureDescription.texture;
-            normalTexture = (WgTexture) tex;
-        } else {
-            normalTexture = defaultNormalTexture; // green texture, ie. Y = 1
-        }
-        entry.normalTexture = normalTexture;
-
-        // metallic roughness texture
-        WgTexture metallicRoughnessTexture;
-        if (material.has(PBRTextureAttribute.MetallicRoughness)) {
-            TextureAttribute ta = (TextureAttribute) material.get(PBRTextureAttribute.MetallicRoughness);
-            assert ta != null;
-            Texture tex = ta.textureDescription.texture;
-            metallicRoughnessTexture = (WgTexture) tex;
-        } else {
-            metallicRoughnessTexture = defaultTexture; // suitable?
-        }
-        entry.metallicRoughnessTexture = metallicRoughnessTexture;
-
-        // metallic roughness texture
-        WgTexture emissiveTexture;
-        if (material.has(TextureAttribute.Emissive)) {
-            TextureAttribute ta = (TextureAttribute) material.get(TextureAttribute.Emissive);
-            assert ta != null;
-            Texture tex = ta.textureDescription.texture;
-            emissiveTexture = (WgTexture) tex;
-        } else {
-            emissiveTexture = defaultBlackTexture;
-        }
-        entry.emissiveTexture = emissiveTexture;
-
-        // todo not needed except for last one
-        materialBuffer.flush(); // write to GPU
-
-        return entry;
+    /**
+     * Returns the BindGroupLayout that was built during construction.
+     * WgDefaultShader registers this with its own Binder for group 1.
+     * Always use this getter â€” never call createMaterialBindGroupLayout() again,
+     * as that would produce a second, inconsistent layout object.
+     */
+    public WebGPUBindGroupLayout getBindGroupLayout() {
+        return bindGroupLayout;
     }
 
+    /**
+     * Builds the BindGroupLayout for group 1 from the registered descriptor.
+     * Called once during construction; result is stored and exposed via {@link #getBindGroupLayout()}.
+     */
     public WebGPUBindGroupLayout createMaterialBindGroupLayout() {
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch bind group layout (material)");
         layout.begin();
-        layout.addBuffer(0, WGPUShaderStage.Vertex.or(WGPUShaderStage.Fragment), WGPUBufferBindingType.Uniform,
-                materialSize, true);
-        layout.addTexture(1, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D,
-                false);
-        layout.addSampler(2, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering);
-        layout.addTexture(3, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D,
-                false);
-        layout.addSampler(4, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering);
-        layout.addTexture(5, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D,
-                false);
-        layout.addSampler(6, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering);
-        layout.addTexture(7, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D,
-                false);
-        layout.addSampler(8, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering);
+
+        // Binding 0: uniform buffer (dynamic offset)
+        layout.addBuffer(0, WGPUShaderStage.Vertex.or(WGPUShaderStage.Fragment),
+                WGPUBufferBindingType.Uniform, materialSize, true);
+
+        // One texture + sampler entry per registered pair
+        for (MaterialUniformLayout.TextureEntry te : uniformLayout.textures) {
+            layout.addTexture(te.textureBindingId, WGPUShaderStage.Fragment,
+                    WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D, false);
+            layout.addSampler(te.samplerBindingId, WGPUShaderStage.Fragment,
+                    WGPUSamplerBindingType.Filtering);
+        }
+
         layout.end();
         return layout;
     }
 
-    private void defineDefaultTextures() {
-        // fallback texture
-        // todo these could be static?
-        Pixmap pixmap = new Pixmap(1, 1, RGBA8888);
-        pixmap.setColor(Color.WHITE);
-        pixmap.fill();
-        defaultTexture = new WgTexture(pixmap, "default (white)");
-        pixmap.setColor(Color.GREEN);
-        pixmap.fill();
-        defaultNormalTexture = new WgTexture(pixmap, "default normal texture");
-        pixmap.setColor(Color.BLACK);
-        pixmap.fill();
-        defaultBlackTexture = new WgTexture(pixmap, "default (black)");
+    // -----------------------------------------------------------------------
+    // Override point
+    // -----------------------------------------------------------------------
+
+    /**
+     * Write uniform values and texture references for a single material into {@code entry}.
+     *
+     * The default implementation simply iterates every resolver registered in the
+     * {@link MaterialUniformLayout} â€” no attribute names are hardcoded here.
+     *
+     * Override this only if you registered a slot <em>without</em> a resolver (the
+     * no-resolver overloads exist for advanced cases). Otherwise you never need to touch
+     * this method.
+     *
+     * @param material the libGDX Material being processed
+     * @param entry    the GPU entry to populate (entry.dynamicOffset is already set)
+     */
+    protected void applyMaterialAttributes(Material material, MaterialEntry entry) {
+        // uniforms â€” each resolver writes its value into the binder
+        for (MaterialUniformLayout.UniformEntry u : uniformLayout.uniforms) {
+            if (u.resolver != null)
+                u.resolver.resolve(material, binder, u.name);
+        }
+        // textures â€” each resolver returns the WgTexture to bind for this slot
+        for (int i = 0; i < uniformLayout.textures.size; i++) {
+            MaterialUniformLayout.TextureEntry t = uniformLayout.textures.get(i);
+            if (t.resolver != null)
+                entry.textures[i] = t.resolver.resolve(material);
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Default layout builder
+    // -----------------------------------------------------------------------
+
+    /**
+     * Builds the complete standard PBR material layout.
+     * Resolvers close over the provided per-instance fallback textures.
+     */
+    public static MaterialUniformLayout buildDefaultLayout(WgTexture defaultTex,
+                                                            WgTexture defaultNormalTex,
+                                                            WgTexture defaultBlackTex) {
+        return new MaterialUniformLayout()
+            .registerUniform("diffuseColor", MaterialUniformLayout.TYPE_VEC4,
+                (mat, binder, name) -> {
+                    ColorAttribute a = (ColorAttribute) mat.get(ColorAttribute.Diffuse);
+                    binder.setUniform(name, a == null ? Color.WHITE : a.color);
+                })
+            .registerUniform("shininess", MaterialUniformLayout.TYPE_FLOAT,
+                (mat, binder, name) -> {
+                    FloatAttribute a = mat.get(FloatAttribute.class, FloatAttribute.Shininess);
+                    binder.setUniform(name, a == null ? 20f : a.value);
+                })
+            .registerUniform("roughnessFactor", MaterialUniformLayout.TYPE_FLOAT,
+                (mat, binder, name) -> {
+                    FloatAttribute a = mat.get(PBRFloatAttribute.class, PBRFloatAttribute.Roughness);
+                    binder.setUniform(name, a == null ? 1f : a.value);
+                })
+            .registerUniform("metallicFactor", MaterialUniformLayout.TYPE_FLOAT,
+                (mat, binder, name) -> {
+                    FloatAttribute a = mat.get(PBRFloatAttribute.class, PBRFloatAttribute.Metallic);
+                    binder.setUniform(name, a == null ? 1f : a.value);
+                })
+            .registerTexture("diffuseTexture", "diffuseSampler",
+                mat -> {
+                    if (mat.has(TextureAttribute.Diffuse)) {
+                        TextureAttribute ta = (TextureAttribute) mat.get(TextureAttribute.Diffuse);
+                        WgTexture tex = (WgTexture) ta.textureDescription.texture;
+                        tex.setWrap(ta.textureDescription.uWrap, ta.textureDescription.vWrap);
+                        tex.setFilter(ta.textureDescription.minFilter, ta.textureDescription.magFilter);
+                        return tex;
+                    }
+                    return defaultTex;
+                })
+            .registerTexture("normalTexture", "normalSampler",
+                mat -> {
+                    if (mat.has(TextureAttribute.Normal)) {
+                        TextureAttribute ta = (TextureAttribute) mat.get(TextureAttribute.Normal);
+                        return (WgTexture) ta.textureDescription.texture;
+                    }
+                    return defaultNormalTex;
+                })
+            .registerTexture("metallicRoughnessTexture", "metallicRoughnessSampler",
+                mat -> {
+                    if (mat.has(PBRTextureAttribute.MetallicRoughness)) {
+                        TextureAttribute ta = (TextureAttribute) mat.get(PBRTextureAttribute.MetallicRoughness);
+                        return (WgTexture) ta.textureDescription.texture;
+                    }
+                    return defaultTex;
+                })
+            .registerTexture("emissiveTexture", "emissiveSampler",
+                mat -> {
+                    if (mat.has(TextureAttribute.Emissive)) {
+                        TextureAttribute ta = (TextureAttribute) mat.get(TextureAttribute.Emissive);
+                        return (WgTexture) ta.textureDescription.texture;
+                    }
+                    return defaultBlackTex;
+                });
+    }
+
+    // -----------------------------------------------------------------------
+    // Helpers
+    // -----------------------------------------------------------------------
+
+    private MaterialEntry buildEntry(Material material) {
+        MaterialEntry entry = new MaterialEntry(uniformLayout.textures.size);
+        entry.dynamicOffset = materialBuffer.nextSlice();
+        applyMaterialAttributes(material, entry);
+        materialBuffer.flush();
+        return entry;
+    }
+
+    private int hashCode(Material material) {
+        int code = material.attributesHash();
+        if (material.has(TextureAttribute.Diffuse)) {
+            TextureAttribute ta = (TextureAttribute) material.get(TextureAttribute.Diffuse);
+            assert ta != null;
+            code += 31 * ta.textureDescription.texture.hashCode();
+        }
+        return code;
     }
 
     @Override
     public void dispose() {
-        defaultTexture.dispose();
-        defaultNormalTexture.dispose();
-        defaultBlackTexture.dispose();
         cache.clear();
         binder.dispose();
         materialBuffer.dispose();
-        // more??
+        // Dispose per-instance fallback textures (null when using custom layout constructor).
+        if (defaultTexture      != null) defaultTexture.dispose();
+        if (defaultNormalTexture!= null) defaultNormalTexture.dispose();
+        if (defaultBlackTexture != null) defaultBlackTexture.dispose();
     }
 
 }

@@ -56,6 +56,10 @@ public class WgDefaultShader extends WgShader implements Disposable {
     private final WebGPUUniformBuffer instanceBuffer;
     private final WebGPUUniformBuffer jointMatricesBuffer;
     private MaterialsCache materials;
+    // Fallback textures used when createMaterialLayout() is overridden — owned and disposed here.
+    private WgTexture fallbackWhiteTexture;
+    private WgTexture fallbackNormalTexture;
+    private WgTexture fallbackBlackTexture;
     private int numRigged;
     private int rigSize; // bytes per rigged instance
     private final PipelineCache pipelineCache; // cache of pipelines for different render targets
@@ -93,6 +97,16 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
     public WgDefaultShader(final Renderable renderable, WgModelBatch.Config config) {
         this.config = config;
+
+        // If no custom MaterialsCache has been supplied via config, create one now.
+        // - Default case (not subclassed): use MaterialsCache(int) directly so the fallback
+        //   textures are per-instance fields owned and disposed by the cache.
+        // - Subclassed case: createMaterialLayout() is overridden to return a custom layout;
+        //   the cache is built from that layout (caller is responsible for fallback textures
+        //   inside their resolvers).
+        if (config.materials == null) {
+            config.materials = new MaterialsCache(config.maxMaterials, createMaterialLayout());
+        }
         this.materials = config.materials;
 
         // System.out.println("Create WgDefaultShader "+renderable.meshPart.id+" vert mask:
@@ -126,7 +140,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         // define groups
         binder.defineGroup(0, createFrameBindGroupLayout(uniformBufferSize, hasShadowMap, hasCubeMap, hasDiffuseCubeMap,
                 hasSpecularCubeMap));
-        binder.defineGroup(1, materials.createMaterialBindGroupLayout());
+        binder.defineGroup(1, materials.getBindGroupLayout());
         binder.defineGroup(2, createInstancingBindGroupLayout());
         if (hasBones)
             binder.defineGroup(3, createSkinningBindGroupLayout(rigSize));
@@ -644,6 +658,38 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
     // todo vertex attributes are hardcoded, should use conditional compilation.
 
+    /**
+     * Declares the material uniform group (group 1) for this shader.
+     *
+     * The base implementation creates per-instance fallback textures (owned by this shader
+     * and disposed with it) and returns the complete standard PBR layout.
+     *
+     * Override to add custom uniforms or textures — call {@code super.createMaterialLayout()}
+     * to get the standard layout, then chain your additions:
+     *
+     *   {@literal @}Override
+     *   protected MaterialUniformLayout createMaterialLayout() {
+     *       return super.createMaterialLayout()
+     *           .registerUniform("tintColor", TYPE_VEC4,
+     *               (mat, b, n) -> b.setUniform(n, Color.WHITE))
+     *           .registerTexture("detailTexture", "detailSampler",
+     *               mat -> myDetailTexture);
+     *   }
+     *
+     * Then add the matching fields and bindings in your WGSL — that is all.
+     */
+    protected MaterialUniformLayout createMaterialLayout() {
+        Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
+        pixmap.setColor(Color.WHITE);  pixmap.fill();
+        fallbackWhiteTexture  = new WgTexture(pixmap, "default (white)");
+        pixmap.setColor(Color.GREEN);  pixmap.fill();
+        fallbackNormalTexture = new WgTexture(pixmap, "default normal texture");
+        pixmap.setColor(Color.BLACK);  pixmap.fill();
+        fallbackBlackTexture  = new WgTexture(pixmap, "default (black)");
+        pixmap.dispose();
+        return MaterialsCache.buildDefaultLayout(fallbackWhiteTexture, fallbackNormalTexture, fallbackBlackTexture);
+    }
+
     private String getDefaultShaderSource() {
         if (config.shaderSource != null)
             return config.shaderSource;
@@ -663,6 +709,9 @@ public class WgDefaultShader extends WgShader implements Disposable {
         pipelineCache.dispose();
         if (brdfLUT != null)
             brdfLUT.dispose();
+        if (fallbackWhiteTexture  != null) fallbackWhiteTexture.dispose();
+        if (fallbackNormalTexture != null) fallbackNormalTexture.dispose();
+        if (fallbackBlackTexture  != null) fallbackBlackTexture.dispose();
     }
 
     /**
