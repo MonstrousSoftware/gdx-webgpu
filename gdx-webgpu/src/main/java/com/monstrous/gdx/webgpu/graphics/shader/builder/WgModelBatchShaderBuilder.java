@@ -545,10 +545,12 @@ public final class WgModelBatchShaderBuilder {
           + "#endif // MAX_POINT_LIGHTS\n");
 
     public static final WgShaderChunk FS_LIT_COLOR_CHUNK =
-        WgShaderChunk.block(FS_LIT_COLOR, "#ifdef PBR\n", "#endif\n")
-            .line("pbr_lit",  "    let litColor = vec4f(ambient + visibility*radiance, 1.0);\n")
-            .sub(WgShaderChunk.block("else_block", "#else\n", "")
-                .line("simple_lit", "    let litColor = vec4f(ambient + color.rgb * (visibility * radiance) + visibility*specular, 1.0);\n").build())
+        WgShaderChunk.block(FS_LIT_COLOR, "", "")
+            .sub(WgShaderChunk.block("pbr_block", "#ifdef PBR\n", "#endif\n")
+                .line("pbr_lit",  "    let litColor = vec4f(ambient + visibility*radiance, 1.0);\n")
+                .sub(WgShaderChunk.block("else_block", "#else\n", "")
+                    .line("simple_lit", "    let litColor = vec4f(ambient + color.rgb * (visibility * radiance) + visibility*specular, 1.0);\n").build())
+                .build())
             .line("apply_lit", "    color = litColor;\n")
             .build();
 
