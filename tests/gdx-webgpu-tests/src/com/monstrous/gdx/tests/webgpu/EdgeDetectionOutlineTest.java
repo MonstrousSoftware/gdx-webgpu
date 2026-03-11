@@ -167,7 +167,7 @@ public class EdgeDetectionOutlineTest extends GdxTest {
     Vector3 lightPos;
 
     // Shadow bias control
-    private float shadowBias = 0.04f;
+    private float shadowBias = 0.01f;
     private static final float BIAS_STEP = 0.01f;
     private static final float BIAS_MIN = 0.01f;
     private static final float BIAS_MAX = 0.15f;
@@ -240,7 +240,7 @@ public class EdgeDetectionOutlineTest extends GdxTest {
         environment = new Environment();
         emptyEnvironment = new Environment();
 
-        lightPos = new Vector3(-.75f, 1f, -1.00f);
+        lightPos = new Vector3(-.75f, 1f, -0.75f);
 
         // Enhanced lighting setup with warm main light and cool fill light
         float ambientLevel = 0.3f;
@@ -261,7 +261,7 @@ public class EdgeDetectionOutlineTest extends GdxTest {
         environment.add(fillLight);
 
         // Set up shadow mapping
-        final int VIEWPORT = 8;
+        final int VIEWPORT = 18;
         final float DEPTH = 10f;
         shadowLight = new WgDirectionalShadowLight(MAP, MAP, VIEWPORT, VIEWPORT, 0.01f, DEPTH);
         shadowLight.setDirection(dirLight1.direction);
