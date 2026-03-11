@@ -124,4 +124,14 @@ fn vs_main(in: VertexInput, @builtin(instance_index) instance: u32) -> VertexOut
    return out;
 }
 
-
+// Fragment stage used only when visualising the depth buffer.
+// Outputs the NDC depth value as greyscale so it can be blitted to the screen.
+@fragment
+fn fs_depth_vis(in: VertexOutput) -> @location(0) vec4f {
+    // Convert clip-space depth to normalized device coordinate depth and map to [0,1].
+    // NDC z = clip.z / clip.w. Many projection matrices use [-1,1] range for NDC z (OpenGL).
+    // Map [-1,1] -> [0,1] by (ndcZ * 0.5 + 0.5).
+    let ndcZ = in.position.z / in.position.w;
+    let d = clamp(ndcZ * 0.5 + 0.5, 0.0, 1.0);
+    return vec4f(d, d, d, 1.0);
+}

@@ -68,7 +68,7 @@ public class WgSpriteBatch implements Batch {
     public int maxFlushes;
     private float invTexWidth;
     private float invTexHeight;
-    private final Binder binder;
+    protected final Binder binder;
     private static String defaultShader;
     private int frameNumber;
 

@@ -53,7 +53,7 @@ public class WgDepthShader extends WgShader {
     private int rigSize; // bytes per rigged instance
     private final WebGPUPipeline pipeline;
     private WebGPURenderPass renderPass;
-    private final VertexAttributes vertexAttributes;
+    private VertexAttributes vertexAttributes;
 
     public WgDepthShader(final Renderable renderable) {
         this(renderable, new WgModelBatch.Config());
@@ -63,12 +63,12 @@ public class WgDepthShader extends WgShader {
         this(renderable, config, getDefaultShaderSource());
     }
 
-    protected WgDepthShader(final Renderable renderable, WgModelBatch.Config config, String shaderSource) {
+    public WgDepthShader(final Renderable renderable, WgModelBatch.Config config, String shaderSource) {
         this(renderable, config, shaderSource, null); // null = no fragment shader for normal depth rendering
     }
 
-    protected WgDepthShader(final Renderable renderable, WgModelBatch.Config config, String shaderSource,
-            String fragmentEntryPoint) {
+    public WgDepthShader(final Renderable renderable, WgModelBatch.Config config, String shaderSource,
+                         String fragmentEntryPoint) {
         this.config = config;
 
         // Create uniform buffer for global (per-frame) uniforms, i.e. projection matrix
@@ -171,7 +171,28 @@ public class WgDepthShader extends WgShader {
         }
 
         // Fragment shader entry point (null for normal depth rendering, "fs_main" for masking)
-        pipelineSpec.colorFormats = null; // No color output
+        if (fragmentEntryPoint == null) {
+            // No color output for normal depth-only rendering
+            pipelineSpec.colorFormats = null;
+        } else {
+            // If fragment is present but writes only to builtin(frag_depth) (i.e. no color outputs),
+            // keep depth-only pipeline. We detect that by searching the provided shader source for
+            // the annotation '@builtin(frag_depth)'.
+            if (shaderSource != null) {
+                boolean writesFragDepth = shaderSource.contains("@builtin(frag_depth)");
+                boolean writesLocation = shaderSource.contains("@location(");
+                // If the fragment writes only frag_depth and does not write any color outputs (@location),
+                // keep depth-only pipeline. Otherwise, enable color targets.
+                if (writesFragDepth && !writesLocation) {
+                    pipelineSpec.colorFormats = null;
+                } else {
+                    pipelineSpec.colorFormats = new WGPUTextureFormat[] { WGPUTextureFormat.RGBA8UnormSrgb };
+                }
+            } else {
+                // Fallback: assume color output
+                pipelineSpec.colorFormats = new WGPUTextureFormat[] { WGPUTextureFormat.RGBA8UnormSrgb };
+            }
+        }
         pipelineSpec.fragmentShaderEntryPoint = fragmentEntryPoint;
         pipelineSpec.isDepthPass = true; // Mark this as a depth pass
 
@@ -409,7 +430,7 @@ public class WgDepthShader extends WgShader {
         return layout;
     }
 
-    protected static String getDefaultShaderSource() {
+    public static String getDefaultShaderSource() {
         if (defaultShader == null) {
             defaultShader = Gdx.files.classpath("shaders/depthshader.wgsl").readString();
         }
@@ -421,7 +442,8 @@ public class WgDepthShader extends WgShader {
         binder.dispose();
         instanceBuffer.dispose();
         uniformBuffer.dispose();
-        pipeline.dispose();
+        if (pipeline != null) pipeline.dispose();
     }
 
 }
+

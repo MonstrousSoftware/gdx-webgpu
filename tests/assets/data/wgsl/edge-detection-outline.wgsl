@@ -10,6 +10,7 @@
 
 struct Uniforms {
     projectionViewTransform: mat4x4f,
+    outlineColor: vec4f,
 };
 
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
@@ -77,11 +78,7 @@ fn detectEdge(idTexture: texture_2d<f32>, uv: vec2f) -> f32 {
 @fragment
 fn fs_main(in : VertexOutput) -> @location(0) vec4f {
     let edge = detectEdge(idTexture, in.uv);
-
-    // Outline color is red, blended with background
-    let outlineColor = vec4f(1.0, 0.0, 0.0, 1.0);
     let bgColor = vec4f(0.0, 0.0, 0.0, 0.0);
 
-    return mix(bgColor, outlineColor, edge);
+    return mix(bgColor, uniforms.outlineColor, edge);
 }
-
