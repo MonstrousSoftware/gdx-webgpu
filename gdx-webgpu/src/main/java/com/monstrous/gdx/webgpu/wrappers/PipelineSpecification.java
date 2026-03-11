@@ -224,6 +224,17 @@ public class PipelineSpecification {
         if (o == null || getClass() != o.getClass())
             return false;
         PipelineSpecification that = (PipelineSpecification) o;
+        boolean isRealSource = shaderSource != null && !shaderSource.equals("precompiled");
+        boolean thatIsRealSource = that.shaderSource != null && !that.shaderSource.equals("precompiled");
+        boolean shaderEquals;
+        if (isRealSource && thatIsRealSource) {
+            shaderEquals = shaderSource.equals(that.shaderSource);
+        } else if (!isRealSource && !thatIsRealSource) {
+            shaderEquals = Objects.equals(shader, that.shader);
+        } else {
+            // One side is a real source, the other is an external shader — they can never match.
+            shaderEquals = false;
+        }
         return useDepthTest == that.useDepthTest && noDepthAttachment == that.noDepthAttachment
                 && isSkyBox == that.isSkyBox && isDepthPass == that.isDepthPass
                 && afterDepthPrepass == that.afterDepthPrepass && numSamples == that.numSamples
@@ -231,8 +242,7 @@ public class PipelineSpecification {
                 && Objects.equals(vertexAttributes, that.vertexAttributes)
                 && Objects.equals(vertexLayout, that.vertexLayout) && vertexStepMode == that.vertexStepMode
                 && indexFormat == that.indexFormat && topology == that.topology
-                && Objects.equals(environment, that.environment) && Objects.equals(shaderSource, that.shaderSource)
-                && Objects.equals(shader, that.shader)
+                && Objects.equals(environment, that.environment) && shaderEquals
                 && Objects.equals(vertexShaderEntryPoint, that.vertexShaderEntryPoint)
                 && Objects.equals(fragmentShaderEntryPoint, that.fragmentShaderEntryPoint)
                 && Arrays.equals(colorFormats, that.colorFormats)
@@ -248,8 +258,13 @@ public class PipelineSpecification {
     public int hashCode() {
         if (!dirty)
             return hash;
+        // When shaderSource is a real source (not null, not "precompiled"), hash only shaderSource
+        // since the compiled shader is a derived artefact.
+        // When shaderSource is null or "precompiled" (external shader), hash only the shader object.
+        boolean isRealSource = shaderSource != null && !shaderSource.equals("precompiled");
+        Object shaderKey = isRealSource ? shaderSource : shader;
         int result = Objects.hash(name, vertexAttributes, vertexLayout, vertexStepMode, indexFormat, topology,
-                environment, shaderSource, shader, vertexShaderEntryPoint, fragmentShaderEntryPoint, useDepthTest,
+                environment, shaderKey, vertexShaderEntryPoint, fragmentShaderEntryPoint, useDepthTest,
                 noDepthAttachment, isSkyBox, isDepthPass, afterDepthPrepass, numSamples, blendingEnabled, blendSrcColor,
                 blendDstColor, blendOpColor, blendSrcAlpha, blendDstAlpha, blendOpAlpha, cullMode, depthFormat,
                 maxDirLights, maxPointLights, usePBR, customPrefix);

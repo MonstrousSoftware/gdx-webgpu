@@ -16,6 +16,7 @@
 
 package com.monstrous.gdx.webgpu.wrappers;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import com.github.xpenatan.webgpu.WGPUPipelineLayout;
@@ -37,6 +38,9 @@ public class PipelineCache implements Disposable {
         for (WebGPUPipeline pipeline : pipelines) {
             if (pipeline.canRender(spec))
                 return pipeline;
+        }
+        if(pipelines.size > 1000) {
+            Gdx.app.error("PipelineCache#findPipeline", "possible Memory leak: Pipeline cache size is " + pipelines.size);
         }
         // if not found, create a new pipeline
         WebGPUPipeline pipeline = new WebGPUPipeline(pipelineLayout, spec);
