@@ -65,10 +65,8 @@ public class EdgeDetectionOutlineTest extends GdxTest {
     Environment environment;
     Environment emptyEnvironment;
     WgFrameBuffer mrtFbo;
-    WgShaderProgram[] edgeDetectionShaders;
-    int currentOutlineWidthIndex = 2; // Start at 1.0 (middle)
-    float[] outlineWidths = {0.5f, 0.75f, 1.0f, 1.5f, 2.0f, 2.5f};
-    boolean[] keyPressed = new boolean[256];
+    WgShaderProgram edgeDetectionShader;
+    float currentOutlineWidth = 1.0f;
     private Viewport viewport;
     private Array<Disposable> disposables;
     private boolean showFullScreenModel = false;  // Toggle between split-screen and full-screen render
@@ -120,7 +118,6 @@ public class EdgeDetectionOutlineTest extends GdxTest {
         config.maxInstances = 100;
         config.numBones = 100;  // Increased to support SillyDancing model (65 bones)
         modelBatch = new WgModelBatch(new WgEdgeDetectionOutlineShaderProvider(config));
-//        modelBatch = new WgModelBatch(config);
         disposables.add(modelBatch);
 
         // Improved camera setup
@@ -143,17 +140,8 @@ public class EdgeDetectionOutlineTest extends GdxTest {
         font = new WgBitmapFont();
         disposables.add(font);
 
-        // Load edge detection shaders with different outline widths
-        String baseShaderSource = Gdx.files.internal("data/wgsl/edge-detection-outline.wgsl").readString();
-        edgeDetectionShaders = new WgShaderProgram[outlineWidths.length];
-        for (int i = 0; i < outlineWidths.length; i++) {
-            String prefix = "#define OUTLINE_WIDTH " + outlineWidths[i] + "\n";
-            edgeDetectionShaders[i] = new WgShaderProgram(
-                "edge-detection-" + outlineWidths[i],
-                baseShaderSource,
-                prefix
-            );
-        }
+        // Load edge detection shader
+        updateOutlineShader();
 
         // Create environment with enhanced lighting
         environment = new Environment();
@@ -250,6 +238,16 @@ public class EdgeDetectionOutlineTest extends GdxTest {
         disposables.add(shadowBatch);
 
         viewport = new ScreenViewport();
+    }
+
+    private void updateOutlineShader() {
+        if(edgeDetectionShader != null) {
+            edgeDetectionShader.dispose();
+        }
+        String baseShaderSource = Gdx.files.internal("data/wgsl/edge-detection-outline.wgsl").readString();
+        String prefix = "#define OUTLINE_WIDTH " + currentOutlineWidth + "\n";
+        edgeDetectionShader = new WgShaderProgram("edge-detection-", baseShaderSource,
+            prefix);
     }
 
     private void loadSkybox(int skyboxIndex) {
@@ -364,10 +362,9 @@ public class EdgeDetectionOutlineTest extends GdxTest {
                 System.out.println("Shadow Bias: " + String.format("%.2f", shadowBias));
             } else {
                 // Split-screen mode: adjust outline width
-                if (!keyPressed[Input.Keys.PLUS]) {
-                    currentOutlineWidthIndex = Math.min(outlineWidths.length - 1, currentOutlineWidthIndex + 1);
-                    keyPressed[Input.Keys.PLUS] = true;
-                }
+                currentOutlineWidth = Math.min(currentOutlineWidth + 0.25f, 3.0f);
+                System.out.println("Outline width: " + String.format("%.2f", currentOutlineWidth) + " pixels");
+                updateOutlineShader();
             }
             return true;
         }
@@ -378,20 +375,13 @@ public class EdgeDetectionOutlineTest extends GdxTest {
                 System.out.println("Shadow Bias: " + String.format("%.2f", shadowBias));
             } else {
                 // Split-screen mode: adjust outline width
-                if (!keyPressed[Input.Keys.MINUS]) {
-                    currentOutlineWidthIndex = Math.max(0, currentOutlineWidthIndex - 1);
-                    keyPressed[Input.Keys.MINUS] = true;
-                }
+                currentOutlineWidth = Math.max(currentOutlineWidth - 0.25f, 0.25f);
+                System.out.println("Outline width: " + String.format("%.2f", currentOutlineWidth) + " pixels");
+                updateOutlineShader();
             }
             return true;
         }
 
-        return false;
-    }
-
-    @Override
-    public boolean keyUp(int keycode) {
-        keyPressed[keycode] = false;
         return false;
     }
 
@@ -528,7 +518,7 @@ public class EdgeDetectionOutlineTest extends GdxTest {
         font.draw(batch, "Color Output", 20, 40);
 
         // Draw Edge Detection Output (right side)
-        batch.setShader(edgeDetectionShaders[currentOutlineWidthIndex]);
+        batch.setShader(edgeDetectionShader);
         batch.draw(mrtFbo.getColorBufferTexture(1), w, 0, w, h);
         batch.setShader((WgShaderProgram) null);
         font.draw(batch, "Edge Detection Outline", w + 20, 40);
@@ -536,7 +526,7 @@ public class EdgeDetectionOutlineTest extends GdxTest {
         // Draw info text
         font.draw(batch, "FPS: " + Gdx.graphics.getFramesPerSecond(), 20, 60);
         font.draw(batch, "+ / - keys: Adjust outline width", 20, 80);
-        font.draw(batch, "Current width: " + String.format("%.2f", outlineWidths[currentOutlineWidthIndex]) + " pixels", 20, 100);
+        font.draw(batch, "Current width: " + String.format("%.2f", currentOutlineWidth) + " pixels", 20, 100);
         font.draw(batch, "Shadow Bias: " + String.format("%.2f", shadowBias) + " (full-screen mode)", 20, 120);
         font.draw(batch, "Skybox: " + SKYBOX_NAMES[currentSkyboxIndex] + "  (S = switch)", 20, 140);
         font.draw(batch, "T = Toggle render mode", 20, 160);
@@ -572,14 +562,12 @@ public class EdgeDetectionOutlineTest extends GdxTest {
             cubemap = null;
         }
 
-        // Dispose edge detection shaders
-        for (WgShaderProgram shader : edgeDetectionShaders) {
-            if (shader != null) {
-                try {
-                    shader.dispose();
-                } catch (Exception e) {
-                    System.err.println("Error disposing shader: " + e.getMessage());
-                }
+        // Dispose edge detection shader
+        if (edgeDetectionShader != null) {
+            try {
+                edgeDetectionShader.dispose();
+            } catch (Exception e) {
+                System.err.println("Error disposing shader: " + e.getMessage());
             }
         }
 
