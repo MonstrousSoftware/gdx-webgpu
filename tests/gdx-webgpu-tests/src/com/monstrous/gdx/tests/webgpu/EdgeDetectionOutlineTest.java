@@ -71,7 +71,7 @@ public class EdgeDetectionOutlineTest extends GdxTest {
     boolean[] keyPressed = new boolean[256];
     private Viewport viewport;
     private Array<Disposable> disposables;
-    private boolean showFullScreenModel = true;  // Toggle between split-screen and full-screen render
+    private boolean showFullScreenModel = false;  // Toggle between split-screen and full-screen render
     WgDirectionalShadowLight shadowLight;
     WgCubemap cubemap;
     SkyBox skybox;
@@ -218,14 +218,14 @@ public class EdgeDetectionOutlineTest extends GdxTest {
         Material groundMat = new Material(ColorAttribute.createDiffuse(0.25f, 0.28f, 0.32f, 1f));
         groundModel = builder.createBox(16f, 0.1f, 16f, groundMat, vertexUsage);
         groundInstance = new WgModelInstance(groundModel);
-        groundInstance.transform.setToTranslation(0, -0.5f, 0);
+        groundInstance.transform.setToTranslation(0, -0.1f, 0);
         disposables.add(groundModel);
 
         // Load animated morph model
         morphModel = loadMorphModel();
         if (morphModel != null) {
             morphInstance = new WgModelInstance(morphModel);
-            morphInstance.transform.setToTranslation(2, 0, 0);
+            morphInstance.transform.setToTranslation(-1, 0, 0);
             if (morphInstance.animations != null && morphInstance.animations.size > 0) {
                 morphAnimationController = new AnimationController(morphInstance);
                 morphAnimationController.setAnimation(morphInstance.animations.get(0).id, -1);
@@ -237,7 +237,7 @@ public class EdgeDetectionOutlineTest extends GdxTest {
         skinnedModel = loadSkinnedModel();
         if (skinnedModel != null) {
             skinnedInstance = new WgModelInstance(skinnedModel);
-            skinnedInstance.transform.setToTranslation(4, 0, -2);
+            skinnedInstance.transform.setToTranslation(1, 0, 2);
             if (skinnedInstance.animations != null && skinnedInstance.animations.size > 0) {
                 skinnedAnimationController = new AnimationController(skinnedInstance);
                 skinnedAnimationController.setAnimation(skinnedInstance.animations.get(0).id, -1);
@@ -414,7 +414,7 @@ public class EdgeDetectionOutlineTest extends GdxTest {
 
         // Update static model transforms
         staticInstances[0].transform.idt();
-        staticInstances[0].transform.translate(-4, 1, 0);
+        staticInstances[0].transform.translate(1, 1, -3);
         staticInstances[0].transform.rotate(com.badlogic.gdx.math.Vector3.Y, staticRotations[0]);
 
         staticInstances[1].transform.idt();
@@ -434,11 +434,6 @@ public class EdgeDetectionOutlineTest extends GdxTest {
 
         // Render scene to screen directly
         renderScene(cam, environment);
-
-        // Render skybox for PBR environment mapping
-        if (skybox != null) {
-            skybox.renderPass(cam);
-        }
 
         // Draw info text overlay
         viewport.apply();
@@ -506,6 +501,11 @@ public class EdgeDetectionOutlineTest extends GdxTest {
             modelBatch.render(skinnedInstance, env);
         }
         modelBatch.end();
+
+        // Render skybox for PBR environment mapping
+        if (skybox != null) {
+            skybox.renderPass(cam);
+        }
     }
 
     private void applyCurrentShadowBias() {

@@ -402,10 +402,25 @@ public class WgDefaultShader extends WgShader implements Disposable {
         // Clone the formats array — getColorFormats() returns the render pass's internal array,
         // which could be mutated when the pooled pass is reused, corrupting the cached spec.
         WGPUTextureFormat[] formats = pass.getColorFormats();
-        if (pipelineSpec.colorFormats == null || pipelineSpec.colorFormats.length != formats.length) {
+        boolean formatsChanged = pipelineSpec.colorFormats == null
+                || pipelineSpec.colorFormats.length != formats.length;
+        if (!formatsChanged) {
+            for (int i = 0; i < formats.length; i++) {
+                if (formats[i] != pipelineSpec.colorFormats[i]) {
+                    formatsChanged = true;
+                    break;
+                }
+            }
+        }
+        if (formatsChanged) {
             pipelineSpec.colorFormats = formats.clone();
-        } else {
-            System.arraycopy(formats, 0, pipelineSpec.colorFormats, 0, formats.length);
+            // Clear the cached shader so WebGPUPipeline will call buildPrefix() fresh for the new
+            // target format — this re-evaluates hasLinearOutput() and sets GAMMA_CORRECTION correctly.
+            // Only do this for auto-compiled shaders (shaderSource != null); pre-built shaders are
+            // external and do not depend on hasLinearOutput(), so they must be kept as-is.
+            if (pipelineSpec.shaderSource != null) {
+                pipelineSpec.shader = null;
+            }
         }
         pipelineSpec.numSamples = pass.getSampleCount();
         pipelineSpec.invalidateHashCode();

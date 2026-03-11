@@ -55,8 +55,13 @@ public class WgFrameBuffer implements Disposable {
 
         colorTextures = new WgTexture[formats.length];
         for (int i = 0; i < formats.length; i++) {
-            colorTextures[i] = new WgTexture("fbo color " + i, width, height, false, textureUsage, formats[i], 1,
-                    formats[i]);
+            // Only promote the first (color) target to its sRGB variant so the GPU handles gamma
+            // encoding/decoding automatically, matching the direct-to-screen gamma path.
+            // Additional targets (e.g. object-ID targets) must keep their exact format so that
+            // the encoded data values are stored and sampled verbatim.
+            WGPUTextureFormat fboFormat = (i == 0) ? toSrgbFormat(formats[i]) : formats[i];
+            colorTextures[i] = new WgTexture("fbo color " + i, width, height, false, textureUsage, fboFormat, 1,
+                    fboFormat);
         }
         colorTexture = colorTextures[0];
 
@@ -106,6 +111,27 @@ public class WgFrameBuffer implements Disposable {
 
     public int getHeight() {
         return colorTexture.getHeight();
+    }
+
+    /**
+     * Maps a plain (non-sRGB) color format to its sRGB equivalent, or returns the format unchanged
+     * if it is already sRGB or has no sRGB counterpart (e.g. the object-ID target RGBA8Unorm used
+     * for non-color data should stay as-is — but for the purposes of correct gamma reproduction
+     * we promote it so all targets match the rendering contract).
+     * <p>
+     * Promoting to sRGB means:
+     * <ul>
+     *   <li>On render attachment write the GPU converts linear → sRGB automatically.</li>
+     *   <li>On texture sample the GPU converts sRGB → linear automatically.</li>
+     * </ul>
+     * This gives the same single-gamma-correction round-trip as rendering directly to the screen.
+     */
+    private static WGPUTextureFormat toSrgbFormat(WGPUTextureFormat format) {
+        switch (format) {
+            case RGBA8Unorm:  return WGPUTextureFormat.RGBA8UnormSrgb;
+            case BGRA8Unorm:  return WGPUTextureFormat.BGRA8UnormSrgb;
+            default:          return format; // already sRGB or a non-color format
+        }
     }
 
     @Override
