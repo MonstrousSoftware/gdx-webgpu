@@ -42,11 +42,6 @@ public abstract class WebGPUContext {
     public WgTexture depthTexture;
     public int frameNumber;
 
-    // Pre-allocated scratch arrays for pushTargetView(WgTexture[]) to avoid per-call heap allocation.
-    // Sized to the actual number of textures; grown as needed so length always equals the valid element count.
-    private WGPUTextureView[] texturePushViewScratch = new WGPUTextureView[1];
-    private WGPUTextureFormat[] texturePushFormatScratch = new WGPUTextureFormat[1];
-
     abstract WGPUDevice getDevice();
 
     abstract WGPUQueue getQueue();
@@ -71,22 +66,6 @@ public abstract class WebGPUContext {
 
     public abstract RenderOutputState pushTargetView(RenderOutputState outState, WGPUTextureView[] textureViews,
             WGPUTextureFormat[] textureFormats, int width, int height, WgTexture depthTexture);
-
-    public RenderOutputState pushTargetView(RenderOutputState outState, WgTexture[] textures, int width, int height,
-            WgTexture depthTexture) {
-        int count = textures.length;
-        // Reallocate only when count has grown — arrays are always exactly count elements,
-        // so that when WebGPUApplication assigns targetViews = textureViews the length is correct.
-        if (count != texturePushViewScratch.length) {
-            texturePushViewScratch = new WGPUTextureView[count];
-            texturePushFormatScratch = new WGPUTextureFormat[count];
-        }
-        for (int i = 0; i < count; i++) {
-            texturePushViewScratch[i] = textures[i].getTextureView();
-            texturePushFormatScratch[i] = textures[i].getFormat();
-        }
-        return pushTargetView(outState, texturePushViewScratch, texturePushFormatScratch, width, height, depthTexture);
-    }
 
     /**
      * Restore previous output target.
