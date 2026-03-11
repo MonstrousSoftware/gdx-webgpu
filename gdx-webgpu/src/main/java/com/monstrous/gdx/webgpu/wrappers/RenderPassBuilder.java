@@ -82,6 +82,93 @@ public class RenderPassBuilder {
     }
 
     /**
+     * Create a render pass targeting only the first color attachment of the current context (ignoring additional MRT
+     * targets). This is used e.g. by the skybox which only writes to one color target even when inside an MRT FBO.
+     * The pipeline used with this pass must declare exactly one color format (the first context surface format).
+     *
+     * @param name pass name
+     * @param clearDepth whether to clear the depth buffer
+     * @param sampleCount samples per pixel
+     * @return the created WebGPURenderPass
+     */
+    public static WebGPURenderPass createFirstTargetOnly(String name, boolean clearDepth, int sampleCount) {
+        WgGraphics gfx = (WgGraphics) Gdx.graphics;
+        WebGPUContext webgpu = gfx.getContext();
+
+        if (webgpu.encoder == null)
+            throw new RuntimeException("Encoder must be set before calling RenderPassBuilder.createFirstTargetOnly()");
+        if (!webgpu.encoder.isValid())
+            throw new RuntimeException("Encoder not valid for call of RenderPassBuilder.createFirstTargetOnly()");
+
+        WGPURenderPassDescriptor renderPassDescriptor = WGPURenderPassDescriptor.obtain();
+        renderPassDescriptor.setNextInChain(WGPUChainedStruct.NULL);
+        renderPassDescriptor.setOcclusionQuerySet(WGPUQuerySet.NULL);
+        renderPassDescriptor.setLabel(name);
+
+        WGPUVectorRenderPassColorAttachment colorAttachments = WGPUVectorRenderPassColorAttachment.obtain();
+
+        // Only use the first color target
+        WGPURenderPassColorAttachment renderPassColorAttachment = WGPURenderPassColorAttachment.obtain();
+        renderPassColorAttachment.setNextInChain(WGPUChainedStruct.NULL);
+        renderPassColorAttachment.setStoreOp(WGPUStoreOp.Store);
+        renderPassColorAttachment.setDepthSlice(-1);
+        renderPassColorAttachment.setLoadOp(WGPULoadOp.Load); // preserve existing scene color
+
+        if (sampleCount > 1) {
+            renderPassColorAttachment.setView(webgpu.getMultiSamplingTexture().getTextureView());
+            renderPassColorAttachment.setResolveTarget(webgpu.getTargetViews()[0]);
+        } else {
+            renderPassColorAttachment.setView(webgpu.targetViews[0]);
+            renderPassColorAttachment.setResolveTarget(WGPUTextureView.NULL);
+        }
+        colorAttachments.push_back(renderPassColorAttachment);
+
+        renderPassDescriptor.setColorAttachments(colorAttachments);
+
+        WgTexture depthTexture = webgpu.getDepthTexture();
+        WGPURenderPassDepthStencilAttachment depthStencilAttachment = WGPURenderPassDepthStencilAttachment.obtain();
+        depthStencilAttachment.setDepthClearValue(1.0f);
+        depthStencilAttachment.setDepthLoadOp(clearDepth ? WGPULoadOp.Clear : WGPULoadOp.Load);
+        depthStencilAttachment.setDepthStoreOp(WGPUStoreOp.Store);
+        depthStencilAttachment.setDepthReadOnly(false);
+        depthStencilAttachment.setStencilClearValue(0);
+        depthStencilAttachment.setStencilLoadOp(WGPULoadOp.Undefined);
+        depthStencilAttachment.setStencilStoreOp(WGPUStoreOp.Undefined);
+        depthStencilAttachment.setStencilReadOnly(true);
+        depthStencilAttachment.setView(depthTexture.getTextureView());
+        renderPassDescriptor.setDepthStencilAttachment(depthStencilAttachment);
+
+        GPUTimer timer = webgpu.getGPUTimer();
+        if (timer.isEnabled()) {
+            timer.addPass(name);
+            WGPURenderPassTimestampWrites query = WGPURenderPassTimestampWrites.obtain();
+            query.setBeginningOfPassWriteIndex(timer.getStartIndex());
+            query.setEndOfPassWriteIndex(timer.getStopIndex());
+            query.setQuerySet(timer.getQuerySet());
+            renderPassDescriptor.setTimestampWrites(query);
+        }
+
+        WebGPURenderPass pass = WebGPURenderPass.obtain();
+
+        Rectangle view = webgpu.getViewportRectangle();
+        int width = (int) view.width;
+        int height = (int) view.height;
+
+        WGPUTextureFormat[] singleFormat = new WGPUTextureFormat[] { webgpu.surfaceFormats[0] };
+        pass.begin(webgpu.encoder, renderPassDescriptor, RenderPassType.COLOR_AND_DEPTH, singleFormat, 1,
+                depthTexture.getFormat(), sampleCount, width, height);
+
+        pass.setViewport(view.x, view.y, view.width, view.height, 0, 1);
+
+        if (webgpu.isScissorEnabled()) {
+            Rectangle scissor = webgpu.getScissor();
+            pass.setScissorRect((int) scissor.x, (int) scissor.y, (int) scissor.width, (int) scissor.height);
+        }
+
+        return pass;
+    }
+
+    /**
      * Create a render pass
      *
      * @param clearColor background color, null to not clear the screen, e.g. for a UI
