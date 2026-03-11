@@ -232,6 +232,7 @@ public class PipelineSpecification {
                 && Objects.equals(vertexLayout, that.vertexLayout) && vertexStepMode == that.vertexStepMode
                 && indexFormat == that.indexFormat && topology == that.topology
                 && Objects.equals(environment, that.environment) && Objects.equals(shaderSource, that.shaderSource)
+                && Objects.equals(shader, that.shader)
                 && Objects.equals(vertexShaderEntryPoint, that.vertexShaderEntryPoint)
                 && Objects.equals(fragmentShaderEntryPoint, that.fragmentShaderEntryPoint)
                 && Arrays.equals(colorFormats, that.colorFormats)
@@ -248,7 +249,7 @@ public class PipelineSpecification {
         if (!dirty)
             return hash;
         int result = Objects.hash(name, vertexAttributes, vertexLayout, vertexStepMode, indexFormat, topology,
-                environment, shaderSource, vertexShaderEntryPoint, fragmentShaderEntryPoint, useDepthTest,
+                environment, shaderSource, shader, vertexShaderEntryPoint, fragmentShaderEntryPoint, useDepthTest,
                 noDepthAttachment, isSkyBox, isDepthPass, afterDepthPrepass, numSamples, blendingEnabled, blendSrcColor,
                 blendDstColor, blendOpColor, blendSrcAlpha, blendDstAlpha, blendOpAlpha, cullMode, depthFormat,
                 maxDirLights, maxPointLights, usePBR, customPrefix);
