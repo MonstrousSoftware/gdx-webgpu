@@ -17,7 +17,7 @@ import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelInstance;
-import com.monstrous.gdx.webgpu.graphics.g3d.attributes.PickingIdAttribute;
+import com.monstrous.gdx.webgpu.graphics.g3d.attributes.IdAttribute;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLBModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLTFModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgModelLoader;
@@ -25,7 +25,7 @@ import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
 import com.monstrous.gdx.webgpu.graphics.utils.WgFrameBuffer;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenReader;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
-import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgPickingShaderProvider;
+import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgIDShaderProvider;
 import com.github.xpenatan.webgpu.WGPUTextureFormat;
 
 /**
@@ -70,7 +70,7 @@ public class Picking3DTest extends GdxTest {
         // Build MRT shader with picking ID support
         WgModelBatch.Config config = new WgModelBatch.Config();
         config.numBones = 80; // For animated models
-        modelBatch = new WgModelBatch(new WgPickingShaderProvider(config));
+        modelBatch = new WgModelBatch(new WgIDShaderProvider(config, true));
 
         cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         cam.position.set(10, 10, 10);
@@ -94,7 +94,7 @@ public class Picking3DTest extends GdxTest {
         staticModels[0] = modelBuilder.createBox(2f, 2f, 2f,
                 new Material(
                     ColorAttribute.createDiffuse(Color.RED),
-                    new PickingIdAttribute(nextPickingId++)
+                    new IdAttribute(nextPickingId++)
                 ),
                 VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
         staticInstances[0] = new WgModelInstance(staticModels[0]);
@@ -104,7 +104,7 @@ public class Picking3DTest extends GdxTest {
         staticModels[1] = modelBuilder.createSphere(2f, 2f, 2f, 16, 16,
                 new Material(
                     ColorAttribute.createDiffuse(Color.GREEN),
-                    new PickingIdAttribute(nextPickingId++)
+                    new IdAttribute(nextPickingId++)
                 ),
                 VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
         staticInstances[1] = new WgModelInstance(staticModels[1]);
@@ -114,7 +114,7 @@ public class Picking3DTest extends GdxTest {
         staticModels[2] = modelBuilder.createCylinder(1.5f, 3f, 1.5f, 16,
                 new Material(
                     ColorAttribute.createDiffuse(Color.BLUE),
-                    new PickingIdAttribute(nextPickingId++)
+                    new IdAttribute(nextPickingId++)
                 ),
                 VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
         staticInstances[2] = new WgModelInstance(staticModels[2]);
@@ -124,7 +124,7 @@ public class Picking3DTest extends GdxTest {
         staticModels[3] = modelBuilder.createCone(1.5f, 3f, 1.5f, 16,
                 new Material(
                     ColorAttribute.createDiffuse(Color.YELLOW),
-                    new PickingIdAttribute(nextPickingId++)
+                    new IdAttribute(nextPickingId++)
                 ),
                 VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
         staticInstances[3] = new WgModelInstance(staticModels[3]);
@@ -141,7 +141,7 @@ public class Picking3DTest extends GdxTest {
                 if (!material.has(ColorAttribute.Diffuse)) {
                     material.set(ColorAttribute.createDiffuse(Color.WHITE));
                 }
-                material.set(new PickingIdAttribute(nextPickingId++));
+                material.set(new IdAttribute(nextPickingId++));
             }
 
             // Setup morph animation if model has animations
@@ -164,7 +164,7 @@ public class Picking3DTest extends GdxTest {
                 if (!material.has(ColorAttribute.Diffuse)) {
                     material.set(ColorAttribute.createDiffuse(Color.WHITE));
                 }
-                material.set(new PickingIdAttribute(nextPickingId++));
+                material.set(new IdAttribute(nextPickingId++));
             }
 
             if (animatedInstance.animations != null && animatedInstance.animations.size > 0) {
@@ -235,7 +235,7 @@ public class Picking3DTest extends GdxTest {
     private void applyPickingIdToModel(Model model, int pickingId) {
         if (model == null) return;
         for (Material material : model.materials) {
-            material.set(new PickingIdAttribute(pickingId));
+            material.set(new IdAttribute(pickingId));
         }
     }
 
@@ -313,7 +313,7 @@ public class Picking3DTest extends GdxTest {
         screenReader.readPixelAsync(mrtFbo, 1, fbX, fbY, new WgScreenReader.PixelReadCallback() {
             @Override
             public void onPixelRead(int r, int g, int b, int a) {
-                int pickingId = PickingIdAttribute.decodePickingIdFromBytes(r, g, b);
+                int pickingId = IdAttribute.decodeIdFromBytes(r, g, b);
 
                 if (pickingId < 1 || pickingId > nextPickingId - 1) {
                     selectedModelId = -1;

@@ -4,37 +4,36 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g3d.Attribute;
 
 /**
- * Attribute for encoding picking IDs as a color value in the material.
- * The picking ID is encoded in the red channel as a float (0-255).
+ * Attribute for encoding IDs as a color value in the material.
  */
-public class PickingIdAttribute extends Attribute {
-    public static final String Alias = "pickingId";
+public class IdAttribute extends Attribute {
+    public static final String Alias = "colored_id";
     public static final long Type = register(Alias);
 
     public Color color = new Color(0, 0, 0, 1);
 
-    public PickingIdAttribute() {
+    public IdAttribute() {
         super(Type);
     }
 
-    public PickingIdAttribute(float pickingId) {
+    public IdAttribute(float id) {
         super(Type);
-        setPickingId(pickingId);
+        setId(id);
     }
 
-    public PickingIdAttribute(Color color) {
+    public IdAttribute(Color color) {
         super(Type);
         this.color.set(color);
     }
 
-    public void setPickingId(float pickingId) {
+    public void setId(float pickingId) {
         // Use static method to encode picking ID
-        this.color.set(encodePickingId((int) pickingId));
+        this.color.set(encodeId((int) pickingId));
     }
 
     public float getPickingId() {
         // Use static method to decode ID from color
-        return decodePickingId(this.color);
+        return decodId(this.color);
     }
 
     /**
@@ -50,7 +49,7 @@ public class PickingIdAttribute extends Attribute {
      * @param id The picking ID to encode (0-16777215)
      * @return A Color with the encoded ID
      */
-    public static Color encodePickingId(int id) {
+    public static Color encodeId(int id) {
         id = Math.min(16777215, Math.max(0, id)); // Clamp to 24-bit range
 
         int r = id & 0xFF;              // Low byte (bits 0-7)
@@ -67,7 +66,7 @@ public class PickingIdAttribute extends Attribute {
      * @param color The Color containing the encoded ID
      * @return The decoded picking ID (0-16777215)
      */
-    public static int decodePickingId(Color color) {
+    public static int decodId(Color color) {
         int r = Math.round(color.r * 255.0f);
         int g = Math.round(color.g * 255.0f);
         int b = Math.round(color.b * 255.0f);
@@ -85,7 +84,7 @@ public class PickingIdAttribute extends Attribute {
      * @param b Blue channel (0-255) - High byte
      * @return The decoded picking ID (0-16777215)
      */
-    public static int decodePickingIdFromBytes(int r, int g, int b) {
+    public static int decodeIdFromBytes(int r, int g, int b) {
         return r | (g << 8) | (b << 16);
     }
 
@@ -95,13 +94,13 @@ public class PickingIdAttribute extends Attribute {
 
     @Override
     public Attribute copy() {
-        return new PickingIdAttribute(this.color);
+        return new IdAttribute(this.color);
     }
 
     @Override
     public int compareTo(Attribute o) {
         if (type != o.type) return type < o.type ? -1 : 1;
-        PickingIdAttribute other = (PickingIdAttribute) o;
+        IdAttribute other = (IdAttribute) o;
         return this.color.toIntBits() - other.color.toIntBits();
     }
 }
