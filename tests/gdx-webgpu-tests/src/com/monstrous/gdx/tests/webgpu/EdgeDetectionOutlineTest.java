@@ -37,7 +37,7 @@ import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLBModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLTFModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDepthShader;
-import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgEdgeDetectionOutlineShaderProvider;
+import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgIDShaderProvider;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
 import com.monstrous.gdx.webgpu.graphics.utils.WgFrameBuffer;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
@@ -209,7 +209,7 @@ public class EdgeDetectionOutlineTest extends GdxTest {
         WgModelBatch.Config config = new WgModelBatch.Config();
         config.maxInstances = 100;
         config.numBones = 100;  // Increased to support SillyDancing model (65 bones)
-        modelBatch = new WgModelBatch(new WgEdgeDetectionOutlineShaderProvider(config));
+        modelBatch = new WgModelBatch(new WgIDShaderProvider(config, true));
         disposables.add(modelBatch);
 
         // Improved camera setup
