@@ -23,6 +23,7 @@ import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.ObjectIntMap;
 import com.github.xpenatan.webgpu.*;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 /* Adapted to allow different vertex layouts depending on the context, e.g. different meshes.
@@ -254,9 +255,17 @@ public class WebGPUVertexLayout {
     public int hashCode() {
         int result = Objects.hash(attributes, stepMode);
         // Include attributeLocations entries in a order-stable way
-        for (ObjectIntMap.Entry<String> entry : attributeLocations) {
-            result = 31 * result + entry.key.hashCode();
-            result = 31 * result + entry.value;
+        ObjectIntMap.Keys<String> keys = attributeLocations.keys();
+        int size = attributeLocations.size;
+        String[] keyArray = new String[size];
+        int i = 0;
+        for (String key : keys) {
+            keyArray[i++] = key;
+        }
+        Arrays.sort(keyArray);
+        for (String key : keyArray) {
+            result = 31 * result + key.hashCode();
+            result = 31 * result + attributeLocations.get(key, 0);
         }
         return result;
     }

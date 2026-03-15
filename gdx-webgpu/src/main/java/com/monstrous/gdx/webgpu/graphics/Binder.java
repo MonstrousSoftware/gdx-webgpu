@@ -129,7 +129,7 @@ public class Binder implements Disposable {
 
     // hack to use tuple as single key
     private int combine(int groupId, int bindingId) {
-        return groupId << 16 + bindingId;
+        return (groupId << 16) | (bindingId & 0xFFFF);
     }
 
     /** note that buffer.flush() is needed to write the uniform values to the GPU. */

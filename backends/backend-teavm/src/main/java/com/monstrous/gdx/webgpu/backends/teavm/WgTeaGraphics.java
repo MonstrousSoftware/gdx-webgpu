@@ -85,10 +85,33 @@ public class WgTeaGraphics extends WebGraphics implements WgGraphics {
     }
 
     @Override
-    public void render(ApplicationListener listener) {
-        context.renderFrame(listener);
+    public void begin() {
+        if (context != null) {
+            context.update();
+            if (!webGPUReady && context.isReady()) {
+                WebApplication teaApplication = WebApplication.get();
+                teaApplication.subtractInitQueue();
+                webGPUReady = true;
+            }
+        }
+        super.begin();
+        context.beginFrame();
     }
 
+    @Override
+    public void end() {
+        context.endFrame();
+    }
+
+    @Override
+    public void render(ApplicationListener listener) {
+        listener.render();
+    }
+
+    /**
+     * @deprecated use {@link #begin()} instead
+     */
+    @Deprecated
     @Override
     public void update() {
         if (context != null) {

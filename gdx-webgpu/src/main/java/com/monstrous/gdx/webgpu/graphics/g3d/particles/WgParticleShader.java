@@ -149,10 +149,12 @@ public class WgParticleShader extends WgShader {
         binder.defineBinding("sampler", 0, 2);
         // define uniforms
         binder.defineUniform("projectionViewTransform", 0, 0, 0);
-        binder.defineUniform("projectionTransform", 0, 1, 16 * Float.BYTES);
+        binder.defineUniform("projectionTransform", 0, 0, 16 * Float.BYTES);
 
         // set binding 0 to uniform buffer
         binder.setBuffer("uniforms", uniformBuffer, 0, uniformBufferSize);
+        binder.defineUniform("projectionViewTransform", 0, 0, 0);
+        binder.defineUniform("projectionTransform", 0, 0, 16 * Float.BYTES);
 
         // get pipeline layout which aggregates all the bind group layouts
         WGPUPipelineLayout pipelineLayout = binder.getPipelineLayout("PointSprite pipeline layout");
@@ -326,5 +328,5 @@ public class WgParticleShader extends WgShader {
         layout.end();
         return layout;
     }
-
 }
+

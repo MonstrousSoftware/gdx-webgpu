@@ -57,6 +57,10 @@ public class SkyBox implements Disposable {
 
     /** Construct a skybox from a cube map */
     public SkyBox(WgCubemap cubeMap) {
+        this(cubeMap, "shaders/skybox.wgsl");
+    }
+
+    public SkyBox(WgCubemap cubeMap, String shaderPath) {
         this.cubeMap = cubeMap;
         WgGraphics gfx = (WgGraphics) Gdx.graphics;
         WebGPUContext webgpu = gfx.getContext();
@@ -67,7 +71,7 @@ public class SkyBox implements Disposable {
 
         pipelineLayout = new WebGPUPipelineLayout("SkyBox Pipeline Layout", bindGroupLayout);
 
-        shaderSource = Gdx.files.internal("shaders/skybox.wgsl").readString();
+        shaderSource = Gdx.files.internal(shaderPath).readString();
 
         bindGroup = makeBindGroup(bindGroupLayout, uniformBuffer);
 
@@ -175,8 +179,7 @@ public class SkyBox implements Disposable {
         // Define binding layout
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout();
         layout.begin();
-        layout.addBuffer(0, WGPUShaderStage.Fragment, WGPUBufferBindingType.Uniform, FRAME_UB_SIZE, false); // uniform
-                                                                                                            // buffer
+        layout.addBuffer(0, WGPUShaderStage.Vertex.or(WGPUShaderStage.Fragment), WGPUBufferBindingType.Uniform, FRAME_UB_SIZE, false); // uniform buffer
         layout.addTexture(1, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension.Cube,
                 false); // cube map texture
         layout.addSampler(2, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering); // cube map sampler

@@ -27,9 +27,11 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.WgCubemap;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
@@ -37,7 +39,6 @@ import com.monstrous.gdx.webgpu.graphics.g3d.attributes.PBRFloatAttribute;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute;
 import com.monstrous.gdx.webgpu.graphics.g3d.environment.ibl.HDRLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.environment.ibl.IBLGenerator;
-import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDefaultShader;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
 import com.monstrous.gdx.webgpu.wrappers.SkyBox;
 
@@ -55,10 +56,14 @@ public class IBL_Spheres extends GdxTest {
     SkyBox skyBox;
 
     WgTexture equiRectangular;
+    WgCubemap envMap;
+    WgCubemap irradianceMap;
+    WgCubemap radianceMap;
     private Array<ModelInstance> instances;
     private Array<Disposable> disposables;
     WgModelBatch modelBatch;
     Environment environment;
+    private boolean validated = false;
 
     public void create() {
 
@@ -78,30 +83,35 @@ public class IBL_Spheres extends GdxTest {
         // equiRectangular = HDRLoader.loadHDR(Gdx.files.internal("data/hdr/brown_photostudio_02_1k.hdr"), true);
 
         // Generate environment map from equirectangular texture
-        WgCubemap envMap = IBLGenerator.buildCubeMapFromEquirectangularTexture(equiRectangular, 1024);
+        envMap = IBLGenerator.buildCubeMapFromEquirectangularTexture(equiRectangular, 1024);
 
         // Diffuse cube map (irradiance map)
         //
-        WgCubemap irradianceMap = IBLGenerator.buildIrradianceMap(envMap, 64);
+        irradianceMap = IBLGenerator.buildIrradianceMap(envMap, 64);
 
         // Specular cube map (radiance map)
         //
-        WgCubemap radianceMap = IBLGenerator.buildRadianceMap(envMap, 128);
+        radianceMap = IBLGenerator.buildRadianceMap(envMap, 128);
 
-        // use cube map as a sky box
-        skyBox = new SkyBox(irradianceMap);
+        // use full environment cube map as a sky box (not the blurry irradianceMap)
+        skyBox = new SkyBox(envMap);
 
-        modelBatch = new WgModelBatch();
+        // use same config as IBL_Sliders/IBL_GenerateOutdoor: no directional lights (IBL handles ambient),
+        // explicit point light count avoids uninitialized uniform memory from default maxDirectionalLights=3
+        WgModelBatch.Config config = new WgModelBatch.Config();
+        config.maxDirectionalLights = 0;
+        config.maxPointLights = 3;
+        modelBatch = new WgModelBatch(config);
 
         environment = new Environment();
         environment.set(new WgCubemapAttribute(DiffuseCubeMap, irradianceMap)); // add irradiance map
         environment.set(new WgCubemapAttribute(SpecularCubeMap, radianceMap)); // add radiance map
 
-        // Add lighting (a few point lights)
+        // Add lighting (a few point lights on the camera side so they illuminate the visible faces)
         float intensity = 25f;
-        environment.add(new PointLight().setColor(Color.WHITE).setPosition(-10f, 10f, 10).setIntensity(intensity));
-        environment.add(new PointLight().setColor(Color.WHITE).setPosition(10f, 10f, 10).setIntensity(intensity));
-        environment.add(new PointLight().setColor(Color.WHITE).setPosition(10f, -10f, 10).setIntensity(intensity));
+        environment.add(new PointLight().setColor(Color.WHITE).setPosition(-10f, 10f, -10).setIntensity(intensity));
+        environment.add(new PointLight().setColor(Color.WHITE).setPosition(10f, 10f, -10).setIntensity(intensity));
+        environment.add(new PointLight().setColor(Color.WHITE).setPosition(10f, -10f, -10).setIntensity(intensity));
 
         // Models
         //
@@ -120,6 +130,10 @@ public class IBL_Spheres extends GdxTest {
     }
 
     public void render() {
+        if (!validated) {
+            validate();
+            validated = true;
+        }
         controller.update();
 
         modelBatch.begin(cam, Color.BLACK, true);
@@ -129,11 +143,71 @@ public class IBL_Spheres extends GdxTest {
         skyBox.renderPass(cam, false);
     }
 
+    /** Validate that all resources and state are set up correctly. Logs warnings for any problems found. */
+    private void validate() {
+        boolean ok = true;
+
+        // Check viewport
+        WgGraphics gfx = (WgGraphics) Gdx.graphics;
+        Rectangle vp = gfx.getContext().getViewportRectangle();
+        int expectedW = Gdx.graphics.getWidth();
+        int expectedH = Gdx.graphics.getHeight();
+        if (vp.width != expectedW || vp.height != expectedH) {
+            Gdx.app.error("IBL_Spheres", "VIEWPORT MISMATCH: viewport=" + vp + " expected=" + expectedW + "x" + expectedH
+                    + ". Correcting viewport.");
+            gfx.getContext().setViewportRectangle(0, 0, expectedW, expectedH);
+            ok = false;
+        }
+
+        // Check environment has cubemaps
+        if (!environment.has(WgCubemapAttribute.DiffuseCubeMap)) {
+            Gdx.app.error("IBL_Spheres", "Environment MISSING DiffuseCubeMap attribute.");
+            ok = false;
+        }
+        if (!environment.has(WgCubemapAttribute.SpecularCubeMap)) {
+            Gdx.app.error("IBL_Spheres", "Environment MISSING SpecularCubeMap attribute.");
+            ok = false;
+        }
+
+        // Check instances
+        if (instances == null || instances.size == 0) {
+            Gdx.app.error("IBL_Spheres", "No model instances to render.");
+            ok = false;
+        }
+
+        // Check camera
+        if (cam.viewportWidth <= 0 || cam.viewportHeight <= 0) {
+            Gdx.app.error("IBL_Spheres", "Camera has invalid viewport: " + cam.viewportWidth + "x" + cam.viewportHeight);
+            ok = false;
+        }
+
+        // Check cubemap resources
+        if (envMap == null) {
+            Gdx.app.error("IBL_Spheres", "envMap is null.");
+            ok = false;
+        }
+        if (irradianceMap == null) {
+            Gdx.app.error("IBL_Spheres", "irradianceMap is null.");
+            ok = false;
+        }
+        if (radianceMap == null) {
+            Gdx.app.error("IBL_Spheres", "radianceMap is null.");
+            ok = false;
+        }
+
+        if (ok) {
+            Gdx.app.log("IBL_Spheres", "Validation PASSED: viewport=" + (int) vp.width + "x" + (int) vp.height
+                    + ", instances=" + instances.size + ", envMaps OK");
+        }
+    }
+
     @Override
     public void resize(int width, int height) {
         cam.viewportWidth = width;
         cam.viewportHeight = height;
         cam.update();
+        // Ensure WebGPU viewport matches window size (safety net in case IBL generation leaves it incorrect)
+        ((WgGraphics) Gdx.graphics).getContext().setViewportRectangle(0, 0, width, height);
     }
 
     private Model buildSphere(Color albedo, float metallic, float roughness) {
@@ -149,6 +223,10 @@ public class IBL_Spheres extends GdxTest {
     public void dispose() {
         skyBox.dispose();
         equiRectangular.dispose();
+        envMap.dispose();
+        irradianceMap.dispose();
+        radianceMap.dispose();
+        modelBatch.dispose();
         for (Disposable disposable : disposables)
             disposable.dispose();
     }

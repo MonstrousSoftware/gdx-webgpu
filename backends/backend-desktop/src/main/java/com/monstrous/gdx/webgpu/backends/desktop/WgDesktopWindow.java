@@ -447,51 +447,56 @@ public class WgDesktopWindow implements Disposable {
     }
 
     boolean update() {
-        if (!listenerInitialized) {
-            initializeListener();
+        graphics.context.beginFrame();
+        try {
+            if (!listenerInitialized) {
+                initializeListener();
+            }
+            synchronized (runnables) {
+                executedRunnables.addAll(runnables);
+                runnables.clear();
+            }
+            for (Runnable runnable : executedRunnables) {
+                runnable.run();
+            }
+            boolean shouldRender = executedRunnables.size > 0 || graphics.isContinuousRendering();
+            executedRunnables.clear();
+
+            if (!iconified)
+                input.update();
+
+            synchronized (this) {
+                // original libgdx code:
+                // shouldRender |= requestRendering && !iconified;
+
+                // don't render when iconified
+                shouldRender |= requestRendering;
+                shouldRender &= !iconified;
+                requestRendering = false;
+            }
+
+            // In case glfw_async is used, we need to resize outside the GLFW
+            if (asyncResized) {
+                asyncResized = false;
+                graphics.updateFramebufferInfo();
+                // graphics.gl20.glViewport(0, 0, graphics.getBackBufferWidth(), graphics.getBackBufferHeight());
+                listener.resize(graphics.getWidth(), graphics.getHeight());
+                graphics.update();
+                return true;
+            }
+
+            if (shouldRender) {
+                graphics.update();
+                listener.render();
+            }
+
+            if (!iconified)
+                input.prepareNext();
+
+            return shouldRender;
+        } finally {
+            graphics.context.endFrame();
         }
-        synchronized (runnables) {
-            executedRunnables.addAll(runnables);
-            runnables.clear();
-        }
-        for (Runnable runnable : executedRunnables) {
-            runnable.run();
-        }
-        boolean shouldRender = executedRunnables.size > 0 || graphics.isContinuousRendering();
-        executedRunnables.clear();
-
-        if (!iconified)
-            input.update();
-
-        synchronized (this) {
-            // original libgdx code:
-            // shouldRender |= requestRendering && !iconified;
-
-            // don't render when iconified
-            shouldRender |= requestRendering;
-            shouldRender &= !iconified;
-            requestRendering = false;
-        }
-
-        // In case glfw_async is used, we need to resize outside the GLFW
-        if (asyncResized) {
-            asyncResized = false;
-            graphics.updateFramebufferInfo();
-            // graphics.gl20.glViewport(0, 0, graphics.getBackBufferWidth(), graphics.getBackBufferHeight());
-            listener.resize(graphics.getWidth(), graphics.getHeight());
-            graphics.update();
-            return true;
-        }
-
-        if (shouldRender) {
-            graphics.update();
-            graphics.context.renderFrame(listener);
-        }
-
-        if (!iconified)
-            input.prepareNext();
-
-        return shouldRender;
     }
 
     void requestRendering() {
@@ -527,8 +532,13 @@ public class WgDesktopWindow implements Disposable {
 
     @Override
     public void dispose() {
-        listener.pause();
-        listener.dispose();
+        graphics.context.beginFrame();
+        try {
+            listener.pause();
+            listener.dispose();
+        } finally {
+            graphics.context.endFrame();
+        }
         WgDesktopCursor.dispose(this);
         graphics.dispose();
         input.dispose();

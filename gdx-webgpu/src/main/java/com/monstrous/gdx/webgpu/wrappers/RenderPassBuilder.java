@@ -35,6 +35,7 @@ public class RenderPassBuilder {
     private static final WGPUTextureFormat[] scratchFormats = new WGPUTextureFormat[16];
     // Pre-allocated single-element array to avoid per-call allocation in the single-texture overload
     private static final WgTexture[] singleTextureArray = new WgTexture[1];
+    private static final Color scratchColor = new Color();
 
     public static WebGPURenderPass create(String name) {
         return create(name, null);
@@ -219,7 +220,8 @@ public class RenderPassBuilder {
             targetFormats = scratchFormats;
         }
 
-        if (passType == RenderPassType.COLOR_AND_DEPTH || passType == RenderPassType.COLOR_PASS
+        if (passType == RenderPassType.COLOR_AND_DEPTH || passType == RenderPassType.COLOR_AND_DEPTH_NO_CLEAR
+                || passType == RenderPassType.COLOR_PASS
                 || passType == RenderPassType.COLOR_PASS_AFTER_DEPTH_PREPASS || passType == RenderPassType.SHADOW_PASS
                 || passType == RenderPassType.NO_DEPTH) {
 
@@ -229,31 +231,25 @@ public class RenderPassBuilder {
                 renderPassColorAttachment.setStoreOp(WGPUStoreOp.Store);
                 renderPassColorAttachment.setDepthSlice(-1);
 
-                if (clearColor != null) {
-                    if (!webgpu.hasLinearOutput())
-                        GammaCorrection.fromLinear(clearColor); // inverse gamma correction
+                if (clearColor != null && passType != RenderPassType.COLOR_AND_DEPTH_NO_CLEAR) {
+                    Color finalClearColor = clearColor;
+                    if (!webgpu.hasLinearOutput() && outTextures == null) {
+                        GammaCorrection.fromLinear(clearColor, scratchColor); // inverse gamma correction
+                        finalClearColor = scratchColor;
+                    }
                     renderPassColorAttachment.setLoadOp(WGPULoadOp.Clear);
 
-                    renderPassColorAttachment.getClearValue().setR(clearColor.r);
-                    renderPassColorAttachment.getClearValue().setG(clearColor.g);
-                    renderPassColorAttachment.getClearValue().setB(clearColor.b);
-                    renderPassColorAttachment.getClearValue().setA(clearColor.a);
+                    renderPassColorAttachment.getClearValue().setR(finalClearColor.r);
+                    renderPassColorAttachment.getClearValue().setG(finalClearColor.g);
+                    renderPassColorAttachment.getClearValue().setB(finalClearColor.b);
+                    renderPassColorAttachment.getClearValue().setA(finalClearColor.a);
                 } else {
                     renderPassColorAttachment.setLoadOp(WGPULoadOp.Load);
                 }
 
-                if (sampleCount > 1 && i == 0) { // Keep MSAA logic restricted to first attachment/screen if needed?
-                    // Assuming MSAA only for main screen for now or if supported by logic
-                    // existing logic:
-                    if (outTextures == null) {
-                        renderPassColorAttachment.setView(webgpu.getMultiSamplingTexture().getTextureView());
-                        renderPassColorAttachment.setResolveTarget(webgpu.getTargetViews()[0]);
-                    } else {
-                        // MSAA to texture not fully implemented in this logic block for MRT?
-                        // defaulting to simple logic for custom texture
-                        renderPassColorAttachment.setView(targetViews[i]);
-                        renderPassColorAttachment.setResolveTarget(WGPUTextureView.NULL);
-                    }
+                if (sampleCount > 1 && i == 0 && outTextures == null) {
+                    renderPassColorAttachment.setView(webgpu.getMultiSamplingTexture().getTextureView());
+                    renderPassColorAttachment.setResolveTarget(webgpu.getTargetViews()[0]);
                 } else {
                     renderPassColorAttachment.setView(targetViews[i]);
                     renderPassColorAttachment.setResolveTarget(WGPUTextureView.NULL);
@@ -279,7 +275,10 @@ public class RenderPassBuilder {
             depthStencilAttachment.setStencilStoreOp(WGPUStoreOp.Undefined);
             depthStencilAttachment.setStencilReadOnly(true);
 
-            depthStencilAttachment.setView(depthTexture.getTextureView());
+            if (depthTexture != null)
+                depthStencilAttachment.setView(depthTexture.getTextureView());
+            else
+                depthStencilAttachment.setView(webgpu.getDepthTexture().getTextureView());
 
             renderPassDescriptor.setDepthStencilAttachment(depthStencilAttachment);
         }
@@ -309,7 +308,13 @@ public class RenderPassBuilder {
             height = (int) view.height;
         }
 
-        pass.begin(webgpu.encoder, renderPassDescriptor, passType, targetFormats, targetCount, depthTexture.getFormat(),
+        WGPUTextureFormat dFormat;
+        if (depthTexture != null)
+            dFormat = depthTexture.getFormat();
+        else
+            dFormat = webgpu.getDepthTexture().getFormat();
+
+        pass.begin(webgpu.encoder, renderPassDescriptor, passType, targetFormats, targetCount, dFormat,
                 sampleCount, width, height);
 
         pass.setViewport(view.x, view.y, view.width, view.height, 0, 1);
