@@ -49,6 +49,12 @@ public class WgDesktopWindow implements Disposable {
     boolean asyncResized = false;
     private boolean requestRendering = false;
 
+    // Pending resize state — set by resizeCallback, consumed before beginFrame() in update().
+    // This avoids acquiring a surface texture at the old size and presenting an empty frame.
+    private boolean pendingResize = false;
+    private int pendingResizeWidth;
+    private int pendingResizeHeight;
+
     private final GLFWWindowFocusCallback focusCallback = new GLFWWindowFocusCallback() {
         @Override
         public void invoke(long windowHandle, final boolean focused) {
@@ -154,28 +160,21 @@ public class WgDesktopWindow implements Disposable {
     private final GLFWFramebufferSizeCallback resizeCallback = new GLFWFramebufferSizeCallback() {
         @Override
         public void invoke(long windowHandle, final int width, final int height) {
-            postRunnable(new Runnable() {
-                @Override
-                public void run() {
-                    // System.out.println("Runnable resize");
-                    if (!"glfw_async".equals(Configuration.GLFW_LIBRARY_NAME.get())) {
-                        // System.out.println("resize callback");
-                        graphics.updateFramebufferInfo();
-                        if (!isListenerInitialized()) {
-                            return;
-                        }
-                        // makeCurrent();
-                        // System.out.println("context resize");
-                        if (width > 0 && height > 0) {
-                            listener.resize(width, height);
-                            graphics.context.resize(width, height);
-                        }
-                    } else {
+            if (!"glfw_async".equals(Configuration.GLFW_LIBRARY_NAME.get())) {
+                // Record the new size so update() can apply it before beginFrame().
+                // This avoids acquiring a surface texture at the old size and then
+                // presenting an empty frame (which caused a visible blink during resize).
+                pendingResize = true;
+                pendingResizeWidth = width;
+                pendingResizeHeight = height;
+            } else {
+                postRunnable(new Runnable() {
+                    @Override
+                    public void run() {
                         asyncResized = true;
-                        // System.out.println("Window.async resized");
                     }
-                }
-            });
+                });
+            }
         }
     };
 
@@ -197,6 +196,8 @@ public class WgDesktopWindow implements Disposable {
         }
     };
 
+    private boolean inLiveResize = false;
+
     private final GLFWWindowRefreshCallback refreshCallback = new GLFWWindowRefreshCallback() {
         @Override
         public void invoke(long windowHandle) {
@@ -208,6 +209,19 @@ public class WgDesktopWindow implements Disposable {
                     }
                 }
             });
+            // On Windows, GLFW enters a modal loop during window resize/move which blocks
+            // glfwPollEvents(). Rendering a frame here keeps the window content visible
+            // instead of showing a black screen.  The previous frame's endFrame() has
+            // already completed before glfwPollEvents() was called, so it is safe to run
+            // a full update() cycle (beginFrame → process runnables → render → endFrame).
+            if (isListenerInitialized() && !iconified && !inLiveResize) {
+                inLiveResize = true;
+                try {
+                    update();
+                } finally {
+                    inLiveResize = false;
+                }
+            }
         }
     };
 
@@ -447,51 +461,73 @@ public class WgDesktopWindow implements Disposable {
     }
 
     boolean update() {
-        if (!listenerInitialized) {
-            initializeListener();
+        try {
+            // Apply any pending resize BEFORE acquiring the surface texture.
+            // This ensures the swap chain is reconfigured at the new size first,
+            // so beginFrame() gets a correctly-sized surface texture and we never
+            // present an empty frame (which previously caused a visible blink).
+            if (pendingResize) {
+                pendingResize = false;
+                graphics.updateFramebufferInfo();
+                if (isListenerInitialized() && pendingResizeWidth > 0 && pendingResizeHeight > 0) {
+                    graphics.context.resize(pendingResizeWidth, pendingResizeHeight);
+                    // Reset deltaTime so the resize pause (GLFW modal loop on Windows)
+                    // does not produce a huge time spike that makes particles/physics explode.
+                    graphics.resetDeltaTime();
+                    listener.resize(graphics.getWidth(), graphics.getHeight());
+                }
+            }
+
+            graphics.context.beginFrame();
+            if (!listenerInitialized) {
+                initializeListener();
+            }
+
+            synchronized (runnables) {
+                executedRunnables.addAll(runnables);
+                runnables.clear();
+            }
+            for (Runnable runnable : executedRunnables) {
+                runnable.run();
+            }
+            boolean shouldRender = executedRunnables.size > 0 || graphics.isContinuousRendering();
+            executedRunnables.clear();
+
+            if (!iconified)
+                input.update();
+
+            synchronized (this) {
+                // original libgdx code:
+                // shouldRender |= requestRendering && !iconified;
+
+                // don't render when iconified
+                shouldRender |= requestRendering;
+                shouldRender &= !iconified;
+                requestRendering = false;
+            }
+
+            // In case glfw_async is used, we need to resize outside the GLFW
+            if (asyncResized) {
+                asyncResized = false;
+                graphics.updateFramebufferInfo();
+                // graphics.gl20.glViewport(0, 0, graphics.getBackBufferWidth(), graphics.getBackBufferHeight());
+                listener.resize(graphics.getWidth(), graphics.getHeight());
+                graphics.update();
+                return true;
+            }
+
+            if (shouldRender) {
+                graphics.update();
+                listener.render();
+            }
+
+            if (!iconified)
+                input.prepareNext();
+
+            return shouldRender;
+        } finally {
+            graphics.context.endFrame();
         }
-        synchronized (runnables) {
-            executedRunnables.addAll(runnables);
-            runnables.clear();
-        }
-        for (Runnable runnable : executedRunnables) {
-            runnable.run();
-        }
-        boolean shouldRender = executedRunnables.size > 0 || graphics.isContinuousRendering();
-        executedRunnables.clear();
-
-        if (!iconified)
-            input.update();
-
-        synchronized (this) {
-            // original libgdx code:
-            // shouldRender |= requestRendering && !iconified;
-
-            // don't render when iconified
-            shouldRender |= requestRendering;
-            shouldRender &= !iconified;
-            requestRendering = false;
-        }
-
-        // In case glfw_async is used, we need to resize outside the GLFW
-        if (asyncResized) {
-            asyncResized = false;
-            graphics.updateFramebufferInfo();
-            // graphics.gl20.glViewport(0, 0, graphics.getBackBufferWidth(), graphics.getBackBufferHeight());
-            listener.resize(graphics.getWidth(), graphics.getHeight());
-            graphics.update();
-            return true;
-        }
-
-        if (shouldRender) {
-            graphics.update();
-            graphics.context.renderFrame(listener);
-        }
-
-        if (!iconified)
-            input.prepareNext();
-
-        return shouldRender;
     }
 
     void requestRendering() {
@@ -527,8 +563,13 @@ public class WgDesktopWindow implements Disposable {
 
     @Override
     public void dispose() {
-        listener.pause();
-        listener.dispose();
+        graphics.context.beginFrame();
+        try {
+            listener.pause();
+            listener.dispose();
+        } finally {
+            graphics.context.endFrame();
+        }
         WgDesktopCursor.dispose(this);
         graphics.dispose();
         input.dispose();

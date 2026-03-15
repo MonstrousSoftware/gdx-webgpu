@@ -3,7 +3,6 @@ package com.monstrous.gdx.webgpu.backends.teavm;
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
-import com.github.xpenatan.gdx.teavm.backends.web.WebApplication;
 import com.github.xpenatan.gdx.teavm.backends.web.WebApplicationConfiguration;
 import com.github.xpenatan.gdx.teavm.backends.web.WebGraphics;
 import com.github.xpenatan.gdx.teavm.backends.web.dom.HTMLDocumentExt;
@@ -38,9 +37,6 @@ public class WgTeaGraphics extends WebGraphics implements WgGraphics {
     }
 
     public void init(WebApplicationConfiguration config) {
-        WebApplication teaApplication = WebApplication.get();
-        teaApplication.addInitQueue();
-
         if (config.width >= 0 || config.height >= 0) {
             if (config.isFixedSizeApplication()) {
                 setCanvasSize(config.width, config.height, false);
@@ -79,27 +75,45 @@ public class WgTeaGraphics extends WebGraphics implements WgGraphics {
 
     @Override
     public void resize(ApplicationListener appListener, int width, int height) {
-        context.resize(width, height);
+        if (webGPUReady) {
+            // End the current frame — the surface texture was acquired at the old size.
+            // Resize reconfigures the swap chain at the new size, then beginFrame
+            // re-acquires the surface texture so it matches the new MSAA / depth attachments.
+            context.endFrame();
+            context.resize(width, height);
+            context.beginFrame();
+        }
         Gdx.gl.glViewport(0, 0, width, height);
         appListener.resize(width, height);
     }
 
     @Override
-    public void render(ApplicationListener listener) {
-        context.renderFrame(listener);
-    }
-
-    @Override
-    public void update() {
+    public void begin() {
         if (context != null) {
             context.update();
             if (!webGPUReady && context.isReady()) {
-                WebApplication teaApplication = WebApplication.get();
-                teaApplication.subtractInitQueue();
                 webGPUReady = true;
+                // Configure the surface / swap chain before the first beginFrame().
+                // Without this, getCurrentTexture() fails because the surface is not yet configured.
+                context.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
             }
         }
-        super.update();
+        super.begin();
+        if (webGPUReady) {
+            context.beginFrame();
+        }
+    }
+
+    @Override
+    public void end() {
+        if (webGPUReady) {
+            context.endFrame();
+        }
+    }
+
+    @Override
+    public void render(ApplicationListener listener) {
+        listener.render();
     }
 
     @Override

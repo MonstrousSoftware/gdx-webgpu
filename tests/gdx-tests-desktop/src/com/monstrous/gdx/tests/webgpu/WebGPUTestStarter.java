@@ -16,6 +16,7 @@
 
 package com.monstrous.gdx.tests.webgpu;
 
+
 import com.badlogic.gdx.*;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -25,10 +26,9 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
-import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.github.xpenatan.webgpu.JWebGPUBackend;
-import com.monstrous.gdx.tests.webgpu.utils.GdxTestWrapper;
+import com.monstrous.gdx.tests.webgpu.utils.AutoTestRunner;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopApplication;
 import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopApplicationConfiguration;
@@ -56,8 +56,23 @@ public class WebGPUTestStarter {
         config.samples = 4; // anti-aliasing (4) or not (1)
         config.useVsync(true);
 
+        if (argv.length > 0) {
+            String testName = argv[0];
+            if (testName.equalsIgnoreCase("auto")) {
+                new WgDesktopApplication(new AutoTestRunner(), config);
+                return;
+            }
+            ApplicationListener test = WebGPUTests.newTest(testName);
+            if (test != null) {
+                new WgDesktopApplication(test, config);
+                return;
+            }
+            System.out.println("Test not found: " + testName);
+        }
+
         new WgDesktopApplication(new TestChooser(), config);
     }
+
 
     static class TestChooser extends ApplicationAdapter {
         private Stage stage;

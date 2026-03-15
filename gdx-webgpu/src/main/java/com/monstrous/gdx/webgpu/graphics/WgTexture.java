@@ -537,6 +537,9 @@ public class WgTexture extends Texture {
         extent.setHeight(height);
         extent.setDepthOrArrayLayers(1);
         WebGPUContext webgpu = ((WgGraphics) Gdx.graphics).getContext();
+        if (!webgpu.isFrameStarted()) {
+            Gdx.app.error("WgTexture", "writeTexture called outside of beginFrame/endFrame window. This may cause a crash.");
+        }
         webgpu.queue.writeTexture(destination, data, 4 * width * height, source, extent);
     }
 
@@ -562,6 +565,9 @@ public class WgTexture extends Texture {
         extent.setHeight(data.getHeight());
         extent.setDepthOrArrayLayers(1);
 
+        if (!webgpu.isFrameStarted()) {
+            Gdx.app.error("WgTexture", "writeTexture called outside of beginFrame/endFrame window. This may cause a crash.");
+        }
         webgpu.queue.writeTexture(destination, pixels, pixels.limit(), source, extent);
     }
 

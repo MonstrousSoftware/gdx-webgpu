@@ -9,7 +9,6 @@ dependencies {
 
     //implementation("com.badlogicgames.gdx:gdx:$gdxVersion")
     implementation("com.github.xpenatan.gdx-teavm:backend-web:$gdxTeaVMVersion")
-    implementation("com.github.xpenatan.gdx-teavm:backend-web:$gdxTeaVMVersion:sources")
 
 //    implementation("org.teavm:teavm-classlib:${teaVMVersion}")
 //    implementation("org.teavm:teavm-core:${teaVMVersion}")
@@ -27,34 +26,16 @@ dependencies {
 
 val mainClassName = "com.monstrous.gdx.tests.webgpu.BuildTeaVM"
 
-tasks.register<JavaExec>("gdx_webgpu_tests_build_teavm") {
+tasks.register<JavaExec>("gdx_webgpu_tests_run_teavm") {
     group = "LibGDX"
     description = "Build webgpu-tests"
     mainClass.set(mainClassName)
     classpath = sourceSets["main"].runtimeClasspath
 }
 
-tasks.register("gdx_webgpu_tests_run_teavm") {
-    group = "LibGDX"
-    description = "Run webgpu-tests"
-    val list = listOf("gdx_webgpu_tests_build_teavm", "jettyRun")
-    dependsOn(list)
-
-    tasks.findByName("jettyRun")?.mustRunAfter("gdx_webgpu_tests_build_teavm")
-}
-
-tasks.register<JavaExec>("gdx_webgpu_asset_manager_build_teavm") {
+tasks.register<JavaExec>("gdx_webgpu_asset_manager_run_teavm") {
     group = "LibGDX"
     description = "Build AssetManager test"
     mainClass.set("com.monstrous.gdx.tests.webgpu.assetmanager.BuildAssetManagerTest")
     classpath = sourceSets["main"].runtimeClasspath
-}
-
-tasks.register("gdx_webgpu_asset_manager_run_teavm") {
-    group = "LibGDX"
-    description = "Run AssetManager test"
-    val list = listOf("gdx_webgpu_asset_manager_build_teavm", "jettyRun")
-    dependsOn(list)
-
-    tasks.findByName("jettyRun")?.mustRunAfter("gdx_webgpu_asset_manager_build_teavm")
 }

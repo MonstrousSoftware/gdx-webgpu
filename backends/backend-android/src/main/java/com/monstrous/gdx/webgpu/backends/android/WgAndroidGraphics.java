@@ -423,53 +423,57 @@ public class WgAndroidGraphics extends AbstractGraphics implements WgGraphics, W
             }
         }
 
-        if(lresume) {
-            for(int i = 0; i < app.getLifecycleListeners().size; i++) {
-                LifecycleListener listener = app.getLifecycleListeners().get(i);
-                listener.resume();
-            }
-            Gdx.app.getApplicationListener().resume();
-        }
-
         if(lrunning) {
-            synchronized(app.getRunnables()) {
-                app.getExecutedRunnables().clear();
-                app.getExecutedRunnables().addAll(app.getRunnables());
-                app.getRunnables().clear();
-            }
-
-            for(int i = 0; i < app.getExecutedRunnables().size; i++) {
+            if (context != null && context.isReady()) {
+                context.beginFrame();
                 try {
-                    app.getExecutedRunnables().get(i).run();
-                } catch(Throwable t) {
-                    t.printStackTrace();
+                    synchronized(app.getRunnables()) {
+                        app.getExecutedRunnables().clear();
+                        app.getExecutedRunnables().addAll(app.getRunnables());
+                        app.getRunnables().clear();
+                    }
+
+                    for(int i = 0; i < app.getExecutedRunnables().size; i++) {
+                        try {
+                            app.getExecutedRunnables().get(i).run();
+                        } catch(Throwable t) {
+                            t.printStackTrace();
+                        }
+                    }
+
+                    app.getInput().processEvents();
+
+                    context.update();
+                    app.getApplicationListener().render();
+
+                    if(lresume) {
+                        for(int i = 0; i < app.getLifecycleListeners().size; i++) {
+                            LifecycleListener listener = app.getLifecycleListeners().get(i);
+                            listener.resume();
+                        }
+                        Gdx.app.getApplicationListener().resume();
+                    }
+
+                    if(lpause) {
+                        Gdx.app.getApplicationListener().pause();
+                        for(int i = 0; i < app.getLifecycleListeners().size; i++) {
+                            LifecycleListener listener = app.getLifecycleListeners().get(i);
+                            listener.pause();
+                        }
+                    }
+
+                    if(ldestroy) {
+                        Gdx.app.getApplicationListener().dispose();
+                        for(int i = 0; i < app.getLifecycleListeners().size; i++) {
+                            LifecycleListener listener = app.getLifecycleListeners().get(i);
+                            listener.dispose();
+                        }
+                        clearManagedCaches();
+                    }
+                } finally {
+                    context.endFrame();
                 }
             }
-
-            app.getInput().processEvents();
-
-            if (context != null && context.isReady()) {
-                context.update();
-                context.renderFrame(app.getApplicationListener());
-            }
-        }
-
-        if(lpause) {
-            Gdx.app.getApplicationListener().pause();
-            for(int i = 0; i < app.getLifecycleListeners().size; i++) {
-                LifecycleListener listener = app.getLifecycleListeners().get(i);
-                listener.pause();
-            }
-        }
-
-        if(ldestroy) {
-            Gdx.app.getApplicationListener().dispose();
-            for(int i = 0; i < app.getLifecycleListeners().size; i++) {
-                LifecycleListener listener = app.getLifecycleListeners().get(i);
-                listener.dispose();
-            }
-
-            clearManagedCaches();
         }
 
         frames++;

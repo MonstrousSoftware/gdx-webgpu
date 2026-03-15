@@ -32,6 +32,10 @@ import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
+import com.monstrous.gdx.webgpu.wrappers.RenderPassBuilder;
+import com.monstrous.gdx.webgpu.wrappers.RenderPassType;
+import com.monstrous.gdx.webgpu.wrappers.SkyBox;
+import com.monstrous.gdx.webgpu.wrappers.WebGPURenderPass;
 
 import static com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute.EnvironmentMap;
 
@@ -76,7 +80,7 @@ public class IBLGenerator {
         Environment environment = new Environment();
         environment.set(new WgCubemapAttribute(EnvironmentMap, environmentMap)); // add cube map attribute
 
-        String shaderSource = Gdx.files.internal("shaders/modelbatchCubeMapIrradiance.wgsl").readString();
+        String shaderSource = Gdx.files.classpath("shaders/modelbatchCubeMapIrradiance.wgsl").readString();
         WgCubemap irradianceMap = constructMap(cubeInstance, shaderSource, environment, size, 1);
 
         cube.dispose();
@@ -93,7 +97,7 @@ public class IBLGenerator {
         Environment environment = new Environment();
         environment.set(new WgCubemapAttribute(EnvironmentMap, environmentMap)); // add cube map attribute
 
-        String shaderSource = Gdx.files.internal("shaders/modelbatchCubeMapRadiance.wgsl").readString();
+        String shaderSource = Gdx.files.classpath("shaders/modelbatchCubeMapRadiance.wgsl").readString();
         WgCubemap radianceMap = constructMap(cubeInstance, shaderSource, environment, size,
                 WgTexture.calculateMipLevelCount(size, size));
 
@@ -115,7 +119,7 @@ public class IBLGenerator {
         Environment environment = new Environment();
         environment.add(sun);
 
-        String shaderSource = Gdx.files.internal("shaders/genIBL.wgsl").readString();
+        String shaderSource = Gdx.files.classpath("shaders/genIBL.wgsl").readString();
         WgCubemap envMap = constructMap(cubeInstance, shaderSource, environment, size, 1);
 
         cube.dispose();
@@ -153,6 +157,9 @@ public class IBLGenerator {
         // Pre-allocate once outside the loops to avoid per-mip-level allocation
         WebGPUContext.RenderOutputState prevState = new WebGPUContext.RenderOutputState();
 
+        WGPUCommandEncoder localEncoder = new WGPUCommandEncoder();
+        WGPUCommandEncoder originalEncoder = webgpu.encoder;
+
         for (int mipLevel = 0; mipLevel < numLevels; mipLevel++) {
 
             final WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst)
@@ -180,11 +187,12 @@ public class IBLGenerator {
 
                 WGPUCommandEncoderDescriptor encoderDesc = WGPUCommandEncoderDescriptor.obtain();
                 encoderDesc.setLabel("encoder");
-                webgpu.device.createCommandEncoder(encoderDesc, webgpu.encoder);
+                webgpu.device.createCommandEncoder(encoderDesc, localEncoder);
+                webgpu.encoder = localEncoder;
 
                 webgpu.pushTargetView(prevState, colorTexture.getTextureView(), format, size, size, depthTexture);
 
-                mapBatch.begin(snapCam, Color.GREEN, true, 1);
+                mapBatch.begin(snapCam, Color.GREEN, true, RenderPassType.COLOR_AND_DEPTH_NO_CLEAR, 1);
                 mapBatch.render(instance, environment);
                 mapBatch.end();
 
@@ -193,32 +201,40 @@ public class IBLGenerator {
                 cmdBufferDescriptor.setLabel("Command buffer");
                 WGPUCommandBuffer command = new WGPUCommandBuffer();
 
-                webgpu.encoder.finish(cmdBufferDescriptor, command);
-                webgpu.encoder.release();
+                localEncoder.finish(cmdBufferDescriptor, command);
+                localEncoder.release();
 
                 webgpu.queue.submit(command);
                 command.release();
 
                 webgpu.popTargetView(prevState);
 
-                webgpu.device.createCommandEncoder(encoderDesc, webgpu.encoder);
-                copyTextureToCubeMap(webgpu.encoder, cube, side, mipLevel, colorTexture, size);
+                webgpu.device.createCommandEncoder(encoderDesc, localEncoder);
+                copyTextureToCubeMap(localEncoder, cube, side, mipLevel, colorTexture, size);
 
                 if (size == 256) {
-                    copyTextureToTexture(webgpu.encoder, debugTextures[side], colorTexture, size);
+                    copyTextureToTexture(localEncoder, debugTextures[side], colorTexture, size);
                 }
 
-                webgpu.encoder.finish(cmdBufferDescriptor, command);
-                webgpu.encoder.release();
+                localEncoder.finish(cmdBufferDescriptor, command);
+                localEncoder.release();
 
                 webgpu.queue.submit(command);
                 command.release();
                 command.dispose();
 
-            } // next side
+            }
+            colorTexture.dispose();
+            depthTexture.dispose();
             size /= 2;
-        } // next mip level
+        }
+
+        webgpu.encoder = originalEncoder;
+        localEncoder.dispose();
+
+        // Restore viewport to screen dimensions (constructMap shrinks it with each mip level)
         webgpu.setViewportRectangle(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
         mapBatch.dispose();
         webgpu.getGPUTimer().setEnabled(timerEnabled);
         return cube;
@@ -228,7 +244,7 @@ public class IBLGenerator {
         WgGraphics gfx = (WgGraphics) Gdx.graphics;
         WebGPUContext webgpu = gfx.getContext();
 
-        String shaderSource = Gdx.files.internal("shaders/modelbatchEquilateral.wgsl").readString();
+        String shaderSource = Gdx.files.classpath("shaders/modelbatchEquilateral.wgsl").readString();
         WgModelBatch mapBatch = new WgModelBatch(new IBLShaderProvider(shaderSource));
 
         PerspectiveCamera snapCam = createCamera();
@@ -247,6 +263,10 @@ public class IBLGenerator {
 
         boolean timerEnabled = webgpu.getGPUTimer().setEnabled(false);
         WebGPUContext.RenderOutputState prevState = new WebGPUContext.RenderOutputState();
+
+        WGPUCommandEncoder localEncoder = new WGPUCommandEncoder();
+        WGPUCommandEncoder originalEncoder = webgpu.encoder;
+
         for (int side = 0; side < 6; side++) {
             // point the camera at one of the cube sides
             snapCam.direction.set(directions[side]);
@@ -261,11 +281,12 @@ public class IBLGenerator {
 
             WGPUCommandEncoderDescriptor encoderDesc = WGPUCommandEncoderDescriptor.obtain();
             encoderDesc.setLabel("encoder");
-            webgpu.device.createCommandEncoder(encoderDesc, webgpu.encoder);
+            webgpu.device.createCommandEncoder(encoderDesc, localEncoder);
+            webgpu.encoder = localEncoder;
 
             webgpu.pushTargetView(prevState, colorTexture.getTextureView(), format, size, size, depthTexture);
 
-            mapBatch.begin(snapCam, Color.BLACK, true, 1);
+            mapBatch.begin(snapCam, Color.BLACK, true, RenderPassType.COLOR_AND_DEPTH_NO_CLEAR, 1);
             mapBatch.render(instance);
             mapBatch.end();
 
@@ -274,23 +295,27 @@ public class IBLGenerator {
             cmdBufferDescriptor.setLabel("Command buffer");
             WGPUCommandBuffer command = new WGPUCommandBuffer();
 
-            webgpu.encoder.finish(cmdBufferDescriptor, command);
-            webgpu.encoder.release();
+            localEncoder.finish(cmdBufferDescriptor, command);
+            localEncoder.release();
             webgpu.queue.submit(command);
             command.release();
 
             webgpu.popTargetView(prevState);
 
-            webgpu.device.createCommandEncoder(encoderDesc, webgpu.encoder);
-            copyTextureToCubeMap(webgpu.encoder, cube, side, 0, colorTexture, size);
+            webgpu.device.createCommandEncoder(encoderDesc, localEncoder);
+            copyTextureToCubeMap(localEncoder, cube, side, 0, colorTexture, size);
 
-            webgpu.encoder.finish(cmdBufferDescriptor, command);
-            webgpu.encoder.release();
+            localEncoder.finish(cmdBufferDescriptor, command);
+            localEncoder.release();
 
             webgpu.queue.submit(command);
             command.release();
             command.dispose();
         }
+
+        webgpu.encoder = originalEncoder;
+        localEncoder.dispose();
+
         webgpu.setViewportRectangle(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         mapBatch.dispose();
         webgpu.getGPUTimer().setEnabled(timerEnabled);

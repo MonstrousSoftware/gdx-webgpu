@@ -26,8 +26,7 @@ import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.WgCubemap;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.badlogic.gdx.utils.LongMap;
 
 import static com.badlogic.gdx.math.Matrix4.M33;
 
@@ -49,14 +48,18 @@ public class SkyBox implements Disposable {
     protected final WebGPUBindGroup bindGroup;
     protected final WebGPUPipelineLayout pipelineLayout;
 
-    /** Cache of pipelines keyed by "format_samples" to support rendering to different targets (screen, FBO, MRT). */
-    protected final Map<String, WebGPUPipeline> pipelineCache = new HashMap<>();
+    /** Cache of pipelines keyed by encoded (format ordinal, samples) to support rendering to different targets (screen, FBO, MRT). */
+    protected final LongMap<WebGPUPipeline> pipelineCache = new LongMap<>();
 
     protected final String shaderSource;
     protected final Matrix4 invertedProjectionView;
 
     /** Construct a skybox from a cube map */
     public SkyBox(WgCubemap cubeMap) {
+        this(cubeMap, "shaders/skybox.wgsl");
+    }
+
+    public SkyBox(WgCubemap cubeMap, String shaderPath) {
         this.cubeMap = cubeMap;
         WgGraphics gfx = (WgGraphics) Gdx.graphics;
         WebGPUContext webgpu = gfx.getContext();
@@ -67,7 +70,7 @@ public class SkyBox implements Disposable {
 
         pipelineLayout = new WebGPUPipelineLayout("SkyBox Pipeline Layout", bindGroupLayout);
 
-        shaderSource = Gdx.files.internal("shaders/skybox.wgsl").readString();
+        shaderSource = Gdx.files.classpath(shaderPath).readString();
 
         bindGroup = makeBindGroup(bindGroupLayout, uniformBuffer);
 
@@ -82,7 +85,8 @@ public class SkyBox implements Disposable {
      * Pipelines are cached so each configuration is only compiled once.
      */
     protected WebGPUPipeline getOrCreatePipeline(WGPUTextureFormat colorFormat, int numSamples) {
-        String key = colorFormat.name() + "_" + numSamples;
+        // Encode format ordinal and sample count into a single long key — zero allocation lookup
+        long key = ((long) colorFormat.ordinal() << 32) | (numSamples & 0xFFFFFFFFL);
         WebGPUPipeline cached = pipelineCache.get(key);
         if (cached != null) return cached;
 
@@ -175,8 +179,7 @@ public class SkyBox implements Disposable {
         // Define binding layout
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout();
         layout.begin();
-        layout.addBuffer(0, WGPUShaderStage.Fragment, WGPUBufferBindingType.Uniform, FRAME_UB_SIZE, false); // uniform
-                                                                                                            // buffer
+        layout.addBuffer(0, WGPUShaderStage.Vertex.or(WGPUShaderStage.Fragment), WGPUBufferBindingType.Uniform, FRAME_UB_SIZE, false); // uniform buffer
         layout.addTexture(1, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension.Cube,
                 false); // cube map texture
         layout.addSampler(2, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering); // cube map sampler

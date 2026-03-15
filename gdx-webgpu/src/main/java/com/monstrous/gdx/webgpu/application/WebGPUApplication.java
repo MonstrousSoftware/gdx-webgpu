@@ -136,13 +136,18 @@ public class WebGPUApplication extends WebGPUContext implements WebGPUInitializa
         }
     }
 
-    public void renderFrame(ApplicationListener listener) {
-        WGPUTextureView targetView = getNextSurfaceTextureView();
+    private boolean isFrameStarted = false;
+    private WGPUTextureView currentTargetView;
 
-        if (targetView == null)
-            return;
+    public void beginFrame() {
+        if (isFrameStarted) return;
+        isFrameStarted = true;
 
-        defaultTargetViews[0] = targetView;
+        currentTargetView = getNextSurfaceTextureView();
+
+        if (currentTargetView == null) return;
+
+        defaultTargetViews[0] = currentTargetView;
         // defaultSurfaceFormats[0] is already set to surface format
         targetViews = defaultTargetViews;
         surfaceFormats = defaultSurfaceFormats;
@@ -150,8 +155,13 @@ public class WebGPUApplication extends WebGPUContext implements WebGPUInitializa
         WGPUCommandEncoderDescriptor encoderDesc = WGPUCommandEncoderDescriptor.obtain();
         encoderDesc.setLabel("The Command Encoder");
         device.createCommandEncoder(encoderDesc, encoder);
+    }
 
-        listener.render();
+    public void endFrame() {
+        if (!isFrameStarted) return;
+        isFrameStarted = false;
+
+        if (currentTargetView == null) return;
 
         // resolve time stamps after render pass end and before encoder finish
         gpuTimer.resolveTimeStamps(encoder);
@@ -168,7 +178,7 @@ public class WebGPUApplication extends WebGPUContext implements WebGPUInitializa
         // fetch time stamps after submitting the command buffer
         gpuTimer.fetchTimestamps();
 
-        targetView.release();
+        currentTargetView.release();
 
         if (WGPU.getPlatformType() != WGPUPlatformType.WGPU_Web) {
             surface.present();
@@ -289,6 +299,11 @@ public class WebGPUApplication extends WebGPUContext implements WebGPUInitializa
 
     public Rectangle getViewportRectangle() {
         return viewportRectangle;
+    }
+
+    @Override
+    public boolean isFrameStarted() {
+        return isFrameStarted;
     }
 
     @Override

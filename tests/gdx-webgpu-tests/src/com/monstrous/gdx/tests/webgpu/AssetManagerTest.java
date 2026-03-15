@@ -157,9 +157,9 @@ public class AssetManagerTest extends GdxTest {
     @Override
     public void dispose() {
         batch.dispose();
-        font.dispose();
+        if (font != null) font.dispose();
         modelBatch.dispose();
-        model.dispose();
+        if (model != null) model.dispose();
     }
 
     private void loadModel() {

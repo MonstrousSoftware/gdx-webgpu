@@ -168,7 +168,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
             binder.defineBinding("lutSampler", 0, 10);
 
             // set 'isColor' to false in order to avoid gamma correction on this data texture
-            brdfLUT = new WgTexture(Gdx.files.internal("brdfLUT.png"), false, false);
+            brdfLUT = new WgTexture(Gdx.files.classpath("brdfLUT.png"), false, false);
             brdfLUT.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
             brdfLUT.setWrap(Texture.TextureWrap.ClampToEdge, Texture.TextureWrap.ClampToEdge);
 
@@ -413,7 +413,11 @@ public class WgDefaultShader extends WgShader implements Disposable {
             }
         }
         if (formatsChanged) {
-            pipelineSpec.colorFormats = formats.clone();
+            // Reuse existing array if length matches, only allocate on length change (rare: single-target vs MRT)
+            if (pipelineSpec.colorFormats == null || pipelineSpec.colorFormats.length != formats.length) {
+                pipelineSpec.colorFormats = new WGPUTextureFormat[formats.length];
+            }
+            System.arraycopy(formats, 0, pipelineSpec.colorFormats, 0, formats.length);
             // Clear the cached shader so WebGPUPipeline will call buildPrefix() fresh for the new
             // target format — this re-evaluates hasLinearOutput() and sets GAMMA_CORRECTION correctly.
             // Only do this for auto-compiled shaders (shaderSource != null); pre-built shaders are

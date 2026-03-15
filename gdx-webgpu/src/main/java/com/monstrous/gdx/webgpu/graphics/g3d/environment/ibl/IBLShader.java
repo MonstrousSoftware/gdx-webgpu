@@ -130,10 +130,9 @@ public class IBLShader extends WgShader implements Disposable {
         pipelineSpec.disableBlending();
         pipelineSpec.cullMode = WGPUCullMode.None;
         pipelineSpec.environment = renderable.environment;
-        WgGraphics gfx = (WgGraphics) Gdx.graphics;
-        WebGPUContext webgpu = gfx.getContext();
 
-        pipelineSpec.colorFormats = new WGPUTextureFormat[] {webgpu.getSurfaceFormat()};
+        pipelineSpec.colorFormats = new WGPUTextureFormat[] {WGPUTextureFormat.RGBA8UnormSrgb};
+        pipelineSpec.depthFormat = WGPUTextureFormat.Depth24Plus;
 
         pipeline = new WebGPUPipeline(pipelineLayout, pipelineSpec);
     }

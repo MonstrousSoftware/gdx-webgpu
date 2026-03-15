@@ -65,6 +65,7 @@ public class ScissorTest extends GdxTest {
     @Override
     public void dispose() {
         // cleanup
+        Gdx.gl.glDisable(GL20.GL_SCISSOR_TEST);
         background.dispose();
         batch.dispose();
         font.dispose();

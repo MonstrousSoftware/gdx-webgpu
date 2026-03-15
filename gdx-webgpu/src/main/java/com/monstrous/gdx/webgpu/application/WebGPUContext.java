@@ -103,4 +103,6 @@ public abstract class WebGPUContext {
     public abstract void resize(int width, int height);
 
     public abstract void setVSync(boolean vsync);
+
+    public abstract boolean isFrameStarted();
 }

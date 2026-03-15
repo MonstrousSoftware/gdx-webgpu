@@ -129,7 +129,7 @@ public class Binder implements Disposable {
 
     // hack to use tuple as single key
     private int combine(int groupId, int bindingId) {
-        return groupId << 16 + bindingId;
+        return (groupId << 16) | (bindingId & 0xFFFF);
     }
 
     /** note that buffer.flush() is needed to write the uniform values to the GPU. */
@@ -272,11 +272,16 @@ public class Binder implements Disposable {
 
             WGPUVectorBindGroupLayout layouts = WGPUVectorBindGroupLayout.obtain();
 
-            // does this need to be in sequential order of group id? Can group id's skip numbers?
-            // Answer: you cannot skip numbers. The vector is assumed to contain layout 0, 1, 2, ...
-            // note the BindGroupLayout does not contain the bind group id.
-            for (WebGPUBindGroupLayout layout : groupLayouts.values())
+            // WebGPU requires bind group layouts in strict sequential order: 0, 1, 2, ...
+            // HashMap.values() does NOT guarantee insertion/key order, so we must iterate
+            // by ascending key to ensure the vector matches the expected group indices.
+            for (int i = 0; i < groupLayouts.size(); i++) {
+                WebGPUBindGroupLayout layout = groupLayouts.get(i);
+                if (layout == null)
+                    throw new RuntimeException("Bind group layout for group " + i + " is missing. "
+                            + "Group IDs must be sequential starting from 0.");
                 layouts.push_back(layout.getLayout());
+            }
 
             WGPUPipelineLayoutDescriptor pipelineLayoutDesc = WGPUPipelineLayoutDescriptor.obtain();
             pipelineLayoutDesc.setNextInChain(WGPUChainedStruct.NULL);

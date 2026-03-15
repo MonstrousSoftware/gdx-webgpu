@@ -184,11 +184,11 @@ public class WebGPUPipeline implements Disposable {
         return topology == WGPUPrimitiveTopology.TriangleStrip || topology == WGPUPrimitiveTopology.LineStrip;
     }
 
-    public boolean canRender(PipelineSpecification spec) { // perhaps we need more params
-        // crude check, to be refined
+    public boolean canRender(PipelineSpecification spec) {
+        // Use hash code as a fast-path reject, then verify with full equals to avoid hash collisions
         int h = spec.hashCode();
         int h2 = this.specification.hashCode();
-        return h == h2;
+        return h == h2 && this.specification.equals(spec);
     }
 
     public WGPURenderPipeline getPipeline() {

@@ -34,7 +34,7 @@ import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
  * usage. Initialize the SpriteBatch with the {@link #createDistanceFieldShader()} shader.
  * <p>
  * Attention: The batch is flushed before and after each string is rendered.
- * 
+ *
  * @author Florian Falkner
  */
 // note: smoothing uniform not supported.
@@ -104,7 +104,7 @@ public class WgDistanceFieldFont extends WgBitmapFont {
     // }
     //
     static public WgShaderProgram createDistanceFieldShader() {
-        return new WgShaderProgram(Gdx.files.internal("shaders/spritebatch-sdf.wgsl"));
+        return new WgShaderProgram(Gdx.files.classpath("shaders/spritebatch-sdf.wgsl"));
     }
     //
     // /** Provides a font cache that uses distance field shader for rendering fonts. Attention: breaks batching because

@@ -168,7 +168,8 @@ public class IBL_GenerateOutdoor extends GdxTest {
         modelBatch.render(instance, environment);
         modelBatch.end();
 
-        skyBox.renderPass(cam, false);
+        if (skyBox != null)
+            skyBox.renderPass(cam, false);
 
         stage.act();
         stage.draw();
@@ -201,10 +202,12 @@ public class IBL_GenerateOutdoor extends GdxTest {
 
         Label metallicValue = new Label("", skin);
         metallicValue.setText(String.format("metallic: %.2f", metallic));
-        instance.materials.get(0).set(new PBRFloatAttribute(PBRFloatAttribute.Metallic, metallic));
+        if (instance.materials.size > 0)
+            instance.materials.get(0).set(new PBRFloatAttribute(PBRFloatAttribute.Metallic, metallic));
         Label roughnessValue = new Label("", skin);
         roughnessValue.setText(String.format("roughness: %.2f", roughness));
-        instance.materials.get(0).set(new PBRFloatAttribute(PBRFloatAttribute.Roughness, roughness));
+        if (instance.materials.size > 0)
+            instance.materials.get(0).set(new PBRFloatAttribute(PBRFloatAttribute.Roughness, roughness));
 
         Table sliderTable = new Table();
         Slider slider = new Slider(0, 1, 0.01f, false, skin);
@@ -213,7 +216,8 @@ public class IBL_GenerateOutdoor extends GdxTest {
             public void changed(ChangeEvent event, Actor actor) {
                 metallic = slider.getValue();
                 metallicValue.setText(String.format("metallic: %.2f", metallic));
-                instance.materials.get(0).set(new PBRFloatAttribute(PBRFloatAttribute.Metallic, metallic));
+                if (instance.materials.size > 0)
+                    instance.materials.get(0).set(new PBRFloatAttribute(PBRFloatAttribute.Metallic, metallic));
             }
         });
 
@@ -223,7 +227,8 @@ public class IBL_GenerateOutdoor extends GdxTest {
             public void changed(ChangeEvent event, Actor actor) {
                 roughness = slider2.getValue();
                 roughnessValue.setText(String.format("roughness: %.2f", roughness));
-                instance.materials.get(0).set(new PBRFloatAttribute(PBRFloatAttribute.Roughness, roughness));
+                if (instance.materials.size > 0)
+                    instance.materials.get(0).set(new PBRFloatAttribute(PBRFloatAttribute.Roughness, roughness));
             }
         });
 
@@ -240,21 +245,12 @@ public class IBL_GenerateOutdoor extends GdxTest {
         stage.addActor(screenTable);
     }
 
-    private Model buildSphere(Color albedo, float metallic, float roughness) {
-        long usage = VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal;
-        Material mat = new Material(ColorAttribute.createDiffuse(albedo), PBRFloatAttribute.createMetallic(metallic),
-                PBRFloatAttribute.createRoughness(roughness));
-
+    private Model buildSphere(Color color, float width, float height) {
         WgModelBuilder modelBuilder = new WgModelBuilder();
-        return modelBuilder.createSphere(2f, 2f, 2f, 32, 32, mat, usage);
-    }
-
-    @Override
-    public void dispose() {
-        skyBox.dispose();
-        // equiRectangular.dispose();
-        model.dispose();
-
+        return modelBuilder.createSphere(width, height, width, 20, 20,
+                new Material(ColorAttribute.createDiffuse(color), PBRFloatAttribute.createMetallic(metallic),
+                        PBRFloatAttribute.createRoughness(roughness)),
+                VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.TextureCoordinates);
     }
 
 }
