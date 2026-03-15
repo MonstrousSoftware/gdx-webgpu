@@ -106,6 +106,43 @@ different test cases.
 You can also check out the web version here: [tests](https://monstrous-software.itch.io/gdx-webgpu-sampler).
 (Press Escape to return to the test selection menu).
 
+## Running Tests
+
+The `tests/` folder contains a suite of test applications. You can run them on desktop or web, either interactively (with a chooser UI), as a single test by name, or in auto mode (all tests sequentially, 3 seconds each).
+
+### Desktop
+
+Use the Gradle task `gdx_webgpu_tests_run_desktop`:
+
+```bash
+# Interactive test chooser (default):
+./gradlew gdx_webgpu_tests_run_desktop
+
+# Run a single test by class name:
+./gradlew gdx_webgpu_tests_run_desktop --args="Particles3D"
+
+# Run ALL tests sequentially (auto mode):
+./gradlew gdx_webgpu_tests_run_desktop --args="auto"
+```
+
+### Web (TeaVM)
+
+First, build the web version. This compiles to JavaScript/WebAssembly and starts a local Jetty server:
+
+```bash
+./gradlew gdx_webgpu_tests_run_teavm
+```
+
+Then open one of the following URLs in a WebGPU-capable browser:
+
+| URL | Mode |
+|-----|------|
+| `http://localhost:8080/index.html` | Interactive test chooser |
+| `http://localhost:8080/index.html?test=Particles3D` | Run a single test by name |
+| `http://localhost:8080/index.html?auto` | Run all tests sequentially |
+
+Press **Escape** to return to the test chooser when running an individual test interactively.
+
 ## New features 
 
 Apart from the graphics platform, gdx-webgpu offers some new features with regard to LibGDX:
