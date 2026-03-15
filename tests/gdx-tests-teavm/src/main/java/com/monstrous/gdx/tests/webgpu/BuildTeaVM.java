@@ -11,9 +11,12 @@ public class BuildTeaVM {
 
     public static void main(String[] args) throws IOException {
         AssetFileHandle assetsPath = new AssetFileHandle("../assets");
-        new TeaCompiler(new WgBackend().setWebAssembly(true).setStartJettyAfterBuild(true)).addAssets(assetsPath)
-                .setOptimizationLevel(TeaVMOptimizationLevel.SIMPLE).setMainClass(TeaVMTestLauncher.class.getName())
-                .setObfuscated(false).addReflectionClass("com.badlogic.gdx.graphics.g3d.particles.**")
-                .build(new File("build/dist"));
+//        new TeaCompiler(new WgBackend().setWebAssembly(true).setStartJettyAfterBuild(true)).addAssets(assetsPath)
+        new TeaCompiler(new WgBackend().setWebAssembly(false).setStartJettyAfterBuild(true)).addAssets(assetsPath)
+            .setOptimizationLevel(TeaVMOptimizationLevel.SIMPLE).setMainClass(TeaVMTestLauncher.class.getName())
+            .setObfuscated(false).addReflectionClass("com.badlogic.gdx.graphics.g3d.particles.**")
+            .setDebugInformationGenerated(true)
+            .setSourceMapsFileGenerated(true)
+            .build(new File("build/dist"));
     }
 }
