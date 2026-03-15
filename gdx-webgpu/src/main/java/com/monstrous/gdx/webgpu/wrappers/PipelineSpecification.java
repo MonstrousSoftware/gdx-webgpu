@@ -258,16 +258,43 @@ public class PipelineSpecification {
     public int hashCode() {
         if (!dirty)
             return hash;
+        // Manual hash computation to avoid Object[] allocation and primitive boxing from Objects.hash()
         // When shaderSource is a real source (not null, not "precompiled"), hash only shaderSource
         // since the compiled shader is a derived artefact.
         // When shaderSource is null or "precompiled" (external shader), hash only the shader object.
         boolean isRealSource = shaderSource != null && !shaderSource.equals("precompiled");
         Object shaderKey = isRealSource ? shaderSource : shader;
-        int result = Objects.hash(name, vertexAttributes, vertexLayout, vertexStepMode, indexFormat, topology,
-                environment, shaderKey, vertexShaderEntryPoint, fragmentShaderEntryPoint, useDepthTest,
-                noDepthAttachment, isSkyBox, isDepthPass, afterDepthPrepass, numSamples, blendingEnabled, blendSrcColor,
-                blendDstColor, blendOpColor, blendSrcAlpha, blendDstAlpha, blendOpAlpha, cullMode, depthFormat,
-                maxDirLights, maxPointLights, usePBR, customPrefix);
+
+        int result = 1;
+        result = 31 * result + (name != null ? name.hashCode() : 0);
+        result = 31 * result + (vertexAttributes != null ? vertexAttributes.hashCode() : 0);
+        result = 31 * result + (vertexLayout != null ? vertexLayout.hashCode() : 0);
+        result = 31 * result + (vertexStepMode != null ? vertexStepMode.hashCode() : 0);
+        result = 31 * result + (indexFormat != null ? indexFormat.hashCode() : 0);
+        result = 31 * result + (topology != null ? topology.hashCode() : 0);
+        result = 31 * result + (environment != null ? environment.hashCode() : 0);
+        result = 31 * result + (shaderKey != null ? shaderKey.hashCode() : 0);
+        result = 31 * result + (vertexShaderEntryPoint != null ? vertexShaderEntryPoint.hashCode() : 0);
+        result = 31 * result + (fragmentShaderEntryPoint != null ? fragmentShaderEntryPoint.hashCode() : 0);
+        result = 31 * result + Boolean.hashCode(useDepthTest);
+        result = 31 * result + Boolean.hashCode(noDepthAttachment);
+        result = 31 * result + Boolean.hashCode(isSkyBox);
+        result = 31 * result + Boolean.hashCode(isDepthPass);
+        result = 31 * result + Boolean.hashCode(afterDepthPrepass);
+        result = 31 * result + Integer.hashCode(numSamples);
+        result = 31 * result + Boolean.hashCode(blendingEnabled);
+        result = 31 * result + (blendSrcColor != null ? blendSrcColor.hashCode() : 0);
+        result = 31 * result + (blendDstColor != null ? blendDstColor.hashCode() : 0);
+        result = 31 * result + (blendOpColor != null ? blendOpColor.hashCode() : 0);
+        result = 31 * result + (blendSrcAlpha != null ? blendSrcAlpha.hashCode() : 0);
+        result = 31 * result + (blendDstAlpha != null ? blendDstAlpha.hashCode() : 0);
+        result = 31 * result + (blendOpAlpha != null ? blendOpAlpha.hashCode() : 0);
+        result = 31 * result + (cullMode != null ? cullMode.hashCode() : 0);
+        result = 31 * result + (depthFormat != null ? depthFormat.hashCode() : 0);
+        result = 31 * result + Integer.hashCode(maxDirLights);
+        result = 31 * result + Integer.hashCode(maxPointLights);
+        result = 31 * result + Boolean.hashCode(usePBR);
+        result = 31 * result + (customPrefix != null ? customPrefix.hashCode() : 0);
         result = 31 * result + Arrays.hashCode(colorFormats);
         hash = result;
         dirty = false;

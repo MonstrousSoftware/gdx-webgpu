@@ -33,6 +33,8 @@ public class WebGPUVertexLayout {
     protected VertexAttributes attributes;
     protected final ObjectIntMap<String> attributeLocations;
     protected WGPUVertexStepMode stepMode;
+    private int cachedHash;
+    private boolean hashDirty = true;
 
     public WebGPUVertexLayout(VertexAttributes attributes) {
         this.attributes = attributes;
@@ -43,6 +45,7 @@ public class WebGPUVertexLayout {
     /** define a location for a vertex attribute to match the shader code */
     public void setVertexAttributeLocation(String alias, int location) {
         attributeLocations.put(alias, location);
+        hashDirty = true;
     }
 
     /** lookup location defined for the vertex attribute */
@@ -55,6 +58,7 @@ public class WebGPUVertexLayout {
 
     public void setStepMode(WGPUVertexStepMode stepMode) {
         this.stepMode = stepMode;
+        hashDirty = true;
     }
 
     /** create a vertex buffer layout object from the VertexAttributes */
@@ -253,7 +257,10 @@ public class WebGPUVertexLayout {
 
     @Override
     public int hashCode() {
-        int result = Objects.hash(attributes, stepMode);
+        if (!hashDirty) return cachedHash;
+
+        int result = (attributes != null ? attributes.hashCode() : 0);
+        result = 31 * result + (stepMode != null ? stepMode.hashCode() : 0);
         // Include attributeLocations entries in a order-stable way
         ObjectIntMap.Keys<String> keys = attributeLocations.keys();
         int size = attributeLocations.size;
@@ -267,7 +274,9 @@ public class WebGPUVertexLayout {
             result = 31 * result + key.hashCode();
             result = 31 * result + attributeLocations.get(key, 0);
         }
-        return result;
+        cachedHash = result;
+        hashDirty = false;
+        return cachedHash;
     }
 
 }

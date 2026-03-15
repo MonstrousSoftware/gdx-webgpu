@@ -35,6 +35,8 @@ public class RenderPassBuilder {
     private static final WGPUTextureFormat[] scratchFormats = new WGPUTextureFormat[16];
     // Pre-allocated single-element array to avoid per-call allocation in the single-texture overload
     private static final WgTexture[] singleTextureArray = new WgTexture[1];
+    // Pre-allocated single-format array used by createFirstTargetOnly() — avoids per-frame allocation (single-threaded rendering)
+    private static final WGPUTextureFormat[] singleFormatScratch = new WGPUTextureFormat[1];
     private static final Color scratchColor = new Color();
 
     public static WebGPURenderPass create(String name) {
@@ -155,8 +157,8 @@ public class RenderPassBuilder {
         int width = (int) view.width;
         int height = (int) view.height;
 
-        WGPUTextureFormat[] singleFormat = new WGPUTextureFormat[] { webgpu.surfaceFormats[0] };
-        pass.begin(webgpu.encoder, renderPassDescriptor, RenderPassType.COLOR_AND_DEPTH, singleFormat, 1,
+        singleFormatScratch[0] = webgpu.surfaceFormats[0];
+        pass.begin(webgpu.encoder, renderPassDescriptor, RenderPassType.COLOR_AND_DEPTH, singleFormatScratch, 1,
                 depthTexture.getFormat(), sampleCount, width, height);
 
         pass.setViewport(view.x, view.y, view.width, view.height, 0, 1);

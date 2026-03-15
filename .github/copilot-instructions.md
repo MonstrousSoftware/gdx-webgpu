@@ -133,4 +133,9 @@ gdx-webgpu/
 - **FIXED (Critical):** `Binder.getPipelineLayout()` — HashMap iteration gave non-deterministic bind group layout ordering. Now iterates sequentially by group index 0, 1, 2, ...
 - **FIXED (Critical):** `WebGPUPipeline.canRender()` — Only compared hash codes (collision risk). Now uses hash as fast-path + `equals()` for correctness
 - **FIXED (Moderate):** `BindGroupCache` — Only tracked last bind group, leaking earlier ones. Now tracks all active bind groups and returns them all to pool on `reset()`
-
+- **FIXED (GC/Perf):** `RenderPassBuilder.createFirstTargetOnly()` — Created `new WGPUTextureFormat[]` every call (per-frame via SkyBox). Now uses pre-allocated static `singleFormatScratch` array
+- **FIXED (GC/Perf):** `SkyBox.getOrCreatePipeline()` — String concatenation (`colorFormat.name() + "_" + numSamples`) every frame for HashMap lookup. Replaced with `LongMap<WebGPUPipeline>` keyed by encoded `(ordinal << 32 | samples)` — zero allocation
+- **FIXED (GC/Perf):** `PipelineSpecification.hashCode()` — Used `Objects.hash(...)` with 29+ arguments, creating a varargs `Object[]` and boxing all primitives on every call. Replaced with manual `31 * result + field.hashCode()` chain
+- **FIXED (GC/Perf):** `WebGPUVertexLayout.hashCode()` — Allocated `new String[size]`, sorted, and iterated on every call (transitive via `PipelineSpecification.hashCode()`). Now caches hash with dirty flag, recomputes only when `setVertexAttributeLocation()` or `setStepMode()` is called
+- **FIXED (GC/Perf):** `WgDefaultShader.setPipeline()` / `WgSpriteBatch.setPipeline()` — Called `formats.clone()` on format change. Now reuses existing array via `System.arraycopy()` when array length matches; allocates only on length change (rare MRT transitions)
+- **VERIFIED:** Full per-frame allocation audit of all rendering hot paths (SpriteBatch, DefaultShader, ImmediateModeRenderer, ShapeRenderer, ModelBatch, RenderPassBuilder, SkyBox, PipelineCache, MaterialsCache, Binder, BindGroupCache, GPUTimer). Zero per-frame `new` allocations confirmed. All 77 automated tests pass.

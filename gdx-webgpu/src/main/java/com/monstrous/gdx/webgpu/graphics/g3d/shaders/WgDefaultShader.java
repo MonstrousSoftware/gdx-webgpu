@@ -413,7 +413,11 @@ public class WgDefaultShader extends WgShader implements Disposable {
             }
         }
         if (formatsChanged) {
-            pipelineSpec.colorFormats = formats.clone();
+            // Reuse existing array if length matches, only allocate on length change (rare: single-target vs MRT)
+            if (pipelineSpec.colorFormats == null || pipelineSpec.colorFormats.length != formats.length) {
+                pipelineSpec.colorFormats = new WGPUTextureFormat[formats.length];
+            }
+            System.arraycopy(formats, 0, pipelineSpec.colorFormats, 0, formats.length);
             // Clear the cached shader so WebGPUPipeline will call buildPrefix() fresh for the new
             // target format — this re-evaluates hasLinearOutput() and sets GAMMA_CORRECTION correctly.
             // Only do this for auto-compiled shaders (shaderSource != null); pre-built shaders are
