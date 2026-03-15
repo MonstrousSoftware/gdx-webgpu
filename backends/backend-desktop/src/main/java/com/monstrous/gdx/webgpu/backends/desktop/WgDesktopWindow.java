@@ -49,6 +49,12 @@ public class WgDesktopWindow implements Disposable {
     boolean asyncResized = false;
     private boolean requestRendering = false;
 
+    // Pending resize state — set by resizeCallback, consumed before beginFrame() in update().
+    // This avoids acquiring a surface texture at the old size and presenting an empty frame.
+    private boolean pendingResize = false;
+    private int pendingResizeWidth;
+    private int pendingResizeHeight;
+
     private final GLFWWindowFocusCallback focusCallback = new GLFWWindowFocusCallback() {
         @Override
         public void invoke(long windowHandle, final boolean focused) {
@@ -154,37 +160,21 @@ public class WgDesktopWindow implements Disposable {
     private final GLFWFramebufferSizeCallback resizeCallback = new GLFWFramebufferSizeCallback() {
         @Override
         public void invoke(long windowHandle, final int width, final int height) {
-            postRunnable(new Runnable() {
-                @Override
-                public void run() {
-                    // System.out.println("Runnable resize");
-                    if (!"glfw_async".equals(Configuration.GLFW_LIBRARY_NAME.get())) {
-                        // System.out.println("resize callback");
-                        graphics.updateFramebufferInfo();
-                        if (!isListenerInitialized()) {
-                            return;
-                        }
-                        // makeCurrent();
-                        // System.out.println("context resize");
-                        if (width > 0 && height > 0) {
-                            // End the current frame — the surface texture was acquired at the
-                            // old size. Resize reconfigures the swap chain at the new size,
-                            // then beginFrame re-acquires the surface texture so it matches
-                            // the new MSAA / depth attachments.
-                            graphics.context.endFrame();
-                            graphics.context.resize(width, height);
-                            graphics.context.beginFrame();
-                            // Reset deltaTime so the resize pause (GLFW modal loop on Windows)
-                            // does not produce a huge time spike that makes particles/physics explode.
-                            graphics.resetDeltaTime();
-                            listener.resize(width, height);
-                        }
-                    } else {
+            if (!"glfw_async".equals(Configuration.GLFW_LIBRARY_NAME.get())) {
+                // Record the new size so update() can apply it before beginFrame().
+                // This avoids acquiring a surface texture at the old size and then
+                // presenting an empty frame (which caused a visible blink during resize).
+                pendingResize = true;
+                pendingResizeWidth = width;
+                pendingResizeHeight = height;
+            } else {
+                postRunnable(new Runnable() {
+                    @Override
+                    public void run() {
                         asyncResized = true;
-                        // System.out.println("Window.async resized");
                     }
-                }
-            });
+                });
+            }
         }
     };
 
@@ -472,6 +462,22 @@ public class WgDesktopWindow implements Disposable {
 
     boolean update() {
         try {
+            // Apply any pending resize BEFORE acquiring the surface texture.
+            // This ensures the swap chain is reconfigured at the new size first,
+            // so beginFrame() gets a correctly-sized surface texture and we never
+            // present an empty frame (which previously caused a visible blink).
+            if (pendingResize) {
+                pendingResize = false;
+                graphics.updateFramebufferInfo();
+                if (isListenerInitialized() && pendingResizeWidth > 0 && pendingResizeHeight > 0) {
+                    graphics.context.resize(pendingResizeWidth, pendingResizeHeight);
+                    // Reset deltaTime so the resize pause (GLFW modal loop on Windows)
+                    // does not produce a huge time spike that makes particles/physics explode.
+                    graphics.resetDeltaTime();
+                    listener.resize(graphics.getWidth(), graphics.getHeight());
+                }
+            }
+
             graphics.context.beginFrame();
             if (!listenerInitialized) {
                 initializeListener();
