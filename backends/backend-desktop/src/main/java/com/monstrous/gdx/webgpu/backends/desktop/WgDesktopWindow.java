@@ -206,6 +206,8 @@ public class WgDesktopWindow implements Disposable {
         }
     };
 
+    private boolean inLiveResize = false;
+
     private final GLFWWindowRefreshCallback refreshCallback = new GLFWWindowRefreshCallback() {
         @Override
         public void invoke(long windowHandle) {
@@ -217,6 +219,19 @@ public class WgDesktopWindow implements Disposable {
                     }
                 }
             });
+            // On Windows, GLFW enters a modal loop during window resize/move which blocks
+            // glfwPollEvents(). Rendering a frame here keeps the window content visible
+            // instead of showing a black screen.  The previous frame's endFrame() has
+            // already completed before glfwPollEvents() was called, so it is safe to run
+            // a full update() cycle (beginFrame → process runnables → render → endFrame).
+            if (isListenerInitialized() && !iconified && !inLiveResize) {
+                inLiveResize = true;
+                try {
+                    update();
+                } finally {
+                    inLiveResize = false;
+                }
+            }
         }
     };
 
@@ -457,10 +472,10 @@ public class WgDesktopWindow implements Disposable {
 
     boolean update() {
         try {
+            graphics.context.beginFrame();
             if (!listenerInitialized) {
                 initializeListener();
             }
-            graphics.context.beginFrame();
 
             synchronized (runnables) {
                 executedRunnables.addAll(runnables);
