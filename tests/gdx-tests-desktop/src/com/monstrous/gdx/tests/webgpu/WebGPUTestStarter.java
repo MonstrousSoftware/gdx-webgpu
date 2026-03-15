@@ -63,7 +63,173 @@ public class WebGPUTestStarter {
         config.samples = 4; // anti-aliasing (4) or not (1)
         config.useVsync(true);
 
+        if (argv.length > 0) {
+            String testName = argv[0];
+            if (testName.equalsIgnoreCase("auto")) {
+                new WgDesktopApplication(new AutoTestRunner(), config);
+                return;
+            }
+            ApplicationListener test = WebGPUTests.newTest(testName);
+            if (test != null) {
+                new WgDesktopApplication(test, config);
+                return;
+            }
+            System.out.println("Test not found: " + testName);
+        }
+
         new WgDesktopApplication(new TestChooser(), config);
+    }
+
+    static class AutoTestRunner extends ApplicationAdapter {
+        private List<String> testNames;
+        private int currentTestIndex = -1;
+        private float timer = 0;
+        private final float TEST_DURATION = 3.0f; // seconds per test
+        private ApplicationListener currentTest;
+        private boolean pendingSwitch = false;
+
+        private WgSpriteBatch uiBatch;
+        private WgBitmapFont uiFont;
+
+        @Override
+        public void create() {
+            testNames = WebGPUTests.getNames();
+            System.out.println("Starting Auto Test Runner with " + testNames.size() + " tests.");
+
+            uiBatch = new WgSpriteBatch();
+            uiFont = new WgBitmapFont();
+            uiFont.setColor(Color.RED);
+
+            nextTest();
+        }
+
+        private void nextTest() {
+            currentTestIndex++;
+            if (currentTestIndex >= testNames.size()) {
+                System.out.println("All tests completed!");
+                Gdx.app.exit();
+                return;
+            }
+
+            String name = testNames.get(currentTestIndex);
+            System.out.println("Running test (" + (currentTestIndex + 1) + "/" + testNames.size() + "): " + name);
+            currentTest = WebGPUTests.newTest(name);
+
+            try {
+                currentTest.create();
+                currentTest.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+            } catch (Exception e) {
+                System.err.println("Error creating test " + name + ": " + e.getMessage());
+                e.printStackTrace();
+                // move to next test immediately on error
+                timer = TEST_DURATION;
+                return;
+            }
+
+            timer = 0;
+            pendingSwitch = false;
+        }
+
+        @Override
+        public void render() {
+            if (pendingSwitch) {
+                if (currentTest != null) {
+                    currentTest.pause();
+                    currentTest.dispose();
+                    currentTest = null;
+                }
+                nextTest();
+                return;
+            }
+
+            // Clear the screen before rendering the test to prevent flickering or "on top" rendering
+            WgScreenUtils.clear(0, 0, 0, 1);
+
+              if (currentTest != null) {
+                  try {
+                      currentTest.render();
+                  } catch (Exception e) {
+                    System.err.println("Error rendering test " + testNames.get(currentTestIndex) + ": " + e.getMessage());
+                    e.printStackTrace();
+                    timer = TEST_DURATION; // force next test
+                }
+            }
+
+            timer += Gdx.graphics.getDeltaTime();
+
+            // Render UI on top
+            if (currentTestIndex >= 0 && currentTestIndex < testNames.size()) {
+                String testName = testNames.get(currentTestIndex);
+                String info = (currentTestIndex + 1) + " / " + testNames.size() + " - " + testName;
+
+                uiBatch.begin();
+                // Draw it higher from the bottom to avoid being cut off by test-specific overlays.
+                float estimatedWidth = info.length() * 8f;
+                float x = (Gdx.graphics.getWidth() - estimatedWidth) / 2f;
+                // Draw current test in White (higher up now: y=70)
+                uiFont.setColor(Color.WHITE);
+                uiFont.draw(uiBatch, info, x, 70);
+
+                // Draw previous test in Gray above current test (y=90)
+                if (currentTestIndex > 0) {
+                    String prevName = (currentTestIndex) + " / " + testNames.size() + " - " + testNames.get(currentTestIndex - 1);
+                    float prevWidth = prevName.length() * 8f;
+                    float prevX = (Gdx.graphics.getWidth() - prevWidth) / 2f;
+                    uiFont.setColor(Color.GRAY);
+                    uiFont.draw(uiBatch, prevName, prevX, 90);
+                }
+
+                // Draw next test in Gray below current test (y=50)
+                if (currentTestIndex < testNames.size() - 1) {
+                    String nextName = (currentTestIndex + 2) + " / " + testNames.size() + " - " + testNames.get(currentTestIndex + 1);
+                    float nextWidth = nextName.length() * 8f;
+                    float nextX = (Gdx.graphics.getWidth() - nextWidth) / 2f;
+                    uiFont.setColor(Color.GRAY);
+                    uiFont.draw(uiBatch, nextName, nextX, 50);
+                }
+
+                uiBatch.end();
+            }
+
+            if (timer >= TEST_DURATION) {
+                pendingSwitch = true;
+            }
+        }
+
+
+        @Override
+        public void resize(int width, int height) {
+            if (currentTest != null) {
+                currentTest.resize(width, height);
+            }
+        }
+
+        @Override
+        public void pause() {
+            if (currentTest != null) {
+                currentTest.pause();
+            }
+        }
+
+        @Override
+        public void resume() {
+            if (currentTest != null) {
+                currentTest.resume();
+            }
+        }
+
+        @Override
+        public void dispose() {
+            if (currentTest != null) {
+                currentTest.dispose();
+            }
+            if (uiBatch != null) {
+                uiBatch.dispose();
+            }
+            if (uiFont != null) {
+                uiFont.dispose();
+            }
+        }
     }
 
     static class TestChooser extends ApplicationAdapter {
