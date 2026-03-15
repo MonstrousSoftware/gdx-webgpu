@@ -136,6 +136,10 @@ public class AutoTestRunner extends ApplicationAdapter {
         if (currentTest != null) {
             currentTest.resize(width, height);
         }
+        // Update the UI batch projection so the overlay text stays on screen after resize
+        if (uiBatch != null) {
+            uiBatch.getProjectionMatrix().setToOrtho2D(0, 0, width, height, 0, 100);
+        }
     }
 
     @Override
