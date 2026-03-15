@@ -89,7 +89,7 @@ gdx-webgpu/
 
 ### Resource Patterns
 
-- **`WebGPURenderPass` pooling**: Uses libGDX `Pool`. `obtain()` → use → `end()` releases encoder + returns to pool. `dispose()` destroys native wrapper
+- **`WebGPURenderPass`**: pooling Uses libGDX `Pool`. `obtain()` → use → `end()` releases encoder + returns to pool. `dispose()` destroys native wrapper
 - **`BindGroupCache`**: Pool for bind groups used by WgImmediateModeRenderer / WgSpriteBatch
 - **Texture creation**: `WgTexture` wraps `WGPUTexture` + `WGPUTextureView` + lazy `WGPUSampler`. Mipmap generation done on CPU
 - **sRGB handling**: Color textures use `RGBA8UnormSrgb` (auto gamma); non-color (normals, data) use `RGBA8Unorm`
@@ -138,6 +138,49 @@ Use the Gradle task `gdx_webgpu_tests_run_desktop`:
 
 - The `auto` argument loops through all registered tests automatically.
 - Passing a test class name (e.g., `SpriteBatchTest`, `IBL_Spheres`) launches only that test interactively.
+
+### Running Android Tests
+
+First build and install the debug APK, then launch via `adb`:
+
+```bash
+# Build & install:
+./gradlew :tests:gdx-tests-android:installDebug
+
+# Run ALL tests sequentially (auto mode):
+adb shell am start -n com.monstrous.gdx.tests.webgpu/.GdxTestActivity --es test auto
+
+# Run a SINGLE test by class name:
+adb shell am start -n com.monstrous.gdx.tests.webgpu/.GdxTestActivity --es test Particles3D
+
+# Interactive chooser (default — no extras):
+adb shell am start -n com.monstrous.gdx.tests.webgpu/.GdxTestActivity
+```
+
+- The `--es test <value>` passes a string Intent extra to `GdxTestActivity`.
+- Monitor test output: `adb logcat -s "System.out" | grep "Running test"`
+- If `adb` is not on PATH, use the full path: `<SDK>/platform-tools/adb` (SDK path is in `local.properties`).
+
+### Running TeaVM (Web) Tests
+
+Build the TeaVM web app first, which compiles to JS and starts a local Jetty server:
+
+```bash
+./gradlew gdx_webgpu_tests_run_teavm
+```
+
+Then open the local URL (shown in console output) in a WebGPU-capable browser. URL query parameters control the mode:
+
+```
+# Interactive chooser (default):
+http://localhost:8080/
+
+# Run ALL tests sequentially (auto mode):
+http://localhost:8080/?auto
+
+# Run a SINGLE test by class name:
+http://localhost:8080/?test=Particles3D
+```
 
 ---
 

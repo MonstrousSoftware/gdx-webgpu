@@ -9,11 +9,15 @@ import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Runs all registered WebGPU tests sequentially, spending a fixed number of seconds on each.
- * Used by both the desktop and web test launchers to validate that every test passes without errors.
+ * Used by both the desktop, web, and Android test launchers to validate that every test passes without errors.
+ * <p>
+ * Every test lifecycle call is wrapped in try-catch so a single failing test cannot crash the runner.
+ * After all tests complete, a summary of passed/failed tests is printed to stdout.
  */
 public class AutoTestRunner extends ApplicationAdapter {
     private List<String> testNames;
@@ -23,8 +27,26 @@ public class AutoTestRunner extends ApplicationAdapter {
     private ApplicationListener currentTest;
     private boolean pendingSwitch = false;
 
+    // --- FPS-stability loading detection ---
+    /** Number of consecutive stable frames required before considering a test "loaded". */
+    private static final int STABLE_FRAMES_REQUIRED = 10;
+    /** A frame with deltaTime above this threshold (in seconds) is considered a loading spike. */
+    private static final float SPIKE_THRESHOLD = 0.10f; // 100 ms = < 10 fps
+    /** Maximum seconds to wait for stability before starting the timer anyway. */
+    private static final float LOAD_TIMEOUT = 15.0f;
+    /** Count of consecutive frames with deltaTime below the spike threshold. */
+    private int stableFrameCount = 0;
+    /** True once FPS has stabilised (or the load timeout was reached). */
+    private boolean testLoaded = false;
+    /** Accumulated wall-clock time since the test's first render(), used for the load timeout. */
+    private float loadWaitTime = 0;
+
     private WgSpriteBatch uiBatch;
     private WgBitmapFont uiFont;
+
+    /** Tracks which tests failed (test name + phase + message). */
+    private final List<String> failedTests = new ArrayList<>();
+    private boolean currentTestFailed = false;
 
     @Override
     public void create() {
@@ -41,23 +63,27 @@ public class AutoTestRunner extends ApplicationAdapter {
     private void nextTest() {
         currentTestIndex++;
         if (currentTestIndex >= testNames.size()) {
-            System.out.println("All tests completed!");
+            printSummary();
             Gdx.app.exit();
             return;
         }
 
         String name = testNames.get(currentTestIndex);
         System.out.println("Running test (" + (currentTestIndex + 1) + "/" + testNames.size() + "): " + name);
+        currentTestFailed = false;
+        testLoaded = false;
+        stableFrameCount = 0;
+        loadWaitTime = 0;
         currentTest = WebGPUTests.newTest(name);
 
         try {
             currentTest.create();
             currentTest.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        } catch (Exception e) {
-            System.err.println("Error creating test " + name + ": " + e.getMessage());
-            e.printStackTrace();
+        } catch (Throwable e) {
+            recordFailure(name, "create", e);
             // move to next test immediately on error
             timer = TEST_DURATION;
+            testLoaded = true; // allow timer to proceed
             return;
         }
 
@@ -65,14 +91,52 @@ public class AutoTestRunner extends ApplicationAdapter {
         pendingSwitch = false;
     }
 
+    /** Safely dispose the current test, catching any errors. */
+    private void disposeCurrentTest() {
+        if (currentTest == null) return;
+        String name = testNames.get(currentTestIndex);
+        try {
+            currentTest.pause();
+        } catch (Throwable e) {
+            recordFailure(name, "pause", e);
+        }
+        try {
+            currentTest.dispose();
+        } catch (Throwable e) {
+            recordFailure(name, "dispose", e);
+        }
+        currentTest = null;
+    }
+
+    private void recordFailure(String testName, String phase, Throwable e) {
+        String msg = testName + " [" + phase + "]: " + e.getClass().getSimpleName() + " - " + e.getMessage();
+        System.err.println("FAIL: " + msg);
+        e.printStackTrace();
+        if (!currentTestFailed) {
+            currentTestFailed = true;
+            failedTests.add(msg);
+        }
+    }
+
+    private void printSummary() {
+        int total = testNames.size();
+        int failed = failedTests.size();
+        int passed = total - failed;
+        System.out.println("========================================");
+        System.out.println("Auto Test Runner complete: " + passed + " / " + total + " passed.");
+        if (failed > 0) {
+            System.out.println("FAILED tests (" + failed + "):");
+            for (String f : failedTests) {
+                System.out.println("  - " + f);
+            }
+        }
+        System.out.println("========================================");
+    }
+
     @Override
     public void render() {
         if (pendingSwitch) {
-            if (currentTest != null) {
-                currentTest.pause();
-                currentTest.dispose();
-                currentTest = null;
-            }
+            disposeCurrentTest();
             nextTest();
             return;
         }
@@ -80,17 +144,43 @@ public class AutoTestRunner extends ApplicationAdapter {
         // Clear the screen before rendering the test
         WgScreenUtils.clear(0, 0, 0, 1);
 
+        float dt = Gdx.graphics.getDeltaTime();
+
         if (currentTest != null) {
             try {
                 currentTest.render();
-            } catch (Exception e) {
-                System.err.println("Error rendering test " + testNames.get(currentTestIndex) + ": " + e.getMessage());
-                e.printStackTrace();
+
+                // --- FPS-stability loading detection ---
+                // While the test is still loading (compiling shaders, uploading textures,
+                // parsing models) individual frames take much longer than normal, causing
+                // deltaTime spikes.  We wait until we see STABLE_FRAMES_REQUIRED consecutive
+                // frames below the SPIKE_THRESHOLD before we consider the test "loaded" and
+                // start the countdown timer.  A LOAD_TIMEOUT safety net ensures we don't
+                // wait forever on a test that is genuinely slow to render.
+                if (!testLoaded) {
+                    loadWaitTime += dt;
+                    if (dt < SPIKE_THRESHOLD) {
+                        stableFrameCount++;
+                    } else {
+                        stableFrameCount = 0;
+                    }
+                    if (stableFrameCount >= STABLE_FRAMES_REQUIRED || loadWaitTime >= LOAD_TIMEOUT) {
+                        testLoaded = true;
+                        timer = 0;
+                    }
+                }
+            } catch (Throwable e) {
+                String name = testNames.get(currentTestIndex);
+                recordFailure(name, "render", e);
                 timer = TEST_DURATION; // force next test
+                testLoaded = true;
             }
         }
 
-        timer += Gdx.graphics.getDeltaTime();
+        // Only advance the timer once the test has fully loaded
+        if (testLoaded) {
+            timer += dt;
+        }
 
         // Render UI overlay
         if (currentTestIndex >= 0 && currentTestIndex < testNames.size()) {
@@ -101,8 +191,8 @@ public class AutoTestRunner extends ApplicationAdapter {
             float estimatedWidth = info.length() * 8f;
             float x = (Gdx.graphics.getWidth() - estimatedWidth) / 2f;
 
-            // Current test in white
-            uiFont.setColor(Color.WHITE);
+            // Current test in white (red if failed)
+            uiFont.setColor(currentTestFailed ? Color.RED : Color.WHITE);
             uiFont.draw(uiBatch, info, x, 70);
 
             // Previous test in gray above
@@ -134,7 +224,11 @@ public class AutoTestRunner extends ApplicationAdapter {
     @Override
     public void resize(int width, int height) {
         if (currentTest != null) {
-            currentTest.resize(width, height);
+            try {
+                currentTest.resize(width, height);
+            } catch (Throwable e) {
+                recordFailure(testNames.get(currentTestIndex), "resize", e);
+            }
         }
         // Update the UI batch projection so the overlay text stays on screen after resize
         if (uiBatch != null) {
@@ -145,22 +239,28 @@ public class AutoTestRunner extends ApplicationAdapter {
     @Override
     public void pause() {
         if (currentTest != null) {
-            currentTest.pause();
+            try {
+                currentTest.pause();
+            } catch (Throwable e) {
+                recordFailure(testNames.get(currentTestIndex), "pause", e);
+            }
         }
     }
 
     @Override
     public void resume() {
         if (currentTest != null) {
-            currentTest.resume();
+            try {
+                currentTest.resume();
+            } catch (Throwable e) {
+                recordFailure(testNames.get(currentTestIndex), "resume", e);
+            }
         }
     }
 
     @Override
     public void dispose() {
-        if (currentTest != null) {
-            currentTest.dispose();
-        }
+        disposeCurrentTest();
         if (uiBatch != null) {
             uiBatch.dispose();
         }
@@ -169,4 +269,3 @@ public class AutoTestRunner extends ApplicationAdapter {
         }
     }
 }
-

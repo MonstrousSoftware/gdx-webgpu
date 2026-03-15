@@ -108,7 +108,7 @@ You can also check out the web version here: [tests](https://monstrous-software.
 
 ## Running Tests
 
-The `tests/` folder contains a suite of test applications. You can run them on desktop or web, either interactively (with a chooser UI), as a single test by name, or in auto mode (all tests sequentially, 3 seconds each).
+The `tests/` folder contains a suite of test applications. You can run them on desktop, web, or Android, either interactively (with a chooser UI), as a single test by name, or in auto mode (all tests sequentially, 3 seconds each).
 
 ### Desktop
 
@@ -142,6 +142,23 @@ Then open one of the following URLs in a WebGPU-capable browser:
 | `http://localhost:8080/index.html?auto` | Run all tests sequentially |
 
 Press **Escape** to return to the test chooser when running an individual test interactively.
+
+### Android
+
+Install the APK on a connected device or emulator, then launch via `adb`:
+
+```bash
+# Interactive test chooser (default):
+adb shell am start -n com.monstrous.gdx.tests.webgpu/.GdxTestActivity
+
+# Run a single test by class name:
+adb shell am start -n com.monstrous.gdx.tests.webgpu/.GdxTestActivity --es test "Particles3D"
+
+# Run ALL tests sequentially (auto mode):
+adb shell am start -n com.monstrous.gdx.tests.webgpu/.GdxTestActivity --es test "auto"
+```
+
+On mobile, tap the bottom-right corner hotspot to close a running test and return to the chooser.
 
 ## New features 
 

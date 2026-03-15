@@ -70,7 +70,7 @@ public class SkyBox implements Disposable {
 
         pipelineLayout = new WebGPUPipelineLayout("SkyBox Pipeline Layout", bindGroupLayout);
 
-        shaderSource = Gdx.files.internal(shaderPath).readString();
+        shaderSource = Gdx.files.classpath(shaderPath).readString();
 
         bindGroup = makeBindGroup(bindGroupLayout, uniformBuffer);
 

@@ -80,7 +80,7 @@ public class IBLGenerator {
         Environment environment = new Environment();
         environment.set(new WgCubemapAttribute(EnvironmentMap, environmentMap)); // add cube map attribute
 
-        String shaderSource = Gdx.files.internal("shaders/modelbatchCubeMapIrradiance.wgsl").readString();
+        String shaderSource = Gdx.files.classpath("shaders/modelbatchCubeMapIrradiance.wgsl").readString();
         WgCubemap irradianceMap = constructMap(cubeInstance, shaderSource, environment, size, 1);
 
         cube.dispose();
@@ -97,7 +97,7 @@ public class IBLGenerator {
         Environment environment = new Environment();
         environment.set(new WgCubemapAttribute(EnvironmentMap, environmentMap)); // add cube map attribute
 
-        String shaderSource = Gdx.files.internal("shaders/modelbatchCubeMapRadiance.wgsl").readString();
+        String shaderSource = Gdx.files.classpath("shaders/modelbatchCubeMapRadiance.wgsl").readString();
         WgCubemap radianceMap = constructMap(cubeInstance, shaderSource, environment, size,
                 WgTexture.calculateMipLevelCount(size, size));
 
@@ -119,7 +119,7 @@ public class IBLGenerator {
         Environment environment = new Environment();
         environment.add(sun);
 
-        String shaderSource = Gdx.files.internal("shaders/genIBL.wgsl").readString();
+        String shaderSource = Gdx.files.classpath("shaders/genIBL.wgsl").readString();
         WgCubemap envMap = constructMap(cubeInstance, shaderSource, environment, size, 1);
 
         cube.dispose();
@@ -244,7 +244,7 @@ public class IBLGenerator {
         WgGraphics gfx = (WgGraphics) Gdx.graphics;
         WebGPUContext webgpu = gfx.getContext();
 
-        String shaderSource = Gdx.files.internal("shaders/modelbatchEquilateral.wgsl").readString();
+        String shaderSource = Gdx.files.classpath("shaders/modelbatchEquilateral.wgsl").readString();
         WgModelBatch mapBatch = new WgModelBatch(new IBLShaderProvider(shaderSource));
 
         PerspectiveCamera snapCam = createCamera();

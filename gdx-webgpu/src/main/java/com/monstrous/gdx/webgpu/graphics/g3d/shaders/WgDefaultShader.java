@@ -168,7 +168,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
             binder.defineBinding("lutSampler", 0, 10);
 
             // set 'isColor' to false in order to avoid gamma correction on this data texture
-            brdfLUT = new WgTexture(Gdx.files.internal("brdfLUT.png"), false, false);
+            brdfLUT = new WgTexture(Gdx.files.classpath("brdfLUT.png"), false, false);
             brdfLUT.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
             brdfLUT.setWrap(Texture.TextureWrap.ClampToEdge, Texture.TextureWrap.ClampToEdge);
 

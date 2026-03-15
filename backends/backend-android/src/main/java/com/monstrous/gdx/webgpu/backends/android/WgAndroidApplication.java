@@ -595,7 +595,7 @@ public class WgAndroidApplication extends Activity implements AndroidApplication
 
     @Override
     public AndroidInput createInput(Application activity, Context context, Object view, AndroidApplicationConfiguration config) {
-        return new DefaultAndroidInput(this, this, graphics.view, config);
+        return new WgDefaultAndroidInput(this, this, graphics.view, config);
     }
 
     protected AndroidFiles createFiles() {
