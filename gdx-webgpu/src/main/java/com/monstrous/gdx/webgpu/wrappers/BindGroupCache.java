@@ -29,7 +29,7 @@ import com.github.xpenatan.webgpu.WGPUTextureView;
  * reconfigured and reused for different bindings within the same layout.
  * <p>
  * Usage:
- * 
+ *
  * <pre>
  * BindGroupCache cache = new BindGroupCache();
  * // Get a bind group (either new or from pool)
@@ -40,11 +40,11 @@ import com.github.xpenatan.webgpu.WGPUTextureView;
  */
 public class BindGroupCache implements Disposable {
     private final Array<WebGPUBindGroup> pool;
-    private WebGPUBindGroup currentBindGroup;
+    private final Array<WebGPUBindGroup> active; // all bind groups obtained since last reset()
 
     public BindGroupCache() {
         pool = new Array<>();
-        currentBindGroup = null;
+        active = new Array<>();
     }
 
     /**
@@ -79,7 +79,7 @@ public class BindGroupCache implements Disposable {
 
         bg.end();
 
-        currentBindGroup = bg;
+        active.add(bg);
         return bg;
     }
 
@@ -109,11 +109,11 @@ public class BindGroupCache implements Disposable {
      * Clear the pool and reset for next frame. Should be called at end of frame/render pass.
      */
     public void reset() {
-        // Return current bind group to pool if any
-        if (currentBindGroup != null) {
-            returnBindGroup(currentBindGroup);
-            currentBindGroup = null;
+        // Return all active bind groups to pool for reuse
+        for (int i = 0; i < active.size; i++) {
+            returnBindGroup(active.get(i));
         }
+        active.clear();
         // Note: We don't clear the pool - those objects are kept for reuse
     }
 
@@ -123,9 +123,9 @@ public class BindGroupCache implements Disposable {
             bg.dispose();
         }
         pool.clear();
-        if (currentBindGroup != null) {
-            currentBindGroup.dispose();
-            currentBindGroup = null;
+        for (WebGPUBindGroup bg : active) {
+            bg.dispose();
         }
+        active.clear();
     }
 }
