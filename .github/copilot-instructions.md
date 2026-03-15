@@ -123,7 +123,21 @@ gdx-webgpu/
 - **Desktop entry point**: `backends/backend-desktop/` → `WgDesktopApplication`
 - **TeaVM web entry point**: `backends/backend-teavm/`
 - **Test projects**: `tests/gdx-tests-desktop/`, `tests/gdx-tests-teavm/`
-- **Examples**: `examples/basic/`, `examples/freetype/`, `examples/gdx-tests/`
+
+### Running Desktop Tests
+
+Use the Gradle task `gdx_webgpu_tests_run_desktop`:
+
+```bash
+# Run ALL tests sequentially (auto-advances through every test):
+./gradlew gdx_webgpu_tests_run_desktop --args="auto"
+
+# Run a SINGLE test by class name:
+./gradlew gdx_webgpu_tests_run_desktop --args="Particles3D"
+```
+
+- The `auto` argument loops through all registered tests automatically.
+- Passing a test class name (e.g., `SpriteBatchTest`, `IBL_Spheres`) launches only that test interactively.
 
 ---
 
@@ -138,4 +152,8 @@ gdx-webgpu/
 - **FIXED (GC/Perf):** `PipelineSpecification.hashCode()` — Used `Objects.hash(...)` with 29+ arguments, creating a varargs `Object[]` and boxing all primitives on every call. Replaced with manual `31 * result + field.hashCode()` chain
 - **FIXED (GC/Perf):** `WebGPUVertexLayout.hashCode()` — Allocated `new String[size]`, sorted, and iterated on every call (transitive via `PipelineSpecification.hashCode()`). Now caches hash with dirty flag, recomputes only when `setVertexAttributeLocation()` or `setStepMode()` is called
 - **FIXED (GC/Perf):** `WgDefaultShader.setPipeline()` / `WgSpriteBatch.setPipeline()` — Called `formats.clone()` on format change. Now reuses existing array via `System.arraycopy()` when array length matches; allocates only on length change (rare MRT transitions)
+- **FIXED (Critical):** `WgDesktopWindow.resizeCallback` — Resize during active frame caused WebGPU validation error (surface texture size mismatch with MSAA/depth attachments). The resize runnable now brackets `context.resize()` with `endFrame()`/`beginFrame()` to properly restart the frame at the new size. Note: `beginFrame()` must remain at the top of `update()` because runnables (input/lifecycle listeners) may execute WebGPU commands requiring an active frame context.
+- **FIXED (Critical):** `WgTeaGraphics.resize()` — Same resize-during-active-frame bug as desktop. `context.resize()` was called between `begin()` (which calls `beginFrame()`) and `end()` (which calls `endFrame()`), causing surface texture size mismatch on browser window resize. Now brackets `context.resize()` with `endFrame()`/`beginFrame()`.
+- **FIXED (Moderate):** `WgDesktopWindow.resizeCallback` — After resize, `deltaTime` spiked because GLFW's modal resize loop on Windows blocks the event loop. Added `graphics.resetDeltaTime()` after resize to zero out the accumulated time, preventing particles/physics from exploding on the first frame after resize.
+- **VERIFIED (Android):** `WgAndroidGraphics.onSurfaceChanged()` — Resize is safe. Called by the render thread BEFORE `onDrawFrame()` (sequential in `WgSurfaceView.RenderThread.run()` loop), so `context.resize()` always completes before `beginFrame()`.
 - **VERIFIED:** Full per-frame allocation audit of all rendering hot paths (SpriteBatch, DefaultShader, ImmediateModeRenderer, ShapeRenderer, ModelBatch, RenderPassBuilder, SkyBox, PipelineCache, MaterialsCache, Binder, BindGroupCache, GPUTimer). Zero per-frame `new` allocations confirmed. All 77 automated tests pass.

@@ -79,7 +79,12 @@ public class WgTeaGraphics extends WebGraphics implements WgGraphics {
 
     @Override
     public void resize(ApplicationListener appListener, int width, int height) {
+        // End the current frame — the surface texture was acquired at the old size.
+        // Resize reconfigures the swap chain at the new size, then beginFrame
+        // re-acquires the surface texture so it matches the new MSAA / depth attachments.
+        context.endFrame();
         context.resize(width, height);
+        context.beginFrame();
         Gdx.gl.glViewport(0, 0, width, height);
         appListener.resize(width, height);
     }

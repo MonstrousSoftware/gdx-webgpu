@@ -167,8 +167,17 @@ public class WgDesktopWindow implements Disposable {
                         // makeCurrent();
                         // System.out.println("context resize");
                         if (width > 0 && height > 0) {
-                            listener.resize(width, height);
+                            // End the current frame — the surface texture was acquired at the
+                            // old size. Resize reconfigures the swap chain at the new size,
+                            // then beginFrame re-acquires the surface texture so it matches
+                            // the new MSAA / depth attachments.
+                            graphics.context.endFrame();
                             graphics.context.resize(width, height);
+                            graphics.context.beginFrame();
+                            // Reset deltaTime so the resize pause (GLFW modal loop on Windows)
+                            // does not produce a huge time spike that makes particles/physics explode.
+                            graphics.resetDeltaTime();
+                            listener.resize(width, height);
                         }
                     } else {
                         asyncResized = true;
@@ -447,11 +456,12 @@ public class WgDesktopWindow implements Disposable {
     }
 
     boolean update() {
-        graphics.context.beginFrame();
         try {
             if (!listenerInitialized) {
                 initializeListener();
             }
+            graphics.context.beginFrame();
+
             synchronized (runnables) {
                 executedRunnables.addAll(runnables);
                 runnables.clear();
