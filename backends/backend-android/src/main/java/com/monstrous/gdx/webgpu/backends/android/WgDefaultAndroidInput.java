@@ -20,7 +20,7 @@ import java.lang.reflect.Field;
  * Subclass of {@link DefaultAndroidInput} that fixes two hard-coded {@code (AndroidApplication)app}
  * casts in the upstream class ({@code onKeyboardHeightChanged} and {@code getSoftButtonsBarHeight}).
  * <p>
- * {@link WgAndroidApplication} extends {@link Activity} + {@code AndroidApplicationBase} but does
+ * {@link WgAndroidApplication} extends Activity + {@code AndroidApplicationBase} but does
  * <b>not</b> extend {@code AndroidApplication}, so those casts throw {@code ClassCastException}.
  * This class overrides the affected method with equivalent logic using the correct type.
  */
