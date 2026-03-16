@@ -47,6 +47,20 @@ public class WgFrameBuffer implements Disposable {
     }
 
     public WgFrameBuffer(WGPUTextureFormat[] formats, int width, int height, boolean hasDepth) {
+        this(formats, width, height, hasDepth, false);
+    }
+
+    /**
+     * Create a framebuffer with the given format(s).
+     *
+     * @param formats         one format per color attachment
+     * @param width           framebuffer width
+     * @param height          framebuffer height
+     * @param hasDepth        whether to create a depth attachment
+     * @param exactFormats    when {@code true}, formats are used verbatim (no sRGB promotion).
+     *                        Use this for non-color data such as object-ID picking.
+     */
+    public WgFrameBuffer(WGPUTextureFormat[] formats, int width, int height, boolean hasDepth, boolean exactFormats) {
         WgGraphics gfx = (WgGraphics) Gdx.graphics;
         webgpu = gfx.getContext();
 
@@ -59,7 +73,8 @@ public class WgFrameBuffer implements Disposable {
             // encoding/decoding automatically, matching the direct-to-screen gamma path.
             // Additional targets (e.g. object-ID targets) must keep their exact format so that
             // the encoded data values are stored and sampled verbatim.
-            WGPUTextureFormat fboFormat = (i == 0) ? toSrgbFormat(formats[i]) : formats[i];
+            // When exactFormats is true, skip promotion entirely (for non-color data like ID picking).
+            WGPUTextureFormat fboFormat = (!exactFormats && i == 0) ? toSrgbFormat(formats[i]) : formats[i];
             colorTextures[i] = new WgTexture("fbo color " + i, width, height, false, textureUsage, fboFormat, 1,
                     fboFormat);
         }

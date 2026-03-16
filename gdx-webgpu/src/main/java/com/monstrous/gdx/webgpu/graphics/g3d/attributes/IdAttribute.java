@@ -93,6 +93,11 @@ public class IdAttribute extends Attribute {
     }
 
     @Override
+    public int hashCode() {
+        return 31 * super.hashCode() + color.toIntBits();
+    }
+
+    @Override
     public Attribute copy() {
         return new IdAttribute(this.color);
     }
