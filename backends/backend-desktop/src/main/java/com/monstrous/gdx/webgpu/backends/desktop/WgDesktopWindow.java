@@ -469,13 +469,10 @@ public class WgDesktopWindow implements Disposable {
             if (pendingResize) {
                 pendingResize = false;
                 graphics.updateFramebufferInfo();
-                if (isListenerInitialized() && pendingResizeWidth > 0 && pendingResizeHeight > 0) {
-                    graphics.context.resize(pendingResizeWidth, pendingResizeHeight);
-                    // Reset deltaTime so the resize pause (GLFW modal loop on Windows)
-                    // does not produce a huge time spike that makes particles/physics explode.
-                    graphics.resetDeltaTime();
-                    listener.resize(graphics.getWidth(), graphics.getHeight());
-                }
+            if (isListenerInitialized() && pendingResizeWidth > 0 && pendingResizeHeight > 0) {
+                graphics.context.resize(pendingResizeWidth, pendingResizeHeight);
+                listener.resize(graphics.getWidth(), graphics.getHeight());
+            }
             }
 
             graphics.context.beginFrame();

@@ -63,7 +63,6 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
     private BufferFormat bufferFormat;
     private long lastFrameTime = -1;
     private float deltaTime;
-    private boolean resetDeltaTime = false;
     private long frameId;
     private long frameCounterStart = 0;
     private int frames;
@@ -196,11 +195,7 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
         long time = System.nanoTime();
         if (lastFrameTime == -1)
             lastFrameTime = time;
-        if (resetDeltaTime) {
-            resetDeltaTime = false;
-            deltaTime = 0;
-        } else
-            deltaTime = (time - lastFrameTime) / 1000000000.0f;
+        deltaTime = (time - lastFrameTime) / 1000000000.0f;
         lastFrameTime = time;
 
         if (time - frameCounterStart >= 1000000000) {
@@ -327,9 +322,6 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
         return 0;
     }
 
-    public void resetDeltaTime() {
-        resetDeltaTime = true;
-    }
 
     @Override
     public int getFramesPerSecond() {
