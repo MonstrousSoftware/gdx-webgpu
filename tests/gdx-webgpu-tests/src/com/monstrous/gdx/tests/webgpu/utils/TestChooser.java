@@ -180,6 +180,9 @@ public class TestChooser extends ApplicationAdapter {
     @Override
     public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
+        if (test != null) {
+            test.resize(width, height);
+        }
     }
 
     @Override

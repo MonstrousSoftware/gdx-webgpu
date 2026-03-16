@@ -318,11 +318,13 @@ public class WebGPUApplication extends WebGPUContext implements WebGPUInitializa
 
     @Override
     public void setScissor(int x, int y, int w, int h) {
-        if (x + w > width || y + h > height) {
-            // alert on invalid use, and avoid crash
-            Gdx.app.error("setScissor", "dimensions outside render target");
-            return;
-        }
+        // Clamp the scissor rectangle to the render target bounds
+        if (x < 0) { w += x; x = 0; }
+        if (y < 0) { h += y; y = 0; }
+        if (x + w > width)  w = width - x;
+        if (y + h > height) h = height - y;
+        if (w < 0) w = 0;
+        if (h < 0) h = 0;
         scissor.set(x, y, w, h);
     }
 
