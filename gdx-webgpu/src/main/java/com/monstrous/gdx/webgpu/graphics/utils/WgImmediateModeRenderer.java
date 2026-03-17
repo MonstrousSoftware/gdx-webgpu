@@ -284,6 +284,18 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
         return pipelineSpec.isDepthTestEnabled();
     }
 
+    public void enableBlending() {
+        pipelineSpec.enableBlending();
+    }
+
+    public void disableBlending() {
+        pipelineSpec.disableBlending();
+    }
+
+    public boolean isBlendingEnabled() {
+        return pipelineSpec.isBlendingEnabled();
+    }
+
     // Note: the default shader ignores the normal vectors
 
     static private String defaultShaderSource() {
