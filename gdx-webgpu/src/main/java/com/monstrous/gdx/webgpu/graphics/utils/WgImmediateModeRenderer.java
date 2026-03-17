@@ -50,7 +50,6 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
     private final int colorOffset;
     private final int texCoordOffset;
     private final Matrix4 projModelView = new Matrix4();
-    private final Matrix4 shiftDepthMatrix;
 
     private WebGPUVertexBuffer vertexBuffer;
     private WebGPUUniformBuffer uniformBuffer;
@@ -84,9 +83,6 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
         frameNumber = -1;
         vbOffset = 0;
 
-        // matrix which will transform an opengl ortho matrix to a webgpu ortho matrix
-        // by scaling the Z range from [-1..1] to [0..1]
-        shiftDepthMatrix = new Matrix4().idt().scl(1, 1, 0.5f).trn(0, 0, 0.5f);
 
         this.maxVertices = maxVertices;
 
@@ -154,7 +150,7 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
         // we reset vertexIdx and numVertices at the start of every FLUSH/end of FLUSH,
         // so no need to do it here for every begin call in the same frame.
 
-        this.projModelView.set(shiftDepthMatrix).mul(projModelView);
+        this.projModelView.set(projModelView);
         this.primitiveType = primitiveType;
 
         if (primitiveType == GL20.GL_LINES)
@@ -344,6 +340,34 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
 
     // create or reuse pipeline on demand to match the pipeline spec
     private void setPipeline() {
+        // Sync pipeline spec with the current render pass's color formats and sample count.
+        // Without this, the spec retains stale values from construction time (the screen
+        // surface format and MSAA count). When rendering inside an FBO (different format,
+        // MSAA disabled), the pipeline would be created with mismatched format/samples,
+        // causing broken depth testing.
+        WGPUTextureFormat[] formats = renderPass.getColorFormats();
+        boolean formatsChanged = pipelineSpec.colorFormats == null
+                || pipelineSpec.colorFormats.length != formats.length;
+        if (!formatsChanged) {
+            for (int i = 0; i < formats.length; i++) {
+                if (formats[i] != pipelineSpec.colorFormats[i]) {
+                    formatsChanged = true;
+                    break;
+                }
+            }
+        }
+        if (formatsChanged) {
+            if (pipelineSpec.colorFormats == null || pipelineSpec.colorFormats.length != formats.length) {
+                pipelineSpec.colorFormats = new WGPUTextureFormat[formats.length];
+            }
+            System.arraycopy(formats, 0, pipelineSpec.colorFormats, 0, formats.length);
+            if (pipelineSpec.shaderSource != null) {
+                pipelineSpec.shader = null;
+            }
+        }
+        pipelineSpec.numSamples = renderPass.getSampleCount();
+        pipelineSpec.invalidateHashCode();
+
         WebGPUPipeline pipeline = pipelines.findPipeline(pipelineLayout, pipelineSpec);
         if (pipeline != prevPipeline) { // avoid unneeded switches
             renderPass.setPipeline(pipeline);
