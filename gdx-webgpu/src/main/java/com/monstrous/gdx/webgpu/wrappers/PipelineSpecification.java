@@ -167,6 +167,10 @@ public class PipelineSpecification {
         dirty = true;
     }
 
+    public boolean isDepthTestEnabled() {
+        return useDepthTest;
+    }
+
     public void setCullMode(WGPUCullMode cullMode) {
         this.cullMode = cullMode;
         dirty = true;

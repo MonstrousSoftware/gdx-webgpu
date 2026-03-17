@@ -273,6 +273,18 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
         this.texture = texture;
     }
 
+    public void enableDepthTest() {
+        pipelineSpec.enableDepthTest();
+    }
+
+    public void disableDepthTest() {
+        pipelineSpec.disableDepthTest();
+    }
+
+    public boolean isDepthTestEnabled() {
+        return pipelineSpec.isDepthTestEnabled();
+    }
+
     // Note: the default shader ignores the normal vectors
 
     static private String defaultShaderSource() {
