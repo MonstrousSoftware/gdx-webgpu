@@ -62,13 +62,6 @@ public class WgShapeRenderer implements Disposable {
     private boolean autoShapeType;
     private final float defaultRectLineWidth = 0.75f;
 
-    // Matrix to remap OpenGL [-1,1] depth to WebGPU [0,1].
-    // Enabled by default for 2D rendering (orthographic cameras).
-    // Disable via disableDepthShift() when rendering 3D debug lines alongside WgModelBatch,
-    // so that depth values match WgDefaultShader (which passes camera.combined raw).
-    private final Matrix4 shiftDepthMatrix = new Matrix4().idt().scl(1, 1, 0.5f).trn(0, 0, 0.5f);
-    private final Matrix4 shiftedMatrix = new Matrix4();
-    private boolean depthShiftEnabled = true;
 
     public WgShapeRenderer() {
         this(5000);
@@ -104,20 +97,6 @@ public class WgShapeRenderer implements Disposable {
         return color;
     }
 
-    /** Enables the OpenGL-to-WebGPU depth shift (default). Use for 2D rendering with orthographic cameras. */
-    public void enableDepthShift() {
-        depthShiftEnabled = true;
-    }
-
-    /** Disables the depth shift. Use when rendering 3D debug lines alongside WgModelBatch so depth values match. */
-    public void disableDepthShift() {
-        depthShiftEnabled = false;
-    }
-
-    /** Returns whether the depth shift is currently enabled. */
-    public boolean isDepthShiftEnabled() {
-        return depthShiftEnabled;
-    }
 
     public void updateMatrices() {
         matrixDirty = true;
@@ -207,13 +186,7 @@ public class WgShapeRenderer implements Disposable {
             Matrix4.mul(combinedMatrix.val, transformMatrix.val);
             matrixDirty = false;
         }
-        if (depthShiftEnabled) {
-            // Apply the depth shift on top of the combined matrix so the IMR
-            // (which no longer shifts internally) produces WebGPU [0,1] depth.
-            renderer.begin(shiftedMatrix.set(shiftDepthMatrix).mul(combinedMatrix), shapeType.getGlType());
-        } else {
-            renderer.begin(combinedMatrix, shapeType.getGlType());
-        }
+        renderer.begin(combinedMatrix, shapeType.getGlType());
     }
 
     public void set(ShapeType type) {

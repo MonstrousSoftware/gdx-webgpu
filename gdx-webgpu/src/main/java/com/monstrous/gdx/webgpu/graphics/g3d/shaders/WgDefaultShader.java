@@ -71,7 +71,10 @@ public class WgDefaultShader extends WgShader implements Disposable {
     private final VertexAttributes vertexAttributes;
     private final Matrix4 combined;
     private final Matrix4 projection;
-    private final Matrix4 shiftDepthMatrix;
+    // Remap OpenGL depth range [-1,1] to WebGPU [0,1].
+    // Used in bindLights() to shift the shadow camera's ProjViewTrans to match the shadow map depths
+    // (which were rendered through WgModelBatch, which applies this same shift during the shadow pass).
+    private static final Matrix4 shiftDepthMatrix = new Matrix4().idt().scl(1, 1, 0.5f).trn(0, 0, 0.5f);
 
     protected int numDirectionalLights;
     protected DirectionalLight[] directionalLights;
@@ -324,8 +327,6 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
         projection = new Matrix4();
         combined = new Matrix4();
-        // matrix to transform OpenGL projection to WebGPU projection by modifying the Z scale
-        shiftDepthMatrix = new Matrix4().scl(1, 1, -0.5f).trn(0, 0, 0.5f);
 
         frameNumber = -1;
     }
@@ -360,13 +361,8 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
         // set global uniforms, that do not depend on renderables
         // e.g. camera, lighting, environment uniforms
-        //
-        // todo: we are working here with an OpenGL projection matrix, which provides a different Z range than for
-        // WebGPU.
-
-        // projection.set(camera.projection);
-        // projection.set(shiftDepthMatrix).mul(camera.projection);
-        // combined.set(projection).mul(camera.view);
+        // Note: camera.combined is already remapped from OpenGL [-1,1] to WebGPU [0,1] depth
+        // by WgModelBatch.begin() before shaders are invoked.
         binder.setUniform("projectionViewTransform", camera.combined);
 
         // pass a special value in the w component of camera position that is used by the fog calculation
@@ -800,7 +796,10 @@ public class WgDefaultShader extends WgShader implements Disposable {
         }
 
         if (lights.shadowMap != null) {
-            binder.setUniform("shadowProjViewTransform", lights.shadowMap.getProjViewTrans());
+            // The shadow map was rendered through WgModelBatch which applies the depth shift
+            // during the shadow pass. The shadow PVT must be shifted to match those depth values.
+            combined.set(shiftDepthMatrix).mul(lights.shadowMap.getProjViewTrans());
+            binder.setUniform("shadowProjViewTransform", combined);
 
             WgTexture shadowMap = (WgTexture) (lights.shadowMap.getDepthMap().texture);
             binder.setTexture("shadowMap", shadowMap.getTextureView());

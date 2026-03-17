@@ -19,6 +19,7 @@ package com.monstrous.gdx.webgpu.graphics.g3d;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.RenderableProvider;
@@ -53,6 +54,11 @@ public class WgModelBatch implements Disposable {
     public int numRenderables;
     public int drawCalls;
     public int shaderSwitches;
+
+    // Remap OpenGL depth range [-1,1] to WebGPU [0,1].
+    // Applied to camera.combined in begin() and restored in end().
+    private static final Matrix4 shiftDepthMatrix = new Matrix4().idt().scl(1, 1, 0.5f).trn(0, 0, 0.5f);
+    private final Matrix4 savedCombined = new Matrix4();
     // public int numMaterials;
     /** Returns the active MaterialsCache, or null if no renderable has been submitted yet. */
     public MaterialsCache getMaterials() { return config.materials; }
@@ -160,6 +166,12 @@ public class WgModelBatch implements Disposable {
         drawing = true;
         this.camera = camera;
 
+        // Remap the camera's combined matrix from OpenGL [-1,1] to WebGPU [0,1] depth range.
+        // Shaders (WgDefaultShader, WgDepthShader) read camera.combined directly, so this
+        // single point fixes all shaders that render through WgModelBatch.
+        savedCombined.set(camera.combined);
+        camera.combined.set(shiftDepthMatrix).mul(savedCombined);
+
         renderPass = RenderPassBuilder.create("ModelBatch", clearColor, clearDepth, numSamples, passType);
 
         renderables.clear();
@@ -245,6 +257,8 @@ public class WgModelBatch implements Disposable {
         flush();
         renderPass.end();
         renderPass = null;
+        // Restore the camera's combined matrix to its original (OpenGL) value.
+        camera.combined.set(savedCombined);
     }
 
     @Override

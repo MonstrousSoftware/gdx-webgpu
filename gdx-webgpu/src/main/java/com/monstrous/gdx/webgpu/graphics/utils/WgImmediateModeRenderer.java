@@ -50,6 +50,9 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
     private final int colorOffset;
     private final int texCoordOffset;
     private final Matrix4 projModelView = new Matrix4();
+    // Matrix to remap OpenGL depth range [-1,1] to WebGPU [0,1].
+    // Applied internally in begin() so callers (WgShapeRenderer, user code) never need to care.
+    private static final Matrix4 shiftDepthMatrix = new Matrix4().idt().scl(1, 1, 0.5f).trn(0, 0, 0.5f);
 
     private WebGPUVertexBuffer vertexBuffer;
     private WebGPUUniformBuffer uniformBuffer;
@@ -150,7 +153,7 @@ public class WgImmediateModeRenderer implements ImmediateModeRenderer {
         // we reset vertexIdx and numVertices at the start of every FLUSH/end of FLUSH,
         // so no need to do it here for every begin call in the same frame.
 
-        this.projModelView.set(projModelView);
+        this.projModelView.set(shiftDepthMatrix).mul(projModelView);
         this.primitiveType = primitiveType;
 
         if (primitiveType == GL20.GL_LINES)

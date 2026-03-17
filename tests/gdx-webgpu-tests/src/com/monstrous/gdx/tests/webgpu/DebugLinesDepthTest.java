@@ -241,8 +241,6 @@ public class DebugLinesDepthTest extends GdxTest {
             imr.disableDepthTest();
         }
 
-        // Disable depth shift so debug lines produce the same depth values as WgDefaultShader
-        shapeRenderer.disableDepthShift();
 
         shapeRenderer.setProjectionMatrix(cam.combined);
         shapeRenderer.identity();

@@ -18,8 +18,6 @@ public class WgDirectionalShadowLight extends DirectionalLight implements Shadow
     protected float halfDepth;
     protected float halfHeight;
     protected final Vector3 tmpV = new Vector3();
-    private Matrix4 shiftDepthMatrix;
-    private final Matrix4 tmpMat4 = new Matrix4();
     private final TextureDescriptor<Texture> textureDesc;
 
     public WgDirectionalShadowLight(int shadowMapWidth, int shadowMapHeight, float shadowViewportWidth,
@@ -34,8 +32,6 @@ public class WgDirectionalShadowLight extends DirectionalLight implements Shadow
         textureDesc = new TextureDescriptor<Texture>();
         textureDesc.minFilter = textureDesc.magFilter = Texture.TextureFilter.Nearest;
         textureDesc.uWrap = textureDesc.vWrap = Texture.TextureWrap.ClampToEdge;
-
-        shiftDepthMatrix = new Matrix4().idt().scl(1, 1, 0.5f).trn(0, 0, 0.5f);
     }
 
     public void update(final Camera camera) {
@@ -48,9 +44,6 @@ public class WgDirectionalShadowLight extends DirectionalLight implements Shadow
         cam.direction.set(direction).nor();
         cam.normalizeUp();
         cam.update();
-
-        tmpMat4.set(shiftDepthMatrix).mul(cam.combined);
-        cam.combined.set(tmpMat4);
     }
 
     public void begin(final Camera camera) {

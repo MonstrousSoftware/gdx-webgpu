@@ -236,11 +236,8 @@ public class WgDepthShader extends WgShader {
         }
 
         // set global uniforms, that do not depend on renderables
-        // e.g. camera, lighting, environment uniforms
-        //
-        // todo: we are working here with an OpenGL projection matrix, which provides a different Z range than for
-        // WebGPU.
-
+        // Note: camera.combined is already remapped from OpenGL [-1,1] to WebGPU [0,1] depth
+        // by WgModelBatch.begin() before shaders are invoked.
         binder.setUniform("projectionViewTransform", camera.combined);
         uniformBuffer.flush();
 

@@ -1,7 +1,7 @@
 # gdx-webgpu — AI Context Memory File
 
 > **Purpose:** This file helps AI assistants remember how this project works across chat sessions.
-> Last updated: 2026-03-15
+> Last updated: 2026-03-16
 
 ---
 
@@ -94,11 +94,25 @@ gdx-webgpu/
 - **Texture creation**: `WgTexture` wraps `WGPUTexture` + `WGPUTextureView` + lazy `WGPUSampler`. Mipmap generation done on CPU
 - **sRGB handling**: Color textures use `RGBA8UnormSrgb` (auto gamma); non-color (normals, data) use `RGBA8Unorm`
 
+### WgShapeRenderer / WgImmediateModeRenderer (Debug Lines & Immediate-Mode Drawing)
+
+- **`WgShapeRenderer`**: High-level shape API (lines, rects, circles, boxes, etc.). Delegates all vertex submission to a `WgImmediateModeRenderer` (implements libGDX `ImmediateModeRenderer`)
+- **Depth shift mechanism**: OpenGL projection matrices produce Z in [-1,1]; WebGPU clip space expects [0,1]. The depth conversion `shiftDepthMatrix = idt().scl(1,1,0.5).trn(0,0,0.5)` is applied **inside the three rendering classes** that receive a user-supplied camera/projection matrix:
+  - **`WgModelBatch.begin()`**: Shifts `camera.combined` in-place, restores it in `end()`
+  - **`WgSpriteBatch.updateMatrices()`**: Shifts the internal `combinedMatrix` before writing to the uniform buffer
+  - **`WgImmediateModeRenderer.begin()`**: Shifts the incoming `projModelView` matrix before storing it
+  - This means shader classes (`WgDefaultShader`, `WgDepthShader`, etc.) and callers (`WgShapeRenderer`, user code) never need to handle the depth conversion — it is fully transparent
+- **`WgImmediateModeRenderer` depth test control**: `enableDepthTest()` / `disableDepthTest()` / `isDepthTestEnabled()` toggle the underlying `PipelineSpecification.useDepthTest`. Used by external engines (e.g., XpeEngine's `XShapeRenderer`) for overlay rendering where debug lines must always appear on top of scene geometry
+- **`WgImmediateModeRenderer.setPipeline()` FBO sync**: Before pipeline lookup, syncs `colorFormats` and `numSamples` from the current `WebGPURenderPass`. Without this, the pipeline spec retains stale screen surface values, causing broken depth test when rendering inside an FBO (different format, MSAA disabled)
+- **Vertex layout**: Position(3) + ColorPacked(1) + TexCoords(2) + Normal(3) = 9 floats per vertex. The default WGSL shader ignores normals. `@location` mapping: 0=position, 1=color, 2=uv, 3=normal
+- **Batching**: Each `begin()`/`end()` pair is one render pass. Within a pass, the IMR accumulates vertices in a CPU-side `FloatBuffer`, flushing on `end()` (or when buffer full). Multiple flushes per frame share a single large GPU vertex buffer via `vbOffset`. Uniform buffer uses slices (one slice per flush for the projection matrix)
+- **Bind group pooling**: `BindGroupCache` provides bind groups per flush (uniform slice + texture). All are returned to pool on `end()` → `reset()`
+
 ### Key Conventions
 
 - **`(WgGraphics) Gdx.graphics`** → cast to get `WebGPUContext` via `.getContext()`
 - **Depth format**: Always `Depth24Plus`
-- **Depth range**: WebGPU uses [0,1] (vs OpenGL [-1,1]). A `shiftDepthMatrix` is used for projection correction
+- **Depth range**: WebGPU uses [0,1] (vs OpenGL [-1,1]). The `shiftDepthMatrix` conversion is applied exclusively in the three rendering classes (`WgModelBatch`, `WgSpriteBatch`, `WgImmediateModeRenderer`). Shader classes and user code never need to handle this — they always work with standard OpenGL-convention matrices
 - **`encoder` field on `WebGPUContext`**: The current frame's command encoder. May be replaced temporarily (e.g., IBLGenerator creates local encoders)
 - **`surfaceFormats[]` / `targetViews[]`**: Arrays (not single values) to support MRT
 
@@ -206,4 +220,15 @@ http://localhost:8080/?test=Particles3D
 - **ADDED:** `PipelineSpecification.isDepthTestEnabled()` — New getter to query the current `useDepthTest` state.
 - **ADDED:** `WgImmediateModeRenderer.enableDepthTest()` / `disableDepthTest()` / `isDepthTestEnabled()` — Public API to control depth testing on the underlying pipeline specification. Used by XpeEngine's `XShapeRenderer` for overlay rendering (debug lines always visible on top of scene geometry).
 - **FIXED (Critical):** `WgImmediateModeRenderer.setPipeline()` — Pipeline spec was never synced with the current render pass's `colorFormats` and `numSamples`. The spec retained stale values from construction time (screen surface format and MSAA count). When rendering inside an FBO (different format, MSAA disabled), the pipeline was created with mismatched format/samples, causing broken depth testing — debug lines rendered as if they were always behind scene models. Now syncs `colorFormats` and `numSamples` from the render pass before pipeline lookup, matching what `WgDefaultShader.setPipeline()` already does.
+- **ADDED:** `WgShapeRenderer.enableDepthShift()` / `disableDepthShift()` / `isDepthShiftEnabled()` — Controls whether the OpenGL[-1,1]→WebGPU[0,1] depth remapping matrix is applied. Default: enabled (correct for 2D ortho cameras). Disable when rendering 3D debug lines alongside `WgModelBatch` so depth values match `WgDefaultShader` (which passes `camera.combined` raw and handles depth in the shader). The depth shift is applied in `WgShapeRenderer.begin()` by pre-multiplying `shiftDepthMatrix` onto the combined matrix before passing to the `WgImmediateModeRenderer`.
+- **DOCUMENTED:** Full architecture of `WgShapeRenderer` ↔ `WgImmediateModeRenderer` relationship added to AGENTS.md Key Architecture Concepts: vertex layout (9 floats: pos3+colorPacked1+uv2+normal3), batching model (CPU FloatBuffer → GPU vertex buffer via vbOffset), bind group pooling (BindGroupCache per flush), uniform slicing (one matrix per flush).
+- **REFACTORED:** Centralized OpenGL→WebGPU depth conversion into the three rendering classes (`WgModelBatch`, `WgSpriteBatch`, `WgImmediateModeRenderer`). Previously the depth shift was scattered: `WgModelBatch.begin()` mutated `camera.combined` but never restored it in `end()` (bug — permanently corrupted the user's camera); `WgShapeRenderer` had enable/disable depth shift logic with `shiftDepthMatrix`/`shiftedMatrix`/`depthShiftEnabled` fields; `WgDefaultShader` had an unused `shiftDepthMatrix` field. Now:
+  - **`WgModelBatch`**: Still shifts `camera.combined` in `begin()`, but now **restores** it in `end()` via `savedCombined` — camera is no longer permanently mutated
+  - **`WgImmediateModeRenderer`**: Now applies `shiftDepthMatrix` internally in `begin()` to the incoming `projModelView` matrix
+  - **`WgSpriteBatch`**: Already applied the shift internally in `updateMatrices()` — unchanged
+  - **`WgShapeRenderer`**: Removed `shiftDepthMatrix`, `shiftedMatrix`, `depthShiftEnabled`, `enableDepthShift()`, `disableDepthShift()`, `isDepthShiftEnabled()` — always passes `combinedMatrix` directly to the IMR
+  - **`WgDefaultShader`**: Removed unused `shiftDepthMatrix` field and commented-out code. Added shift of `shadowProjViewTransform` in `bindLights()` — the shadow map was rendered through WgModelBatch (which shifts during rendering), so the shader must shift the lookup matrix to match
+  - **`WgDepthShader`**: Cleaned up obsolete depth-range TODO comment
+  - **`WgDirectionalShadowLight`**: Removed all depth shift logic (`shiftDepthMatrix`, `shiftedCombined`, `tmpMat4`). `update()` no longer mutates `cam.combined`; `getProjViewTrans()` returns raw `cam.combined`. The depth shift for shadow map lookups is now handled by `WgDefaultShader.bindLights()`
+  - **`DebugLinesDepthTest`**: Removed `shapeRenderer.disableDepthShift()` call — no longer needed
 
