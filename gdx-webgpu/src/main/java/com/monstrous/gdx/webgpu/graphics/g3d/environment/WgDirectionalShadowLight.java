@@ -1,4 +1,4 @@
-package com.monstrous.gdx.webgpu.graphics.g3d.attributes.environment;
+package com.monstrous.gdx.webgpu.graphics.g3d.environment;
 
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.OrthographicCamera;
