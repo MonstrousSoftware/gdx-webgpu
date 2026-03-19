@@ -17,7 +17,19 @@ struct PointLight {
 
 struct FrameUniforms {
     projectionViewTransform: mat4x4f,
+#ifdef CSM_SHADOW_MAP
+    // N cascade projection-view transforms followed by cascade split thresholds
+    shadowProjViewTransforms: array<mat4x4f, MAX_CASCADES>,
+    cascadeSplits: vec4f,
+    // Per-cascade shadow bias — scaled by each cascade's depth range so the
+    // world-space bias is constant regardless of how much depth range a cascade covers.
+    cascadeBiases: vec4f,
+    // Projection-view of the CSM driver camera (may differ from the rendering camera
+    // when an observer/debug camera is active). Used for cascade selection only.
+    csmCameraProjectionView: mat4x4f,
+#else
     shadowProjViewTransform: mat4x4f,
+#endif
 #ifdef MAX_DIR_LIGHTS
     directionalLights : array<DirectionalLight, MAX_DIR_LIGHTS>,
 #endif
@@ -33,6 +45,11 @@ struct FrameUniforms {
     shadowBias: f32,
     normalMapStrength: f32,
     numRoughnessLevels: f32,
+#ifdef CSM_SHADOW_MAP
+    shadowPcfRadius: f32,       // PCF kernel half-size: 0=1×1, 1=3×3, 2=5×5, 3=7×7
+    shadowFilterMode: f32,      // 0 = grid PCF, 1 = rotated Poisson disk PCF
+    cascadeBlendFraction: f32,  // fraction of cascade range used for blending (0 = off, e.g. 0.1 = 10%)
+#endif
 };
 
 struct ModelUniforms {
@@ -54,6 +71,10 @@ struct MaterialUniforms {
 #ifdef SHADOW_MAP
     @group(0) @binding(1) var shadowMap: texture_depth_2d;
     @group(0) @binding(2) var shadowSampler: sampler_comparison;
+#endif
+#ifdef CSM_SHADOW_MAP
+    @group(0) @binding(1) var csmShadowMap: texture_depth_2d_array;
+    @group(0) @binding(2) var csmShadowSampler: sampler_comparison;
 #endif
 #ifdef ENVIRONMENT_MAP
     @group(0) @binding(3) var cubeMap:          texture_cube<f32>;
@@ -259,6 +280,7 @@ fn vs_main(in: VertexInput, @builtin(instance_index) instance: u32) -> VertexOut
     posFromLight.z
   );
 #endif
+// CSM: no per-vertex shadow coords needed — lookup done fully in fragment shader from worldPos
 
    return out;
 }
@@ -272,10 +294,14 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
    var color = in.color;
 #endif
 
+#ifdef CSM_SHADOW_MAP
+    let visibility = getCsmVisibility(in.worldPos, in.position.xy);
+#else
 #ifdef SHADOW_MAP
     let visibility = getShadowNess(in.shadowPos);
 #else
     let visibility = 1.0;
+#endif
 #endif
 
 #ifdef LIGHTING
@@ -414,25 +440,168 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
     return color;
 };
 
-#ifdef SHADOW_MAP
-// returns value 0..1 for the amount of "sunlight"
-fn getShadowNess( shadowPos:vec3f ) -> f32 {
+// ----- Poisson Disk PCF helpers (shared by single shadow map and CSM) -----
+// 16-sample Poisson disk distributed in the unit circle
+const POISSON_DISK = array<vec2f, 16>(
+    vec2f(-0.94201624, -0.39906216),
+    vec2f( 0.94558609, -0.76890725),
+    vec2f(-0.09418410, -0.92938870),
+    vec2f( 0.34495938,  0.29387760),
+    vec2f(-0.91588581,  0.45771432),
+    vec2f(-0.81544232, -0.87912464),
+    vec2f(-0.38277543,  0.27676845),
+    vec2f( 0.97484398,  0.75648379),
+    vec2f( 0.44323325, -0.97511554),
+    vec2f( 0.53742981, -0.47373420),
+    vec2f(-0.26496911, -0.41893023),
+    vec2f( 0.79197514,  0.19090188),
+    vec2f(-0.24188840,  0.99706507),
+    vec2f(-0.81409955,  0.91437590),
+    vec2f( 0.19984126,  0.78641367),
+    vec2f( 0.14383161, -0.14100790)
+);
 
-    // PCF filtering: take 9 samples and use the average value
+// Screen-space pseudo-random rotation angle [0, 2π)
+fn poissonRotationAngle(fragCoord: vec2f) -> f32 {
+    return fract(sin(dot(fragCoord, vec2f(12.9898, 78.233))) * 43758.5453) * 2.0 * pi;
+}
+
+#ifdef SHADOW_MAP
+// returns value 0..1 for the amount of "sunlight" using a fixed 3×3 PCF
+fn getShadowNess( shadowPos:vec3f ) -> f32 {
     var visibility = 0.0;
     for( var y = -1; y <= 1; y++){
         for( var x = -1; x <= 1; x++){
-        let offset = vec2f(vec2(x,y)) * uFrame.shadowPcfOffset;  //oneOverDepthTextureSize
-            // returns 0 or 1
+        let offset = vec2f(f32(x), f32(y)) * uFrame.shadowPcfOffset;
             visibility += textureSampleCompare(shadowMap, shadowSampler, shadowPos.xy+offset, shadowPos.z - uFrame.shadowBias);
         }
     }
-    visibility /= 9.0;  // divide by nr of samples
-    return visibility;
+    return visibility / 9.0;
 }
 
 fn getShadowSingleSample( shadowPos:vec3f ) -> f32 {
     return textureSampleCompare(shadowMap, shadowSampler, shadowPos.xy, shadowPos.z -  uFrame.shadowBias);
+}
+#endif
+
+
+#ifdef CSM_SHADOW_MAP
+
+// Sample shadow visibility for a specific cascade layer.
+// Returns 1.0 (fully lit) if the fragment is outside the cascade's coverage.
+fn sampleCascade(cascadeIdx: u32, worldPos: vec3f, fragCoord: vec2f) -> f32 {
+    let posFromLight = uFrame.shadowProjViewTransforms[cascadeIdx] * vec4f(worldPos, 1.0);
+    let shadowUV = posFromLight.xy * vec2f(0.5, -0.5) + vec2f(0.5);
+    let shadowDepth = posFromLight.z - uFrame.cascadeBiases[cascadeIdx];
+
+    // Outside shadow map coverage → fully lit
+    if (shadowUV.x < 0.0 || shadowUV.x > 1.0 || shadowUV.y < 0.0 || shadowUV.y > 1.0
+        || shadowDepth < 0.0 || shadowDepth > 1.0) {
+        return 1.0;
+    }
+
+    if (uFrame.shadowFilterMode > 0.5) {
+        // Rotated Poisson disk PCF (16 samples)
+        let angle = poissonRotationAngle(fragCoord);
+        let s = sin(angle);
+        let c = cos(angle);
+        let rot = mat2x2f(c, s, -s, c);
+        var visibility = 0.0;
+        for (var i = 0u; i < 16u; i++) {
+            let offset = rot * POISSON_DISK[i] * uFrame.shadowPcfOffset;
+            visibility += textureSampleCompareLevel(
+                csmShadowMap, csmShadowSampler,
+                shadowUV + offset, cascadeIdx,
+                shadowDepth
+            );
+        }
+        return visibility / 16.0;
+    }
+
+    // Grid PCF
+    let radius = i32(uFrame.shadowPcfRadius);
+    var visibility = 0.0;
+    var sampleCount = 0.0;
+    for (var y = -radius; y <= radius; y++) {
+        for (var x = -radius; x <= radius; x++) {
+            let offset = vec2f(f32(x), f32(y)) * uFrame.shadowPcfOffset;
+            visibility += textureSampleCompareLevel(
+                csmShadowMap, csmShadowSampler,
+                shadowUV + offset, cascadeIdx,
+                shadowDepth
+            );
+            sampleCount += 1.0;
+        }
+    }
+    return visibility / sampleCount;
+}
+
+// Select the correct cascade using the CSM driver camera's depth (not the rendering camera's),
+// then do a PCF lookup in the depth-array layer for that cascade.
+// When cascade blending is enabled (cascadeBlendFraction > 0), fragments near the far edge
+// of a cascade are smoothly blended with the next cascade to eliminate visible seams.
+//
+// The CSM driver camera may differ from the rendering camera (e.g. when a debug observer camera
+// is active). csmCameraProjectionView holds the CSM driver camera's shifted projection-view.
+//
+// Uses textureSampleCompareLevel (not textureSampleCompare) because the cascade
+// selection depends on per-fragment depth, making control flow non-uniform.
+// textureSampleCompareLevel always samples mip-level 0 and has no uniformity requirement.
+fn getCsmVisibility(worldPos: vec3f, fragCoord: vec2f) -> f32 {
+    // Compute the fragment's NDC depth in the CSM driver camera's clip space
+    let csmClip = uFrame.csmCameraProjectionView * vec4f(worldPos, 1.0);
+    let ndcDepth = csmClip.z / csmClip.w;
+
+    // Find the first cascade whose far plane is at or beyond the fragment depth.
+    var cascadeIndex = u32(MAX_CASCADES - 1); // default: farthest cascade
+    for (var i = 0u; i < u32(MAX_CASCADES - 1); i++) {
+        if (ndcDepth <= uFrame.cascadeSplits[i]) {
+            cascadeIndex = i;
+            break;
+        }
+    }
+
+    // For the last cascade, check if the fragment is beyond shadow coverage entirely
+    let blendFrac = uFrame.cascadeBlendFraction;
+    if (cascadeIndex == u32(MAX_CASCADES - 1)) {
+        let lastFar = uFrame.cascadeSplits[cascadeIndex];
+        if (ndcDepth >= lastFar) {
+            return 1.0; // fully lit — beyond shadow distance
+        }
+    }
+
+    let visA = sampleCascade(cascadeIndex, worldPos, fragCoord);
+
+    // Cascade blending — only the last 10% of the blend zone actually fades.
+    // This keeps full shadow strength for 90% of the zone and avoids wasting
+    // ALU/texture samples on fragments that won't visibly blend.
+    if (blendFrac > 0.0) {
+        let splitDepth = uFrame.cascadeSplits[cascadeIndex];
+
+        if (cascadeIndex < u32(MAX_CASCADES - 1)) {
+            // Inter-cascade blend: thin strip at the cascade boundary
+            let prevSplit = select(0.0, uFrame.cascadeSplits[cascadeIndex - 1u], cascadeIndex > 0u);
+            let fadeZone = (splitDepth - prevSplit) * blendFrac * 0.1;
+            let blendStart = splitDepth - fadeZone;
+
+            if (ndcDepth > blendStart) {
+                let t = saturate((ndcDepth - blendStart) / fadeZone);
+                let visB = sampleCascade(cascadeIndex + 1u, worldPos, fragCoord);
+                return mix(visA, visB, t);
+            }
+        } else {
+            // Last cascade fade-out: thin strip at the shadow distance edge
+            let fadeZone = splitDepth * blendFrac / f32(MAX_CASCADES) * 0.1;
+            let blendStart = splitDepth - fadeZone;
+
+            if (ndcDepth > blendStart) {
+                let t = saturate((ndcDepth - blendStart) / fadeZone);
+                return mix(visA, 1.0, t);
+            }
+        }
+    }
+
+    return visA;
 }
 #endif
 
