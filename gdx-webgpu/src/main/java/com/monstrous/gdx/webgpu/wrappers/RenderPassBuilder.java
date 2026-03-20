@@ -265,6 +265,17 @@ public class RenderPassBuilder {
         }
         renderPassDescriptor.setColorAttachments(colorAttachments);
 
+        // Determine depth format and view (needed both for the attachment and for pass.begin())
+        WGPUTextureFormat dFormat;
+        WGPUTextureView dView;
+        if (depthTexture != null) {
+            dView   = depthTexture.getTextureView();
+            dFormat = depthTexture.getFormat();
+        } else {
+            dView   = webgpu.getDepthTexture().getTextureView();
+            dFormat = webgpu.getDepthTexture().getFormat();
+        }
+
         if (passType != RenderPassType.NO_DEPTH) {
             WGPURenderPassDepthStencilAttachment depthStencilAttachment = WGPURenderPassDepthStencilAttachment.obtain();
 
@@ -276,11 +287,7 @@ public class RenderPassBuilder {
             depthStencilAttachment.setStencilLoadOp(WGPULoadOp.Undefined);
             depthStencilAttachment.setStencilStoreOp(WGPUStoreOp.Undefined);
             depthStencilAttachment.setStencilReadOnly(true);
-
-            if (depthTexture != null)
-                depthStencilAttachment.setView(depthTexture.getTextureView());
-            else
-                depthStencilAttachment.setView(webgpu.getDepthTexture().getTextureView());
+            depthStencilAttachment.setView(dView);
 
             renderPassDescriptor.setDepthStencilAttachment(depthStencilAttachment);
         }
@@ -310,11 +317,6 @@ public class RenderPassBuilder {
             height = (int) view.height;
         }
 
-        WGPUTextureFormat dFormat;
-        if (depthTexture != null)
-            dFormat = depthTexture.getFormat();
-        else
-            dFormat = webgpu.getDepthTexture().getFormat();
 
         pass.begin(webgpu.encoder, renderPassDescriptor, passType, targetFormats, targetCount, dFormat,
                 sampleCount, width, height);

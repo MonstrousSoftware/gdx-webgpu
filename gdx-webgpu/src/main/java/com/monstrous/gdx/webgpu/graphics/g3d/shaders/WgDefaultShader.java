@@ -41,7 +41,10 @@ import com.monstrous.gdx.webgpu.graphics.WgMesh;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute;
+import com.monstrous.gdx.webgpu.graphics.g3d.attributes.CSMShadowAttribute;
+import com.monstrous.gdx.webgpu.graphics.g3d.attributes.CascadedShadowAttribute;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.PBRFloatAttribute;
+import com.monstrous.gdx.webgpu.graphics.g3d.environment.WgCascadedShadowLight;
 import com.monstrous.gdx.webgpu.wrappers.*;
 
 /** Default shader to render renderables */
@@ -86,6 +89,8 @@ public class WgDefaultShader extends WgShader implements Disposable {
     private final long environmentMask;
     private final boolean blended;
     private final boolean hasShadowMap;
+    private final boolean hasCascadedShadowMap;
+    private final int maxCascades; // 0 when hasCascadedShadowMap is false
     private final boolean hasCubeMap;
     private final boolean hasBones;
     private final int primitiveType;
@@ -121,8 +126,18 @@ public class WgDefaultShader extends WgShader implements Disposable {
         webgpu = gfx.getContext();
 
         linearFogColor = new Color();
-
-        hasShadowMap = renderable.environment != null && renderable.environment.shadowMap != null;
+        hasCascadedShadowMap = renderable.environment != null
+                && renderable.environment.has(CascadedShadowAttribute.Type);
+        // CSM and single shadow map are mutually exclusive — CSM takes priority.
+        hasShadowMap = !hasCascadedShadowMap
+                && renderable.environment != null && renderable.environment.shadowMap != null;
+        if (hasCascadedShadowMap) {
+            CascadedShadowAttribute csmAttr = renderable.environment.get(
+                    CascadedShadowAttribute.class, CascadedShadowAttribute.Type);
+            maxCascades = csmAttr.csmLight.getCascadeCount();
+        } else {
+            maxCascades = 0;
+        }
         hasCubeMap = renderable.environment != null && renderable.environment.has(WgCubemapAttribute.EnvironmentMap);
         hasBones = renderable.bones != null;
         final boolean hasDiffuseCubeMap = renderable.environment != null
@@ -132,7 +147,10 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
         // Create uniform buffer for global (per-frame) uniforms, e.g. projection matrix, camera position, etc.
         // Use multiple slices to support multiple render passes per frame with different camera/lighting state
-        uniformBufferSize = (16 + 16 + 4 + 4 + 4 + 4 + +32 + 8 * config.maxDirectionalLights
+        // Shadow section: single shadow map uses 1 mat4 (16 floats);
+        // CSM uses N mat4s + vec4 splits + vec4 biases + 1 mat4 csmCameraProjectionView.
+        int shadowUniformFloats = hasCascadedShadowMap ? (maxCascades * 16 + 4 + 4 + 16) : 16;
+        uniformBufferSize = (16 + shadowUniformFloats + 4 + 4 + 4 + 4 + 32 + 8 * config.maxDirectionalLights
                 + 12 * config.maxPointLights) * Float.BYTES;
 
         uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Uniform),
@@ -142,8 +160,8 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
         binder = new Binder();
         // define groups
-        binder.defineGroup(0, createFrameBindGroupLayout(uniformBufferSize, hasShadowMap, hasCubeMap, hasDiffuseCubeMap,
-                hasSpecularCubeMap));
+        binder.defineGroup(0, createFrameBindGroupLayout(uniformBufferSize, hasShadowMap, hasCascadedShadowMap,
+                hasCubeMap, hasDiffuseCubeMap, hasSpecularCubeMap));
         binder.defineGroup(1, materials.getBindGroupLayout());
         binder.defineGroup(2, createInstancingBindGroupLayout());
         if (hasBones)
@@ -155,6 +173,10 @@ public class WgDefaultShader extends WgShader implements Disposable {
         if (hasShadowMap) {
             binder.defineBinding("shadowMap", 0, 1);
             binder.defineBinding("shadowSampler", 0, 2);
+        }
+        if (hasCascadedShadowMap) {
+            binder.defineBinding("csmShadowMap", 0, 1);
+            binder.defineBinding("csmShadowSampler", 0, 2);
         }
         if (hasCubeMap) {
             binder.defineBinding("cubeMap", 0, 3);
@@ -195,8 +217,22 @@ public class WgDefaultShader extends WgShader implements Disposable {
         int offset = 0;
         binder.defineUniform("projectionViewTransform", 0, 0, offset);
         offset += 16 * 4;
-        binder.defineUniform("shadowProjViewTransform", 0, 0, offset);
-        offset += 16 * 4;
+
+        if (hasCascadedShadowMap) {
+            // N cascade matrices followed by cascadeSplits (vec4f), cascadeBiases (vec4f),
+            // and csmCameraProjectionView (mat4x4f)
+            binder.defineUniform("shadowProjViewTransforms[0]", 0, 0, offset);
+            offset += maxCascades * 16 * 4;
+            binder.defineUniform("cascadeSplits", 0, 0, offset);
+            offset += 4 * 4;
+            binder.defineUniform("cascadeBiases", 0, 0, offset);
+            offset += 4 * 4;
+            binder.defineUniform("csmCameraProjectionView", 0, 0, offset);
+            offset += 16 * 4;
+        } else {
+            binder.defineUniform("shadowProjViewTransform", 0, 0, offset);
+            offset += 16 * 4;
+        }
 
         if (config.maxDirectionalLights > 0) {
             // define only a uniform for the initial array elements
@@ -236,6 +272,14 @@ public class WgDefaultShader extends WgShader implements Disposable {
         offset += 4;
         binder.defineUniform("numRoughnessLevels", 0, 0, offset);
         offset += 4;
+        if (hasCascadedShadowMap) {
+            binder.defineUniform("shadowPcfRadius", 0, 0, offset);
+            offset += 4;
+            binder.defineUniform("shadowFilterMode", 0, 0, offset);
+            offset += 4;
+            binder.defineUniform("cascadeBlendFraction", 0, 0, offset);
+            offset += 4;
+        }
 
         // note: put shorter uniforms last for padding reasons
 
@@ -463,7 +507,13 @@ public class WgDefaultShader extends WgShader implements Disposable {
         long renderableEnvironmentMask = renderable.environment == null ? 0 : renderable.environment.getMask();
         if (environmentMask != renderableEnvironmentMask)
             return false;
-        boolean renderableHasShadowMap = renderable.environment != null && renderable.environment.shadowMap != null;
+        boolean renderableHasCsm = renderable.environment != null
+                && renderable.environment.has(CascadedShadowAttribute.Type);
+        if (hasCascadedShadowMap != renderableHasCsm)
+            return false;
+        // CSM and single shadow map are mutually exclusive — CSM takes priority
+        boolean renderableHasShadowMap = !renderableHasCsm
+                && renderable.environment != null && renderable.environment.shadowMap != null;
         if (hasShadowMap != renderableHasShadowMap)
             return false;
 
@@ -621,7 +671,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
     }
 
     private WebGPUBindGroupLayout createFrameBindGroupLayout(int uniformBufferSize, boolean hasShadowMap,
-            boolean hasCubeMap, boolean hasDiffuseCubeMap, boolean hasSpecularCubeMap) {
+            boolean hasCascadedShadowMap, boolean hasCubeMap, boolean hasDiffuseCubeMap, boolean hasSpecularCubeMap) {
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("ModelBatch bind group layout (frame)");
         layout.begin();
         layout.addBuffer(0, WGPUShaderStage.Vertex.or(WGPUShaderStage.Fragment), WGPUBufferBindingType.Uniform,
@@ -629,6 +679,12 @@ public class WgDefaultShader extends WgShader implements Disposable {
         if (hasShadowMap) {
             layout.addTexture(1, WGPUShaderStage.Fragment, WGPUTextureSampleType.Depth, WGPUTextureViewDimension._2D,
                     false);
+            layout.addSampler(2, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Comparison);
+        }
+        if (hasCascadedShadowMap) {
+            // Depth texture 2D array — one layer per cascade
+            layout.addTexture(1, WGPUShaderStage.Fragment, WGPUTextureSampleType.Depth,
+                    WGPUTextureViewDimension._2DArray, false);
             layout.addSampler(2, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Comparison);
         }
         if (hasCubeMap) {
@@ -748,7 +804,13 @@ public class WgDefaultShader extends WgShader implements Disposable {
                 throw new RuntimeException("Too many directional lights. Increase the configured maximum.");
 
             for (int i = 0; i < dirs.size; i++) {
-                directionalLights[i].color.set(dirs.get(i).color);
+                // Assign fields directly: Color.set() calls clamp(), which caps to [0,1]
+                // and would silently discard HDR light intensities above 1.0.
+                Color src = dirs.get(i).color;
+                directionalLights[i].color.r = src.r;
+                directionalLights[i].color.g = src.g;
+                directionalLights[i].color.b = src.b;
+                directionalLights[i].color.a = src.a;
                 directionalLights[i].direction.set(dirs.get(i).direction);
             }
         }
@@ -767,7 +829,12 @@ public class WgDefaultShader extends WgShader implements Disposable {
                 throw new RuntimeException("Too many point lights. Increase the configured maximum.");
             // is it useful to copy from attributes to a local array?
             for (int i = 0; i < points.size; i++) {
-                pointLights[i].color.set(points.get(i).color);
+                // Assign fields directly: Color.set() calls clamp() — see directional lights above.
+                Color src = points.get(i).color;
+                pointLights[i].color.r = src.r;
+                pointLights[i].color.g = src.g;
+                pointLights[i].color.b = src.b;
+                pointLights[i].color.a = src.a;
                 pointLights[i].position.set(points.get(i).position);
                 pointLights[i].intensity = points.get(i).intensity;
             }
@@ -804,18 +871,50 @@ public class WgDefaultShader extends WgShader implements Disposable {
             WgTexture shadowMap = (WgTexture) (lights.shadowMap.getDepthMap().texture);
             binder.setTexture("shadowMap", shadowMap.getTextureView());
             binder.setSampler("shadowSampler", shadowMap.getDepthSampler());
-            Rectangle rect = webgpu.getViewportRectangle();
-            float screenSize = Math.max(rect.width, rect.height);
-            binder.setUniform("shadowPcfOffset", 1f / screenSize);
 
-            // Get shadow bias from environment attribute, or use default
-            float shadowBias = 0.01f;
-            FloatAttribute shadowBiasAttr = (FloatAttribute) lights.get(PBRFloatAttribute.ShadowBias);
-            if (shadowBiasAttr != null) {
-                shadowBias = shadowBiasAttr.value;
-            }
+            // PCF offset: 1 texel in shadow-map UV space for a basic 3×3 soft shadow kernel.
+            binder.setUniform("shadowPcfOffset", 1f / shadowMap.getWidth());
+
+            FloatAttribute biasAttr = lights.get(FloatAttribute.class, PBRFloatAttribute.ShadowBias);
+            float shadowBias = biasAttr != null ? biasAttr.value : 0.01f;
             binder.setUniform("shadowBias", shadowBias);
+        }
 
+        final CascadedShadowAttribute csmAttr = lights.get(CascadedShadowAttribute.class, CascadedShadowAttribute.Type);
+        if (csmAttr != null) {
+            WgCascadedShadowLight csm = csmAttr.csmLight;
+            Matrix4[] pvts = csm.getLightSpaceProjViews();
+            // Upload each cascade's pre-shifted projection-view matrix
+            for (int i = 0; i < pvts.length; i++) {
+                binder.setUniform("shadowProjViewTransforms[0]", i * 16 * Float.BYTES, pvts[i]);
+            }
+            // Upload cascade split NDC-z thresholds as a vec4f
+            float[] splits = csm.getCascadeSplitNDC();
+            tmpVec4.set(splits[0], splits[1], splits[2], splits[3]);
+            binder.setUniform("cascadeSplits", tmpVec4);
+            // Upload per-cascade shadow biases (scaled by each cascade's depth range)
+            float[] biases = csm.getCascadeBiases();
+            tmpVec4.set(biases[0], biases[1], biases[2], biases[3]);
+            binder.setUniform("cascadeBiases", tmpVec4);
+            // Upload the CSM driver camera's shifted projection-view for cascade selection
+            // (allows correct cascade selection even when rendering from a different camera)
+            binder.setUniform("csmCameraProjectionView", csm.getCsmCameraProjectionView());
+            binder.setTexture("csmShadowMap", csm.getArrayView());
+            binder.setSampler("csmShadowSampler", csm.getDepthArraySampler());
+
+            // Shadow parameters from CSMShadowAttribute (or defaults)
+            CSMShadowAttribute csmShadowAttr = lights.get(CSMShadowAttribute.class, CSMShadowAttribute.Type);
+            float pcfSoftness = csmShadowAttr != null ? csmShadowAttr.softness : CSMShadowAttribute.DEFAULT_SOFTNESS;
+            float pcfRadius   = csmShadowAttr != null ? csmShadowAttr.pcfRadius : CSMShadowAttribute.DEFAULT_PCF_RADIUS;
+            float shadowBias  = csmShadowAttr != null ? csmShadowAttr.bias      : CSMShadowAttribute.DEFAULT_BIAS;
+
+            binder.setUniform("shadowPcfOffset", pcfSoftness / csm.getShadowMapSize());
+            binder.setUniform("shadowPcfRadius", pcfRadius);
+            binder.setUniform("shadowBias", shadowBias);
+            float filterMode = csmShadowAttr != null ? (float) csmShadowAttr.shadowFilterMode : (float) CSMShadowAttribute.DEFAULT_FILTER_MODE;
+            binder.setUniform("shadowFilterMode", filterMode);
+            float cascadeBlend = csmShadowAttr != null ? csmShadowAttr.cascadeBlend : CSMShadowAttribute.DEFAULT_CASCADE_BLEND;
+            binder.setUniform("cascadeBlendFraction", cascadeBlend);
         }
 
         final WgCubemapAttribute cubemapAttribute = lights.get(WgCubemapAttribute.class,

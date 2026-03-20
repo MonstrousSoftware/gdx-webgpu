@@ -46,6 +46,7 @@ public class FirstPersonCameraController extends InputAdapter {
     /** Maximum scroll speed. */
     public float maxSpeed = 100f;
 
+    private boolean enabled = true;
     private boolean rightButtonDown = false;
     private int lastScreenX, lastScreenY;
 
@@ -56,6 +57,30 @@ public class FirstPersonCameraController extends InputAdapter {
 
     public FirstPersonCameraController(Camera camera) {
         this.camera = camera;
+    }
+
+    /**
+     * Enable or disable this controller. When disabled, {@link #update()} is a no-op
+     * and all input events are ignored. The drag state is also reset on disable so no
+     * stale mouse position causes a snap when the controller is re-enabled.
+     */
+    public void setEnabled(boolean enabled) {
+        if (!enabled && this.enabled) {
+            rightButtonDown = false;
+        }
+        this.enabled = enabled;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    /**
+     * @deprecated Use {@link #setEnabled(boolean)} instead.
+     */
+    @Deprecated
+    public void resetDragState() {
+        rightButtonDown = false;
     }
 
     /**
@@ -70,6 +95,7 @@ public class FirstPersonCameraController extends InputAdapter {
      * Process continuous keyboard movement for the given delta time.
      */
     public void update(float deltaTime) {
+        if (!enabled) return;
         float speed = moveSpeed * deltaTime;
         if (Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT) || Gdx.input.isKeyPressed(Input.Keys.SHIFT_RIGHT)) {
             speed *= shiftMultiplier;
@@ -110,6 +136,7 @@ public class FirstPersonCameraController extends InputAdapter {
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+        if (!enabled) return false;
         if (button == Input.Buttons.RIGHT) {
             rightButtonDown = true;
             lastScreenX = screenX;
@@ -122,6 +149,7 @@ public class FirstPersonCameraController extends InputAdapter {
 
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+        if (!enabled) return false;
         if (button == Input.Buttons.RIGHT) {
             rightButtonDown = false;
             return true;
@@ -131,7 +159,7 @@ public class FirstPersonCameraController extends InputAdapter {
 
     @Override
     public boolean touchDragged(int screenX, int screenY, int pointer) {
-        if (!rightButtonDown) return false;
+        if (!enabled || !rightButtonDown) return false;
 
         float deltaX = (screenX - lastScreenX) * lookSensitivity;
         float deltaY = (screenY - lastScreenY) * lookSensitivity;
@@ -151,6 +179,7 @@ public class FirstPersonCameraController extends InputAdapter {
 
     @Override
     public boolean scrolled(float amountX, float amountY) {
+        if (!enabled) return false;
         moveSpeed *= (1f - amountY * 0.1f);
         moveSpeed = Math.max(minSpeed, Math.min(maxSpeed, moveSpeed));
         return true;

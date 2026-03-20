@@ -34,6 +34,8 @@ import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.webgpu.graphics.Binder;
 import com.monstrous.gdx.webgpu.graphics.WgMesh;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.wrappers.*;
 
 /** Depth shader to render renderables to a depth buffer */
@@ -54,6 +56,8 @@ public class WgDepthShader extends WgShader {
     private final WebGPUPipeline pipeline;
     private WebGPURenderPass renderPass;
     private VertexAttributes vertexAttributes;
+    private int frameNumber = -1;
+    private int maxRenderPassesPerFrame = 16; // Support multiple render passes per frame (e.g. CSM cascades)
 
     public WgDepthShader(final Renderable renderable) {
         this(renderable, new WgModelBatch.Config());
@@ -72,8 +76,11 @@ public class WgDepthShader extends WgShader {
         this.config = config;
 
         // Create uniform buffer for global (per-frame) uniforms, i.e. projection matrix
+        // Use multiple slices to support multiple render passes per frame (e.g. CSM cascades
+        // each need their own projection-view matrix in the same frame)
         uniformBufferSize = 16 * Float.BYTES;
-        uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Uniform));
+        uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Uniform),
+                maxRenderPassesPerFrame);
 
         hasBones = renderable.bones != null;
         rigSize = config.numBones * 16 * Float.BYTES;
@@ -235,14 +242,25 @@ public class WgDepthShader extends WgShader {
             instanceStride += 8 * Float.BYTES; // morphWeights (vec4) + morphWeights2 (vec4)
         }
 
+        // Reset buffer slices at the start of each frame
+        WebGPUContext webgpu = ((WgGraphics) Gdx.graphics).getContext();
+        if (webgpu.frameNumber != this.frameNumber) {
+            this.frameNumber = webgpu.frameNumber;
+            uniformBuffer.beginSlices();
+        }
+
+        // Get a new slice of the uniform buffer for this render pass.
+        // This ensures each render pass (e.g. each CSM cascade) has its own camera matrix.
+        int dynamicOffset = uniformBuffer.nextSlice();
+
         // set global uniforms, that do not depend on renderables
         // Note: camera.combined is already remapped from OpenGL [-1,1] to WebGPU [0,1] depth
         // by WgModelBatch.begin() before shaders are invoked.
         binder.setUniform("projectionViewTransform", camera.combined);
         uniformBuffer.flush();
 
-        // bind group 0 (frame) once per frame
-        binder.bindGroup(renderPass, 0);
+        // bind group 0 (frame) with dynamic offset for this render pass
+        binder.bindGroup(renderPass, 0, dynamicOffset);
 
         // idem for group 1 (instances), we will fill in the buffer as we go
         binder.bindGroup(renderPass, 1);
@@ -404,7 +422,7 @@ public class WgDepthShader extends WgShader {
         WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("WgDepthShader bind group layout (frame)");
         layout.begin();
         layout.addBuffer(0, WGPUShaderStage.Vertex.or(WGPUShaderStage.Fragment), WGPUBufferBindingType.Uniform,
-                uniformBufferSize, false);
+                uniformBufferSize, true); // Enable dynamic offset for multiple render passes per frame
         layout.end();
         return layout;
     }

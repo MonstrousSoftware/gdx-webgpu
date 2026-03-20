@@ -57,7 +57,7 @@ public class WebGPUTests {
                     InstancingTest.class, ViewportTest.class, ScissorTest.class, ASimpleGame.class,
                     ParticleEmitterTest.class, ParticleEmittersTest.class, HeightMapTest.class, FullScreenTest.class,
                     GPUTimerTest.class, FrameBufferTest.class, PostProcessing.class, SuperKoalio.class,
-                    DistanceFontTest.class, DepthClearTest.class, FogTest.class, ShadowTest.class,
+                    DistanceFontTest.class, DepthClearTest.class, FogTest.class, ShadowTest.class, CSMShadowTest.class,
                     TextureAtlasTest.class, TestTextureMipMap.class, Basic3DTest.class, TestMesh.class,
                     TestMeshNoIndices.class, TestMeshBuilder.class, TestTexture.class, SpriteBatchDoubleLoop.class,
                     TransparencyTest.class, TestCompute.class, ComputeMoldSlime.class, SpriteBatchBasic.class,

@@ -23,6 +23,7 @@ import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.WgCubemapAttribute;
+import com.monstrous.gdx.webgpu.graphics.g3d.attributes.CascadedShadowAttribute;
 
 public class ShaderPrefix {
     private static final StringBuffer sb = new StringBuffer();
@@ -84,7 +85,13 @@ public class ShaderPrefix {
             if ((environment.getMask() & WgCubemapAttribute.EnvironmentMap) != 0) {
                 sb.append("#define ENVIRONMENT_MAP\n");
             }
-            if (environment.shadowMap != null) {
+            // CSM and single shadow map are mutually exclusive — CSM takes priority
+            if (environment.has(CascadedShadowAttribute.Type)) {
+                CascadedShadowAttribute csmAttr = environment.get(
+                        CascadedShadowAttribute.class, CascadedShadowAttribute.Type);
+                sb.append("#define CSM_SHADOW_MAP\n");
+                sb.append("#define MAX_CASCADES ").append(csmAttr.csmLight.getCascadeCount()).append('\n');
+            } else if (environment.shadowMap != null) {
                 sb.append("#define SHADOW_MAP\n");
             }
             if (usePBR && (environment.getMask() & WgCubemapAttribute.DiffuseCubeMap) != 0) {

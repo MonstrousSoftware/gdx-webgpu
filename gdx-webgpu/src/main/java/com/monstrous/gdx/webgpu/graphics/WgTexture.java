@@ -45,6 +45,27 @@ public class WgTexture extends Texture {
     protected int numSamples;
     protected TextureData data; // cannot access data of Texture which is package private
 
+    /**
+     * Wraps an externally-owned texture view without owning the underlying GPU texture.
+     * {@link #dispose()} will release the view but will NOT destroy the backing {@link WGPUTexture}.
+     * <p>
+     * Typical use: wrap a single-layer 2D view of a texture array for per-layer rendering targets.
+     *
+     * @param view   the texture view to wrap (this WgTexture takes ownership of the view)
+     * @param format the texture format
+     * @param width  texture width in pixels
+     * @param height texture height in pixels
+     */
+    public WgTexture(WGPUTextureView view, WGPUTextureFormat format, int width, int height) {
+        this.data = new WgTextureData(width, height, false, 0, 0);
+        this.label = "layer-view";
+        this.numSamples = 1;
+        this.format = format;
+        this.mipLevelCount = 1;
+        this.textureView = view;
+        this.texture = null; // not owned — prevents dispose() from destroying the underlying texture
+    }
+
     public WgTexture(String label, int width, int height, boolean useMipMaps, boolean renderAttachment,
             WGPUTextureFormat format, int numSamples) {
         this.data = new WgTextureData(width, height, useMipMaps, 0, 0);
@@ -86,6 +107,18 @@ public class WgTexture extends Texture {
         WGPUTextureFormat fmt = isColor ? WGPUTextureFormat.RGBA8UnormSrgb : WGPUTextureFormat.RGBA8Unorm;
 
         create(label, useMipMaps, textureUsage, fmt, numLayers, numSamples, null);
+    }
+
+    /**
+     * Create a texture array with an explicit format (e.g. for depth array textures).
+     * The default texture view will be a 2DArray view spanning all layers.
+     */
+    public WgTexture(String label, int width, int height, int numLayers, boolean useMipMaps,
+            WGPUTextureUsage textureUsage, WGPUTextureFormat format) {
+        this.data = new WgTextureData(width, height, useMipMaps, 0, 0);
+        this.label = label;
+        this.numSamples = 1;
+        create(label, useMipMaps, textureUsage, format, numLayers, numSamples, null);
     }
 
     /*
@@ -605,14 +638,26 @@ public class WgTexture extends Texture {
             if (sampler != null) {
                 sampler.release();
                 sampler.dispose();
+                sampler = null;
+            }
+            if (depthSampler != null) {
+                depthSampler.release();
+                depthSampler.dispose();
+                depthSampler = null;
             }
             if (textureView != null) {
                 textureView.release();
                 textureView.dispose();
+                textureView = null;
             }
             texture.destroy();
             texture.dispose();
             texture = null;
+        } else if (textureView != null) {
+            // Layer-view wrapper (texture == null): we own the view but not the underlying texture.
+            textureView.release();
+            textureView.dispose();
+            textureView = null;
         }
         super.dispose();
     }
