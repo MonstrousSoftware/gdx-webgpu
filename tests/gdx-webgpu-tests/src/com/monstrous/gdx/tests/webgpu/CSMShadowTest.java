@@ -210,8 +210,10 @@ public class CSMShadowTest extends GdxTest {
         shapeRenderer = new WgShapeRenderer();
 
         // -------- IBL Setup (procedural sky cubemap → diffuse/specular cubemaps for PBR reflections) --------
-        // Generate a sky cubemap that matches the procedural sky colors
-        envMap = buildSkyCubemap(512,
+        // Generate a sky cubemap that matches the procedural sky colors.
+        // Size 64 is sufficient for a smooth gradient; higher values (e.g., 512) cause extreme
+        // slowness on web due to per-pixel Pixmap interop overhead in TeaVM.
+        envMap = buildSkyCubemap(64,
                 new Color(0.15f, 0.3f, 0.65f, 1f),   // zenith (deep blue)
                 new Color(0.55f, 0.72f, 0.9f, 1f),   // horizon (light blue)
                 new Color(0.25f, 0.22f, 0.2f, 1f));   // ground (dark brownish)
@@ -1434,15 +1436,15 @@ public class CSMShadowTest extends GdxTest {
      * Each face pixel is computed from the world-space view direction.
      */
     private static WgCubemap buildSkyCubemap(int size, Color zenith, Color horizon, Color ground) {
-        // For each cubemap face, compute the world-space direction per pixel, then derive color from elevation
+        // For each cubemap face, compute the world-space direction per pixel, then derive color from elevation.
         Pixmap[] faces = new Pixmap[6];
         for (int face = 0; face < 6; face++) {
             faces[face] = new Pixmap(size, size, Pixmap.Format.RGBA8888);
+            java.nio.ByteBuffer buf = faces[face].getPixels();
             for (int y = 0; y < size; y++) {
+                float v = (y + 0.5f) / size * 2f - 1f;
                 for (int x = 0; x < size; x++) {
-                    // Map pixel to [-1,1] range on the face
                     float u = (x + 0.5f) / size * 2f - 1f;
-                    float v = (y + 0.5f) / size * 2f - 1f;
 
                     // Compute world-space direction for this face
                     float dx, dy, dz;
@@ -1471,10 +1473,14 @@ public class CSMShadowTest extends GdxTest {
                     g = g + (ground.g - g) * groundT;
                     b = b + (ground.b - b) * groundT;
 
-                    faces[face].setColor(r, g, b, 1f);
-                    faces[face].drawPixel(x, y);
+                    // Write RGBA8888 directly to buffer (avoids setColor + drawPixel interop)
+                    buf.put((byte) (int) (r * 255));
+                    buf.put((byte) (int) (g * 255));
+                    buf.put((byte) (int) (b * 255));
+                    buf.put((byte) 255);
                 }
             }
+            buf.flip();
         }
         WgCubemap cubemap = new WgCubemap(faces[0], faces[1], faces[2], faces[3], faces[4], faces[5]);
         for (Pixmap p : faces) p.dispose();
