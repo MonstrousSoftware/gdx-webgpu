@@ -13,8 +13,8 @@ import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 // Test behaviour with many different textures
 
 public class SpriteBatchTextures extends GdxTest {
-    public static int NUM_SPRITES = 160;
-    public static int NUM_TEXTURES = 200;
+    public static int NUM_SPRITES = 200;     // sprites per texture, max is 16384
+    public static int NUM_TEXTURES = 10;
 
     private WgSpriteBatch batch;
     private WgSpriteBatch textBatch;
@@ -28,17 +28,18 @@ public class SpriteBatchTextures extends GdxTest {
         font = new WgBitmapFont();
         pm = new Pixmap(32, 32, Pixmap.Format.RGBA8888);
         textures = new WgTexture[NUM_TEXTURES];
+        MathUtils.random.setSeed(1234);
         for (int i = 0; i < NUM_TEXTURES; i++)
             textures[i] = genTexture();
 
-        // since every sprite will have a random texture, (almost) every sprite
-        // will cause a batch flush (unless the texture is the same as the previous sprite)
-        // So we need to allow for one flush per sprite.
-        batch = new WgSpriteBatch(NUM_SPRITES, null, NUM_SPRITES);
+        // set max sprites per flush to NUM_SPRITES and max number of flushes to NUM_TEXTURES
+        //
+        batch = new WgSpriteBatch(NUM_SPRITES, null, NUM_TEXTURES);
         viewport = new ScreenViewport();
 
         // use a separate batch for text info to not affect the batch testing
         textBatch = new WgSpriteBatch();
+
     }
 
     @Override
@@ -47,16 +48,26 @@ public class SpriteBatchTextures extends GdxTest {
         viewport.apply();
         batch.setProjectionMatrix(viewport.getCamera().combined);
 
-        // MathUtils.random.setSeed(1234);
+        // same random sprite positions per frame
+        MathUtils.random.setSeed(1234);
+
 
         // pass a clear color to batch begin
         batch.begin(Color.TEAL);
-        for (int i = 0; i < NUM_SPRITES; i++) {
-            int x = MathUtils.random(Gdx.graphics.getWidth() - 32);
-            int y = MathUtils.random(Gdx.graphics.getHeight() - 32);
-            WgTexture texture = textures[MathUtils.random(NUM_TEXTURES - 1)];
-            batch.draw(texture, x, y, 32, 32);
+
+        // best practice is to group sprites per texture to minimize the number of texture switches, i.e. render calls
+        // so we iterate over the textures and draw some random sprites per texture
+        // This does mean that if we set NUM_SPRITES too high, only the last texture will be visible
+        // (Even better practice is to use a texture atlas, but this test is to demonstrate use of multiple textures)
+
+        for (int i = 0; i < NUM_TEXTURES; i++) {
+            for (int j = 0; j < NUM_SPRITES; j++) {
+                int x = MathUtils.random(Gdx.graphics.getWidth() - 32);
+                int y = MathUtils.random(Gdx.graphics.getHeight() - 32);
+                batch.draw(textures[i], x, y, 32, 32);
+            }
         }
+
         batch.end();
 
         textBatch.setProjectionMatrix(viewport.getCamera().combined);

@@ -22,8 +22,6 @@ import com.monstrous.gdx.webgpu.graphics.utils.BlendMapper;
 import com.monstrous.gdx.webgpu.wrappers.*;
 
 import java.nio.*;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Class to render textured rectangles in batches.
@@ -31,12 +29,12 @@ import java.util.Map;
 public class WgSpriteBatch implements Batch {
 
     private final static int VERTS_PER_SPRITE = 4;
-    private final static int INDICES_PER_SPRITE = 6;
+    private final static int INDICES_PER_SPRITE = 6;    // to build a rectangle from two triangles
 
     private final WgGraphics gfx;
     private final WebGPUContext webgpu;
     private final WgShaderProgram specificShader;
-    private final int maxSprites;
+    private final int maxSpritesPerFlush;
     private boolean drawing;
     private final int vertexSize;
     private final ByteBuffer vertexBB;
@@ -61,7 +59,7 @@ public class WgSpriteBatch implements Batch {
     private WebGPURenderPass renderPass;
     private int vbOffset;
     private final PipelineCache pipelines;
-    public int maxSpritesInBatch; // most nr of sprites in the batch over its lifetime
+    public int topSpritesPerBatch; // most nr of sprites in the batch over its lifetime
     public int renderCalls;
     public int pipelineCount;
     public int flushCount; // number of flushes since begin()
@@ -76,30 +74,30 @@ public class WgSpriteBatch implements Batch {
         this(2000, null, 100); // default nr
     }
 
-    public WgSpriteBatch(int maxSprites) {
-        this(maxSprites, null, 100);
+    public WgSpriteBatch(int maxSpritesPerFlush) {
+        this(maxSpritesPerFlush, null, 100);
     }
 
-    public WgSpriteBatch(int maxSprites, WgShaderProgram specificShader) {
-        this(maxSprites, specificShader, 100);
+    public WgSpriteBatch(int maxSpritesPerFlush, WgShaderProgram specificShader) {
+        this(maxSpritesPerFlush, specificShader, 100);
     }
 
     /**
      * Create a SpriteBatch.
      *
-     * @param maxSprites maximum number of sprite to be supported (default is 1000)
+     * @param maxSpritesPerFlush maximum number of sprite to be supported (default is 1000)
      * @param specificShader specific ShaderProgram to use, must be compatible with "sprite.wgsl". Leave null to use the
      *            default shader.
      * @param maxFlushes maximum number of flushes (e.g. texture changes, blending changes)
      */
-    public WgSpriteBatch(int maxSprites, WgShaderProgram specificShader, int maxFlushes) {
+    public WgSpriteBatch(int maxSpritesPerFlush, WgShaderProgram specificShader, int maxFlushes) {
         gfx = (WgGraphics) Gdx.graphics;
         webgpu = gfx.getContext();
 
-        if (maxSprites > 16384)
+        if (maxSpritesPerFlush > 16384)
             throw new GdxRuntimeException("Too many sprites. Max is 16384.");
 
-        this.maxSprites = maxSprites;
+        this.maxSpritesPerFlush = maxSpritesPerFlush;
         this.specificShader = specificShader;
 
         vertexAttributes = new VertexAttributes(
@@ -115,11 +113,11 @@ public class WgSpriteBatch implements Batch {
 
         // allocate data buffers based on default vertex attributes which are assumed to be the worst case.
         // i.e. with setVertexAttributes() you can specify a subset
-        createBuffers(maxFlushes + 1);
-        fillIndexBuffer(maxSprites);
+        createBuffers(maxFlushes);
+        fillIndexBuffer(maxSpritesPerFlush);
 
         // Create FloatBuffer to hold vertex data per batch, is reset every flush
-        vertexBB = BufferUtils.newUnsafeByteBuffer(maxSprites * VERTS_PER_SPRITE * vertexSize);
+        vertexBB = BufferUtils.newUnsafeByteBuffer(maxSpritesPerFlush * VERTS_PER_SPRITE * vertexSize);
         vertexBB.order(ByteOrder.LITTLE_ENDIAN);
         // important, webgpu expects little endian. ByteBuffer defaults to big endian.
         vertexFloats = vertexBB.asFloatBuffer();
@@ -357,7 +355,7 @@ public class WgSpriteBatch implements Batch {
             numSpritesPerFlush = 0;
             vbOffset = 0;
             vertexFloats.clear();
-            maxSpritesInBatch = 0;
+            topSpritesPerBatch = 0;
             flushCount = 0;
             numSprites = 0;
         }
@@ -388,8 +386,8 @@ public class WgSpriteBatch implements Batch {
             return;
         if (numSpritesPerFlush == 0)
             return;
-        if (numSpritesPerFlush > maxSpritesInBatch)
-            maxSpritesInBatch = numSpritesPerFlush;
+        if (numSpritesPerFlush > topSpritesPerBatch)    // keep statistics
+            topSpritesPerBatch = numSpritesPerFlush;
         if (flushCount > maxFlushes - 1) {
             Gdx.app.error("WgSpriteBatch", "Too many flushes (" + flushCount + "). Increase maxFlushes.");
             return;
@@ -412,7 +410,7 @@ public class WgSpriteBatch implements Batch {
         // use an offset to set the vertex buffer for this batch
         renderPass.setVertexBuffer(0, vertexBuffer.getBuffer(), vbOffset, numBytes);
         renderPass.setIndexBuffer(indexBuffer.getBuffer(), WGPUIndexFormat.Uint16, 0,
-                numSpritesPerFlush * 6 * Short.BYTES);
+                numSpritesPerFlush * INDICES_PER_SPRITE * Short.BYTES);
 
         renderPass.drawIndexed(numSpritesPerFlush * 6, 1, 0, 0, 0);
 
@@ -552,8 +550,8 @@ public class WgSpriteBatch implements Batch {
     private boolean check() {
         if (!drawing)
             throw new RuntimeException("SpriteBatch: Must call begin() before draw().");
-        if (numSpritesPerFlush == maxSprites) {
-            Gdx.app.error("WgSpriteBatch", "Too many sprites (more than " + maxSprites + "). Enlarge maxSprites.");
+        if (numSpritesPerFlush == maxSpritesPerFlush) {
+            Gdx.app.error("WgSpriteBatch", "Too many sprites (more than " + maxSpritesPerFlush + "). Enlarge maxSprites.");
             return false;
         }
         return true;
@@ -572,12 +570,13 @@ public class WgSpriteBatch implements Batch {
 
     public void draw(Texture texture, float x, float y, float width, float height, float u, float v, float u2,
             float v2) {
-        if (!check())
-            return;
 
-        if (texture != lastTexture) { // changing texture, need to flush what we have so far
+        if (lastTexture == null || ((WgTexture)texture).getHandle() != lastTexture.getHandle()) { // changing texture, need to flush what we have so far
             switchTexture(texture);
         }
+        // put check after texture switch, because the switch resets numSpritesPerFlush
+        if (!check())
+            return;
         addRect(x, y, width, height, u, v, u2, v2);
         numSpritesPerFlush++;
     }
@@ -585,15 +584,13 @@ public class WgSpriteBatch implements Batch {
     public void draw(Texture texture, float x, float y, float originX, float originY, float width, float height,
             float scaleX, float scaleY, float rotation, int srcX, int srcY, int srcWidth, int srcHeight, boolean flipX,
             boolean flipY) {
-        if (!check())
-            return;
 
         if (texture != lastTexture) { // changing texture, need to flush what we have so far
             switchTexture(texture);
         }
-
-        // if (idx == vertices.length) //
-        // flush();
+        // put check after texture switch, because the switch resets numSpritesPerFlush
+        if (!check())
+            return;
 
         // bottom left and top right corner points relative to origin
         final float worldOriginX = x + originX;
@@ -694,11 +691,12 @@ public class WgSpriteBatch implements Batch {
 
     public void draw(Texture texture, float x, float y, float width, float height, int srcX, int srcY, int srcWidth,
             int srcHeight, boolean flipX, boolean flipY) {
-        if (!check())
-            return;
 
         if (texture != lastTexture)
             switchTexture(texture);
+        // put check after texture switch, because the switch resets numSpritesPerFlush
+        if (!check())
+            return;
 
         float u = srcX * invTexWidth;
         float v = (srcY + srcHeight) * invTexHeight;
@@ -727,11 +725,11 @@ public class WgSpriteBatch implements Batch {
     }
 
     public void draw(Texture texture, float x, float y, int srcX, int srcY, int srcWidth, int srcHeight) {
-        if (!check())
-            return;
-
         if (texture != lastTexture)
             switchTexture(texture);
+        // put check after texture switch, because the switch resets numSpritesPerFlush
+        if (!check())
+            return;
 
         final float u = srcX * invTexWidth;
         final float v = (srcY + srcHeight) * invTexHeight;
@@ -769,13 +767,12 @@ public class WgSpriteBatch implements Batch {
 
     // used by Sprite class and BitmapFont
     public void draw(Texture texture, float[] spriteVertices, int offset, int numFloats) {
-        if (!check())
-            return;
 
         if (texture != lastTexture) { // changing texture, need to flush what we have so far
             switchTexture(texture);
         }
-        int remaining = 20 * (maxSprites - numSpritesPerFlush);
+
+        int remaining = 20 * (maxSpritesPerFlush - numSpritesPerFlush);
         if (numFloats > remaining) // avoid buffer overflow by truncating as needed
             numFloats = remaining;
         vertexFloats.put(spriteVertices, offset, numFloats);
@@ -784,11 +781,13 @@ public class WgSpriteBatch implements Batch {
 
     public void draw(TextureRegion region, float x, float y, float originX, float originY, float width, float height,
             float scaleX, float scaleY, float rotation) {
-        if (!check())
-            return;
+
         Texture texture = region.getTexture();
         if (texture != lastTexture)
             switchTexture(texture);
+        // put check after texture switch, because the switch resets numSpritesPerFlush
+        if (!check())
+            return;
 
         // bottom left and top right corner points relative to origin
         final float worldOriginX = x + originX;
@@ -878,11 +877,12 @@ public class WgSpriteBatch implements Batch {
 
     public void draw(TextureRegion region, float x, float y, float originX, float originY, float width, float height,
             float scaleX, float scaleY, float rotation, boolean clockwise) {
-        if (!check())
-            return;
         Texture texture = region.getTexture();
         if (texture != lastTexture)
             switchTexture(texture);
+        // put check after texture switch, because the switch resets numSpritesPerFlush
+        if (!check())
+            return;
 
         // bottom left and top right corner points relative to origin
         final float worldOriginX = x + originX;
@@ -987,11 +987,12 @@ public class WgSpriteBatch implements Batch {
     }
 
     public void draw(TextureRegion region, float width, float height, Affine2 transform) {
-        if (!check())
-            return;
         Texture texture = region.getTexture();
         if (texture != lastTexture)
             switchTexture(texture);
+        // put check after texture switch, because the switch resets numSpritesPerFlush
+        if (!check())
+            return;
 
         // construct corner points
         float x1 = transform.m02;
@@ -1040,11 +1041,11 @@ public class WgSpriteBatch implements Batch {
     }
 
     private void createBuffers(int maxFlushes) {
-        int indexSize = maxSprites * INDICES_PER_SPRITE * Short.BYTES;
+        int indexSize = maxSpritesPerFlush * INDICES_PER_SPRITE * Short.BYTES;
 
         // Create vertex buffer and index buffer
         vertexBuffer = new WebGPUVertexBuffer(WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Vertex),
-                maxSprites * 4 * vertexSize);
+                maxSpritesPerFlush * maxFlushes * VERTS_PER_SPRITE * vertexSize);
         indexBuffer = new WebGPUIndexBuffer(WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Index), indexSize, Short.BYTES);
 
         // Create uniform buffer with dynamic offset for the view projection matrix
@@ -1054,7 +1055,6 @@ public class WgSpriteBatch implements Batch {
                 maxFlushes);
     }
 
-    private Matrix4 prevMatrix = new Matrix4();
 
     /**
      * Write per-flush uniforms into the binder.
