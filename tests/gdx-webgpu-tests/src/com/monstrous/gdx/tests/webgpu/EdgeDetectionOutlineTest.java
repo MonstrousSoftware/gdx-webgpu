@@ -107,16 +107,12 @@ public class EdgeDetectionOutlineTest extends GdxTest {
         }
 
         @Override
-        protected WebGPUBindGroupLayout createBindGroupLayout() {
-            WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("SpriteBatch bind group layout");
-            layout.begin();
+        protected void defineBindGroup0Layout(WebGPUBindGroupLayout layout) {
             layout.addBuffer(0, WGPUShaderStage.Vertex.or(WGPUShaderStage.Fragment),
-                    WGPUBufferBindingType.Uniform, getUniformBufferSize(), true);
+                WGPUBufferBindingType.Uniform, getUniformBufferSize(), true);
             layout.addTexture(1, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float,
-                    WGPUTextureViewDimension._2D, false);
+                WGPUTextureViewDimension._2D, false);
             layout.addSampler(2, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering);
-            layout.end();
-            return layout;
         }
     }
 

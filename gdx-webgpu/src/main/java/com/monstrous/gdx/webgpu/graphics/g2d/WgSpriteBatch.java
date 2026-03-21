@@ -1116,38 +1116,36 @@ public class WgSpriteBatch implements Batch {
         binder.defineUniform("projectionViewTransform", 0, 0, 0);
     }
 
+
+    private WebGPUBindGroupLayout createBindGroupLayout() {
+        WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("SpriteBatch bind group layout");
+        layout.begin();
+        defineBindGroup0Layout(layout);
+        layout.end();
+        return layout;
+    }
+
     /**
-     * Creates the BindGroupLayout for group 0.
+     * Defines the BindGroupLayout for group 0.
      *
      * The default layout has binding 0 (uniform buffer), binding 1 (texture2d),
-     * binding 2 (sampler). Override to add extra texture or sampler bindings.
+     * binding 2 (sampler). Override to add extra texture, sampler or uniform bindings.
      *
      * Call {@code getUniformBufferSize()} for the buffer size — it must match
      * the value returned by your {@link #getUniformBufferSize()} override.
      *
-     * Example — adding a second texture at binding 3:
+     * Example — adding a second uniform buffer at binding 3:
      *   {@literal @}Override
-     *   protected WebGPUBindGroupLayout createBindGroupLayout() {
-     *       WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("SpriteBatch bind group layout");
-     *       layout.begin();
-     *       layout.addBuffer(0, WGPUShaderStage.Vertex, WGPUBufferBindingType.Uniform, getUniformBufferSize(), true);
-     *       layout.addTexture(1, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D, false);
-     *       layout.addSampler(2, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering);
-     *       layout.addTexture(3, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D, false);
-     *       layout.addSampler(4, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering);
-     *       layout.end();
-     *       return layout;
+     *    protected void defineBindGroup0Layout(WebGPUBindGroupLayout layout) {
+     *      super.defineBindGroup0Layout(layout);
+     *      layout.addBuffer(3, WGPUShaderStage.Fragment, WGPUBufferBindingType.Uniform, 256, false);
      *   }
      */
-    protected WebGPUBindGroupLayout createBindGroupLayout() {
-        WebGPUBindGroupLayout layout = new WebGPUBindGroupLayout("SpriteBatch bind group layout");
-        layout.begin();
+    protected void defineBindGroup0Layout(WebGPUBindGroupLayout layout) {
         layout.addBuffer(0, WGPUShaderStage.Vertex, WGPUBufferBindingType.Uniform, getUniformBufferSize(), true);
         layout.addTexture(1, WGPUShaderStage.Fragment, WGPUTextureSampleType.Float, WGPUTextureViewDimension._2D,
-                false);
+            false);
         layout.addSampler(2, WGPUShaderStage.Fragment, WGPUSamplerBindingType.Filtering);
-        layout.end();
-        return layout;
     }
 
     @Override
@@ -1171,7 +1169,7 @@ public class WgSpriteBatch implements Batch {
         pipelines.clear();
     }
 
-    private String getDefaultShaderSource() {
+    protected String getDefaultShaderSource() {
         if (defaultShader == null)
             defaultShader = Gdx.files.classpath("shaders/spritebatch.wgsl").readString();
         return defaultShader;
