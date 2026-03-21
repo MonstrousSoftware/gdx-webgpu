@@ -2,11 +2,13 @@ package com.monstrous.gdx.tests.webgpu;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.webgpu.graphics.Binder;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
+import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 import com.monstrous.gdx.webgpu.wrappers.WebGPUBindGroupLayout;
@@ -17,6 +19,7 @@ import com.monstrous.gdx.webgpu.wrappers.WebGPUUniformBuffer;
 public class SpriteBatchUniforms extends GdxTest {
 
     private MySpriteBatch batch;
+    private BitmapFont font;
 
     private WgTexture texture;
     private ScreenViewport viewport;
@@ -73,6 +76,7 @@ public class SpriteBatchUniforms extends GdxTest {
         texture = new WgTexture("data/badlogic.jpg", true);
         batch = new MySpriteBatch();
         viewport = new ScreenViewport();
+        font = new WgBitmapFont();
     }
 
     @Override
@@ -89,6 +93,10 @@ public class SpriteBatchUniforms extends GdxTest {
         batch.begin();
         batch.draw(texture, (Gdx.graphics.getWidth() - texture.getWidth()) / 2f,
                 (Gdx.graphics.getHeight() - texture.getHeight()) / 2f);
+
+
+        font.draw(batch, "Demo of a sprite batch with shader code using a time uniform", 20, 20);
+
         batch.end();
     }
 
@@ -102,6 +110,7 @@ public class SpriteBatchUniforms extends GdxTest {
         // cleanup
         texture.dispose();
         batch.dispose();
+        font.dispose();
     }
 
     // this is a copy of the default sprite batch shader but modifies the red component based on a time

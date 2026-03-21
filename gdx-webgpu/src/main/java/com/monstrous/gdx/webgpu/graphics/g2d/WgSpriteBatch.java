@@ -47,7 +47,7 @@ public class WgSpriteBatch implements Batch {
     private WebGPUIndexBuffer indexBuffer;
     private WebGPUUniformBuffer uniformBuffer;
     private final WebGPUBindGroupLayout bindGroupLayout;
-    private final VertexAttributes vertexAttributes;
+    protected VertexAttributes vertexAttributes;
     private final WGPUPipelineLayout pipelineLayout;
     private final PipelineSpecification pipelineSpec;
     private int uniformBufferSize;
@@ -82,6 +82,8 @@ public class WgSpriteBatch implements Batch {
         this(maxSpritesPerFlush, specificShader, 100);
     }
 
+
+
     /**
      * Create a SpriteBatch.
      *
@@ -100,10 +102,7 @@ public class WgSpriteBatch implements Batch {
         this.maxSpritesPerFlush = maxSpritesPerFlush;
         this.specificShader = specificShader;
 
-        vertexAttributes = new VertexAttributes(
-                new VertexAttribute(VertexAttributes.Usage.Position, 2, ShaderProgram.POSITION_ATTRIBUTE), // 2D
-                                                                                                           // position
-                VertexAttribute.ColorPacked(), VertexAttribute.TexCoords(0));
+        setVertexAttributes();
 
         // vertex: x, y, rgba, u, v
         vertexSize = vertexAttributes.vertexSize; // bytes
@@ -174,6 +173,18 @@ public class WgSpriteBatch implements Batch {
 
         drawing = false;
         frameNumber = -1;
+    }
+
+    /** You can override this to use fewer vertex attributes, i.e. omit packed color or texture coordinate per
+     * vertex to save a few bytes.
+     * The position is mandatory.  The ordering (position, color, texture coordinates) needs to be maintained.
+     * Note: using fewer vertex attributes makes a batch unsuitable for BitmapFont or Sprite.
+     */
+    protected void setVertexAttributes(){
+        vertexAttributes = new VertexAttributes(
+            new VertexAttribute(VertexAttributes.Usage.Position, 2, ShaderProgram.POSITION_ATTRIBUTE), // 2D position
+            VertexAttribute.ColorPacked(),
+            VertexAttribute.TexCoords(0));
     }
 
     // the index buffer is fixed and only has to be filled on start-up
