@@ -68,7 +68,8 @@ public class WebGPUTests {
                     GLTFSkinningMultiple.class, GLTFSkinningShadow.class, ParticleControllerTest.class,
                     Particles3D.class, Particles3DSnow.class, Particles3DmodelInstance.class, ScreenReaderTest.class,
                     MRTTest2D.class, MRTTest3D.class, Picking3DTest.class, EdgeDetectionOutlineTest.class, UITest.class,
-                    DebugLinesDepthTest.class
+                    DebugLinesDepthTest.class,
+                    SpriteBatchUniforms.class
 
             // @on
 
