@@ -16,6 +16,7 @@ import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 public class SpriteBatchCount extends GdxTest {
     public static int NUM_SPRITES = 10000;
     public static int NUM_TEXTURES = 100;
+    public static int MAX_SPRITES_PER_FLUSH = 10;
 
     private WgSpriteBatch batch;
     private WgSpriteBatch textBatch;
@@ -35,7 +36,7 @@ public class SpriteBatchCount extends GdxTest {
         // since every sprite will have a random texture, (almost) every sprite
         // will cause a batch flush (unless the texture is the same as the previous sprite)
         // So we need to allow for one flush per sprite.
-        batch = new WgSpriteBatch(NUM_SPRITES, null, NUM_SPRITES);
+        batch = new WgSpriteBatch(MAX_SPRITES_PER_FLUSH, null, NUM_SPRITES);
         viewport = new ScreenViewport();
 
         // use a separate batch for text info to not affect the batch testing
