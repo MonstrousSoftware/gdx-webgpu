@@ -18,6 +18,7 @@ import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 import com.monstrous.gdx.webgpu.wrappers.WebGPUBindGroupLayout;
 import com.monstrous.gdx.webgpu.wrappers.WebGPUUniformBuffer;
+import com.monstrous.gdx.webgpu.wrappers.WebGPUVertexLayout;
 
 // Sprite batch with fewer vertex attributes.
 // By default, every vertex has 2d position, packed vertex color and texture coordinates (5 floats in total).
@@ -41,10 +42,22 @@ public class SpriteBatchVattr extends GdxTest {
             vertexAttributes = new VertexAttributes(
                 new VertexAttribute(VertexAttributes.Usage.Position, 2, ShaderProgram.POSITION_ATTRIBUTE), // 2D position
                 //VertexAttribute.ColorPacked(),
-                VertexAttribute.TexCoords(0)
+                VertexAttribute.TexCoords(0),
+                VertexAttribute.TexCoords(1)
                 );
         }
+
+        @Override
+        protected void setVertexAttributeLocations(WebGPUVertexLayout vertexLayout) {
+            // define locations of vertex attributes in line with shader code
+            vertexLayout.setVertexAttributeLocation(ShaderProgram.POSITION_ATTRIBUTE, 0);
+            vertexLayout.setVertexAttributeLocation(ShaderProgram.COLOR_ATTRIBUTE, 5);
+            vertexLayout.setVertexAttributeLocation(ShaderProgram.TEXCOORD_ATTRIBUTE + "0", 1);
+            vertexLayout.setVertexAttributeLocation(ShaderProgram.TEXCOORD_ATTRIBUTE + "1", 10);
+        }
     }
+
+
 
 
 

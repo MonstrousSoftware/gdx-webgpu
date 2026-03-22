@@ -38,7 +38,7 @@ public class WgSpriteBatch implements Batch {
     private boolean drawing;
     private final int vertexSize;
     private final ByteBuffer vertexBB;
-    private final FloatBuffer vertexFloats; // float buffer view on byte buffer
+    protected final FloatBuffer vertexFloats; // float buffer view on byte buffer
     public int numSprites;
     private int numSpritesPerFlush;
     private final Color tint;
@@ -150,9 +150,11 @@ public class WgSpriteBatch implements Batch {
         pipelines = new PipelineCache();
         pipelineSpec = new PipelineSpecification("SpriteBatch pipeline", vertexAttributes, this.specificShader);
         // define locations of vertex attributes in line with shader code
-        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.POSITION_ATTRIBUTE, 0);
-        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.COLOR_ATTRIBUTE, 5);
-        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.TEXCOORD_ATTRIBUTE + "0", 1);
+        setVertexAttributeLocations(pipelineSpec.vertexLayout);
+//        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.POSITION_ATTRIBUTE, 0);
+//        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.COLOR_ATTRIBUTE, 5);
+//        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.TEXCOORD_ATTRIBUTE + "0", 1);
+//        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.TEXCOORD_ATTRIBUTE + "1", 10);   // TMP
 
         // default blending values
         pipelineSpec.enableBlending();
@@ -185,6 +187,13 @@ public class WgSpriteBatch implements Batch {
             new VertexAttribute(VertexAttributes.Usage.Position, 2, ShaderProgram.POSITION_ATTRIBUTE), // 2D position
             VertexAttribute.ColorPacked(),
             VertexAttribute.TexCoords(0));
+    }
+
+    protected void setVertexAttributeLocations(WebGPUVertexLayout vertexLayout) {
+        // define locations of vertex attributes in line with shader code
+        vertexLayout.setVertexAttributeLocation(ShaderProgram.POSITION_ATTRIBUTE, 0);
+        vertexLayout.setVertexAttributeLocation(ShaderProgram.COLOR_ATTRIBUTE, 5);
+        vertexLayout.setVertexAttributeLocation(ShaderProgram.TEXCOORD_ATTRIBUTE + "0", 1);
     }
 
     // the index buffer is fixed and only has to be filled on start-up
@@ -431,6 +440,7 @@ public class WgSpriteBatch implements Batch {
         vertexFloats.clear(); // reset fill position for next batch
         numSprites += numSpritesPerFlush;
         numSpritesPerFlush = 0; // reset
+        vertexOffset = 0;
         flushCount++;
         // advance the dynamic offset in the uniform buffer ready for the next flush
         // uniformBuffer.setDynamicOffsetIndex(flushCount);
@@ -1034,21 +1044,27 @@ public class WgSpriteBatch implements Batch {
         addVertex(x + w, y, u2, v);
     }
 
-    private void addVertex(float x, float y, float u, float v) {
+    protected int vertexOffset;
+
+    protected void addVertex(float x, float y, float u, float v) {
+        int stride = vertexAttributes.vertexSize / Float.BYTES;
         boolean hasColor = (vertexAttributes.getMask() & VertexAttributes.Usage.ColorPacked) != 0;
         boolean hasUV = (vertexAttributes.getMask() & VertexAttributes.Usage.TextureCoordinates) != 0;
         float col = tint.toFloatBits();
 
-        vertexFloats.put(x);
-        vertexFloats.put(y);
+        int start = vertexOffset;
+
+        vertexFloats.put(vertexOffset++, x);
+        vertexFloats.put(vertexOffset++, y);
         if (hasColor) {
-            vertexFloats.put(col);
+            vertexFloats.put(vertexOffset++,col);
         }
         if (hasUV) {
-            vertexFloats.put(u);
-            vertexFloats.put(v);
+            vertexFloats.put(vertexOffset++, u);
+            vertexFloats.put(vertexOffset++, v);
         }
-
+        // skip any other vertex attributes that may be defined
+        vertexOffset = start + stride;
     }
 
     private void createBuffers(int maxFlushes) {

@@ -10,7 +10,7 @@ import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 
-// Test behaviour with many different textures
+// Test behaviour with many different textures, as they cause batch flushes
 
 public class SpriteBatchTextures extends GdxTest {
     public static int NUM_SPRITES = 200;     // sprites per texture, max is 16384
