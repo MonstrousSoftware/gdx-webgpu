@@ -151,10 +151,6 @@ public class WgSpriteBatch implements Batch {
         pipelineSpec = new PipelineSpecification("SpriteBatch pipeline", vertexAttributes, this.specificShader);
         // define locations of vertex attributes in line with shader code
         setVertexAttributeLocations(pipelineSpec.vertexLayout);
-//        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.POSITION_ATTRIBUTE, 0);
-//        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.COLOR_ATTRIBUTE, 5);
-//        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.TEXCOORD_ATTRIBUTE + "0", 1);
-//        pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.TEXCOORD_ATTRIBUTE + "1", 10);   // TMP
 
         // default blending values
         pipelineSpec.enableBlending();
@@ -177,10 +173,10 @@ public class WgSpriteBatch implements Batch {
         frameNumber = -1;
     }
 
-    /** You can override this to use fewer vertex attributes, i.e. omit packed color or texture coordinate per
-     * vertex to save a few bytes.
-     * The position is mandatory.  The ordering (position, color, texture coordinates) needs to be maintained.
-     * Note: using fewer vertex attributes makes a batch unsuitable for BitmapFont or Sprite.
+    /** You can override this to use different vertex attributes, i.e. omit packed color or texture coordinate per
+     * vertex to save a few bytes or to add more vertex attributes.
+     * The position is mandatory.  This needs to be matched to your shader code.
+     * Note: using different vertex attributes makes a batch unsuitable for BitmapFont or Sprite.
      */
     protected void setVertexAttributes(){
         vertexAttributes = new VertexAttributes(
