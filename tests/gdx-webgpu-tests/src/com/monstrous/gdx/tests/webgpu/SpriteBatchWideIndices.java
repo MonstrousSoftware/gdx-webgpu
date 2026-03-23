@@ -10,12 +10,14 @@ import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
 
-// Stress test: Place lots of different textures on the screen.
-// Almost every texture will cause a flush (texture swap)
+// Stress test: Many sprites
+// Vanilla libgdx supports a maximum of 8K sprites
+// gdx-webgpu supports 16384 sprites with 16 bit indexes and will automatically switch to 32 bit index values
+// if there are more than 16384 sprites and can in theory support billions of sprites (until you run out of memory etc.)
 //
 public class SpriteBatchWideIndices extends GdxTest {
-    public static int NUM_SPRITES = 18000;
-    public static int NUM_TEXTURES = 1;
+    public static int NUM_SPRITES = 100000;  // note: exceeds 16384,ie more than 64K vertices
+    public static int NUM_TEXTURES = 1;     // use one texture only
     public static int MAX_SPRITES_PER_FLUSH = NUM_SPRITES;
 
     private WgSpriteBatch batch;
@@ -34,9 +36,6 @@ public class SpriteBatchWideIndices extends GdxTest {
         for (int i = 0; i < NUM_TEXTURES; i++)
             textures[i] = genTexture();
 
-        // since every sprite will have a random texture, (almost) every sprite
-        // will cause a batch flush (unless the texture is the same as the previous sprite)
-        // So we need to allow for one flush per sprite.
         batch = new WgSpriteBatch(MAX_SPRITES_PER_FLUSH, null, NUM_TEXTURES);
         viewport = new ScreenViewport();
 
@@ -68,7 +67,8 @@ public class SpriteBatchWideIndices extends GdxTest {
 
         textBatch.setProjectionMatrix(viewport.getCamera().combined);
         textBatch.begin();
-        font.setColor(Color.YELLOW);
+        font.setColor(Color.BLACK);
+        font.draw(textBatch, "Demo of more than 16K sprites" , 10, 120);
         font.draw(textBatch, "fps: " + Gdx.graphics.getFramesPerSecond(), 10, 100);
         font.draw(textBatch, "numSprites: " + batch.numSprites, 10, 80);
         font.draw(textBatch, "numFlushes: " + batch.flushCount, 10, 60);

@@ -61,7 +61,7 @@ public class WebGPUTests {
                     TextureAtlasTest.class, TestTextureMipMap.class, Basic3DTest.class, TestMesh.class,
                     TestMeshNoIndices.class, TestMeshBuilder.class, TestTexture.class, SpriteBatchDoubleLoop.class,
                     TransparencyTest.class, TestCompute.class, ComputeMoldSlime.class, SpriteBatchBasic.class,
-                    SpriteBatchClear.class, SpriteBatchDraw.class, SpriteBatchLimit.class, SpriteBatchTextures.class,
+                    SpriteBatchClear.class, SpriteBatchDraw.class, SpriteBatchTextures.class,
                     SpriteBatchCount.class, EnvironmentMapTest.class, Gamma3D.class, TextureArrayTest.class,
                     SkyBoxTest.class, DuckField.class, IBL_Sliders.class, IBL_Spheres.class, IBL_GenerateOutdoor.class,
                     GLTFAnimation.class, GLTFMorphAnimation.class, GLTFSkinning.class, Scene2dTestScrollPane.class,
@@ -70,7 +70,8 @@ public class WebGPUTests {
                     MRTTest2D.class, MRTTest3D.class, Picking3DTest.class, EdgeDetectionOutlineTest.class, UITest.class,
                     DebugLinesDepthTest.class,
                     SpriteBatchUniforms.class,
-                    SpriteBatchExtraVertAttrib.class
+                    SpriteBatchExtraVertAttrib.class,
+                    SpriteBatchWideIndices.class
 
             // @on
 

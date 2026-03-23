@@ -1,6 +1,7 @@
 package com.monstrous.gdx.tests.webgpu;
 
 import com.github.xpenatan.webgpu.JWebGPUBackend;
+import com.monstrous.gdx.tests.webgpu.utils.AutoTestRunner;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopApplication;
 import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopApplicationConfiguration;
@@ -25,6 +26,8 @@ public class Launcher {
         // new WgDesktopApplication(new MaterialsTest(), config);
         // new WgDesktopApplication(new GLTFSkinningMultiple(), config);
         new WgDesktopApplication(new SpriteBatchWideIndices(), config);
+
+        //new WgDesktopApplication(new AutoTestRunner(), config);
 
     }
 

@@ -193,14 +193,12 @@ public class WgSpriteBatch implements Batch {
 
         indexBuffer = new WgIndexBuffer(true, maxSprites * INDICES_PER_SPRITE, maxSprites*VERTS_PER_SPRITE);
 
-        ByteBuffer bb = BufferUtils.newUnsafeByteBuffer(maxSprites * INDICES_PER_SPRITE * indexBuffer.getIndexSize());
-        bb.order(ByteOrder.LITTLE_ENDIAN); // webgpu expects little endian data
-
         if(indexBuffer.getIndexSize() == 2) {
-            ShortBuffer shorts = bb.asShortBuffer();
+            // write straight to the backing buffer of indexBuffer
+            ShortBuffer shorts = indexBuffer.getBuffer(true);
             for (int i = 0; i < maxSprites; i++) {
                 // note: even if there is overflow above 32767 and the short becomes negative
-                // the GPU will interpret it as a uint32, and it will still work.
+                // the GPU will interpret it as a uint16, and it will still work.
                 // The real limit is where there are more than 16384 * 4 indices (per flush!),
                 // and it wraps back to zero.
                 short vertexOffset = (short) (i * 4);
@@ -213,13 +211,8 @@ public class WgSpriteBatch implements Batch {
                 shorts.put((short) (vertexOffset + 2));
                 shorts.put((short) (vertexOffset + 3));
             }
-            // set the limit of the byte buffer to the number of bytes filled
-            ((Buffer) bb).limit(shorts.limit() * Short.BYTES);
-
-            shorts.flip();  // flip after writing, ready for reading
-            indexBuffer.setIndices(shorts);
         } else { // 4 byte indices
-            IntBuffer ints = bb.asIntBuffer();
+            IntBuffer ints = indexBuffer.getIntBuffer(true);
             for (int i = 0; i < maxSprites; i++) {
                 int vertexOffset = (i * 4);
                 // two triangles per sprite
@@ -231,14 +224,8 @@ public class WgSpriteBatch implements Batch {
                 ints.put(vertexOffset + 2);
                 ints.put(vertexOffset + 3);
             }
-            // set the limit of the byte buffer to the number of bytes filled
-            ((Buffer) bb).limit(ints.limit() * Integer.BYTES);
-
-            ints.flip();  // flip after writing, ready for reading
-            indexBuffer.setIndices(ints);
         }
         indexBuffer.bind(); // commit buffer contents
-        BufferUtils.disposeUnsafeByteBuffer(bb);
     }
 
     public void setColor(float r, float g, float b, float a) {
