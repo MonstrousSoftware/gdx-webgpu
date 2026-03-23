@@ -29,10 +29,11 @@ public class WgIndexBuffer implements IndexData {
      *
      * @param isStatic will this index buffer never change? Allows to free the internal backing buffer after use.
      * @param maxIndices maximum number of indices to be stored
+     * @param maxVertices maximum number of vertices to be indexed
      */
-    public WgIndexBuffer(boolean isStatic, int maxIndices) {
-        // use wide indices (i.e. int rather than short) is maxIndices is too large for shorts
-        this(isStatic, maxIndices, (maxIndices >= 65535)); // Short.MAX_VALUE));
+    public WgIndexBuffer(boolean isStatic, int maxIndices, int maxVertices) {
+        // if there are more than 64K vertices, we will need 32 bit indices, instead of 16 bit indices
+        this(isStatic, maxIndices, maxVertices >= 65536);
     }
 
     /**
@@ -67,6 +68,7 @@ public class WgIndexBuffer implements IndexData {
         return wideIndices ? intBuffer.capacity() : shortBuffer.capacity();
     }
 
+    /** returns size of index in bytes (2 or 4) */
     public int getIndexSize() {
         return wideIndices ? 4 : 2;
     }
@@ -75,22 +77,44 @@ public class WgIndexBuffer implements IndexData {
     public void setIndices(short[] indices, int offset, int count) {
         if (isStatic && isFrozen)
             throw new GdxRuntimeException("WgIndexBuffer: static buffer cannot be modified.");
+        if (wideIndices)
+            throw new GdxRuntimeException("WgIndexBuffer: indexBuffer is 32 bit, use setIndices with int[].");
         ((Buffer) shortBuffer).clear();
         shortBuffer.put(indices, offset, count);
         isDirty = true;
     }
 
+    public void setIndices(int[] indices, int offset, int count) {
+        if (isStatic && isFrozen)
+            throw new GdxRuntimeException("WgIndexBuffer: static buffer cannot be modified.");
+        if (!wideIndices)
+            throw new GdxRuntimeException("WgIndexBuffer: indexBuffer is 16 bit, use setIndices with short[].");
+        ((Buffer) intBuffer).clear();
+        intBuffer.put(indices, offset, count);
+        isDirty = true;
+    }
+
     /**
      * Set indices using a ShortBuffer. Uses values from the ShortBuffer's current position to its limit
+     * (so make sure to flip() the ShortBuffer after writing to it).
+     *
      */
     @Override
     public void setIndices(ShortBuffer indices) {
         if (isFrozen)
             throw new GdxRuntimeException("WgIndexBuffer: static buffer cannot be modified.");
-        int pos = indices.position();
         ((Buffer) shortBuffer).clear();
         ((Buffer) shortBuffer).limit(indices.remaining());
         shortBuffer.put(indices);
+        isDirty = true;
+    }
+
+    public void setIndices(IntBuffer indices) {
+        if (isFrozen)
+            throw new GdxRuntimeException("WgIndexBuffer: static buffer cannot be modified.");
+        ((Buffer) intBuffer).clear();
+        ((Buffer) intBuffer).limit(indices.remaining());
+        intBuffer.put(indices);
         isDirty = true;
     }
 
@@ -154,6 +178,7 @@ public class WgIndexBuffer implements IndexData {
             // if this is a static buffer, we can freeze it
             if (isStatic) {
                 isFrozen = true; // no more modifications allowed
+                // dispose ByteBuffer here?
             }
         }
     }
@@ -161,9 +186,9 @@ public class WgIndexBuffer implements IndexData {
     public void bind(WebGPURenderPass renderPass) {
         bind();
         // bind index buffer to render pass
-        int size = indexBuffer.getSize(); // in bytes
+        int sizeInBytes = indexBuffer.getSize(); // in bytes
         renderPass.setIndexBuffer(indexBuffer.getBuffer(),
-                (wideIndices ? WGPUIndexFormat.Uint32 : WGPUIndexFormat.Uint16), 0, size);
+                (wideIndices ? WGPUIndexFormat.Uint32 : WGPUIndexFormat.Uint16), 0, sizeInBytes);
     }
 
     @Override

@@ -39,7 +39,7 @@ public class WgMesh extends Mesh {
      */
     public WgMesh(boolean isStatic, int maxVertices, int maxIndices, VertexAttribute... attributes) {
         this(new WgVertexBuffer(isStatic, maxVertices, new VertexAttributes(attributes)),
-                new WgIndexBuffer(isStatic, maxIndices), false);
+                new WgIndexBuffer(isStatic, maxIndices, maxVertices), false);
     }
 
     /**
@@ -52,7 +52,7 @@ public class WgMesh extends Mesh {
      *            position, normal or texture coordinate
      */
     public WgMesh(boolean isStatic, int maxVertices, int maxIndices, VertexAttributes attributes) {
-        this(new WgVertexBuffer(isStatic, maxVertices, attributes), new WgIndexBuffer(isStatic, maxIndices), false);
+        this(new WgVertexBuffer(isStatic, maxVertices, attributes), new WgIndexBuffer(isStatic, maxIndices, maxVertices), false);
     }
 
     /**
@@ -69,7 +69,7 @@ public class WgMesh extends Mesh {
      **/
     public WgMesh(boolean staticVertices, boolean staticIndices, int maxVertices, int maxIndices,
             VertexAttributes attributes) {
-        this(new WgVertexBuffer(staticVertices, maxVertices, attributes), new WgIndexBuffer(staticIndices, maxIndices),
+        this(new WgVertexBuffer(staticVertices, maxVertices, attributes), new WgIndexBuffer(staticIndices, maxIndices, maxVertices),
                 false);
     }
 
@@ -87,7 +87,7 @@ public class WgMesh extends Mesh {
     public WgMesh(VertexDataType type, boolean isStatic, int maxVertices, int maxIndices,
             VertexAttribute... attributes) {
         this(new WgVertexBuffer(isStatic, maxVertices, new VertexAttributes(attributes)),
-                new WgIndexBuffer(isStatic, maxIndices), false);
+                new WgIndexBuffer(isStatic, maxIndices, maxVertices), false);
     }
 
     /**
@@ -101,7 +101,7 @@ public class WgMesh extends Mesh {
      * @param attributes the {@link VertexAttributes}.
      */
     public WgMesh(VertexDataType type, boolean isStatic, int maxVertices, int maxIndices, VertexAttributes attributes) {
-        this(new WgVertexBuffer(isStatic, maxVertices, attributes), new WgIndexBuffer(isStatic, maxIndices), false);
+        this(new WgVertexBuffer(isStatic, maxVertices, attributes), new WgIndexBuffer(isStatic, maxIndices, maxVertices), false);
     }
 
     // version that allows to request wide indices
@@ -156,7 +156,7 @@ public class WgMesh extends Mesh {
 
     /**
      * Extends the specified {@link BoundingBox} with the specified part.
-     * 
+     *
      * @param out the bounding box to store the result in.
      * @param offset the start of the part.
      * @param count the size of the part.
@@ -246,7 +246,7 @@ public class WgMesh extends Mesh {
 
     /**
      * Calculates the squared radius of the bounding sphere around the specified center for the specified part.
-     * 
+     *
      * @param centerX The X coordinate of the center of the bounding sphere
      * @param centerY The Y coordinate of the center of the bounding sphere
      * @param centerZ The Z coordinate of the center of the bounding sphere

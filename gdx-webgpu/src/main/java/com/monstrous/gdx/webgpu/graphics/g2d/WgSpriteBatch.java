@@ -10,7 +10,6 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.BufferUtils;
-import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.Null;
 import com.github.xpenatan.webgpu.*;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
@@ -18,6 +17,7 @@ import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.Binder;
 import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
+import com.monstrous.gdx.webgpu.graphics.g3d.WgIndexBuffer;
 import com.monstrous.gdx.webgpu.graphics.utils.BlendMapper;
 import com.monstrous.gdx.webgpu.wrappers.*;
 
@@ -44,7 +44,7 @@ public class WgSpriteBatch implements Batch {
     private final Color tint;
     private float tintPacked;
     private WebGPUVertexBuffer vertexBuffer;
-    private WebGPUIndexBuffer indexBuffer;
+    private WgIndexBuffer indexBuffer;
     private WebGPUUniformBuffer uniformBuffer;
     private final WebGPUBindGroupLayout bindGroupLayout;
     protected VertexAttributes vertexAttributes;
@@ -96,9 +96,6 @@ public class WgSpriteBatch implements Batch {
         gfx = (WgGraphics) Gdx.graphics;
         webgpu = gfx.getContext();
 
-        if (maxSpritesPerFlush > 16384)
-            throw new GdxRuntimeException("Too many sprites. Max is 16384.");
-
         this.maxSpritesPerFlush = maxSpritesPerFlush;
         this.specificShader = specificShader;
 
@@ -110,24 +107,15 @@ public class WgSpriteBatch implements Batch {
         // allow for a different projectionView matrix per flush.
         this.maxFlushes = maxFlushes;
 
-        // allocate data buffers based on default vertex attributes which are assumed to be the worst case.
-        // i.e. with setVertexAttributes() you can specify a subset
+        // allocate data buffers
         createBuffers(maxFlushes);
-        fillIndexBuffer(maxSpritesPerFlush);
+        createIndexBuffer(maxSpritesPerFlush);
 
         // Create FloatBuffer to hold vertex data per batch, is reset every flush
         vertexBB = BufferUtils.newUnsafeByteBuffer(maxSpritesPerFlush * VERTS_PER_SPRITE * vertexSize);
         vertexBB.order(ByteOrder.LITTLE_ENDIAN);
         // important, webgpu expects little endian. ByteBuffer defaults to big endian.
         vertexFloats = vertexBB.asFloatBuffer();
-
-        projectionMatrix = new Matrix4();
-        transformMatrix = new Matrix4();
-        combinedMatrix = new Matrix4();
-
-        // matrix which will transform an opengl ortho matrix to a webgpu ortho matrix
-        // by scaling the Z range from [-1..1] to [0..1]
-        shiftDepthMatrix = new Matrix4().idt().scl(1, 1, -0.5f).trn(0, 0, 0.5f);
 
         tint = new Color(Color.WHITE);
 
@@ -166,6 +154,14 @@ public class WgSpriteBatch implements Batch {
             pipelineSpec.shaderSource = getDefaultShaderSource();
         }
 
+        projectionMatrix = new Matrix4();
+        transformMatrix = new Matrix4();
+        combinedMatrix = new Matrix4();
+
+        // matrix which will transform an opengl ortho matrix to a webgpu ortho matrix
+        // by scaling the Z range from [-1..1] to [0..1]
+        shiftDepthMatrix = new Matrix4().idt().scl(1, 1, -0.5f).trn(0, 0, 0.5f);
+
         projectionMatrix.setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), 0, 100);
         transformMatrix.idt();
 
@@ -192,30 +188,56 @@ public class WgSpriteBatch implements Batch {
         vertexLayout.setVertexAttributeLocation(ShaderProgram.TEXCOORD_ATTRIBUTE + "0", 1);
     }
 
-    // the index buffer is fixed and only has to be filled on start-up
-    private void fillIndexBuffer(int maxSprites) {
-        ByteBuffer bb = BufferUtils.newUnsafeByteBuffer(maxSprites * INDICES_PER_SPRITE * Short.BYTES);
+    // the index buffer is static and only has to be filled on start-up
+    private void createIndexBuffer(int maxSprites) {
+
+        indexBuffer = new WgIndexBuffer(true, maxSprites * INDICES_PER_SPRITE, maxSprites*VERTS_PER_SPRITE);
+
+        ByteBuffer bb = BufferUtils.newUnsafeByteBuffer(maxSprites * INDICES_PER_SPRITE * indexBuffer.getIndexSize());
         bb.order(ByteOrder.LITTLE_ENDIAN); // webgpu expects little endian data
-        ShortBuffer shorts = bb.asShortBuffer();
-        for (int i = 0; i < maxSprites; i++) {
-            // note: even if there is overflow above 32767 and the short becomes negative
-            // the GPU will interpret it as a uint32, and it will still work.
-            // The real limit is where there are more than 16384 * 4 indices (per flush!),
-            // and it wraps back to zero.
-            short vertexOffset = (short) (i * 4);
-            // two triangles per sprite
-            shorts.put(vertexOffset);
-            shorts.put((short) (vertexOffset + 1));
-            shorts.put((short) (vertexOffset + 2));
 
-            shorts.put(vertexOffset);
-            shorts.put((short) (vertexOffset + 2));
-            shorts.put((short) (vertexOffset + 3));
+        if(indexBuffer.getIndexSize() == 2) {
+            ShortBuffer shorts = bb.asShortBuffer();
+            for (int i = 0; i < maxSprites; i++) {
+                // note: even if there is overflow above 32767 and the short becomes negative
+                // the GPU will interpret it as a uint32, and it will still work.
+                // The real limit is where there are more than 16384 * 4 indices (per flush!),
+                // and it wraps back to zero.
+                short vertexOffset = (short) (i * 4);
+                // two triangles per sprite
+                shorts.put(vertexOffset);
+                shorts.put((short) (vertexOffset + 1));
+                shorts.put((short) (vertexOffset + 2));
+
+                shorts.put(vertexOffset);
+                shorts.put((short) (vertexOffset + 2));
+                shorts.put((short) (vertexOffset + 3));
+            }
+            // set the limit of the byte buffer to the number of bytes filled
+            ((Buffer) bb).limit(shorts.limit() * Short.BYTES);
+
+            shorts.flip();  // flip after writing, ready for reading
+            indexBuffer.setIndices(shorts);
+        } else { // 4 byte indices
+            IntBuffer ints = bb.asIntBuffer();
+            for (int i = 0; i < maxSprites; i++) {
+                int vertexOffset = (i * 4);
+                // two triangles per sprite
+                ints.put(vertexOffset);
+                ints.put(vertexOffset + 1);
+                ints.put(vertexOffset + 2);
+
+                ints.put(vertexOffset);
+                ints.put(vertexOffset + 2);
+                ints.put(vertexOffset + 3);
+            }
+            // set the limit of the byte buffer to the number of bytes filled
+            ((Buffer) bb).limit(ints.limit() * Integer.BYTES);
+
+            ints.flip();  // flip after writing, ready for reading
+            indexBuffer.setIndices(ints);
         }
-        // set the limit of the byte buffer to the number of bytes filled
-        ((Buffer) bb).limit(shorts.limit() * Short.BYTES);
-
-        indexBuffer.setIndices(bb);
+        indexBuffer.bind(); // commit buffer contents
         BufferUtils.disposeUnsafeByteBuffer(bb);
     }
 
@@ -425,8 +447,7 @@ public class WgSpriteBatch implements Batch {
         // Set vertex buffer while encoding the render pass
         // use an offset to set the vertex buffer for this batch
         renderPass.setVertexBuffer(0, vertexBuffer.getBuffer(), vbOffset, numBytes);
-        renderPass.setIndexBuffer(indexBuffer.getBuffer(), WGPUIndexFormat.Uint16, 0,
-                numSpritesPerFlush * INDICES_PER_SPRITE * Short.BYTES);
+        indexBuffer.bind(renderPass);
 
         renderPass.drawIndexed(numSpritesPerFlush * 6, 1, 0, 0, 0);
 
@@ -1069,7 +1090,6 @@ public class WgSpriteBatch implements Batch {
         // Create vertex buffer and index buffer
         vertexBuffer = new WebGPUVertexBuffer(WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Vertex),
                 maxSpritesPerFlush * maxFlushes * VERTS_PER_SPRITE * vertexSize);
-        indexBuffer = new WebGPUIndexBuffer(WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Index), indexSize, Short.BYTES);
 
         // Create uniform buffer with dynamic offset for the view projection matrix
         // dynamic offset will be incremented per flush so that it can have a specific view projection matrix
