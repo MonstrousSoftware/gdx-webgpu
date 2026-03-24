@@ -173,10 +173,31 @@ Just like SpriteBatch you can pass a maximum number of sprites in the constructo
 ```java
 	WgSpriteBatch batch = new WgSpriteBatch(8000);
 ```
-Unlike SpriteBatch, this maximum is a hard limit: further sprites will be ignored and an error message will be issued in the log.
+Unlike SpriteBatch, this maximum is a hard limit: further sprites will be ignored and an error message will be issued in the log (but the game will not stop running).
 
 The maximum may therefore need to be set higher than when using `SpriteBatch`. For `SpriteBatch` the maximum value only affects performance, by reducing the number of flushes.
 On the other hand, `WgSpriteBatch` cannot flush intermediate batches to the GPU when the buffer is full as the buffer content can only be reused after the end of the frame.
+
+The number of flushes is also limited, by default to 100. If the maximum is exceeded, there will be an error message in the log.
+
+It is possible to increase this, for example to 200, as follows:
+```java
+	WgSpriteBatch batch = new WgSpriteBatch(8000, null, 200);
+```
+
+The sprite batch will automatically flush whenever you do one of the following between `begin()` and `end()`:
+- change the texture (`switchTexture()`)
+- change the blending (e.g. `enableBlending()`, `disableBlending()`)
+- change the scissor rectangle (`setScissorRect()`)
+- change the shader (`setShader()`)
+- change the transform or projection matrix (`setProjectionMatrix`, `setTranformationMatrix`)
+
+If you are flushing a lot because you are using many different textures, you should probably use a texture atlas instead. (Every flush is a render call and this has performance impact).
+
+Note that the maximum number of sprites (8000 in the example) is actually a maximum per flush. 
+
+The size of the vertex buffer allocated by WgSpriteBatch is proportional to `maxSpritesPerFlush` * `maxFlushes`.
+
 
 
 ### Blend Factor
@@ -218,6 +239,8 @@ If a texture is intended to be used as render output, it needs to be constructed
 For anti-aliasing, the parameter `numSamples` should be set to 4 (valid values are 1 and 4).
 
 If a WgTexture is constructed from a TextureData, it must be a WgTextureData.
+
+A texture can be updated using `WgTexture::load(ByteBuffer bb, int width, int height)`. 
 
 ## WgFrameBuffer
 This can be used to capture output to a texture.

@@ -25,9 +25,9 @@ public class Launcher {
         // new WgDesktopApplication(new Scene2dTestScrollPane(), config);
         // new WgDesktopApplication(new MaterialsTest(), config);
         // new WgDesktopApplication(new GLTFSkinningMultiple(), config);
-        new WgDesktopApplication(new DynamicTexture(), config);
+        //new WgDesktopApplication(new DynamicTexture(), config);
 
-        //new WgDesktopApplication(new AutoTestRunner(), config);
+        new WgDesktopApplication(new AutoTestRunner(), config);
 
     }
 
