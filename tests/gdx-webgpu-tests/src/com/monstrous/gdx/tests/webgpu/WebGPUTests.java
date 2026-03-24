@@ -71,7 +71,8 @@ public class WebGPUTests {
                     DebugLinesDepthTest.class,
                     SpriteBatchUniforms.class,
                     SpriteBatchExtraVertAttrib.class,
-                    SpriteBatchWideIndices.class
+                    SpriteBatchWideIndices.class,
+                    DynamicTexture.class
 
             // @on
 

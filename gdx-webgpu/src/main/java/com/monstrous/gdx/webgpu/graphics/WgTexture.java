@@ -576,32 +576,11 @@ public class WgTexture extends Texture {
         webgpu.queue.writeTexture(destination, data, 4 * width * height, source, extent);
     }
 
-    // use at own risk
-    public void load(ByteBuffer pixels) {
-
-        WGPUTexelCopyTextureInfo destination = WGPUTexelCopyTextureInfo.obtain();
-        destination.setTexture(texture);
-        destination.setMipLevel(0);
-        destination.getOrigin().setX(0);
-        destination.getOrigin().setY(0);
-        destination.getOrigin().setZ(0);
-        destination.setAspect(WGPUTextureAspect.All); // not relevant
-
-        // Arguments telling how the pixel data is laid out
-        WGPUTexelCopyBufferLayout source = WGPUTexelCopyBufferLayout.obtain();
-        source.setOffset(0);
-        source.setBytesPerRow(4 * data.getWidth());
-        source.setRowsPerImage(data.getHeight());
-
-        WGPUExtent3D extent = WGPUExtent3D.obtain();
-        extent.setWidth(data.getWidth());
-        extent.setHeight(data.getHeight());
-        extent.setDepthOrArrayLayers(1);
-
-        if (!webgpu.isFrameStarted()) {
-            Gdx.app.error("WgTexture", "writeTexture called outside of beginFrame/endFrame window. This may cause a crash.");
-        }
-        webgpu.queue.writeTexture(destination, pixels, pixels.limit(), source, extent);
+    /**
+     * Load image data into layer 0 and mip level 0.
+     */
+    public void load(ByteBuffer pixels, int width, int height) {
+        loadMipLevel(pixels, width, height, 0, 0);
     }
 
     private static int toUnsignedInt(byte x) {
