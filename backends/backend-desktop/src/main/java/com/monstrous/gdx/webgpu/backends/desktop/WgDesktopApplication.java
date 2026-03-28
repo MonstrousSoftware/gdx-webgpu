@@ -56,7 +56,9 @@ public class WgDesktopApplication implements Application {
     private static GLVersion glVersion;
     private static Callback glDebugCallback;
     private final Sync sync;
-    public int wGPUInit = 0;
+    private final Object webGPUInitLock = new Object();
+    public volatile int wGPUInit = 0;
+    private volatile Throwable wGPUInitError;
     private WGPUInstance instance;
 
     static void initializeGlfw() {
@@ -82,16 +84,28 @@ public class WgDesktopApplication implements Application {
         JWebGPULoader.init(config.backendWebGPU, (isSuccess, e) -> {
             // System.out.println("WebGPU Init Success: " + isSuccess);
             System.out.println("WebGPU implementation: " + JWebGPULoader.getBackend());
-            if (isSuccess) {
-                WGPUInstance instance = WGPU.setupInstance();
-                if (instance.isValid()) {
-                    this.instance = instance;
-                    wGPUInit = 1;
+            try {
+                if (isSuccess) {
+                    WGPUInstance instance = WGPU.setupInstance();
+                    if (instance.isValid()) {
+                        this.instance = instance;
+                        wGPUInit = 1;
+                    } else {
+                        wGPUInitError = new RuntimeException("WebGPU: cannot get instance");
+                        wGPUInit = -1;
+                    }
                 } else {
-                    throw new RuntimeException("WebGPU: cannot get instance");
+                    wGPUInitError = e != null ? e : new RuntimeException("WebGPU: init failed");
+                    wGPUInit = -1;
                 }
-            } else {
-                e.printStackTrace();
+            } catch (Throwable t) {
+                // Ensure async init failures are propagated to the main thread instead of timing out.
+                wGPUInitError = t;
+                wGPUInit = -1;
+            } finally {
+                synchronized (webGPUInitLock) {
+                    webGPUInitLock.notifyAll();
+                }
             }
         });
 
@@ -124,13 +138,27 @@ public class WgDesktopApplication implements Application {
 
         this.sync = new Sync();
 
-        // wait here until the instance is valid (may happen on WGPU)
-        int counter = 0;
-        while (wGPUInit < 1) {
-            System.out.println("Tick...");
-            sync.sync(100);
-            if (counter++ > 50)
-                throw new RuntimeException("WebGPU: time-out on init");
+        // Wait here until WebGPU initialization callback reports success/failure.
+        // Use wait/notify to avoid visibility issues across async callback threads.
+        // Default to no timeout: some FFM environments can take a long time on first native load.
+        final long timeoutMillis = Long.getLong("wg.webgpu.initTimeoutMs", 0L);
+        final long deadline = timeoutMillis > 0 ? System.currentTimeMillis() + timeoutMillis : Long.MAX_VALUE;
+        synchronized (webGPUInitLock) {
+            while (wGPUInit == 0) {
+                long remaining = deadline - System.currentTimeMillis();
+                if (timeoutMillis > 0 && remaining <= 0) {
+                    throw new RuntimeException("WebGPU: time-out on init after " + timeoutMillis + " ms");
+                }
+                try {
+                    webGPUInitLock.wait(timeoutMillis > 0 ? Math.min(remaining, 250L) : 250L);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException("WebGPU: init interrupted", ie);
+                }
+            }
+        }
+        if (wGPUInit < 0) {
+            throw new RuntimeException("WebGPU: init failed", wGPUInitError);
         }
 
         createWindow(config, instance, listener);

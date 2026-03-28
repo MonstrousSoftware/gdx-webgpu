@@ -39,6 +39,14 @@ import com.monstrous.gdx.webgpu.scene2d.WgStage;
 
 // test starter
 public class WebGPUTestStarter {
+    private static String flavorLabel(String desktopFlavor) {
+        return "ffm".equalsIgnoreCase(desktopFlavor) ? "FFM" : "JNI";
+    }
+
+    private static String withFlavorTitle(String baseTitle, String desktopFlavor) {
+        return "[" + flavorLabel(desktopFlavor) + "] " + baseTitle;
+    }
+
     /**
      * Runs libgdx tests.
      *
@@ -52,18 +60,23 @@ public class WebGPUTestStarter {
         config.setWindowedMode(900, 740);
         config.enableGPUtiming = true;
         config.backend = WebGPUContext.Backend.DEFAULT;
-        config.backendWebGPU = JWebGPUBackend.DAWN; // WGPU or DAWN
+        // In FFM mode, default to WGPU because current Dawn FFM snapshots can miss required symbols.
+        String desktopFlavor = System.getProperty("gdx.webgpu.desktop.flavor", "jni");
+        config.setTitle(withFlavorTitle("WebGPU Tests", desktopFlavor));
+        config.backendWebGPU = "ffm".equalsIgnoreCase(desktopFlavor) ? JWebGPUBackend.WGPU : JWebGPUBackend.DAWN;
         config.samples = 4; // anti-aliasing (4) or not (1)
         config.useVsync(true);
 
         if (argv.length > 0) {
             String testName = argv[0];
             if (testName.equalsIgnoreCase("auto")) {
+                config.setTitle(withFlavorTitle("WebGPU Tests - Auto", desktopFlavor));
                 new WgDesktopApplication(new AutoTestRunner(), config);
                 return;
             }
             ApplicationListener test = WebGPUTests.newTest(testName);
             if (test != null) {
+                config.setTitle(withFlavorTitle(testName, desktopFlavor));
                 new WgDesktopApplication(test, config);
                 return;
             }
@@ -114,7 +127,8 @@ public class WebGPUTestStarter {
                     public void changed(ChangeEvent event, Actor actor) {
                         ApplicationListener test = WebGPUTests.newTest(testName);
                         WgDesktopWindowConfiguration winConfig = new WgDesktopWindowConfiguration();
-                        winConfig.setTitle(testName);
+                        String desktopFlavor = System.getProperty("gdx.webgpu.desktop.flavor", "jni");
+                        winConfig.setTitle(withFlavorTitle(testName, desktopFlavor));
                         winConfig.setWindowedMode(640, 480);
                         winConfig.setWindowPosition(((WgDesktopGraphics) Gdx.graphics).getWindow().getPositionX() + 40,
                                 ((WgDesktopGraphics) Gdx.graphics).getWindow().getPositionY() + 40);
