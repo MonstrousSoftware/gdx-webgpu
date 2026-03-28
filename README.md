@@ -123,6 +123,15 @@ Use the Gradle task `gdx_webgpu_tests_run_desktop`:
 
 # Run ALL tests sequentially (auto mode):
 ./gradlew gdx_webgpu_tests_run_desktop --args="auto"
+
+# Force JNI flavor:
+./gradlew gdx_webgpu_tests_run_desktop_jni
+
+# Force FFM flavor (requires Java 24+):
+./gradlew gdx_webgpu_tests_run_desktop_ffm
+
+# Pass test args through wrapper tasks:
+./gradlew gdx_webgpu_tests_run_desktop_ffm -PdesktopTestArgs="Particles3D"
 ```
 
 ### Web (TeaVM)
@@ -194,6 +203,7 @@ The library is available via Maven Central. Make sure the following section is i
 Define the version you want to use in the `gradle.properties` file, e.g. 
 
     gdxWebGPUVersion=0.8
+    backendDesktopFlavor=jni
 
 You can refer to the latest stable release number, e.g. `0.8` or use `-SNAPSHOT` to follow the very latest developments. 
 (Beware when using a snapshot version, that functions may break without notice. Use a stable version by preference).
@@ -211,12 +221,14 @@ To include the library in your project add the following lines to your `build.gr
 Assuming we want to use the LWJGL3 (=Desktop) platform, add the following to `build.gradle` in the `lwjgl3` module:
 
     dependencies {
-        implementation "io.github.monstroussoftware.gdx-webgpu:backend-desktop:$gdxWebGPUVersion"
+        implementation "io.github.monstroussoftware.gdx-webgpu:backend-desktop-$backendDesktopFlavor:$gdxWebGPUVersion"
         // comment out the following:
         //  implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
         //  implementation "com.badlogicgames.gdx:gdx-lwjgl3-angle:$gdxVersion"
         //  implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
     }
+
+Use `backendDesktopFlavor=jni` for JNI bindings or `backendDesktopFlavor=ffm` for FFM bindings.
 
 In the `lwjgl3` module add a starter class called `Launcher.java` with a content as follows:
 

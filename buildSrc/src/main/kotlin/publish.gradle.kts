@@ -9,7 +9,8 @@ var libProjects = mutableSetOf(
     project(":backends:backend-android")
 )
 
-LibExt.isRelease = gradle.startParameter.taskNames.any { it == "publishRelease" }
+val isTestRelease = gradle.startParameter.taskNames.any { it == "publishTestRelease" }
+LibExt.isRelease = gradle.startParameter.taskNames.any { it == "publishRelease" } || isTestRelease
 LibExt.overrideGroup = project.findProperty("group") as String?
 LibExt.overrideVersion = project.findProperty("version") as String?
 
@@ -86,7 +87,7 @@ configure(libProjects) {
     }
 }
 
-if(!LibExt.libVersion.endsWith("-SNAPSHOT") && !gradle.startParameter.taskNames.contains("publishToMavenLocal")) {
+if(!LibExt.libVersion.endsWith("-SNAPSHOT") && !gradle.startParameter.taskNames.contains("publishToMavenLocal") && !isTestRelease) {
     tasks.register<Zip>("zipStagingDeploy") {
         dependsOn(libProjects.map { it.tasks.named("publish") })
         from(rootProject.layout.buildDirectory.dir("staging-deploy"))
@@ -147,6 +148,11 @@ if(!LibExt.libVersion.endsWith("-SNAPSHOT") && !gradle.startParameter.taskNames.
 tasks.register("publishRelease") {
     group = "publishing"
 
+    dependsOn(libProjects.map { it.tasks.withType<PublishToMavenRepository>() })
+}
+
+tasks.register("publishTestRelease") {
+    group = "publishing"
     dependsOn(libProjects.map { it.tasks.withType<PublishToMavenRepository>() })
 }
 
