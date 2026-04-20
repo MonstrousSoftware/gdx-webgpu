@@ -70,6 +70,13 @@ public class WgSpriteBatch implements Batch {
     private static String defaultShader;
     private int frameNumber;
 
+    // Scissor state tracking — used to detect changes (via Gdx.gl.glScissor / glEnable(GL_SCISSOR_TEST)
+    // or via setScissorRect()) between draws so the new scissor is applied on the next flush.
+    private final Rectangle lastAppliedScissor = new Rectangle(-1, -1, -1, -1);
+    private boolean lastAppliedScissorEnabled = false;
+    // When true, ignore the WebGPU context's scissor state — scissor was set explicitly via setScissorRect().
+    private boolean explicitScissor = false;
+
     public WgSpriteBatch() {
         this(2000, null, 100); // default nr
     }
@@ -339,12 +346,16 @@ public class WgSpriteBatch implements Batch {
             setPipeline(renderPass);
     }
 
-    /** Apply a scissor rectangle for further sprites. */
+    /** Apply a scissor rectangle for further sprites (top-left origin, in framebuffer pixels).
+     * Flushes any pending sprites first so they keep the previous scissor. */
     public void setScissorRect(int x, int y, int width, int height) {
-        // start a new render pass (flush sprites up till now)
-        end();
-        begin();
-        renderPass.setScissorRect(x, y, width, height);
+        if (drawing) {
+            flush();
+            renderPass.setScissorRect(x, y, width, height);
+        }
+        lastAppliedScissor.set(x, y, width, height);
+        lastAppliedScissorEnabled = true;
+        explicitScissor = true;
     }
 
     public boolean isBlendingEnabled() {
@@ -380,11 +391,17 @@ public class WgSpriteBatch implements Batch {
             numSpritesPerFlush = 0;
             vbOffset = 0;
             vertexFloats.clear();
+            vertexOffset = 0;
             topSpritesPerBatch = 0;
             flushCount = 0;
             numSprites = 0;
         }
         renderCalls = 0;
+
+        // Reset scissor tracking — a fresh render pass starts with an implicit full-target scissor.
+        lastAppliedScissor.set(-1, -1, -1, -1);
+        lastAppliedScissorEnabled = false;
+        explicitScissor = false;
 
         // set default state
         tint.set(Color.WHITE);
@@ -406,6 +423,29 @@ public class WgSpriteBatch implements Batch {
         binder.setSampler("textureSampler", lastTexture.getSampler());
     }
 
+    /** Synchronize the active render pass scissor with the WebGPU context's scissor state. The state is
+     * normally driven by libgdx's ScissorStack via {@code Gdx.gl.glScissor} + {@code glEnable(GL_SCISSOR_TEST)},
+     * which routes through {@link com.monstrous.gdx.webgpu.graphics.utils.WgGL20}. Coordinates are top-left
+     * origin (the GL→WebGPU Y flip is performed in {@code WgGL20.glScissor}). */
+    private void applyContextScissor() {
+        boolean enabled = webgpu.isScissorEnabled();
+        Rectangle target;
+        if (enabled) {
+            target = webgpu.getScissor();
+        } else {
+            // No scissor: restore the full render-pass viewport so previously applied scissors don't leak.
+            target = webgpu.getViewportRectangle();
+        }
+        if (enabled == lastAppliedScissorEnabled
+                && target.x == lastAppliedScissor.x && target.y == lastAppliedScissor.y
+                && target.width == lastAppliedScissor.width && target.height == lastAppliedScissor.height) {
+            return;
+        }
+        renderPass.setScissorRect((int) target.x, (int) target.y, (int) target.width, (int) target.height);
+        lastAppliedScissor.set(target);
+        lastAppliedScissorEnabled = enabled;
+    }
+
     public void flush() {
         if (!drawing)
             return;
@@ -418,6 +458,13 @@ public class WgSpriteBatch implements Batch {
             return;
         }
         renderCalls++;
+
+        // Apply pending scissor changes (e.g. from libgdx's ScissorStack via WgGL20.glScissor /
+        // glEnable(GL_SCISSOR_TEST)) before issuing the draw. Skipped when scissor was set explicitly
+        // via setScissorRect() — that path applies it directly.
+        if (!explicitScissor) {
+            applyContextScissor();
+        }
 
         // bind group
         int dynamicOffset = uniformBuffer.nextSlice();
@@ -800,7 +847,14 @@ public class WgSpriteBatch implements Batch {
         int remaining = 20 * (maxSpritesPerFlush - numSpritesPerFlush);
         if (numFloats > remaining) // avoid buffer overflow by truncating as needed
             numFloats = remaining;
+        // IMPORTANT: write at vertexOffset (absolute index), not at the FloatBuffer's relative position.
+        // addVertex() uses absolute put(index,value) via vertexOffset and does NOT advance position.
+        // If we used a relative put here, interleaving the two draw paths (e.g. 9-patch bg → Image
+        // drawable → BitmapFont label) would cause the two trackers to diverge and sprites would
+        // overwrite each other. Keep a single source of truth: vertexOffset.
+        vertexFloats.position(vertexOffset);
         vertexFloats.put(spriteVertices, offset, numFloats);
+        vertexOffset += numFloats;
         numSpritesPerFlush += numFloats / 20;
     }
 

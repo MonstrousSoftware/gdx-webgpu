@@ -34,10 +34,14 @@ public class WgGL20 implements GL20 {
         WebGPUContext webgpu = gfx.getContext();
         // note: we are not testing for glEnable(GL_SCISSOR_TEST)/glDisable(GL_SCISSOR_TEST)
 
+        // OpenGL scissor origin is bottom-left; WebGPU scissor origin is top-left.
+        // Flip Y so that the WebGPU context stores top-left-origin coordinates.
+        int flippedY = gfx.getBackBufferHeight() - y - height;
+
         Rectangle scissor = webgpu.getScissor();
-        if (x != scissor.x || y != scissor.y || width != scissor.width || height != scissor.height) {
-            // Gdx.app.log("glScissor", "x=" + x + " y=" + y + " w=" + width + " h=" + height);
-            webgpu.setScissor(x, y, width, height);
+        if (x != scissor.x || flippedY != scissor.y || width != scissor.width || height != scissor.height) {
+            // Gdx.app.log("glScissor", "x=" + x + " y=" + flippedY + " w=" + width + " h=" + height);
+            webgpu.setScissor(x, flippedY, width, height);
         }
     }
 
