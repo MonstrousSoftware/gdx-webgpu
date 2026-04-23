@@ -17,35 +17,35 @@
 package com.monstrous.gdx.tests.webgpu;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.IntAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ShaderProvider;
 import com.badlogic.gdx.utils.Array;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
-import com.monstrous.gdx.webgpu.application.WgGraphics;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDefaultShader;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDefaultShaderProvider;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 
+
 /** Demonstration of switching shaders for different renderables.
  *  This demo applies different shaders to different renderables by using a shader provider that determines
  *  which shader to use for each renderable.
  *  We use WgDefaultShaderProvider and override `getShader()` to return a specific WgShader.
- *  In this simple example we identify renderables that need an alternative shader by means of a specific diffuse color.
+ *  In this simple example we identify renderables that need an alternative shader by means of a new material attribute type.  This also makes
+ *  sure these renderables are not passed to the default shader.
+ *  (See https://xoppa.github.io/blog/using-materials-with-libgdx/)
  */
 public class Basic3DDynamicShader extends GdxTest {
-    public static final Color SPECIAL_COLOR = Color.FIREBRICK;
-
     public PerspectiveCamera cam;
     public CameraInputController inputController;
     public WgModelBatch modelBatch;
@@ -54,6 +54,15 @@ public class Basic3DDynamicShader extends GdxTest {
     public Environment environment;
 
     static class SpecialShader extends WgDefaultShader {
+        // create a new attribute type to flag renderables that require a special shader
+        public static class ShaderAttribute extends IntAttribute {
+            public final static String NormalsAlias = "renderNormals";
+            public final static long Normals = register(NormalsAlias);
+
+            public ShaderAttribute(long type, int value) {
+                super(type, value);
+            }
+        }
 
         public SpecialShader(Renderable renderable) {
             super(renderable);
@@ -61,13 +70,12 @@ public class Basic3DDynamicShader extends GdxTest {
 
         @Override
         protected String getShaderSource() {
-            return getAlternativeShaderSource();
+            return Gdx.files.classpath("data/wgsl/modelbatchNormal.wgsl").readString();
         }
 
         @Override
         public boolean canRender(Renderable renderable) {
-            ColorAttribute colorAttrib = (ColorAttribute) renderable.material.get(ColorAttribute.Diffuse);
-            return colorAttrib != null && colorAttrib.color.equals(SPECIAL_COLOR);
+            return renderable.material.has(ShaderAttribute.Normals);
         }
     }
 
@@ -77,13 +85,10 @@ public class Basic3DDynamicShader extends GdxTest {
         ShaderProvider shaderProvider = new WgDefaultShaderProvider() {
             @Override
             protected Shader createShader(Renderable renderable) {
-                ColorAttribute colorAttrib = (ColorAttribute) renderable.material.get(ColorAttribute.Diffuse);
-                if(colorAttrib != null && colorAttrib.color.equals(SPECIAL_COLOR))
+                if(renderable.material.has(SpecialShader.ShaderAttribute.Normals))
                     return new SpecialShader(renderable);
                 return super.createShader(renderable);  // use default
             }
-
-
         };
         modelBatch = new WgModelBatch(shaderProvider);
 
@@ -103,13 +108,15 @@ public class Basic3DDynamicShader extends GdxTest {
         ModelBuilder modelBuilder = new WgModelBuilder();
         modelA = modelBuilder.createBox(5f, 5f, 5f, new Material(ColorAttribute.createDiffuse(Color.CYAN)),
                 VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-        modelB = modelBuilder.createBox(5f, 5f, 5f, new Material(ColorAttribute.createDiffuse(SPECIAL_COLOR)),
+
+        modelB = modelBuilder.createBox(5f, 5f, 5f,
+            new Material(new SpecialShader.ShaderAttribute(SpecialShader.ShaderAttribute.Normals, 1)),  // trigger special shader
             VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-        instances.add(new ModelInstance(modelB, -6, 0, 6));
-        instances.add(new ModelInstance(modelB, 6, 0, -6));
+
         instances.add(new ModelInstance(modelA, 6, 0, 6));
         instances.add(new ModelInstance(modelA, -6, 0, -6));
-
+        instances.add(new ModelInstance(modelB, -6, 0, 6));
+        instances.add(new ModelInstance(modelB, 6, 0, -6));
 
         Gdx.input.setInputProcessor(new InputMultiplexer(this, inputController = new CameraInputController(cam)));
     }
@@ -132,8 +139,4 @@ public class Basic3DDynamicShader extends GdxTest {
         modelB.dispose();
     }
 
-
-    private static String getAlternativeShaderSource(){
-        return Gdx.files.classpath("data/wgsl/modelbatchNormal.wgsl").readString();
-    }
 }
