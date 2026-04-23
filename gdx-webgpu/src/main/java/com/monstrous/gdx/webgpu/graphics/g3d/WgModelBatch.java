@@ -75,7 +75,7 @@ public class WgModelBatch implements Disposable {
         public RenderPassType defaultPassType;
         public String shaderSource;
 
-        public Config() {
+        public Config(String shaderSource) {
             this.maxInstances = 1024;
             this.maxMaterials = 512;
             this.maxDirectionalLights = 3;
@@ -85,6 +85,11 @@ public class WgModelBatch implements Disposable {
             this.usePBR = true;
             this.materials = null; // created lazily by the shader via createMaterialLayout()
             this.defaultPassType = RenderPassType.COLOR_AND_DEPTH;
+            this.shaderSource = shaderSource;
+        }
+
+        public Config(){
+            this(null);
         }
     }
 

@@ -12,10 +12,12 @@ import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.monstrous.gdx.webgpu.graphics.WgMesh;
 import com.monstrous.gdx.webgpu.graphics.g3d.model.WgMeshPart;
+import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDefaultShader;
 import com.monstrous.gdx.webgpu.graphics.utils.WgMeshBuilder;
 
 /* Shader test based on Xoppa tutorial
-    todo requires to load a Model
+    BROKEN: this does not work because WgModelBatch is very different internally from ModelBatch
+    and WgDefaultShader needs RenderPass as input instead of RenderContext.
  */
 
 public class BasicShaderTest implements ApplicationListener {
@@ -63,7 +65,7 @@ public class BasicShaderTest implements ApplicationListener {
         renderable.worldTransform.idt();
 
         renderContext = null; // new RenderContext(new DefaultTextureBinder(DefaultTextureBinder.ROUNDROBIN, 1));
-        shader = new DefaultShader(renderable);
+        shader = new WgDefaultShader(renderable);
         shader.init();
     }
 
