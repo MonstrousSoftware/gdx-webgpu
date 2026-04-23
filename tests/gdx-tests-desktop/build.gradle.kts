@@ -3,8 +3,6 @@ import org.gradle.jvm.tasks.Jar as JarTask
 
 val mainClassName = "com.monstrous.gdx.tests.webgpu.WebGPUTestStarter"
 
-val javaVersion = project.property("java") as String
-
 plugins {
     application
     id("java-library")
