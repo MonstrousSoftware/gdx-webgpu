@@ -9,10 +9,6 @@ dependencies {
     implementation(project(":gdx-webgpu"))
     implementation(project(":backends:backend-teavm"))
     implementation(project(":tests:gdx-webgpu-tests"))
-
-    // Add natives
-    val jWebGPUVVersion = project.property("jWebGPUVVersion") as String
-    implementation("com.github.xpenatan.jWebGPU:webgpu-teavm:$jWebGPUVVersion")
 }
 
 val mainClassName = "com.monstrous.gdx.tests.webgpu.BuildTeaVM"
