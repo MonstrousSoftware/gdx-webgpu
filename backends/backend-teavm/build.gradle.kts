@@ -10,12 +10,9 @@ java {
 }
 
 dependencies {
-    val gdxVersion = project.property("gdxVersion") as String
     val gdxTeaVMVersion = project.property("gdxTeaVMVersion") as String
     val jWebGPUVVersion = project.property("jWebGPUVVersion") as String
 
-
-    //implementation("com.badlogicgames.gdx:gdx:$gdxVersion")
     implementation("com.github.xpenatan.gdx-teavm:backend-web:$gdxTeaVMVersion")
     implementation("com.github.xpenatan.jWebGPU:webgpu-teavm:${jWebGPUVVersion}")
     implementation(project(":gdx-webgpu"))

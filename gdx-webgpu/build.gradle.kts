@@ -16,7 +16,7 @@ dependencies {
     val jWebGPUVVersion = project.property("jWebGPUVVersion") as String
 
     api("com.badlogicgames.gdx:gdx:$gdxVersion")
-    api("com.github.xpenatan.jWebGPU:webgpu-core:$jWebGPUVVersion")
+    compileOnlyApi("com.github.xpenatan.jWebGPU:webgpu-core:$jWebGPUVVersion")
 
 }
 
