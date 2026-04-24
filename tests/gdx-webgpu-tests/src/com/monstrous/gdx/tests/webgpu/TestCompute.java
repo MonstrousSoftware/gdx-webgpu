@@ -113,7 +113,7 @@ public class TestCompute extends GdxTest {
         WGPUComputePassEncoder pass = new WGPUComputePassEncoder();
         WGPUComputePassDescriptor passDescriptor = WGPUComputePassDescriptor.obtain();
         passDescriptor.setNextInChain(WGPUChainedStruct.NULL);
-        passDescriptor.setTimestampWrites(WGPUComputePassTimestampWrites.NULL);
+        passDescriptor.setTimestampWrites(WGPUPassTimestampWrites.NULL);
         encoder.beginComputePass(passDescriptor, pass);
 
         // set pipeline & bind group 0

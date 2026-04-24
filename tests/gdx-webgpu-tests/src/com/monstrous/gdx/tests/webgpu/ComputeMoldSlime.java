@@ -196,7 +196,7 @@ public class ComputeMoldSlime extends GdxTest {
 
         WGPUComputePassDescriptor passDescriptor = WGPUComputePassDescriptor.obtain();
         passDescriptor.setNextInChain(WGPUChainedStruct.NULL);
-        passDescriptor.setTimestampWrites(WGPUComputePassTimestampWrites.NULL);
+        passDescriptor.setTimestampWrites(WGPUPassTimestampWrites.NULL);
 
         // Step 1. move agents
         encoder.beginComputePass(passDescriptor, pass);

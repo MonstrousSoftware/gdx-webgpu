@@ -17,7 +17,7 @@ sourceSets["main"].resources.srcDirs(File("../assets"))
 
 if (JavaVersion.current().isJava9Compatible) {
     tasks.withType<JavaCompile> {
-        options.release.set(24)
+        options.release.set(25)
     }
 }
 
