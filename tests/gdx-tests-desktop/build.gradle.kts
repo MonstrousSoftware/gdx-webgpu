@@ -29,7 +29,7 @@ dependencies {
     val jWebGPUVVersion = project.property("jWebGPUVVersion") as String
 
     // Add natives
-    val useFFM = true
+    val useFFM = false
     if(useFFM) {
         implementation("com.github.xpenatan.jWebGPU:webgpu-desktop-ffm:$jWebGPUVVersion")
         implementation("com.github.xpenatan.jWebGPU:webgpu-desktop-ffm:$jWebGPUVVersion:windows_64_dawn")
