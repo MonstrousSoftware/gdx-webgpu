@@ -354,12 +354,6 @@ public class WgDefaultShader extends WgShader implements Disposable {
         }
 
         // note: put shorter uniforms last for padding reasons
-
-         System.out.println("offset:"+ uniformOffset +" uniformBufferSize: "+uniformBufferSize);
-//        if (uniformOffset > uniformBufferSize)
-//            throw new RuntimeException("Mismatch in frame uniform buffer size");
-        // binder.defineUniform("modelMatrix", 2, 0, 0);
-
     }
 
     @Override
