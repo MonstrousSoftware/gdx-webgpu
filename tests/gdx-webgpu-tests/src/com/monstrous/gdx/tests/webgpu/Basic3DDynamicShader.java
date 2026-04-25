@@ -93,7 +93,6 @@ public class Basic3DDynamicShader extends GdxTest {
         modelBatch = new WgModelBatch(shaderProvider);
 
         environment = new Environment();
-        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, .4f, .4f, .4f, 1f));
         environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
 
         cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -106,10 +105,11 @@ public class Basic3DDynamicShader extends GdxTest {
         // create some model instances for default rendering and some for special rendering
         instances = new Array<>();
         ModelBuilder modelBuilder = new WgModelBuilder();
-        modelA = modelBuilder.createBox(5f, 5f, 5f, new Material(ColorAttribute.createDiffuse(Color.CYAN)),
+        modelA = modelBuilder.createSphere(5f, 5f, 5f, 16, 16,
+                new Material(ColorAttribute.createDiffuse(Color.CYAN)),
                 VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 
-        modelB = modelBuilder.createBox(5f, 5f, 5f,
+        modelB = modelBuilder.createSphere(5f, 5f, 5f, 16, 16,
             new Material(new SpecialShader.ShaderAttribute(SpecialShader.ShaderAttribute.Normals, 1)),  // trigger special shader
             VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 
