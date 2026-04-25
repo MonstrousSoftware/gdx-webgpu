@@ -24,11 +24,9 @@ import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.g3d.model.Node;
-import com.badlogic.gdx.graphics.g3d.model.NodePart;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Matrix4;
-import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector4;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
@@ -50,10 +48,9 @@ import com.monstrous.gdx.webgpu.wrappers.*;
 /** Default shader to render renderables */
 public class WgDefaultShader extends WgShader implements Disposable {
 
-    private WebGPUContext webgpu;
-    private final WgModelBatch.Config config;
+    protected final WebGPUContext webgpu;
+    protected final WgModelBatch.Config config;
     private static String defaultShader;
-    private final Matrix4 dummyMatrix = new Matrix4();
     public final Binder binder;
     private final WebGPUUniformBuffer uniformBuffer;
     private final int uniformBufferSize;
@@ -66,13 +63,13 @@ public class WgDefaultShader extends WgShader implements Disposable {
     private WgTexture fallbackBlackTexture;
     private int numRigged;
     private int rigSize; // bytes per rigged instance
-    private final PipelineCache pipelineCache; // cache of pipelines for different render targets
+    protected final PipelineCache pipelineCache; // cache of pipelines for different render targets
     private final float[] tmpWeights = new float[8];
-    private final WGPUPipelineLayout pipelineLayout;
-    private final PipelineSpecification pipelineSpec;
-    private WebGPURenderPass renderPass;
-    private final VertexAttributes vertexAttributes;
-    private final Matrix4 combined;
+    protected final WGPUPipelineLayout pipelineLayout;
+    protected final PipelineSpecification pipelineSpec;
+    protected WebGPURenderPass renderPass;
+    protected final VertexAttributes vertexAttributes;
+    protected final Matrix4 combined;
     private final Matrix4 projection;
     // Remap OpenGL depth range [-1,1] to WebGPU [0,1].
     // Used in bindLights() to shift the shadow camera's ProjViewTrans to match the shadow map depths
@@ -83,22 +80,22 @@ public class WgDefaultShader extends WgShader implements Disposable {
     protected DirectionalLight[] directionalLights;
     protected int numPointLights;
     protected PointLight[] pointLights;
-    private final Vector4 tmpVec4 = new Vector4();
-    private final long materialAttributesMask;
-    private final long vertexAttributesHash;
-    private final long environmentMask;
-    private final boolean blended;
-    private final boolean hasShadowMap;
-    private final boolean hasCascadedShadowMap;
-    private final int maxCascades; // 0 when hasCascadedShadowMap is false
-    private final boolean hasCubeMap;
-    private final boolean hasBones;
-    private final int primitiveType;
-    private int frameNumber;
-    private int instanceIndex;
-    private Color linearFogColor;
-    private final WgTexture brdfLUT;
-    private int maxRenderPassesPerFrame = 16; // Support up to 16 render passes per frame with this shader
+    protected final Vector4 tmpVec4 = new Vector4();
+    protected final long materialAttributesMask;
+    protected final long vertexAttributesHash;
+    protected final long environmentMask;
+    protected final boolean blended;
+    protected final boolean hasShadowMap;
+    protected final boolean hasCascadedShadowMap;
+    protected final int maxCascades; // 0 when hasCascadedShadowMap is false
+    protected final boolean hasCubeMap;
+    protected final boolean hasBones;
+    protected final int primitiveType;
+    protected int frameNumber;
+    protected int instanceIndex;
+    protected Color linearFogColor;
+    protected final WgTexture brdfLUT;
+    protected int maxRenderPassesPerFrame = 16; // Support up to 16 render passes per frame with this shader
 
     public WgDefaultShader(final Renderable renderable) {
         this(renderable, new WgModelBatch.Config());
@@ -325,7 +322,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
 
         // vertexAttributes will be set from the renderable
         vertexAttributes = renderable.meshPart.mesh.getVertexAttributes();
-        pipelineSpec = new PipelineSpecification("ModelBatch pipeline", vertexAttributes, getDefaultShaderSource());
+        pipelineSpec = new PipelineSpecification("ModelBatch pipeline", vertexAttributes, getShaderSource());
         // define locations of vertex attributes in line with shader code
         pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.POSITION_ATTRIBUTE, 0);
         pipelineSpec.vertexLayout.setVertexAttributeLocation(ShaderProgram.NORMAL_ATTRIBUTE, 2);
@@ -762,7 +759,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         return MaterialsCache.buildDefaultLayout(fallbackWhiteTexture, fallbackNormalTexture, fallbackBlackTexture);
     }
 
-    private String getDefaultShaderSource() {
+    protected String getShaderSource() {
         if (config.shaderSource != null)
             return config.shaderSource;
 
