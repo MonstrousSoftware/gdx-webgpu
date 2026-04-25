@@ -25,6 +25,7 @@ import com.badlogic.gdx.math.Vector4;
 import com.badlogic.gdx.utils.BufferUtils;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.github.xpenatan.webgpu.WGPUBufferUsage;
+import com.github.xpenatan.webgpu.WGPULimits;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
 import java.nio.ByteBuffer;
@@ -111,16 +112,17 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
     private static int calculateStride(int contentSize, int maxSlices) {
         int stride = 0;
         if (maxSlices > 1) { // do we use dynamic offsets?
+            // calculate stride for slices based on MinUniformBufferOffsetAlignment (typically 256)
             WebGPUContext webgpu = ((WgGraphics) Gdx.graphics).getContext();
-            // todo
-            int uniformAlignment = 256; // (int)
-                                        // webgpu.device.getSupportedLimits().getLimits().getMinUniformBufferOffsetAlignment();
+            WGPULimits limits = WGPULimits.obtain();
+            webgpu.device.getLimits(limits);
+            int uniformAlignment = limits.getMinUniformBufferOffsetAlignment();
             stride = ceilToNextMultiple(contentSize, uniformAlignment);
         }
         return stride;
     }
 
-    private static int ceilToNextMultiple(int value, int step) {
+    public static int ceilToNextMultiple(int value, int step) {
         int d = value / step + (value % step == 0 ? 0 : 1);
         return step * d;
     }
