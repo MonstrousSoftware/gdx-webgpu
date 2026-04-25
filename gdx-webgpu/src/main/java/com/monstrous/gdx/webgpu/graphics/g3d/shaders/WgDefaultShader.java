@@ -209,81 +209,8 @@ public class WgDefaultShader extends WgShader implements Disposable {
             }
         }
 
-        // define uniforms in uniform buffers with their offset
-        // frame uniforms
-        int offset = 0;
-        binder.defineUniform("projectionViewTransform", 0, 0, offset);
-        offset += 16 * 4;
 
-        if (hasCascadedShadowMap) {
-            // N cascade matrices followed by cascadeSplits (vec4f), cascadeBiases (vec4f),
-            // and csmCameraProjectionView (mat4x4f)
-            binder.defineUniform("shadowProjViewTransforms[0]", 0, 0, offset);
-            offset += maxCascades * 16 * 4;
-            binder.defineUniform("cascadeSplits", 0, 0, offset);
-            offset += 4 * 4;
-            binder.defineUniform("cascadeBiases", 0, 0, offset);
-            offset += 4 * 4;
-            binder.defineUniform("csmCameraProjectionView", 0, 0, offset);
-            offset += 16 * 4;
-        } else {
-            binder.defineUniform("shadowProjViewTransform", 0, 0, offset);
-            offset += 16 * 4;
-        }
-
-        if (config.maxDirectionalLights > 0) {
-            // define only a uniform for the initial array elements
-            // you will have to add an offset of i * array element size
-            binder.defineUniform("dirLight[0].color", 0, 0, offset);
-            offset += 4 * 4;
-            binder.defineUniform("dirLight[0].direction", 0, 0, offset);
-            offset += 4 * 4;
-            offset += 8 * Float.BYTES * (config.maxDirectionalLights - 1);
-        }
-
-        if (config.maxPointLights > 0) {
-            binder.defineUniform("pointLight[0].color", 0, 0, offset);
-            offset += 4 * 4;
-            binder.defineUniform("pointLight[0].position", 0, 0, offset);
-            offset += 4 * 4;
-            binder.defineUniform("pointLight[0].intensity", 0, 0, offset);
-            offset += 4 * 4; // added padding
-            offset += 12 * Float.BYTES * (config.maxPointLights - 1);
-        }
-
-        binder.defineUniform("ambientLight", 0, 0, offset);
-        offset += 4 * 4;
-        binder.defineUniform("cameraPosition", 0, 0, offset);
-        offset += 4 * 4;
-        binder.defineUniform("fogColor", 0, 0, offset);
-        offset += 4 * 4;
-        binder.defineUniform("numDirectionalLights", 0, 0, offset);
-        offset += 4;
-        binder.defineUniform("numPointLights", 0, 0, offset);
-        offset += 4;
-        binder.defineUniform("shadowPcfOffset", 0, 0, offset);
-        offset += 4;
-        binder.defineUniform("shadowBias", 0, 0, offset);
-        offset += 4;
-        binder.defineUniform("normalMapStrength", 0, 0, offset);
-        offset += 4;
-        binder.defineUniform("numRoughnessLevels", 0, 0, offset);
-        offset += 4;
-        if (hasCascadedShadowMap) {
-            binder.defineUniform("shadowPcfRadius", 0, 0, offset);
-            offset += 4;
-            binder.defineUniform("shadowFilterMode", 0, 0, offset);
-            offset += 4;
-            binder.defineUniform("cascadeBlendFraction", 0, 0, offset);
-            offset += 4;
-        }
-
-        // note: put shorter uniforms last for padding reasons
-
-        // System.out.println("offset:"+offset+" "+uniformBufferSize);
-        if (offset > uniformBufferSize)
-            throw new RuntimeException("Mismatch in frame uniform buffer size");
-        // binder.defineUniform("modelMatrix", 2, 0, 0);
+        defineUniforms();
 
         // set binding 0 to uniform buffer
         binder.setBuffer("uniforms", uniformBuffer, 0, uniformBufferSize);
@@ -370,6 +297,125 @@ public class WgDefaultShader extends WgShader implements Disposable {
         combined = new Matrix4();
 
         frameNumber = -1;
+    }
+
+    protected int uniformOffset;
+
+    public void defineUniform(String name, int sizeInBytes){
+        binder.defineUniform(name, 0, 0, uniformOffset);
+        uniformOffset += sizeInBytes;
+    }
+
+    protected void defineUniforms(){
+        // define uniforms in uniform buffers with their offset
+        // frame uniforms
+        //int offset = 0;
+        uniformOffset = 0;
+        defineUniform("projectionViewTransform", 16*4);
+//        binder.defineUniform("projectionViewTransform", 0, 0, offset);
+//        offset += 16 * 4;
+
+        if (hasCascadedShadowMap) {
+            // N cascade matrices followed by cascadeSplits (vec4f), cascadeBiases (vec4f),
+            // and csmCameraProjectionView (mat4x4f)
+            defineUniform("shadowProjViewTransforms[0]",maxCascades * 16 * 4);
+            defineUniform("cascadeSplits",4 * 4);
+            defineUniform("cascadeBiases",4 * 4);
+            defineUniform("csmCameraProjectionView", 16 * 4);
+
+
+
+//            binder.defineUniform("shadowProjViewTransforms[0]", 0, 0, offset);
+//            offset += maxCascades * 16 * 4;
+//            binder.defineUniform("cascadeSplits", 0, 0, offset);
+//            offset += 4 * 4;
+//            binder.defineUniform("cascadeBiases", 0, 0, offset);
+//            offset += 4 * 4;
+//            binder.defineUniform("csmCameraProjectionView", 0, 0, offset);
+//            offset += 16 * 4;
+        } else {
+            defineUniform("shadowProjViewTransform",16 * 4);
+
+//            binder.defineUniform("shadowProjViewTransform", 0, 0, offset);
+//            offset += 16 * 4;
+        }
+
+        if (config.maxDirectionalLights > 0) {
+            // define only a uniform for the initial array elements
+            // you will have to add an offset of i * array element size
+            defineUniform("dirLight[0].color",4 * 4);
+            defineUniform("dirLight[0].direction",4 * 4);
+            defineUniform("dirLight filler",8 * 4 * (config.maxDirectionalLights - 1));
+//            binder.defineUniform("dirLight[0].color", 0, 0, offset);
+//            offset += 4 * 4;
+//            binder.defineUniform("dirLight[0].direction", 0, 0, offset);
+//            offset += 4 * 4;
+//            offset += 8 * Float.BYTES * (config.maxDirectionalLights - 1);
+        }
+
+        if (config.maxPointLights > 0) {
+            defineUniform("pointLight[0].color",4 * 4);
+            defineUniform("pointLight[0].position",4 * 4);
+            defineUniform("pointLight[0].intensity",4 * 4);// added padding
+            defineUniform("pointLight filler",12 * 4 * (config.maxPointLights - 1));
+
+//            binder.defineUniform("pointLight[0].color", 0, 0, offset);
+//            offset += 4 * 4;
+//            binder.defineUniform("pointLight[0].position", 0, 0, offset);
+//            offset += 4 * 4;
+//            binder.defineUniform("pointLight[0].intensity", 0, 0, offset);
+//            offset += 4 * 4; // added padding
+//            offset += 12 * Float.BYTES * (config.maxPointLights - 1);
+        }
+        defineUniform("ambientLight",4 * 4);
+        defineUniform("cameraPosition",4 * 4);
+        defineUniform("fogColor",4 * 4);
+        defineUniform("numDirectionalLights",4);
+        defineUniform("numPointLights",4);
+        defineUniform("shadowPcfOffset", 4);
+        defineUniform("shadowBias",4);
+        defineUniform("normalMapStrength", 4);
+        defineUniform("numRoughnessLevels", 4);
+
+
+//        binder.defineUniform("ambientLight", 0, 0, offset);
+//        offset += 4 * 4;
+//        binder.defineUniform("cameraPosition", 0, 0, offset);
+//        offset += 4 * 4;
+//        binder.defineUniform("fogColor", 0, 0, offset);
+//        offset += 4 * 4;
+//        binder.defineUniform("numDirectionalLights", 0, 0, offset);
+//        offset += 4;
+//        binder.defineUniform("numPointLights", 0, 0, offset);
+//        offset += 4;
+//        binder.defineUniform("shadowPcfOffset", 0, 0, offset);
+//        offset += 4;
+//        binder.defineUniform("shadowBias", 0, 0, offset);
+//        offset += 4;
+//        binder.defineUniform("normalMapStrength", 0, 0, offset);
+//        offset += 4;
+//        binder.defineUniform("numRoughnessLevels", 0, 0, offset);
+//        offset += 4;
+        if (hasCascadedShadowMap) {
+            defineUniform("shadowPcfRadius", 4);
+            defineUniform("shadowFilterMode", 4);
+            defineUniform("cascadeBlendFraction", 4);
+
+//            binder.defineUniform("shadowPcfRadius", 0, 0, offset);
+//            offset += 4;
+//            binder.defineUniform("shadowFilterMode", 0, 0, offset);
+//            offset += 4;
+//            binder.defineUniform("cascadeBlendFraction", 0, 0, offset);
+//            offset += 4;
+        }
+
+        // note: put shorter uniforms last for padding reasons
+
+         System.out.println("offset:"+ uniformOffset +" uniformBufferSize: "+uniformBufferSize);
+        if (uniformOffset > uniformBufferSize)
+            throw new RuntimeException("Mismatch in frame uniform buffer size");
+        // binder.defineUniform("modelMatrix", 2, 0, 0);
+
     }
 
     @Override
