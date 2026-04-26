@@ -29,6 +29,9 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.github.xpenatan.webgpu.JWebGPUBackend;
 import com.monstrous.gdx.tests.webgpu.utils.AutoTestRunner;
+import com.monstrous.gdx.tests.webgpu.utils.TestChooser;
+import com.monstrous.gdx.tests.webgpu.utils.WindowOpener;
+import com.monstrous.gdx.tests.webgpu.utils.WindowOpenerRegistry;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopApplication;
 import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopApplicationConfiguration;
@@ -70,106 +73,26 @@ public class WebGPUTestStarter {
             System.out.println("Test not found: " + testName);
         }
 
+        // Register a WindowOpener so the shared TestChooser can open new desktop windows
+        WindowOpenerRegistry.setOpener(new WindowOpener() {
+            @Override
+            public boolean open(String testName) {
+                ApplicationListener test = WebGPUTests.newTest(testName);
+                if (test == null) return false;
+                WgDesktopWindowConfiguration winConfig = new WgDesktopWindowConfiguration();
+                winConfig.setTitle(testName);
+                winConfig.setWindowedMode(640, 480);
+                // position the new window slightly offset from the current one
+                winConfig.setWindowPosition(((WgDesktopGraphics) Gdx.graphics).getWindow().getPositionX() + 40,
+                        ((WgDesktopGraphics) Gdx.graphics).getWindow().getPositionY() + 40);
+                winConfig.useVsync(false);
+                Gdx.app.setLogLevel(Application.LOG_DEBUG);
+                ((WgDesktopApplication) Gdx.app).newWindow(test, winConfig);
+                System.out.println("Started test (new window): " + testName);
+                return true;
+            }
+        });
+
         new WgDesktopApplication(new TestChooser(), config);
-    }
-
-
-    static class TestChooser extends ApplicationAdapter {
-        private Stage stage;
-        private Skin skin;
-        TextButton lastClickedTestButton;
-
-        public void create() {
-
-            final Preferences prefs = Gdx.app.getPreferences("webgpu-tests");
-
-            stage = new WgStage(new ScreenViewport());
-            Gdx.input.setInputProcessor(stage);
-            skin = new WgSkin(Gdx.files.internal("data/uiskin.json"));
-
-            Table container = new Table();
-            stage.addActor(container);
-            container.setFillParent(true);
-
-            Table table = new Table();
-
-            ScrollPane scroll = new ScrollPane(table, skin);
-            scroll.setSmoothScrolling(false);
-            scroll.setFadeScrollBars(false);
-            stage.setScrollFocus(scroll);
-
-            // stage.addActor(table);
-            // table.setFillParent(true);
-
-            int tableSpace = 4;
-            table.pad(10).defaults().expandX().space(tableSpace);
-            for (final String testName : WebGPUTests.getNames()) {
-                final TextButton testButton = new TextButton(testName, skin);
-                // testButton.setDisabled(!options.isTestCompatible(testName));
-                testButton.setName(testName);
-                table.add(testButton).fillX();
-                table.row();
-                testButton.addListener(new ChangeListener() {
-                    @Override
-                    public void changed(ChangeEvent event, Actor actor) {
-                        ApplicationListener test = WebGPUTests.newTest(testName);
-                        WgDesktopWindowConfiguration winConfig = new WgDesktopWindowConfiguration();
-                        winConfig.setTitle(testName);
-                        winConfig.setWindowedMode(640, 480);
-                        winConfig.setWindowPosition(((WgDesktopGraphics) Gdx.graphics).getWindow().getPositionX() + 40,
-                                ((WgDesktopGraphics) Gdx.graphics).getWindow().getPositionY() + 40);
-                        winConfig.useVsync(false);
-                        Gdx.app.setLogLevel(Application.LOG_DEBUG);
-                        ((WgDesktopApplication) Gdx.app).newWindow(test, winConfig);
-                        System.out.println("Started test: " + testName);
-                        prefs.putString("LastTest", testName);
-                        prefs.flush();
-                        if (testButton != lastClickedTestButton) {
-                            testButton.setColor(Color.CYAN);
-                            if (lastClickedTestButton != null) {
-                                lastClickedTestButton.setColor(Color.WHITE);
-                            }
-                            lastClickedTestButton = testButton;
-                        }
-                    }
-                });
-            }
-
-            container.add(scroll).grow();
-            container.row();
-
-            lastClickedTestButton = (TextButton) table.findActor(prefs.getString("LastTest"));
-            if (lastClickedTestButton != null) {
-                lastClickedTestButton.setColor(Color.CYAN);
-                scroll.layout();
-                float scrollY = lastClickedTestButton.getY() + scroll.getScrollHeight() / 2
-                        + lastClickedTestButton.getHeight() / 2 + tableSpace * 2 + 20;
-                scroll.scrollTo(0, scrollY, 0, 0, false, false);
-
-                // Since ScrollPane takes some time for scrolling to a position, we just "fake" time
-                stage.act(1f);
-                stage.act(1f);
-                // context not ready outside render()
-                // stage.draw();
-            }
-        }
-
-        @Override
-        public void render() {
-            /// ScreenUtils.clear(0, 0, 0, 1);
-            stage.act();
-            stage.draw();
-        }
-
-        @Override
-        public void resize(int width, int height) {
-            stage.getViewport().update(width, height, true);
-        }
-
-        @Override
-        public void dispose() {
-            skin.dispose();
-            stage.dispose();
-        }
     }
 }
