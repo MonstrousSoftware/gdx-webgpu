@@ -52,12 +52,12 @@ public class WgDefaultShader extends WgShader implements Disposable {
     protected final WgModelBatch.Config config;
     private static String defaultShader;
     public final Binder binder;
-    private final WebGPUUniformBuffer uniformBuffer;
+    protected final WebGPUUniformBuffer uniformBuffer;
     protected int uniformOffset;
-    private final int uniformBufferSize;
-    private final WebGPUUniformBuffer instanceBuffer;
-    private final WebGPUUniformBuffer jointMatricesBuffer;
-    private MaterialsCache materials;
+    protected final int uniformBufferSize;
+    protected final WebGPUUniformBuffer instanceBuffer;
+    protected final WebGPUUniformBuffer jointMatricesBuffer;
+    protected MaterialsCache materials;
     // Fallback textures used when createMaterialLayout() is overridden — owned and disposed here.
     private WgTexture fallbackWhiteTexture;
     private WgTexture fallbackNormalTexture;
@@ -384,20 +384,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         // This ensures each render pass has its own independent camera/lighting data
         int dynamicOffset = uniformBuffer.nextSlice();
 
-        // set global uniforms, that do not depend on renderables
-        // e.g. camera, lighting, environment uniforms
-        // Note: camera.combined is already remapped from OpenGL [-1,1] to WebGPU [0,1] depth
-        // by WgModelBatch.begin() before shaders are invoked.
-        binder.setUniform("projectionViewTransform", camera.combined);
-
-        // pass a special value in the w component of camera position that is used by the fog calculation
-        tmpVec4.set(camera.position.x, camera.position.y, camera.position.z, 1.1881f / (camera.far * camera.far));
-        binder.setUniform("cameraPosition", tmpVec4);
-
-        // todo: different shaders may overwrite lighting uniforms if renderables have other environments ...
-        bindLights(renderable.environment);
-
-        binder.setUniform("normalMapStrength", 0.5f); // emphasis factor for normal map [0-1]
+        setUniforms(camera, renderable);
 
         // now that we've set all the uniforms (camera,lights, etc.) write the buffer to the gpu
         uniformBuffer.flush();
@@ -416,6 +403,28 @@ public class WgDefaultShader extends WgShader implements Disposable {
         materials.start(); // indicate that no material is currently bound
 
         setPipeline(renderPass);
+    }
+
+    /** set all frame level uniforms.
+     * You may want to override this if your shader has additional uniforms.
+     * @param camera
+     * @param renderable
+     */
+    protected void setUniforms(Camera camera, Renderable renderable){
+        // set global uniforms, that do not depend on renderables
+        // e.g. camera, lighting, environment uniforms
+        // Note: camera.combined is already remapped from OpenGL [-1,1] to WebGPU [0,1] depth
+        // by WgModelBatch.begin() before shaders are invoked.
+        binder.setUniform("projectionViewTransform", camera.combined);
+
+        // pass a special value in the w component of camera position that is used by the fog calculation
+        tmpVec4.set(camera.position.x, camera.position.y, camera.position.z, 1.1881f / (camera.far * camera.far));
+        binder.setUniform("cameraPosition", tmpVec4);
+
+        binder.setUniform("normalMapStrength", 0.5f); // emphasis factor for normal map [0-1]
+
+        // todo: different shaders may overwrite lighting uniforms if renderables have other environments ...
+        bindLights(renderable.environment);
     }
 
     private void setPipeline(WebGPURenderPass pass) {
