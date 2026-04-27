@@ -16,6 +16,7 @@ include(":backends:backend-android")
 
 include(":tests")
 include(":tests:gdx-webgpu-tests")
-include(":tests:gdx-tests-desktop")
+include(":tests:gdx-tests-desktop-jni")
+include(":tests:gdx-tests-desktop-ffm")
 include(":tests:gdx-tests-teavm")
 include(":tests:gdx-tests-android")

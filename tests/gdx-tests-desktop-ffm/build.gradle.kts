@@ -29,26 +29,15 @@ dependencies {
     val jWebGPUVVersion = project.property("jWebGPUVVersion") as String
 
     // Add natives
-    val useFFM = false
-    if(useFFM) {
-        implementation("com.github.xpenatan.jWebGPU:webgpu-desktop-ffm:$jWebGPUVVersion")
-        implementation("com.github.xpenatan.jWebGPU:webgpu-desktop-ffm:$jWebGPUVVersion:windows_64_dawn")
-        implementation("com.github.xpenatan.jWebGPU:webgpu-desktop-ffm:$jWebGPUVVersion:windows_64_wgpu")
-        implementation("com.github.xpenatan.jWebGPU:webgpu-desktop-ffm:$jWebGPUVVersion:linux_64_wgpu")
-        implementation("com.github.xpenatan.jWebGPU:webgpu-desktop-ffm:$jWebGPUVVersion:mac_arm64_wgpu")
-        implementation("com.github.xpenatan.jWebGPU:webgpu-desktop-ffm:$jWebGPUVVersion:mac_64_wgpu")
-    }
-    else {
-        implementation("com.github.xpenatan.jWebGPU:webgpu-desktop-jni:$jWebGPUVVersion")
-        implementation("com.github.xpenatan.jWebGPU:webgpu-desktop-jni:$jWebGPUVVersion:windows_64_dawn")
-        implementation("com.github.xpenatan.jWebGPU:webgpu-desktop-jni:$jWebGPUVVersion:windows_64_wgpu")
-        implementation("com.github.xpenatan.jWebGPU:webgpu-desktop-jni:$jWebGPUVVersion:linux_64_wgpu")
-        implementation("com.github.xpenatan.jWebGPU:webgpu-desktop-jni:$jWebGPUVVersion:mac_arm64_wgpu")
-        implementation("com.github.xpenatan.jWebGPU:webgpu-desktop-jni:$jWebGPUVVersion:mac_64_wgpu")
-    }
+    implementation("com.github.xpenatan.jWebGPU:webgpu-desktop-ffm:$jWebGPUVVersion")
+    implementation("com.github.xpenatan.jWebGPU:webgpu-desktop-ffm:$jWebGPUVVersion:windows_64_dawn")
+    implementation("com.github.xpenatan.jWebGPU:webgpu-desktop-ffm:$jWebGPUVVersion:windows_64_wgpu")
+    implementation("com.github.xpenatan.jWebGPU:webgpu-desktop-ffm:$jWebGPUVVersion:linux_64_wgpu")
+    implementation("com.github.xpenatan.jWebGPU:webgpu-desktop-ffm:$jWebGPUVVersion:mac_arm64_wgpu")
+    implementation("com.github.xpenatan.jWebGPU:webgpu-desktop-ffm:$jWebGPUVVersion:mac_64_wgpu")
 }
 
-tasks.register<JavaExec>("gdx_webgpu_tests_run_desktop") {
+tasks.register<JavaExec>("gdx_webgpu_tests_run_desktop_ffm") {
     group = "LibGDX"
     description = "Run the WebGPU tests"
     mainClass.set(mainClassName)

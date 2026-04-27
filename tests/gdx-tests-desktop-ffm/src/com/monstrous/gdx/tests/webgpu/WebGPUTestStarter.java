@@ -16,17 +16,9 @@
 
 package com.monstrous.gdx.tests.webgpu;
 
-
-import com.badlogic.gdx.*;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.badlogic.gdx.Application;
+import com.badlogic.gdx.ApplicationListener;
+import com.badlogic.gdx.Gdx;
 import com.github.xpenatan.webgpu.JWebGPUBackend;
 import com.monstrous.gdx.tests.webgpu.utils.AutoTestRunner;
 import com.monstrous.gdx.tests.webgpu.utils.TestChooser;
@@ -37,8 +29,6 @@ import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopApplication;
 import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopApplicationConfiguration;
 import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopGraphics;
 import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopWindowConfiguration;
-import com.monstrous.gdx.webgpu.scene2d.WgSkin;
-import com.monstrous.gdx.webgpu.scene2d.WgStage;
 
 // test starter
 public class WebGPUTestStarter {
