@@ -65,7 +65,8 @@ public class Basic3DShader extends GdxTest {
         cam.update();
 
         ModelBuilder modelBuilder = new WgModelBuilder();
-        model = modelBuilder.createBox(5f, 5f, 5f, new Material(ColorAttribute.createDiffuse(Color.GREEN)),
+        model = modelBuilder.createSphere(5f, 5f, 5f, 16,16,
+            new Material(ColorAttribute.createDiffuse(Color.GREEN)),
                 VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
         instance = new ModelInstance(model);
 

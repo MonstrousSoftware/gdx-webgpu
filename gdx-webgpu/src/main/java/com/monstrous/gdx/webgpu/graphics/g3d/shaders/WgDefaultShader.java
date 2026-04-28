@@ -52,11 +52,12 @@ public class WgDefaultShader extends WgShader implements Disposable {
     protected final WgModelBatch.Config config;
     private static String defaultShader;
     public final Binder binder;
-    private final WebGPUUniformBuffer uniformBuffer;
-    private final int uniformBufferSize;
-    private final WebGPUUniformBuffer instanceBuffer;
-    private final WebGPUUniformBuffer jointMatricesBuffer;
-    private MaterialsCache materials;
+    protected final WebGPUUniformBuffer uniformBuffer;
+    protected int uniformOffset;
+    protected final int uniformBufferSize;
+    protected final WebGPUUniformBuffer instanceBuffer;
+    protected final WebGPUUniformBuffer jointMatricesBuffer;
+    protected MaterialsCache materials;
     // Fallback textures used when createMaterialLayout() is overridden — owned and disposed here.
     private WgTexture fallbackWhiteTexture;
     private WgTexture fallbackNormalTexture;
@@ -142,20 +143,22 @@ public class WgDefaultShader extends WgShader implements Disposable {
         final boolean hasSpecularCubeMap = renderable.environment != null
                 && renderable.environment.has(WgCubemapAttribute.SpecularCubeMap);
 
+        binder = new Binder();
+        uniformOffset = 0;
+        defineUniforms();
+        // uniform buffers need to be multiples of 16 bytes
+        uniformBufferSize = WebGPUUniformBuffer.ceilToNextMultiple(uniformOffset, 16);
+
         // Create uniform buffer for global (per-frame) uniforms, e.g. projection matrix, camera position, etc.
         // Use multiple slices to support multiple render passes per frame with different camera/lighting state
-        // Shadow section: single shadow map uses 1 mat4 (16 floats);
-        // CSM uses N mat4s + vec4 splits + vec4 biases + 1 mat4 csmCameraProjectionView.
-        int shadowUniformFloats = hasCascadedShadowMap ? (maxCascades * 16 + 4 + 4 + 16) : 16;
-        uniformBufferSize = (16 + shadowUniformFloats + 4 + 4 + 4 + 4 + 32 + 8 * config.maxDirectionalLights
-                + 12 * config.maxPointLights) * Float.BYTES;
 
         uniformBuffer = new WebGPUUniformBuffer(uniformBufferSize, WGPUBufferUsage.CopyDst.or(WGPUBufferUsage.Uniform),
                 maxRenderPassesPerFrame);
 
+
         rigSize = config.numBones * 16 * Float.BYTES;
 
-        binder = new Binder();
+
         // define groups
         binder.defineGroup(0, createFrameBindGroupLayout(uniformBufferSize, hasShadowMap, hasCascadedShadowMap,
                 hasCubeMap, hasDiffuseCubeMap, hasSpecularCubeMap));
@@ -209,84 +212,9 @@ public class WgDefaultShader extends WgShader implements Disposable {
             }
         }
 
-        // define uniforms in uniform buffers with their offset
-        // frame uniforms
-        int offset = 0;
-        binder.defineUniform("projectionViewTransform", 0, 0, offset);
-        offset += 16 * 4;
-
-        if (hasCascadedShadowMap) {
-            // N cascade matrices followed by cascadeSplits (vec4f), cascadeBiases (vec4f),
-            // and csmCameraProjectionView (mat4x4f)
-            binder.defineUniform("shadowProjViewTransforms[0]", 0, 0, offset);
-            offset += maxCascades * 16 * 4;
-            binder.defineUniform("cascadeSplits", 0, 0, offset);
-            offset += 4 * 4;
-            binder.defineUniform("cascadeBiases", 0, 0, offset);
-            offset += 4 * 4;
-            binder.defineUniform("csmCameraProjectionView", 0, 0, offset);
-            offset += 16 * 4;
-        } else {
-            binder.defineUniform("shadowProjViewTransform", 0, 0, offset);
-            offset += 16 * 4;
-        }
-
-        if (config.maxDirectionalLights > 0) {
-            // define only a uniform for the initial array elements
-            // you will have to add an offset of i * array element size
-            binder.defineUniform("dirLight[0].color", 0, 0, offset);
-            offset += 4 * 4;
-            binder.defineUniform("dirLight[0].direction", 0, 0, offset);
-            offset += 4 * 4;
-            offset += 8 * Float.BYTES * (config.maxDirectionalLights - 1);
-        }
-
-        if (config.maxPointLights > 0) {
-            binder.defineUniform("pointLight[0].color", 0, 0, offset);
-            offset += 4 * 4;
-            binder.defineUniform("pointLight[0].position", 0, 0, offset);
-            offset += 4 * 4;
-            binder.defineUniform("pointLight[0].intensity", 0, 0, offset);
-            offset += 4 * 4; // added padding
-            offset += 12 * Float.BYTES * (config.maxPointLights - 1);
-        }
-
-        binder.defineUniform("ambientLight", 0, 0, offset);
-        offset += 4 * 4;
-        binder.defineUniform("cameraPosition", 0, 0, offset);
-        offset += 4 * 4;
-        binder.defineUniform("fogColor", 0, 0, offset);
-        offset += 4 * 4;
-        binder.defineUniform("numDirectionalLights", 0, 0, offset);
-        offset += 4;
-        binder.defineUniform("numPointLights", 0, 0, offset);
-        offset += 4;
-        binder.defineUniform("shadowPcfOffset", 0, 0, offset);
-        offset += 4;
-        binder.defineUniform("shadowBias", 0, 0, offset);
-        offset += 4;
-        binder.defineUniform("normalMapStrength", 0, 0, offset);
-        offset += 4;
-        binder.defineUniform("numRoughnessLevels", 0, 0, offset);
-        offset += 4;
-        if (hasCascadedShadowMap) {
-            binder.defineUniform("shadowPcfRadius", 0, 0, offset);
-            offset += 4;
-            binder.defineUniform("shadowFilterMode", 0, 0, offset);
-            offset += 4;
-            binder.defineUniform("cascadeBlendFraction", 0, 0, offset);
-            offset += 4;
-        }
-
-        // note: put shorter uniforms last for padding reasons
-
-        // System.out.println("offset:"+offset+" "+uniformBufferSize);
-        if (offset > uniformBufferSize)
-            throw new RuntimeException("Mismatch in frame uniform buffer size");
-        // binder.defineUniform("modelMatrix", 2, 0, 0);
-
         // set binding 0 to uniform buffer
         binder.setBuffer("uniforms", uniformBuffer, 0, uniformBufferSize);
+
 
         // binder.setBuffer("materialUniforms", materialBuffer, 0, materialSize);
 
@@ -372,6 +300,62 @@ public class WgDefaultShader extends WgShader implements Disposable {
         frameNumber = -1;
     }
 
+
+
+    /** define a frame level uniform by name and size */
+    public void defineUniform(String name, int sizeInBytes){
+        binder.defineUniform(name, 0, 0, uniformOffset);
+        uniformOffset += sizeInBytes;
+    }
+
+    /** define the frame level uniforms */
+    protected void defineUniforms(){
+        // define uniforms in uniform buffers with their offset
+        // frame uniforms
+        defineUniform("projectionViewTransform", 16*4);
+        if (hasCascadedShadowMap) {
+            // N cascade matrices followed by cascadeSplits (vec4f), cascadeBiases (vec4f),
+            // and csmCameraProjectionView (mat4x4f)
+            defineUniform("shadowProjViewTransforms[0]",maxCascades * 16 * 4);
+            defineUniform("cascadeSplits",4 * 4);
+            defineUniform("cascadeBiases",4 * 4);
+            defineUniform("csmCameraProjectionView", 16 * 4);
+        } else {
+            defineUniform("shadowProjViewTransform",16 * 4);
+        }
+
+        if (config.maxDirectionalLights > 0) {
+            // define only a uniform for the initial array elements
+            // you will have to add an offset of i * array element size
+            defineUniform("dirLight[0].color",4 * 4);
+            defineUniform("dirLight[0].direction",4 * 4);
+            defineUniform("dirLight filler",8 * 4 * (config.maxDirectionalLights - 1));
+        }
+
+        if (config.maxPointLights > 0) {
+            defineUniform("pointLight[0].color",4 * 4);
+            defineUniform("pointLight[0].position",4 * 4);
+            defineUniform("pointLight[0].intensity",4 * 4);// added padding
+            defineUniform("pointLight filler",12 * 4 * (config.maxPointLights - 1));
+        }
+        defineUniform("ambientLight",4 * 4);
+        defineUniform("cameraPosition",4 * 4);
+        defineUniform("fogColor",4 * 4);
+        defineUniform("numDirectionalLights",4);
+        defineUniform("numPointLights",4);
+        defineUniform("shadowPcfOffset", 4);
+        defineUniform("shadowBias",4);
+        defineUniform("normalMapStrength", 4);
+        defineUniform("numRoughnessLevels", 4);
+        if (hasCascadedShadowMap) {
+            defineUniform("shadowPcfRadius", 4);
+            defineUniform("shadowFilterMode", 4);
+            defineUniform("cascadeBlendFraction", 4);
+        }
+
+        // note: put shorter uniforms last for padding reasons
+    }
+
     @Override
     public void init() {
         // todo some constructor stuff to init()?
@@ -400,20 +384,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         // This ensures each render pass has its own independent camera/lighting data
         int dynamicOffset = uniformBuffer.nextSlice();
 
-        // set global uniforms, that do not depend on renderables
-        // e.g. camera, lighting, environment uniforms
-        // Note: camera.combined is already remapped from OpenGL [-1,1] to WebGPU [0,1] depth
-        // by WgModelBatch.begin() before shaders are invoked.
-        binder.setUniform("projectionViewTransform", camera.combined);
-
-        // pass a special value in the w component of camera position that is used by the fog calculation
-        tmpVec4.set(camera.position.x, camera.position.y, camera.position.z, 1.1881f / (camera.far * camera.far));
-        binder.setUniform("cameraPosition", tmpVec4);
-
-        // todo: different shaders may overwrite lighting uniforms if renderables have other environments ...
-        bindLights(renderable.environment);
-
-        binder.setUniform("normalMapStrength", 0.5f); // emphasis factor for normal map [0-1]
+        setUniforms(camera, renderable);
 
         // now that we've set all the uniforms (camera,lights, etc.) write the buffer to the gpu
         uniformBuffer.flush();
@@ -432,6 +403,28 @@ public class WgDefaultShader extends WgShader implements Disposable {
         materials.start(); // indicate that no material is currently bound
 
         setPipeline(renderPass);
+    }
+
+    /** set all frame level uniforms.
+     * You may want to override this if your shader has additional uniforms.
+     * @param camera
+     * @param renderable
+     */
+    protected void setUniforms(Camera camera, Renderable renderable){
+        // set global uniforms, that do not depend on renderables
+        // e.g. camera, lighting, environment uniforms
+        // Note: camera.combined is already remapped from OpenGL [-1,1] to WebGPU [0,1] depth
+        // by WgModelBatch.begin() before shaders are invoked.
+        binder.setUniform("projectionViewTransform", camera.combined);
+
+        // pass a special value in the w component of camera position that is used by the fog calculation
+        tmpVec4.set(camera.position.x, camera.position.y, camera.position.z, 1.1881f / (camera.far * camera.far));
+        binder.setUniform("cameraPosition", tmpVec4);
+
+        binder.setUniform("normalMapStrength", 0.5f); // emphasis factor for normal map [0-1]
+
+        // todo: different shaders may overwrite lighting uniforms if renderables have other environments ...
+        bindLights(renderable.environment);
     }
 
     private void setPipeline(WebGPURenderPass pass) {
@@ -943,6 +936,4 @@ public class WgDefaultShader extends WgShader implements Disposable {
             binder.setUniform("numRoughnessLevels", cubeMap.getMipLevelCount());
         }
     }
-
-
 }

@@ -40,14 +40,14 @@ public class Binder implements Disposable {
     private final IntMap<WebGPUBindGroup> groups;
     private final IntMap<BufferInfo> buffers;
     private WGPUPipelineLayout pipelineLayout;
-    private WebGPUContext webgpu;
+    private final WebGPUContext webgpu;
 
     public static class BufferInfo {
-        WebGPUUniformBuffer buffer;
+        WebGPUBuffer buffer;
         int offset;
         long size;
 
-        public BufferInfo(WebGPUUniformBuffer buffer, int offset, long size) {
+        public BufferInfo(WebGPUBuffer buffer, int offset, long size) {
             this.buffer = buffer;
             this.offset = offset;
             this.size = size;
@@ -79,8 +79,8 @@ public class Binder implements Disposable {
         bindMap.defineUniform(name, groupId, bindingId, offset);
     }
 
-    // to do specific for uniform buffer
-    public void setBuffer(String name, WebGPUUniformBuffer buffer, int offset, int size) {
+
+    public void setBuffer(String name, WebGPUBuffer buffer, int offset, int size) {
         BindingDictionary.BindingMap mapping = bindMap.findUniform(name);
         if (mapping == null)
             throw new RuntimeException("Uniform name " + name + " not defined.");
@@ -100,8 +100,7 @@ public class Binder implements Disposable {
         return bufferInfo.buffer;
     }
 
-    // todo allow more generic buffers?
-    public void setBuffer(int groupId, int bindingId, WebGPUUniformBuffer buffer, int offset, int size) {
+    public void setBuffer(int groupId, int bindingId, WebGPUBuffer buffer, int offset, int size) {
         WebGPUBindGroup bindGroup = getBindGroup(groupId);
         bindGroup.setBuffer(bindingId, buffer, offset, size);
 
@@ -142,7 +141,7 @@ public class Binder implements Disposable {
 
         BufferInfo bufferInfo = buffers.get(combine(mapping.groupId, mapping.bindingId));
 
-        WebGPUUniformBuffer buffer = bufferInfo.buffer;
+        WebGPUUniformBuffer buffer = (WebGPUUniformBuffer)bufferInfo.buffer;
         buffer.set(bufferInfo.offset + mapping.offset, value);
     }
 
@@ -154,7 +153,7 @@ public class Binder implements Disposable {
         if (mapping.offset < 0)
             throw new RuntimeException("Uniform name " + name + " is not defined in a uniform buffer.");
         BufferInfo bufferInfo = buffers.get(combine(mapping.groupId, mapping.bindingId));
-        WebGPUUniformBuffer buffer = bufferInfo.buffer;
+        WebGPUUniformBuffer buffer = (WebGPUUniformBuffer)bufferInfo.buffer;
         buffer.set(bufferInfo.offset + mapping.offset + offset, value);
     }
 
@@ -165,7 +164,7 @@ public class Binder implements Disposable {
         if (mapping.offset < 0)
             throw new RuntimeException("Uniform name " + name + " is not defined in a uniform buffer.");
         BufferInfo bufferInfo = buffers.get(combine(mapping.groupId, mapping.bindingId));
-        WebGPUUniformBuffer buffer = bufferInfo.buffer;
+        WebGPUUniformBuffer buffer = (WebGPUUniformBuffer)bufferInfo.buffer;
         buffer.set(bufferInfo.offset + mapping.offset, vec);
     }
 
@@ -176,7 +175,7 @@ public class Binder implements Disposable {
         if (mapping.offset < 0)
             throw new RuntimeException("Uniform name " + name + " is not defined in a uniform buffer.");
         BufferInfo bufferInfo = buffers.get(combine(mapping.groupId, mapping.bindingId));
-        WebGPUUniformBuffer buffer = bufferInfo.buffer;
+        WebGPUUniformBuffer buffer = (WebGPUUniformBuffer)bufferInfo.buffer;
         buffer.set(bufferInfo.offset + mapping.offset, vec);
     }
 
@@ -187,7 +186,7 @@ public class Binder implements Disposable {
         if (mapping.offset < 0)
             throw new RuntimeException("Uniform name " + name + " is not defined in a uniform buffer.");
         BufferInfo bufferInfo = buffers.get(combine(mapping.groupId, mapping.bindingId));
-        WebGPUUniformBuffer buffer = bufferInfo.buffer;
+        WebGPUUniformBuffer buffer = (WebGPUUniformBuffer)bufferInfo.buffer;
         buffer.set(bufferInfo.offset + mapping.offset + offset, vec);
     }
 
@@ -198,7 +197,7 @@ public class Binder implements Disposable {
         if (mapping.offset < 0)
             throw new RuntimeException("Uniform name " + name + " is not defined in a uniform buffer.");
         BufferInfo bufferInfo = buffers.get(combine(mapping.groupId, mapping.bindingId));
-        WebGPUUniformBuffer buffer = bufferInfo.buffer;
+        WebGPUUniformBuffer buffer = (WebGPUUniformBuffer)bufferInfo.buffer;
         buffer.set(bufferInfo.offset + mapping.offset, vec);
     }
 
@@ -212,7 +211,7 @@ public class Binder implements Disposable {
         if (bufferInfo == null)
             throw new RuntimeException(
                     "Uniform buffer not defined for group " + mapping.groupId + ", binding " + mapping.bindingId);
-        WebGPUUniformBuffer buffer = bufferInfo.buffer;
+        WebGPUUniformBuffer buffer = (WebGPUUniformBuffer)bufferInfo.buffer;
         buffer.set(bufferInfo.offset + mapping.offset, matrix);
     }
 
@@ -226,7 +225,7 @@ public class Binder implements Disposable {
         if (bufferInfo == null)
             throw new RuntimeException(
                     "Uniform buffer not defined for group " + mapping.groupId + ", binding " + mapping.bindingId);
-        WebGPUUniformBuffer buffer = bufferInfo.buffer;
+        WebGPUUniformBuffer buffer = (WebGPUUniformBuffer)bufferInfo.buffer;
         buffer.set(bufferInfo.offset + mapping.offset + offset, matrix);
     }
 
@@ -237,7 +236,7 @@ public class Binder implements Disposable {
         if (mapping.offset < 0)
             throw new RuntimeException("Uniform name " + name + " is not defined in a uniform buffer.");
         BufferInfo bufferInfo = buffers.get(combine(mapping.groupId, mapping.bindingId));
-        WebGPUUniformBuffer buffer = bufferInfo.buffer;
+        WebGPUUniformBuffer buffer = (WebGPUUniformBuffer)bufferInfo.buffer;
         buffer.set(bufferInfo.offset + mapping.offset, col);
     }
 
@@ -248,7 +247,7 @@ public class Binder implements Disposable {
         if (mapping.offset < 0)
             throw new RuntimeException("Uniform name " + name + " is not defined in a uniform buffer.");
         BufferInfo bufferInfo = buffers.get(combine(mapping.groupId, mapping.bindingId));
-        WebGPUUniformBuffer buffer = bufferInfo.buffer;
+        WebGPUUniformBuffer buffer = (WebGPUUniformBuffer)bufferInfo.buffer;
         buffer.set(bufferInfo.offset + mapping.offset + offset, col);
     }
 
