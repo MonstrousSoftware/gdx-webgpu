@@ -12,12 +12,13 @@ application {
     mainClass = "com.monstrous.gdx.tests.webgpu.WebGPUTestStarter"
 }
 
+val javaVersion = project.property("javaMain") as String
 
 sourceSets["main"].resources.srcDirs(File("../assets"))
 
 if (JavaVersion.current().isJava9Compatible) {
     tasks.withType<JavaCompile> {
-        options.release.set(25)
+        options.release.set(javaVersion.toInt())
     }
 }
 
@@ -44,6 +45,21 @@ tasks.register<JavaExec>("gdx_webgpu_tests_run_desktop_jni") {
     classpath = sourceSets["main"].runtimeClasspath
     workingDir = File("../assets")
     setIgnoreExitValue(true)
+    standardInput = System.`in`
+
+    if(DefaultNativePlatform.getCurrentOperatingSystem().isMacOsX) {
+        jvmArgs("-XstartOnFirstThread")
+    }
+}
+
+tasks.register<JavaExec>("gdx_webgpu_tests_auto_run_desktop_jni") {
+    group = "LibGDX"
+    description = "Run the WebGPU tests"
+    mainClass.set(mainClassName)
+    classpath = sourceSets["main"].runtimeClasspath
+    workingDir = File("../assets")
+    setIgnoreExitValue(true)
+    args = mutableListOf("auto")
     standardInput = System.`in`
 
     if(DefaultNativePlatform.getCurrentOperatingSystem().isMacOsX) {

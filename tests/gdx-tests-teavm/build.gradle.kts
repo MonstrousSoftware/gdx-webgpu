@@ -2,6 +2,13 @@ plugins {
     id("java")
 }
 
+val javaVersion = JavaVersion.toVersion(project.property("javaWeb") as String)
+
+java {
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaVersion
+}
+
 dependencies {
     val gdxTeaVMVersion = project.property("gdxTeaVMVersion") as String
     implementation("com.github.xpenatan.gdx-teavm:backend-web:$gdxTeaVMVersion")

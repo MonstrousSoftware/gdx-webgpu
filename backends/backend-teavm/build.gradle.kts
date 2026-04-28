@@ -2,7 +2,7 @@ plugins {
     id("java")
     id("maven-publish")
 }
-val javaVersion = JavaVersion.toVersion(project.property("java") as String)
+val javaVersion = JavaVersion.toVersion(project.property("javaWeb") as String)
 
 java {
     sourceCompatibility = javaVersion

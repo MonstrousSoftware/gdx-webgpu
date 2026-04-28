@@ -2,7 +2,7 @@ plugins {
     id("com.android.library")
 }
 
-val javaVersion = project.property("java") as String
+val javaVersion = project.property("javaMain") as String
 
 android {
     namespace = "io.github.monstroussoftware.gdx.webgpu"
