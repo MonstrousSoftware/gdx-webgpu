@@ -33,7 +33,7 @@ public class WgIndexBuffer implements IndexData {
      */
     public WgIndexBuffer(boolean isStatic, int maxIndices, int maxVertices) {
         // if there are more than 64K vertices, we will need 32 bit indices, instead of 16 bit indices
-        this(isStatic, maxIndices, maxVertices >= 65536);
+        this(isStatic, maxIndices, maxVertices > 65536);
     }
 
     /**
