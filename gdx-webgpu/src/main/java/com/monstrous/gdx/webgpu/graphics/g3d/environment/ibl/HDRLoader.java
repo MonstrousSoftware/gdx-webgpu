@@ -66,7 +66,7 @@ public class HDRLoader {
             texture = new WgTexture(file.name(), imageWidth, imageHeight, false, false,
                     WGPUTextureFormat.RGBA8UnormSrgb, 1);
             pixels.flip();
-            texture.load(pixels,imageWidth, imageHeight);
+            texture.load(pixels,numComponents, imageWidth, imageHeight);
             BufferUtils.disposeUnsafeByteBuffer(pixels);
         } else {
             throw new RuntimeException("getHDRTexture: only LDR supported for now");
