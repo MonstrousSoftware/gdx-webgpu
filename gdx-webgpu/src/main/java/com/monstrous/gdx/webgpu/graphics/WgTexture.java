@@ -192,11 +192,11 @@ public class WgTexture extends Texture {
         WGPUTextureFormat fmt = isColor ? WGPUTextureFormat.RGBA8UnormSrgb : WGPUTextureFormat.RGBA8Unorm;
         Pixmap.Format dataFormat = Pixmap.Format.RGBA8888;
         int numComponents = 4;
-//        if(data.getFormat() == Pixmap.Format.Alpha) { // todo complete for all format options
-//            fmt = WGPUTextureFormat.R8Unorm;
-//            dataFormat = Pixmap.Format.Alpha;
-//            numComponents = 1;
-//        }
+        if(data.getFormat() == Pixmap.Format.Alpha) { // todo complete for all format options
+            fmt = WGPUTextureFormat.R8Unorm;
+            dataFormat = Pixmap.Format.Alpha;
+            numComponents = 1;
+        }
 
         WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst);
         create(label, data.useMipMaps(), textureUsage, fmt, 1, numSamples, null);
