@@ -102,7 +102,7 @@ public class WgFacedCubemapData implements WgCubemapData {
      * Loads the texture specified using the {@link FileHandle} and sets it to specified side, overwriting any previous
      * data set to that side. Note that you need to reload through {@link Cubemap#load(CubemapData)} any cubemap using
      * this data for the change to be taken in account.
-     * 
+     *
      * @param side The {@link CubemapSide}
      * @param file The texture {@link FileHandle}
      */
@@ -114,7 +114,7 @@ public class WgFacedCubemapData implements WgCubemapData {
      * Sets the specified side of this cubemap to the specified {@link Pixmap}, overwriting any previous data set to
      * that side. Note that you need to reload through {@link Cubemap#load(CubemapData)} any cubemap using this data for
      * the change to be taken in account.
-     * 
+     *
      * @param side The {@link CubemapSide}
      * @param pixmap The {@link Pixmap}
      */
@@ -205,7 +205,7 @@ public class WgFacedCubemapData implements WgCubemapData {
                     mustDisposePixmap = true;
                 }
 
-                texture.load(pixmap.getPixels(), pixmap.getWidth(), pixmap.getHeight(), i);
+                texture.load(pixmap.getPixels(), 4, pixmap.getWidth(), pixmap.getHeight(), i);
 
                 if (mustDisposePixmap)
                     pixmap.dispose();
