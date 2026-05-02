@@ -28,7 +28,8 @@ public class Launcher {
         //new WgDesktopApplication(new DynamicTexture(), config);
 
 
-        new WgDesktopApplication(new Basic3DShader(), config);
+        new WgDesktopApplication(new TextureGreyscale(), config);
+
 
         //new WgDesktopApplication(new AutoTestRunner(), config);
 

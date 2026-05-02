@@ -154,7 +154,7 @@ public class WgTexture extends Texture {
     }
 
     public WgTexture(FileHandle file, Pixmap.Format format, boolean useMipMaps, boolean isColor) {
-        this(TextureData.Factory.loadFromFile(file, format, useMipMaps), file.name(), isColor);
+            this(TextureData.Factory.loadFromFile(file, format, useMipMaps), file.name(), isColor);
     }
 
     public WgTexture(Pixmap pixmap) {
@@ -190,13 +190,20 @@ public class WgTexture extends Texture {
         // linear color value
         // for non-color texture, e.g. normal map, leave content as is.
         WGPUTextureFormat fmt = isColor ? WGPUTextureFormat.RGBA8UnormSrgb : WGPUTextureFormat.RGBA8Unorm;
+        Pixmap.Format dataFormat = Pixmap.Format.RGBA8888;
+        int numComponents = 4;
+        if(data.getFormat() == Pixmap.Format.Alpha) { // todo complete for all format options
+            fmt = WGPUTextureFormat.R8Unorm;
+            dataFormat = Pixmap.Format.Alpha;
+            numComponents = 1;
+        }
 
         WGPUTextureUsage textureUsage = WGPUTextureUsage.TextureBinding.or(WGPUTextureUsage.CopyDst);
         create(label, data.useMipMaps(), textureUsage, fmt, 1, numSamples, null);
         Pixmap pixmap = data.consumePixmap();
         boolean mustDisposePixmap = data.disposePixmap();
 
-        Pixmap.Format dataFormat = Pixmap.Format.RGBA8888;
+
 
         // data format is desired format, pixmap format is format from file
         // convert to desired format (typically RGBA) as needed
@@ -214,7 +221,7 @@ public class WgTexture extends Texture {
             mustDisposePixmap = true;
         }
 
-        load(pixmap.getPixels(), data.getWidth(), data.getHeight(), 0);
+        load(pixmap.getPixels(), numComponents, data.getWidth(), data.getHeight(), 0);
         if (mustDisposePixmap)
             pixmap.dispose();
     }
@@ -477,11 +484,10 @@ public class WgTexture extends Texture {
      * @param pixelPtr pixel data
      * @param layer which layer to load in case of a 3d texture, otherwise 0
      */
-    public void load(ByteBuffer pixelPtr, int width, int height, int layer) {
+    public void load(ByteBuffer pixelPtr, int numComponents, int width, int height, int layer) {
 
         // Generate mipmap levels if this.mipLevelCount > 1
         // candidate for compute shader
-        int numComponents = 4;
 
         if (pixelPtr.limit() != width * height * numComponents)
             throw new GdxRuntimeException(
@@ -502,31 +508,23 @@ public class WgTexture extends Texture {
                     for (int x = 0; x < mipLevelWidth; x++) {
 
                         // Get the corresponding 4 pixels from the previous level
-                        int offset00 = 4 * ((2 * y + 0) * (2 * mipLevelWidth) + (2 * x + 0));
-                        int offset01 = 4 * ((2 * y + 0) * (2 * mipLevelWidth) + (2 * x + 1));
-                        int offset10 = 4 * ((2 * y + 1) * (2 * mipLevelWidth) + (2 * x + 0));
-                        int offset11 = 4 * ((2 * y + 1) * (2 * mipLevelWidth) + (2 * x + 1));
+                        int offset00 = numComponents * ((2 * y + 0) * (2 * mipLevelWidth) + (2 * x + 0));
+                        int offset01 = numComponents * ((2 * y + 0) * (2 * mipLevelWidth) + (2 * x + 1));
+                        int offset10 = numComponents * ((2 * y + 1) * (2 * mipLevelWidth) + (2 * x + 0));
+                        int offset11 = numComponents * ((2 * y + 1) * (2 * mipLevelWidth) + (2 * x + 1));
 
-                        // Average r, g and b components
+                        // Average each color components (R, G, B and A or a subset)
                         // beware that java bytes are signed. So we convert to integer first
-                        int r = toUnsignedInt(prev.get(offset00)) + toUnsignedInt(prev.get(offset01))
-                                + toUnsignedInt(prev.get(offset10)) + toUnsignedInt(prev.get(offset11));
-                        int g = toUnsignedInt(prev.get(offset00 + 1)) + toUnsignedInt(prev.get(offset01 + 1))
-                                + toUnsignedInt(prev.get(offset10 + 1)) + toUnsignedInt(prev.get(offset11 + 1));
-                        int b = toUnsignedInt(prev.get(offset00 + 2)) + toUnsignedInt(prev.get(offset01 + 2))
-                                + toUnsignedInt(prev.get(offset10 + 2)) + toUnsignedInt(prev.get(offset11 + 2));
-                        int a = toUnsignedInt(prev.get(offset00 + 3)) + toUnsignedInt(prev.get(offset01 + 3))
-                                + toUnsignedInt(prev.get(offset10 + 3)) + toUnsignedInt(prev.get(offset11 + 3));
-
-                        next.put((byte) (r >> 2)); // divide by 4
-                        next.put((byte) (g >> 2));
-                        next.put((byte) (b >> 2));
-                        next.put((byte) (a >> 2)); // alpha
+                        for(int i = 0; i < numComponents; i++){
+                            int component = toUnsignedInt(prev.get(offset00+i)) + toUnsignedInt(prev.get(offset01+i))
+                                + toUnsignedInt(prev.get(offset10+i)) + toUnsignedInt(prev.get(offset11+i));
+                            next.put((byte) (component >> 2)); // divide by 4 to take average
+                        }
                     }
                 }
                 next.flip();
             }
-            loadMipLevel(next, mipLevelWidth, mipLevelHeight, layer, mipLevel);
+            loadMipLevel(next, numComponents, mipLevelWidth, mipLevelHeight, layer, mipLevel);
 
             mipLevelWidth /= 2;
             mipLevelHeight /= 2;
@@ -536,7 +534,7 @@ public class WgTexture extends Texture {
             }
             // todo we should be able to avoid one malloc/free
             prev = next;
-            next = BufferUtils.newUnsafeByteBuffer(mipLevelWidth * mipLevelHeight * 4);
+            next = BufferUtils.newUnsafeByteBuffer(mipLevelWidth * mipLevelHeight * numComponents );
         }
 
         if (next != pixelPtr) {
@@ -547,7 +545,7 @@ public class WgTexture extends Texture {
     /**
      * Load image data into a specific layer and mip level
      */
-    public void loadMipLevel(ByteBuffer data, int width, int height, int layer, int mipLevel) {
+    public void loadMipLevel(ByteBuffer data, int numComponents, int width, int height, int layer, int mipLevel) {
 
         // Arguments telling which part of the texture we upload to
         // (together with the last argument of writeTexture)
@@ -562,7 +560,7 @@ public class WgTexture extends Texture {
         // Arguments telling how the pixel data is laid out
         WGPUTexelCopyBufferLayout source = WGPUTexelCopyBufferLayout.obtain();
         source.setOffset(0);
-        source.setBytesPerRow(4 * width);
+        source.setBytesPerRow(numComponents * width);
         source.setRowsPerImage(height);
 
         WGPUExtent3D extent = WGPUExtent3D.obtain();
@@ -573,14 +571,14 @@ public class WgTexture extends Texture {
         if (!webgpu.isFrameStarted()) {
             Gdx.app.error("WgTexture", "writeTexture called outside of beginFrame/endFrame window. This may cause a crash.");
         }
-        webgpu.queue.writeTexture(destination, data, 4 * width * height, source, extent);
+        webgpu.queue.writeTexture(destination, data, numComponents * width * height, source, extent);
     }
 
     /**
      * Load image data into layer 0 and mip level 0.
      */
-    public void load(ByteBuffer pixels, int width, int height) {
-        loadMipLevel(pixels, width, height, 0, 0);
+    public void load(ByteBuffer pixels, int numComponents, int width, int height) {
+        loadMipLevel(pixels, numComponents, width, height, 0, 0);
     }
 
     private static int toUnsignedInt(byte x) {

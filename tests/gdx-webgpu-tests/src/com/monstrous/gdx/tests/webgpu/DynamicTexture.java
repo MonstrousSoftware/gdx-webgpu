@@ -39,7 +39,7 @@ public class DynamicTexture extends GdxTest {
     public void render() {
         counter++;
         updatePixmap(pm, counter);
-        texture.load(pm.getPixels(), SIZE, SIZE);   // modify texture with new pixmap contents
+        texture.load(pm.getPixels(), 4, SIZE, SIZE);   // modify texture with new pixmap contents
 
         viewport.apply();
         batch.setProjectionMatrix(viewport.getCamera().combined);
