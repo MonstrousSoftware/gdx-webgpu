@@ -24,7 +24,7 @@ import com.badlogic.gdx.graphics.glutils.HdpiMode;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.utils.Disposable;
 
-import com.github.xpenatan.jParser.idl.IDLBase;
+import com.github.xpenatan.jParser.api.NativeObject;
 import com.github.xpenatan.webgpu.WGPUBackendType;
 import com.github.xpenatan.webgpu.WGPUInstance;
 import com.github.xpenatan.webgpu.WGPUPowerPreference;
@@ -143,26 +143,26 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
         // System.out.println("os.name: "+osName);
         if (osName.contains("win")) {
             long display = GLFWNativeWin32.glfwGetWin32Window(windowHandle);
-            surface = instance.createWindowsSurface(IDLBase.native_new().native_setAddress(display));
+            surface = instance.createWindowsSurface(NativeObject.native_new().native_setAddress(display));
         } else if (osName.contains("linux")) {
             // System.out.println("Platform: "+glfwGetPlatform());
             if (glfwGetPlatform() == GLFW_PLATFORM_WAYLAND) {
                 System.out.println("Wayland");
                 long display = glfwGetWaylandDisplay();
                 long surf = glfwGetWaylandWindow(windowHandle);
-                IDLBase idlwindow = IDLBase.native_new().native_setAddress(surf);
-                IDLBase idlDisplay = IDLBase.native_new().native_setAddress(display);
+                NativeObject idlwindow = NativeObject.native_new().native_setAddress(surf);
+                NativeObject idlDisplay = NativeObject.native_new().native_setAddress(display);
                 surface = instance.createLinuxSurface(true, idlwindow, idlDisplay);
             } else {
                 // System.out.println("X11");
                 long display = glfwGetX11Display();
                 long surf = glfwGetX11Window(windowHandle);
-                IDLBase idlwindow = IDLBase.native_new().native_setAddress(surf);
-                IDLBase idlDisplay = IDLBase.native_new().native_setAddress(display);
+                NativeObject idlwindow = NativeObject.native_new().native_setAddress(surf);
+                NativeObject idlDisplay = NativeObject.native_new().native_setAddress(display);
                 surface = instance.createLinuxSurface(false, idlwindow, idlDisplay);
             }
         } else if (osName.contains("mac")) {
-            IDLBase idlHandle = IDLBase.native_new().native_setAddress(windowHandle);
+            NativeObject idlHandle = NativeObject.native_new().native_setAddress(windowHandle);
             surface = instance.createMacSurface(idlHandle);
         }
         return surface;

@@ -144,7 +144,7 @@ public class RenderPassBuilder {
         GPUTimer timer = webgpu.getGPUTimer();
         if (timer.isEnabled()) {
             timer.addPass(name);
-            WGPURenderPassTimestampWrites query = WGPURenderPassTimestampWrites.obtain();
+            WGPUPassTimestampWrites query = WGPUPassTimestampWrites.obtain();
             query.setBeginningOfPassWriteIndex(timer.getStartIndex());
             query.setEndOfPassWriteIndex(timer.getStopIndex());
             query.setQuerySet(timer.getQuerySet());
@@ -297,7 +297,7 @@ public class RenderPassBuilder {
             timer.addPass(name); // announce a new render pass for this frame (this determines the index values)
             // create a query
             // System.out.println("Timer for "+name+ " indices: "+timer.getStartIndex()+" "+timer.getStopIndex());
-            WGPURenderPassTimestampWrites query = WGPURenderPassTimestampWrites.obtain();
+            WGPUPassTimestampWrites query = WGPUPassTimestampWrites.obtain();
             query.setBeginningOfPassWriteIndex(timer.getStartIndex()); // get offset for this render pass's start time
             query.setEndOfPassWriteIndex(timer.getStopIndex());
             query.setQuerySet(timer.getQuerySet());

@@ -2,7 +2,7 @@ plugins {
     id("com.android.library")
 }
 
-val javaVersion = project.property("java") as String
+val javaVersion = project.property("javaMain") as String
 
 android {
     namespace = "io.github.monstroussoftware.gdx.webgpu"
@@ -26,7 +26,6 @@ android {
     publishing {
         singleVariant("release") {
             withSourcesJar()
-            withJavadocJar()
         }
     }
 }
@@ -36,7 +35,6 @@ dependencies {
     val jWebGPUVVersion = project.property("jWebGPUVVersion") as String
 
     implementation(project(":gdx-webgpu"))
-    api("com.github.xpenatan.jWebGPU:webgpu-core:$jWebGPUVVersion")
     api("com.github.xpenatan.jWebGPU:webgpu-android:$jWebGPUVVersion")
 
     api("com.badlogicgames.gdx:gdx:${gdxVersion}")

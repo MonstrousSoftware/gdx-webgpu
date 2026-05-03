@@ -3,16 +3,16 @@ import org.gradle.jvm.tasks.Jar as JarTask
 
 val mainClassName = "com.monstrous.gdx.tests.webgpu.WebGPUTestStarter"
 
-val javaVersion = project.property("java") as String
-
 plugins {
     application
+    id("java-library")
 }
 
 application {
     mainClass = "com.monstrous.gdx.tests.webgpu.WebGPUTestStarter"
 }
 
+val javaVersion = project.property("javaMain") as String
 
 sourceSets["main"].resources.srcDirs(File("../assets"))
 
@@ -26,15 +26,36 @@ dependencies {
     implementation(project(":gdx-webgpu"))
     implementation(project(":backends:backend-desktop"))
     implementation(project(":tests:gdx-webgpu-tests"))
+
+    val jWebGPUVVersion = project.property("jWebGPUVVersion") as String
+
+    // Add natives
+    implementation("com.github.xpenatan.jWebGPU:webgpu-jni:$jWebGPUVVersion")
+    implementation("com.github.xpenatan.jWebGPU:webgpu-jni:$jWebGPUVVersion:desktop")
 }
 
-tasks.register<JavaExec>("gdx_webgpu_tests_run_desktop") {
+tasks.register<JavaExec>("gdx_webgpu_tests_run_desktop_jni") {
     group = "LibGDX"
     description = "Run the WebGPU tests"
     mainClass.set(mainClassName)
     classpath = sourceSets["main"].runtimeClasspath
     workingDir = File("../assets")
     setIgnoreExitValue(true)
+    standardInput = System.`in`
+
+    if(DefaultNativePlatform.getCurrentOperatingSystem().isMacOsX) {
+        jvmArgs("-XstartOnFirstThread")
+    }
+}
+
+tasks.register<JavaExec>("gdx_webgpu_tests_auto_run_desktop_jni") {
+    group = "LibGDX"
+    description = "Run the WebGPU tests"
+    mainClass.set(mainClassName)
+    classpath = sourceSets["main"].runtimeClasspath
+    workingDir = File("../assets")
+    setIgnoreExitValue(true)
+    args = mutableListOf("auto")
     standardInput = System.`in`
 
     if(DefaultNativePlatform.getCurrentOperatingSystem().isMacOsX) {

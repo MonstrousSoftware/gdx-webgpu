@@ -4,7 +4,7 @@ plugins {
     id("maven-publish")
 }
 
-val javaVersion = JavaVersion.toVersion(project.property("java") as String)
+val javaVersion = JavaVersion.toVersion(project.property("javaMain") as String)
 
 java {
     sourceCompatibility = javaVersion
@@ -16,7 +16,7 @@ dependencies {
     val jWebGPUVVersion = project.property("jWebGPUVVersion") as String
 
     api("com.badlogicgames.gdx:gdx:$gdxVersion")
-    api("com.github.xpenatan.jWebGPU:webgpu-core:$jWebGPUVVersion")
+    compileOnlyApi("com.github.xpenatan.jWebGPU:webgpu-core:$jWebGPUVVersion")
 
 }
 

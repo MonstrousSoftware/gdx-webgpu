@@ -140,14 +140,14 @@ gdx-webgpu/
 
 ### Running Desktop Tests
 
-Use the Gradle task `gdx_webgpu_tests_run_desktop`:
+Use the Gradle task `gdx_webgpu_tests_run_desktop_jni`:
 
 ```bash
 # Run ALL tests sequentially (auto-advances through every test):
-./gradlew gdx_webgpu_tests_run_desktop --args="auto"
+./gradlew gdx_webgpu_tests_run_desktop_jni --args="auto"
 
 # Run a SINGLE test by class name:
-./gradlew gdx_webgpu_tests_run_desktop --args="Particles3D"
+./gradlew gdx_webgpu_tests_run_desktop_jni --args="Particles3D"
 ```
 
 - The `auto` argument loops through all registered tests automatically.

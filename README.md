@@ -112,17 +112,17 @@ The `tests/` folder contains a suite of test applications. You can run them on d
 
 ### Desktop
 
-Use the Gradle task `gdx_webgpu_tests_run_desktop`:
+Use the Gradle task `gdx_webgpu_tests_run_desktop_jni`:
 
 ```bash
 # Interactive test chooser (default):
-./gradlew gdx_webgpu_tests_run_desktop
+./gradlew gdx_webgpu_tests_run_desktop_jni
 
 # Run a single test by class name:
-./gradlew gdx_webgpu_tests_run_desktop --args="Particles3D"
+./gradlew gdx_webgpu_tests_run_desktop_jni --args="Particles3D"
 
 # Run ALL tests sequentially (auto mode):
-./gradlew gdx_webgpu_tests_run_desktop --args="auto"
+./gradlew gdx_webgpu_tests_run_desktop_jni --args="auto"
 ```
 
 ### Web (TeaVM)

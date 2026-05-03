@@ -170,7 +170,26 @@ public class WebGPURenderPass implements Disposable {
     }
 
     public void setScissorRect(int x, int y, int width, int height) {
-        renderPass.setScissorRect(x, y, width, height);
+        // Clamp both scissor edges to the render target, then derive non-negative extents.
+        int x0 = clampToRange(x, 0, targetWidth);
+        int y0 = clampToRange(y, 0, targetHeight);
+
+        long rawX1 = (long) x + (long) width;
+        long rawY1 = (long) y + (long) height;
+        int x1 = clampToRange(rawX1, 0, targetWidth);
+        int y1 = clampToRange(rawY1, 0, targetHeight);
+
+        renderPass.setScissorRect(x0, y0, Math.max(0, x1 - x0), Math.max(0, y1 - y0));
+    }
+
+    private static int clampToRange(int value, int min, int max) {
+        return Math.max(min, Math.min(max, value));
+    }
+
+    private static int clampToRange(long value, int min, int max) {
+        if (value < min) return min;
+        if (value > max) return max;
+        return (int) value;
     }
 
     public void drawIndexed(int indexCount, int numInstances, int firstIndex, int baseVertex, int firstInstance) {

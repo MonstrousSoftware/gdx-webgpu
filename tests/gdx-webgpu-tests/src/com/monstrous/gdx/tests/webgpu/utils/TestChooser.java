@@ -115,11 +115,24 @@ public class TestChooser extends ApplicationAdapter {
             testButton.addListener(new ChangeListener() {
                 @Override
                 public void changed(ChangeEvent event, Actor actor) {
-                    ((InputWrapper) Gdx.input).multiplexer.removeProcessor(stage);
-                    test = WebGPUTests.newTest(testName);
-                    test.create();
-                    test.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-                    System.out.println("Started test: " + testName);
+                    boolean openedNewWindow = false;
+                    WindowOpener opener = WindowOpenerRegistry.getOpener();
+                    if (opener != null) {
+                        try {
+                            openedNewWindow = opener.open(testName);
+                        } catch (Throwable t) {
+                            openedNewWindow = false;
+                        }
+                    }
+
+                    if (!openedNewWindow) {
+                        ((InputWrapper) Gdx.input).multiplexer.removeProcessor(stage);
+                        test = WebGPUTests.newTest(testName);
+                        test.create();
+                        test.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+                        System.out.println("Started test: " + testName);
+                    }
+
                     prefs.putString("LastTest", testName);
                     prefs.flush();
                     if (testButton != lastClickedTestButton) {
