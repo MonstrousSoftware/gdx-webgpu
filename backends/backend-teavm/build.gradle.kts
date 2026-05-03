@@ -14,7 +14,8 @@ dependencies {
     val jWebGPUVVersion = project.property("jWebGPUVVersion") as String
 
     implementation("com.github.xpenatan.gdx-teavm:backend-web:$gdxTeaVMVersion")
-    implementation("com.github.xpenatan.jWebGPU:webgpu-teavm:${jWebGPUVVersion}")
+    implementation("com.github.xpenatan.jWebGPU:webgpu-web:${jWebGPUVVersion}")
+    implementation("com.github.xpenatan.jWebGPU:webgpu-web:${jWebGPUVVersion}:wasm")
     implementation(project(":gdx-webgpu"))
 }
 
