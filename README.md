@@ -211,12 +211,19 @@ To include the library in your project add the following lines to your `build.gr
 Assuming we want to use the LWJGL3 (=Desktop) platform, add the following to `build.gradle` in the `lwjgl3` module:
 
     dependencies {
-        implementation "io.github.monstroussoftware.gdx-webgpu:backend-desktop:$gdxWebGPUVersion"
+        // Pick one desktop runtime:
+        implementation "io.github.monstroussoftware.gdx-webgpu:backend-desktop-jni:$gdxWebGPUVersion"
+        // or
+        // implementation "io.github.monstroussoftware.gdx-webgpu:backend-desktop-ffm:$gdxWebGPUVersion"
         // comment out the following:
         //  implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
         //  implementation "com.badlogicgames.gdx:gdx-lwjgl3-angle:$gdxVersion"
         //  implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
     }
+
+`backend-desktop-jni` and `backend-desktop-ffm` are wrapper artifacts. They pull in
+`backend-desktop` plus the matching jWebGPU runtime dependencies automatically, so users only
+need to set `gdxWebGPUVersion`.
 
 In the `lwjgl3` module add a starter class called `Launcher.java` with a content as follows:
 

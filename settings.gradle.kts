@@ -11,6 +11,8 @@ include(":gdx-webgpu")
 
 include(":backends")
 include(":backends:backend-desktop")
+include(":backends:backend-desktop-jni")
+include(":backends:backend-desktop-ffm")
 include(":backends:backend-teavm")
 include(":backends:backend-android")
 

@@ -24,14 +24,8 @@ if (JavaVersion.current().isJava9Compatible) {
 
 dependencies {
     implementation(project(":gdx-webgpu"))
-    implementation(project(":backends:backend-desktop"))
+    implementation(project(":backends:backend-desktop-jni"))
     implementation(project(":tests:gdx-webgpu-tests"))
-
-    val jWebGPUVVersion = project.property("jWebGPUVVersion") as String
-
-    // Add natives
-    implementation("com.github.xpenatan.jWebGPU:webgpu-jni:$jWebGPUVVersion")
-    implementation("com.github.xpenatan.jWebGPU:webgpu-jni:$jWebGPUVVersion:desktop")
 }
 
 tasks.register<JavaExec>("gdx_webgpu_tests_run_desktop_jni") {
