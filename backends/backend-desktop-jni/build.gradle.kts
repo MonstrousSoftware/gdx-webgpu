@@ -18,7 +18,7 @@ dependencies {
 
     api(project(":backends:backend-desktop"))
     api("com.github.xpenatan.jWebGPU:webgpu-jni:$jWebGPUVVersion")
-    runtimeOnly("com.github.xpenatan.jWebGPU:webgpu-jni:$jWebGPUVVersion:desktop")
+    api("com.github.xpenatan.jWebGPU:webgpu-jni-desktop:$jWebGPUVVersion")
 }
 
 publishing {
