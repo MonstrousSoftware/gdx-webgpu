@@ -26,6 +26,7 @@ public class WebGPURenderPass implements Disposable {
     private WGPUTextureFormat[] textureFormats;
     private WGPUTextureFormat depthFormat;
     public int targetWidth, targetHeight;
+    private int viewportX, viewportY;
     private int sampleCount;
     private final WGPUTextureFormat[] singleFormatArray = new WGPUTextureFormat[1];
 
@@ -167,17 +168,25 @@ public class WebGPURenderPass implements Disposable {
 
     public void setViewport(float x, float y, float width, float height, float minDepth, float maxDepth) {
         renderPass.setViewport(x, y, width, height, minDepth, maxDepth);
+        viewportX = (int) x;
+        viewportY = (int) y;
     }
 
     public void setScissorRect(int x, int y, int width, int height) {
-        // Clamp both scissor edges to the render target, then derive non-negative extents.
-        int x0 = clampToRange(x, 0, targetWidth);
-        int y0 = clampToRange(y, 0, targetHeight);
+        // Clamp in framebuffer coordinates, but use viewport origin as the render-target offset.
+        int minX = viewportX;
+        int minY = viewportY;
+        int maxX = viewportX + targetWidth;
+        int maxY = viewportY + targetHeight;
+
+        // Clamp both scissor edges to the active render-target bounds, then derive non-negative extents.
+        int x0 = clampToRange(x, minX, maxX);
+        int y0 = clampToRange(y, minY, maxY);
 
         long rawX1 = (long) x + (long) width;
         long rawY1 = (long) y + (long) height;
-        int x1 = clampToRange(rawX1, 0, targetWidth);
-        int y1 = clampToRange(rawY1, 0, targetHeight);
+        int x1 = clampToRange(rawX1, minX, maxX);
+        int y1 = clampToRange(rawY1, minY, maxY);
 
         renderPass.setScissorRect(x0, y0, Math.max(0, x1 - x0), Math.max(0, y1 - y0));
     }
