@@ -2,26 +2,20 @@ plugins {
     id("java")
 }
 
+val javaVersion = JavaVersion.toVersion(project.property("javaWeb") as String)
+
+java {
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaVersion
+}
+
 dependencies {
     val gdxTeaVMVersion = project.property("gdxTeaVMVersion") as String
-//    val gdxVersion = project.property("gdxVersion") as String
-//    val teaVMVersion = project.property("teaVMVersion") as String
-
-    //implementation("com.badlogicgames.gdx:gdx:$gdxVersion")
     implementation("com.github.xpenatan.gdx-teavm:backend-web:$gdxTeaVMVersion")
-
-//    implementation("org.teavm:teavm-classlib:${teaVMVersion}")
-//    implementation("org.teavm:teavm-core:${teaVMVersion}")
-//    implementation("org.teavm:teavm-jso-apis:${teaVMVersion}")
-//    implementation("org.teavm:teavm-jso-impl:${teaVMVersion}")
-//    implementation("org.teavm:teavm-jso:${teaVMVersion}")
-//    implementation("org.teavm:teavm-tooling:${teaVMVersion}")
 
     implementation(project(":gdx-webgpu"))
     implementation(project(":backends:backend-teavm"))
-    //implementation(project("backends:backend-teavm:sources"))
     implementation(project(":tests:gdx-webgpu-tests"))
-
 }
 
 val mainClassName = "com.monstrous.gdx.tests.webgpu.BuildTeaVM"

@@ -14,7 +14,7 @@
  * limitations under the License.
  ******************************************************************************/
 
-val javaVersion = project.property("java") as String
+val javaVersion = project.property("javaMain") as String
 
 dependencies {
     implementation(project(":gdx-webgpu"))

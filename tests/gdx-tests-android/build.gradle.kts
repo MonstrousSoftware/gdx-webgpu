@@ -3,7 +3,7 @@ plugins {
     id("kotlin-android")
 }
 
-val javaVersion = project.property("java") as String
+val javaVersion = project.property("javaMain") as String
 
 android {
     namespace = "com.monstrous.gdx.tests.webgpu"

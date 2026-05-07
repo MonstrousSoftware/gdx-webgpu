@@ -5,6 +5,8 @@ import java.net.URLEncoder
 var libProjects = mutableSetOf(
     project(":gdx-webgpu"),
     project(":backends:backend-desktop"),
+    project(":backends:backend-desktop-jni"),
+    project(":backends:backend-desktop-ffm"),
     project(":backends:backend-teavm"),
     project(":backends:backend-android")
 )

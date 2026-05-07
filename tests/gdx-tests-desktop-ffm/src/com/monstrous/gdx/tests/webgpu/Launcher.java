@@ -1,0 +1,37 @@
+package com.monstrous.gdx.tests.webgpu;
+
+import com.github.xpenatan.webgpu.JWebGPUBackend;
+import com.monstrous.gdx.tests.webgpu.utils.AutoTestRunner;
+import com.monstrous.gdx.webgpu.application.WebGPUContext;
+import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopApplication;
+import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopApplicationConfiguration;
+
+public class Launcher {
+
+    public static void main(String[] argv) {
+
+        WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
+        config.setWindowedMode(640, 480);
+        config.setTitle("WebGPU");
+        config.backendWebGPU = JWebGPUBackend.WGPU; // prefer WGPU or DAWN
+        config.backend = WebGPUContext.Backend.DEFAULT; // Vulkan, DX12, etc.
+
+        config.enableGPUtiming = false;
+        config.samples = 1;
+
+        config.useVsync(true);
+
+        // new WgDesktopApplication(new SpriteBatchScissorTest(), config);
+        // new WgDesktopApplication(new Scene2dTestScrollPane(), config);
+        // new WgDesktopApplication(new MaterialsTest(), config);
+        // new WgDesktopApplication(new GLTFSkinningMultiple(), config);
+        //new WgDesktopApplication(new DynamicTexture(), config);
+
+
+        new WgDesktopApplication(new Basic3DDynamicShader(), config);
+
+        //new WgDesktopApplication(new AutoTestRunner(), config);
+
+    }
+
+}

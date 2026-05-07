@@ -9,23 +9,22 @@ val javaVersion = JavaVersion.toVersion(project.property("javaMain") as String)
 java {
     sourceCompatibility = javaVersion
     targetCompatibility = javaVersion
+    withJavadocJar()
+    withSourcesJar()
 }
 
 dependencies {
-    val gdxVersion = project.property("gdxVersion") as String
     val jWebGPUVVersion = project.property("jWebGPUVVersion") as String
 
-    api("com.badlogicgames.gdx:gdx:$gdxVersion")
-    compileOnlyApi("com.github.xpenatan.jWebGPU:webgpu-core:$jWebGPUVVersion")
-
+    api(project(":backends:backend-desktop"))
+    api("com.github.xpenatan.jWebGPU:webgpu-jni:$jWebGPUVVersion")
+    api("com.github.xpenatan.jWebGPU:webgpu-jni-desktop:$jWebGPUVVersion")
 }
-
-sourceSets["main"].resources.srcDirs(File("res"))
 
 publishing {
     publications {
         create<MavenPublication>("maven") {
-            artifactId = "gdx-webgpu"
+            artifactId = "backend-desktop-jni"
             from(components["java"])
         }
     }

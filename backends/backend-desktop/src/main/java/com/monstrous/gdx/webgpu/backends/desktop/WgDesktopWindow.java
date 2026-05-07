@@ -52,8 +52,6 @@ public class WgDesktopWindow implements Disposable {
     // Pending resize state — set by resizeCallback, consumed before beginFrame() in update().
     // This avoids acquiring a surface texture at the old size and presenting an empty frame.
     private boolean pendingResize = false;
-    private int pendingResizeWidth;
-    private int pendingResizeHeight;
 
     private final GLFWWindowFocusCallback focusCallback = new GLFWWindowFocusCallback() {
         @Override
@@ -165,8 +163,6 @@ public class WgDesktopWindow implements Disposable {
                 // This avoids acquiring a surface texture at the old size and then
                 // presenting an empty frame (which caused a visible blink during resize).
                 pendingResize = true;
-                pendingResizeWidth = width;
-                pendingResizeHeight = height;
             } else {
                 postRunnable(new Runnable() {
                     @Override
@@ -469,10 +465,19 @@ public class WgDesktopWindow implements Disposable {
             if (pendingResize) {
                 pendingResize = false;
                 graphics.updateFramebufferInfo();
-            if (isListenerInitialized() && pendingResizeWidth > 0 && pendingResizeHeight > 0) {
-                graphics.context.resize(pendingResizeWidth, pendingResizeHeight);
-                listener.resize(graphics.getWidth(), graphics.getHeight());
+                int framebufferWidth = graphics.getBackBufferWidth();
+                int framebufferHeight = graphics.getBackBufferHeight();
+                if (isListenerInitialized() && framebufferWidth > 0 && framebufferHeight > 0) {
+                    graphics.context.resize(framebufferWidth, framebufferHeight);
+                    listener.resize(graphics.getWidth(), graphics.getHeight());
+                }
             }
+
+            // During aggressive live-resize the framebuffer can transiently become 0-sized.
+            // Skip frame acquisition/encoding until the size is valid again.
+            if (graphics.getBackBufferWidth() <= 0 || graphics.getBackBufferHeight() <= 0) {
+                graphics.update();
+                return false;
             }
 
             graphics.context.beginFrame();
@@ -507,8 +512,12 @@ public class WgDesktopWindow implements Disposable {
             if (asyncResized) {
                 asyncResized = false;
                 graphics.updateFramebufferInfo();
-                // graphics.gl20.glViewport(0, 0, graphics.getBackBufferWidth(), graphics.getBackBufferHeight());
-                listener.resize(graphics.getWidth(), graphics.getHeight());
+                int framebufferWidth = graphics.getBackBufferWidth();
+                int framebufferHeight = graphics.getBackBufferHeight();
+                if (framebufferWidth > 0 && framebufferHeight > 0) {
+                    graphics.context.resize(framebufferWidth, framebufferHeight);
+                    listener.resize(graphics.getWidth(), graphics.getHeight());
+                }
                 graphics.update();
                 return true;
             }

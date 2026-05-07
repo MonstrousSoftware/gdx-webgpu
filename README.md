@@ -112,17 +112,20 @@ The `tests/` folder contains a suite of test applications. You can run them on d
 
 ### Desktop
 
-Use the Gradle task `gdx_webgpu_tests_run_desktop`:
+Use the Gradle task `gdx_webgpu_tests_run_desktop_jni`:
 
 ```bash
 # Interactive test chooser (default):
-./gradlew gdx_webgpu_tests_run_desktop
+./gradlew gdx_webgpu_tests_run_desktop_jni
+./gradlew gdx_webgpu_tests_run_desktop_ffm
 
 # Run a single test by class name:
-./gradlew gdx_webgpu_tests_run_desktop --args="Particles3D"
+./gradlew gdx_webgpu_tests_run_desktop_jni --args="Particles3D"
+./gradlew gdx_webgpu_tests_run_desktop_ffm --args="Particles3D"
 
 # Run ALL tests sequentially (auto mode):
-./gradlew gdx_webgpu_tests_run_desktop --args="auto"
+./gradlew gdx_webgpu_tests_run_desktop_jni --args="auto"
+./gradlew gdx_webgpu_tests_run_desktop_ffm --args="auto"
 ```
 
 ### Web (TeaVM)
@@ -172,7 +175,7 @@ Apart from the graphics platform, gdx-webgpu offers some new features with regar
 
 | gdx-webgpu | libgdx | gdx-teavm | jWebGPU |
 |------------|--------|-----------|---------|
-| -SNAPSHOT  |1.14.0  | 1.5.0     | 0.1.13 |
+| -SNAPSHOT  |1.14.0  | 1.5.5     | 0.2.0   |
 | 0.8        |1.14.0  | 1.5.0     | 0.1.13  |
 | 0.7.2      |1.14.0  | 1.4.0     | 0.1.11  |
 | 0.7.1      |1.14.0  | 1.4.0     | 0.1.9   |
@@ -211,12 +214,19 @@ To include the library in your project add the following lines to your `build.gr
 Assuming we want to use the LWJGL3 (=Desktop) platform, add the following to `build.gradle` in the `lwjgl3` module:
 
     dependencies {
-        implementation "io.github.monstroussoftware.gdx-webgpu:backend-desktop:$gdxWebGPUVersion"
+        // Pick one desktop runtime:
+        implementation "io.github.monstroussoftware.gdx-webgpu:backend-desktop-jni:$gdxWebGPUVersion"
+        // or
+        // implementation "io.github.monstroussoftware.gdx-webgpu:backend-desktop-ffm:$gdxWebGPUVersion"
         // comment out the following:
         //  implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
         //  implementation "com.badlogicgames.gdx:gdx-lwjgl3-angle:$gdxVersion"
         //  implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
     }
+
+`backend-desktop-jni` and `backend-desktop-ffm` are wrapper artifacts. They pull in
+`backend-desktop` plus the matching jWebGPU runtime dependencies automatically, so users only
+need to set `gdxWebGPUVersion`.
 
 In the `lwjgl3` module add a starter class called `Launcher.java` with a content as follows:
 

@@ -4,7 +4,7 @@ plugins {
     id("maven-publish")
 }
 
-val javaVersion = JavaVersion.toVersion(project.property("java") as String)
+val javaVersion = JavaVersion.toVersion(project.property("javaMain") as String)
 
 java {
     sourceCompatibility = javaVersion
@@ -13,7 +13,6 @@ java {
 
 dependencies {
     val gdxVersion = project.property("gdxVersion") as String
-    val jWebGPUVVersion = project.property("jWebGPUVVersion") as String
 
     implementation("com.badlogicgames.gdx:gdx:$gdxVersion")
     implementation("com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion")
@@ -21,13 +20,6 @@ dependencies {
     implementation(project(":gdx-webgpu"))
     implementation("org.lwjgl:lwjgl-glfw:3.3.3")
     implementation("org.lwjgl:lwjgl:3.3.3")
-
-    api("com.github.xpenatan.jWebGPU:webgpu-core:$jWebGPUVVersion")
-    api("com.github.xpenatan.jWebGPU:webgpu-desktop:$jWebGPUVVersion:windows_64_dawn")
-    api("com.github.xpenatan.jWebGPU:webgpu-desktop:$jWebGPUVVersion:windows_64_wgpu")
-    api("com.github.xpenatan.jWebGPU:webgpu-desktop:$jWebGPUVVersion:linux_64_wgpu")
-    api("com.github.xpenatan.jWebGPU:webgpu-desktop:$jWebGPUVVersion:mac_arm64_wgpu")
-    api("com.github.xpenatan.jWebGPU:webgpu-desktop:$jWebGPUVVersion:mac_64_wgpu")
 }
 
 java {

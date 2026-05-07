@@ -4,29 +4,29 @@ plugins {
     id("maven-publish")
 }
 
-val javaVersion = JavaVersion.toVersion(project.property("javaMain") as String)
+val javaVersion = JavaVersion.toVersion(project.property("javaFFM") as String)
 
 java {
     sourceCompatibility = javaVersion
     targetCompatibility = javaVersion
+    withJavadocJar()
+    withSourcesJar()
 }
 
 dependencies {
-    val gdxVersion = project.property("gdxVersion") as String
     val jWebGPUVVersion = project.property("jWebGPUVVersion") as String
 
-    api("com.badlogicgames.gdx:gdx:$gdxVersion")
-    compileOnlyApi("com.github.xpenatan.jWebGPU:webgpu-core:$jWebGPUVVersion")
-
+    api(project(":backends:backend-desktop"))
+    api("com.github.xpenatan.jWebGPU:webgpu-ffm:$jWebGPUVVersion")
+    api("com.github.xpenatan.jWebGPU:webgpu-ffm-desktop:$jWebGPUVVersion")
 }
-
-sourceSets["main"].resources.srcDirs(File("res"))
 
 publishing {
     publications {
         create<MavenPublication>("maven") {
-            artifactId = "gdx-webgpu"
+            artifactId = "backend-desktop-ffm"
             from(components["java"])
         }
     }
 }
+

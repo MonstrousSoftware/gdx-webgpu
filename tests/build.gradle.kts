@@ -18,21 +18,8 @@ plugins {
     id("java")
 }
 
-val javaVersion = project.property("java") as String
-
 configure(subprojects - project(":tests:gdx-tests-android")) {
     apply(plugin = "java")
-
-    if (JavaVersion.current().isJava9Compatible) {
-        tasks.withType<JavaCompile> {
-            options.release.set(javaVersion.toInt())
-        }
-    }
-
-    java {
-        sourceCompatibility = JavaVersion.toVersion(javaVersion)
-        targetCompatibility = JavaVersion.toVersion(javaVersion)
-    }
 
     sourceSets["main"].java.srcDirs(File("src"))
     sourceSets["main"].resources.srcDirs(File("res"))
