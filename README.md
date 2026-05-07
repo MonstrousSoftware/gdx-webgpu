@@ -117,12 +117,15 @@ Use the Gradle task `gdx_webgpu_tests_run_desktop_jni`:
 ```bash
 # Interactive test chooser (default):
 ./gradlew gdx_webgpu_tests_run_desktop_jni
+./gradlew gdx_webgpu_tests_run_desktop_ffm
 
 # Run a single test by class name:
 ./gradlew gdx_webgpu_tests_run_desktop_jni --args="Particles3D"
+./gradlew gdx_webgpu_tests_run_desktop_ffm --args="Particles3D"
 
 # Run ALL tests sequentially (auto mode):
 ./gradlew gdx_webgpu_tests_run_desktop_jni --args="auto"
+./gradlew gdx_webgpu_tests_run_desktop_ffm --args="auto"
 ```
 
 ### Web (TeaVM)
@@ -172,7 +175,7 @@ Apart from the graphics platform, gdx-webgpu offers some new features with regar
 
 | gdx-webgpu | libgdx | gdx-teavm | jWebGPU |
 |------------|--------|-----------|---------|
-| -SNAPSHOT  |1.14.0  | 1.5.0     | 0.1.13 |
+| -SNAPSHOT  |1.14.0  | 1.5.5     | 0.2.0   |
 | 0.8        |1.14.0  | 1.5.0     | 0.1.13  |
 | 0.7.2      |1.14.0  | 1.4.0     | 0.1.11  |
 | 0.7.1      |1.14.0  | 1.4.0     | 0.1.9   |
