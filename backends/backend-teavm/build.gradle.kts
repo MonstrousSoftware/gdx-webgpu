@@ -15,7 +15,7 @@ dependencies {
 
     implementation("com.github.xpenatan.gdx-teavm:backend-web:$gdxTeaVMVersion")
     implementation("com.github.xpenatan.jWebGPU:webgpu-web:${jWebGPUVVersion}")
-    implementation("com.github.xpenatan.jWebGPU:webgpu-web-wasm:${jWebGPUVVersion}")
+    implementation("com.github.xpenatan.jWebGPU:webgpu-web_wasm:${jWebGPUVVersion}")
     implementation(project(":gdx-webgpu"))
 }
 
