@@ -96,7 +96,8 @@ public class WgFileTextureArrayData implements WgTextureArrayData {
                 pixmap = tmp;
                 mustDisposePixmap = true;
             }
-            texture.load(pixmap.getPixels(), getWidth(), getHeight(), i);
+            // Pixmaps are converted to RGBA8888 above, so upload with 4 components.
+            texture.load(pixmap.getPixels(), 4, getWidth(), getHeight(), i);
             if (mustDisposePixmap)
                 pixmap.dispose();
         }

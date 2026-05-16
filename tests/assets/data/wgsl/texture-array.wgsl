@@ -33,9 +33,14 @@ fn vs_main(in: VertexInput) -> VertexOutput {
 @fragment
 fn fs_main(in : VertexOutput) -> @location(0) vec4f {
 
-    let currentLayer = textureSample(diffuseTexture, diffuseSampler, in.texCoord.xy, i32(round(in.texCoord.z)));
-    let nextLayer = textureSample(diffuseTexture, diffuseSampler, in.texCoord.xy, i32(round(in.texCoord.z))+1);
-    let interp:f32 = fract(in.texCoord.z - 0.5);
+    let layerCount = i32(textureNumLayers(diffuseTexture));
+    let z = clamp(in.texCoord.z, 0.0, f32(layerCount - 1));
+    let currentLayerIndex = i32(floor(z));
+    let nextLayerIndex = min(currentLayerIndex + 1, layerCount - 1);
+
+    let currentLayer = textureSample(diffuseTexture, diffuseSampler, in.texCoord.xy, currentLayerIndex);
+    let nextLayer = textureSample(diffuseTexture, diffuseSampler, in.texCoord.xy, nextLayerIndex);
+    let interp:f32 = fract(z);
     let color = mix(currentLayer.rgb, nextLayer.rgb, interp);
     return vec4f(color.rgb, 1.0);
 }
