@@ -274,5 +274,3 @@ public class FogOfWar2DTest extends GdxTest {
         fogTexture.dispose();
     }
 }
-
-
