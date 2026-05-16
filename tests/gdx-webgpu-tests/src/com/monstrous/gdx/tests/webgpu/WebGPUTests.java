@@ -74,7 +74,8 @@ public class WebGPUTests {
                     SpriteBatchUniforms.class,
                     SpriteBatchExtraVertAttrib.class,
                     SpriteBatchWideIndices.class,
-                    DynamicTexture.class
+                    DynamicTexture.class,
+                    FogOfWar2DTest.class
 
             // @on
 
