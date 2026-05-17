@@ -118,6 +118,8 @@ public class MaterialUniformLayout {
      */
     public MaterialUniformLayout registerUniform(String name, int type, UniformResolver resolver) {
         if (sealed) throw new IllegalStateException("MaterialUniformLayout is already sealed.");
+        if (hasUniform(name))
+            throw new IllegalArgumentException("Duplicate material uniform: " + name);
         currentByteOffset = align(currentByteOffset, alignmentOf(type));
         uniforms.add(new UniformEntry(name, type, currentByteOffset, resolver));
         currentByteOffset += byteSize(type);
@@ -134,6 +136,9 @@ public class MaterialUniformLayout {
     public MaterialUniformLayout registerTexture(String textureName, String samplerName,
                                                   TextureResolver resolver) {
         if (sealed) throw new IllegalStateException("MaterialUniformLayout is already sealed.");
+        if (hasTexture(textureName) || hasSampler(samplerName))
+            throw new IllegalArgumentException("Duplicate material texture or sampler: "
+                    + textureName + " / " + samplerName);
         int texId     = nextBindingId++;
         int samplerId = nextBindingId++;
         textures.add(new TextureEntry(textureName, samplerName, texId, samplerId, resolver));
@@ -171,6 +176,34 @@ public class MaterialUniformLayout {
 
     public boolean isSealed() { return sealed; }
 
+    public int getNextBindingId() {
+        return nextBindingId;
+    }
+
+    public boolean hasUniform(String name) {
+        for (UniformEntry entry : uniforms) {
+            if (entry.name.equals(name))
+                return true;
+        }
+        return false;
+    }
+
+    public boolean hasTexture(String textureName) {
+        for (TextureEntry entry : textures) {
+            if (entry.textureName.equals(textureName))
+                return true;
+        }
+        return false;
+    }
+
+    public boolean hasSampler(String samplerName) {
+        for (TextureEntry entry : textures) {
+            if (entry.samplerName.equals(samplerName))
+                return true;
+        }
+        return false;
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
@@ -201,4 +234,3 @@ public class MaterialUniformLayout {
         return (value + alignment - 1) & -alignment;
     }
 }
-
