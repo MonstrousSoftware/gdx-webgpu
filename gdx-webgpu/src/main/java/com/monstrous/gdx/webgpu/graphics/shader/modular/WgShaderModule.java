@@ -9,16 +9,16 @@ public interface WgShaderModule {
         return getClass().getSimpleName();
     }
 
-    default String getSignature(ShaderModuleContext context) {
+    default String getSignature() {
         return getClass().getName();
     }
 
-    default void configureDefines(ShaderDefines defines, ShaderModuleContext context) {
+    default void configureDefines(ShaderDefines defines) {
     }
 
-    default void configureLayout(ShaderLayoutBuilder layout, ShaderModuleContext context) {
+    default void configureLayout(ShaderLayoutBuilder layout) {
     }
 
-    default void contribute(WgShaderTemplate template, ShaderModuleContext context) {
+    default void contribute(WgShaderTemplate template) {
     }
 }

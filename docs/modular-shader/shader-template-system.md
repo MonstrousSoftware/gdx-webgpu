@@ -99,7 +99,8 @@ com.monstrous.gdx.webgpu.graphics.shader.modular
 Current shared classes:
 
 1. `WgShaderModule`
-2. `ShaderModuleContext`
+
+There is no shader-module context object. Modules should carry the data they need through their own constructor/configuration fields instead of receiving a generic context.
 
 ## Template Markers
 
@@ -172,12 +173,27 @@ Modules are plain Java objects that participate in an external build flow.
 ```java
 public interface WgShaderModule {
     default String getName() { return getClass().getSimpleName(); }
-    default String getSignature(ShaderModuleContext context) { return getClass().getName(); }
-    default void configureDefines(ShaderDefines defines, ShaderModuleContext context) {}
-    default void configureLayout(ShaderLayoutBuilder layout, ShaderModuleContext context) {}
-    default void contribute(WgShaderTemplate template, ShaderModuleContext context) {}
+    default String getSignature() { return getClass().getName(); }
+    default void configureDefines(ShaderDefines defines) {}
+    default void configureLayout(ShaderLayoutBuilder layout) {}
+    default void contribute(WgShaderTemplate template) {}
 }
 ```
+
+Modules are self-contained. For example, a model-batch fog module receives its texture and world bounds when constructed:
+
+```java
+public final class FogOfWarShaderModule implements WgShaderModule {
+    private final WgTexture fogTexture;
+    private final Vector4 worldBounds;
+
+    public void configureLayout(ShaderLayoutBuilder layout) {
+        ...
+    }
+}
+```
+
+Future sprite, depth, font, and utility modules should follow the same pattern: pass module-specific data directly to the module instead of adding a shared context abstraction.
 
 `WgShaderTemplate.build(...)` does not call those hooks automatically in version `0.1`. The caller is responsible for this order:
 
@@ -215,7 +231,7 @@ ShaderLayoutBuilder layout = new ShaderLayoutBuilder()
 // caller invokes module hooks here
 
 layout.apply();
-ShaderBuildResult result = template.build(defines, layout, modules, context);
+ShaderBuildResult result = template.build(defines, layout, modules);
 
 WgModelBatch.Config config = new WgModelBatch.Config();
 config.shaderSource = result.shaderSourceForPipeline;

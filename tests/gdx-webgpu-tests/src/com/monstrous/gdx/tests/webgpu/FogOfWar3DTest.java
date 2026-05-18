@@ -19,7 +19,6 @@ import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.MaterialUniformLayout;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.MaterialsCache;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
-import com.monstrous.gdx.webgpu.graphics.shader.modular.ShaderModuleContext;
 import com.monstrous.gdx.webgpu.graphics.shader.modular.WgShaderModule;
 import com.monstrous.gdx.webgpu.graphics.shader.modular.layout.ShaderLayoutBuilder;
 import com.monstrous.gdx.webgpu.graphics.shader.modular.layout.TextureBinding;
@@ -106,17 +105,17 @@ public class FogOfWar3DTest extends GdxTest {
         }
 
         @Override
-        public String getSignature(ShaderModuleContext context) {
+        public String getSignature() {
             return getClass().getName();
         }
 
         @Override
-        public void configureDefines(ShaderDefines defines, ShaderModuleContext context) {
+        public void configureDefines(ShaderDefines defines) {
             defines.define("FOG_OF_WAR");
         }
 
         @Override
-        public void configureLayout(ShaderLayoutBuilder layout, ShaderModuleContext context) {
+        public void configureLayout(ShaderLayoutBuilder layout) {
             layout.addUniform(ShaderLayoutBuilder.SCOPE_MATERIAL, "fogWorld", UniformType.VEC4,
                 (mat, binder, name) -> binder.setUniform(name, worldBounds));
             fogBinding = layout.addTexture(ShaderLayoutBuilder.SCOPE_MATERIAL, "fogTexture", "fogSampler",
@@ -124,7 +123,7 @@ public class FogOfWar3DTest extends GdxTest {
         }
 
         @Override
-        public void contribute(WgShaderTemplate template, ShaderModuleContext context) {
+        public void contribute(WgShaderTemplate template) {
             template.insert("material.uniformFields", WgslSnippet.text("    fogWorld: vec4f,\n"));
             template.insert("material.bindings", WgslSnippet.text(
                 "@group(1) @binding(" + fogBinding.textureBindingId + ") var fogTexture: texture_2d<f32>;\n"
@@ -206,18 +205,17 @@ public class FogOfWar3DTest extends GdxTest {
         ShaderLayoutBuilder layout = new ShaderLayoutBuilder();
         layout.setMaterialLayout(materialLayout);
 
-        ShaderModuleContext context = new ShaderModuleContext(null, null, null);
-        module.configureLayout(layout, context);
+        module.configureLayout(layout);
         layout.apply();
 
         WgShaderTemplate template = new WgShaderTemplate(Gdx.files.classpath("shaders/modelbatch.template.wgsl"));
         ShaderDefines defines = new ShaderDefines();
-        module.configureDefines(defines, context);
-        module.contribute(template, context);
+        module.configureDefines(defines);
+        module.contribute(template);
 
         Array<WgShaderModule> modules = new Array<>();
         modules.add(module);
-        ShaderBuildResult result = template.build(defines, layout, modules, context);
+        ShaderBuildResult result = template.build(defines, layout, modules);
 
         config.materials = new MaterialsCache(config.maxMaterials, materialLayout);
         return result.shaderSourceForPipeline;

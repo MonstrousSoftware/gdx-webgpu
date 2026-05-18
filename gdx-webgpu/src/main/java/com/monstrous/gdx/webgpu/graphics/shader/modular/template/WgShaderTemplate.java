@@ -2,7 +2,6 @@ package com.monstrous.gdx.webgpu.graphics.shader.modular.template;
 
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.utils.Array;
-import com.monstrous.gdx.webgpu.graphics.shader.modular.ShaderModuleContext;
 import com.monstrous.gdx.webgpu.graphics.shader.modular.WgShaderModule;
 import com.monstrous.gdx.webgpu.graphics.shader.modular.layout.ShaderLayoutBuilder;
 
@@ -74,17 +73,13 @@ public final class WgShaderTemplate {
         }
     }
 
-    public ShaderBuildResult build(ShaderDefines defines, ShaderLayoutBuilder layout, Array<WgShaderModule> modules) {
+    public ShaderBuildResult build(ShaderDefines defines, ShaderLayoutBuilder layout,
+                                   Array<WgShaderModule> modules) {
         return build(defines, layout, modules, null);
     }
 
-    public ShaderBuildResult build(ShaderDefines defines, ShaderLayoutBuilder layout, Array<WgShaderModule> modules,
-                                   ShaderModuleContext context) {
-        return build(defines, layout, modules, context, null);
-    }
-
-    public ShaderBuildResult build(ShaderDefines defines, ShaderLayoutBuilder layout, Array<WgShaderModule> modules,
-                                   ShaderModuleContext context, ShaderTemplateConfig config) {
+    public ShaderBuildResult build(ShaderDefines defines, ShaderLayoutBuilder layout,
+                                   Array<WgShaderModule> modules, ShaderTemplateConfig config) {
         contributions.clear();
         String assembled = assemble();
         String definesSource = defines == null ? "" : defines.buildSource();
@@ -95,7 +90,7 @@ public final class WgShaderTemplate {
         if (modules != null) {
             for (WgShaderModule module : modules) {
                 moduleNames.add(module.getName());
-                moduleSignatures.add(module.getSignature(context));
+                moduleSignatures.add(module.getSignature());
             }
         }
         String hashInput = templateName + '\n' + definesSource + '\n' + assembled + '\n'
