@@ -58,6 +58,7 @@ import com.monstrous.gdx.webgpu.graphics.ShaderPrefix;
  *     .build();
  * }</pre>
  */
+@Deprecated
 public final class WgSpriteBatchShaderBuilder {
 
     // =========================================================================

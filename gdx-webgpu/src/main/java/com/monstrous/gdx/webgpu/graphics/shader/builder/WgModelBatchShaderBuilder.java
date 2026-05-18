@@ -73,6 +73,7 @@ package com.monstrous.gdx.webgpu.graphics.shader.builder;
  *     .build();
  * }</pre>
  */
+@Deprecated
 public final class WgModelBatchShaderBuilder {
 
     // =========================================================================

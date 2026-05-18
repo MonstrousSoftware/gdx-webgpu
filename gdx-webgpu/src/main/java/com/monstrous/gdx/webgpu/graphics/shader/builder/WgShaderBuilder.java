@@ -57,6 +57,7 @@ import java.util.Map;
  *                    new WgShaderChunk("world_pos", "   out.worldPos = myTransform();\n"));
  * }</pre>
  */
+@Deprecated
 public class WgShaderBuilder {
 
     private final LinkedHashMap<String, WgShaderChunk> chunks = new LinkedHashMap<>();

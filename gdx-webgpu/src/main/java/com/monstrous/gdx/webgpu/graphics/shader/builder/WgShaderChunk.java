@@ -52,6 +52,7 @@ import java.util.Map;
  *     .build();
  * }</pre>
  */
+@Deprecated
 public final class WgShaderChunk {
 
     /** Unique name within its parent ({@link WgShaderBuilder} or parent chunk). */
