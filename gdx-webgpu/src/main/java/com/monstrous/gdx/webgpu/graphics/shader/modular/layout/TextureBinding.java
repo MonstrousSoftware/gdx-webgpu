@@ -1,4 +1,4 @@
-package com.monstrous.gdx.webgpu.graphics.shader.template;
+package com.monstrous.gdx.webgpu.graphics.shader.modular.layout;
 
 public final class TextureBinding {
     public final String scope;

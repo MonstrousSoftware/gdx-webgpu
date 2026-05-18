@@ -1,4 +1,4 @@
-package com.monstrous.gdx.webgpu.graphics.shader.template;
+package com.monstrous.gdx.webgpu.graphics.shader.modular.template;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

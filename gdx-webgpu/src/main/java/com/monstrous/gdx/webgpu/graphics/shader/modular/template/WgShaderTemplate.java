@@ -1,7 +1,10 @@
-package com.monstrous.gdx.webgpu.graphics.shader.template;
+package com.monstrous.gdx.webgpu.graphics.shader.modular.template;
 
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.utils.Array;
+import com.monstrous.gdx.webgpu.graphics.shader.modular.ShaderModuleContext;
+import com.monstrous.gdx.webgpu.graphics.shader.modular.WgShaderModule;
+import com.monstrous.gdx.webgpu.graphics.shader.modular.layout.ShaderLayoutBuilder;
 
 import java.security.MessageDigest;
 import java.util.LinkedHashMap;

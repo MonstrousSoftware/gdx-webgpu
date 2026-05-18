@@ -1,8 +1,9 @@
-package com.monstrous.gdx.webgpu.graphics.shader.template;
+package com.monstrous.gdx.webgpu.graphics.shader.modular.layout;
 
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ObjectSet;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.MaterialUniformLayout;
+import com.monstrous.gdx.webgpu.graphics.shader.modular.template.ShaderTemplateException;
 
 public final class ShaderLayoutBuilder {
     public static final String SCOPE_MATERIAL = "material";

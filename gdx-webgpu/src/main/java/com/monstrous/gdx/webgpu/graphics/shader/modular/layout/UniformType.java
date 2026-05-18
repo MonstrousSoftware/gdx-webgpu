@@ -1,4 +1,4 @@
-package com.monstrous.gdx.webgpu.graphics.shader.template;
+package com.monstrous.gdx.webgpu.graphics.shader.modular.layout;
 
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.MaterialUniformLayout;
 

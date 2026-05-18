@@ -19,15 +19,15 @@ import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.MaterialUniformLayout;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.MaterialsCache;
 import com.monstrous.gdx.webgpu.graphics.g3d.utils.WgModelBuilder;
-import com.monstrous.gdx.webgpu.graphics.shader.template.ShaderBuildResult;
-import com.monstrous.gdx.webgpu.graphics.shader.template.ShaderDefines;
-import com.monstrous.gdx.webgpu.graphics.shader.template.ShaderLayoutBuilder;
-import com.monstrous.gdx.webgpu.graphics.shader.template.ShaderModuleContext;
-import com.monstrous.gdx.webgpu.graphics.shader.template.TextureBinding;
-import com.monstrous.gdx.webgpu.graphics.shader.template.UniformType;
-import com.monstrous.gdx.webgpu.graphics.shader.template.WgShaderModule;
-import com.monstrous.gdx.webgpu.graphics.shader.template.WgShaderTemplate;
-import com.monstrous.gdx.webgpu.graphics.shader.template.WgslSnippet;
+import com.monstrous.gdx.webgpu.graphics.shader.modular.ShaderModuleContext;
+import com.monstrous.gdx.webgpu.graphics.shader.modular.WgShaderModule;
+import com.monstrous.gdx.webgpu.graphics.shader.modular.layout.ShaderLayoutBuilder;
+import com.monstrous.gdx.webgpu.graphics.shader.modular.layout.TextureBinding;
+import com.monstrous.gdx.webgpu.graphics.shader.modular.layout.UniformType;
+import com.monstrous.gdx.webgpu.graphics.shader.modular.template.ShaderBuildResult;
+import com.monstrous.gdx.webgpu.graphics.shader.modular.template.ShaderDefines;
+import com.monstrous.gdx.webgpu.graphics.shader.modular.template.WgShaderTemplate;
+import com.monstrous.gdx.webgpu.graphics.shader.modular.template.WgslSnippet;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 
 import java.nio.ByteBuffer;
@@ -44,9 +44,9 @@ import java.util.Arrays;
  * No changes are made to the original shader file.
  *
  * Controls:
- *   WASD / Arrow keys — move player
- *   F1                — toggle fog on/off
- *   F2                — reset explored map
+ *   WASD / Arrow keys - move player
+ *   F1                - toggle fog on/off
+ *   F2                - reset explored map
  */
 public class FogOfWar3DTest extends GdxTest {
 
@@ -302,7 +302,7 @@ public class FogOfWar3DTest extends GdxTest {
         // forward = direction camera is facing projected onto the XZ plane
         float fwdX =  MathUtils.sin(yawRad);
         float fwdZ = -MathUtils.cos(yawRad);
-        // right = 90° clockwise from forward on XZ
+        // right = 90 degrees clockwise from forward on XZ
         float rgtX =  MathUtils.cos(yawRad);
         float rgtZ =  MathUtils.sin(yawRad);
 

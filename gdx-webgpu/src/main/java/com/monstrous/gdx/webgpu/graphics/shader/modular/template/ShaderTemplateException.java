@@ -1,4 +1,4 @@
-package com.monstrous.gdx.webgpu.graphics.shader.template;
+package com.monstrous.gdx.webgpu.graphics.shader.modular.template;
 
 /** Runtime exception for shader template/module configuration and assembly failures. */
 public class ShaderTemplateException extends RuntimeException {

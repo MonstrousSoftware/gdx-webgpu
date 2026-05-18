@@ -1,4 +1,8 @@
-package com.monstrous.gdx.webgpu.graphics.shader.template;
+package com.monstrous.gdx.webgpu.graphics.shader.modular;
+
+import com.monstrous.gdx.webgpu.graphics.shader.modular.layout.ShaderLayoutBuilder;
+import com.monstrous.gdx.webgpu.graphics.shader.modular.template.ShaderDefines;
+import com.monstrous.gdx.webgpu.graphics.shader.modular.template.WgShaderTemplate;
 
 public interface WgShaderModule {
     default String getName() {
