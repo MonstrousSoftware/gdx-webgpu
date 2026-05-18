@@ -59,6 +59,7 @@ import java.util.Locale;
  * - A post-process shader detects edges where object IDs differ between pixels
  * - Front models naturally occlude back model outlines due to depth testing
  * - No outline blending artifacts between overlapping models
+ * - The ID output is added through WgIDShaderProvider's model-batch shader template module
  */
 public class EdgeDetectionOutlineTest extends GdxTest {
 
@@ -201,11 +202,11 @@ public class EdgeDetectionOutlineTest extends GdxTest {
         final int MAP = 2048;
         shadowCamFbo = new WgFrameBuffer(MAP, MAP, true);
 
-        // Setup model batch with edge detection shader provider
+        // Use the template-based ID shader provider to generate color + object-ID MRT output.
         WgModelBatch.Config config = new WgModelBatch.Config();
         config.maxInstances = 100;
         config.numBones = 100;  // Increased to support SillyDancing model (65 bones)
-        modelBatch = new WgModelBatch(new WgIDShaderProvider(config, true));
+        modelBatch = new WgModelBatch(new WgIDShaderProvider(config, true, true));
         disposables.add(modelBatch);
 
         // Improved camera setup

@@ -288,9 +288,10 @@ fn vs_main(in: VertexInput, @builtin(instance_index) instance: u32) -> VertexOut
    return out;
 }
 
-
+// @section fragment.signature
 @fragment
 fn fs_main(in : VertexOutput) -> @location(0) vec4f {
+// @end
 #ifdef TEXTURE_COORDINATE
    var color = in.color * textureSample(diffuseTexture, diffuseSampler, in.uv);
 #else
@@ -442,8 +443,10 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4f {
     //return vec4f(in.fogDepth, 0, 0, 1);
     //return vec4f(ambient, 1.0);
 
+// @section fragment.return
     return color;
 };
+// @end
 
 // ----- Poisson Disk PCF helpers (shared by single shadow map and CSM) -----
 // 16-sample Poisson disk distributed in the unit circle

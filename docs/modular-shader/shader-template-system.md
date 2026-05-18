@@ -18,17 +18,18 @@ Implemented:
 1. `modelbatch.template.wgsl` exists and is intended to match `modelbatch.wgsl` when no modules are applied.
 2. The model-batch template is a phase-1 template copied from `modelbatch.wgsl` with a small number of additive slots.
 3. The published model-batch slots are `material.uniformFields`, `material.bindings`, `helpers`, and `color.final`.
-4. `WgShaderTemplate` can build complete WGSL from text-backed and file-backed templates.
-5. `WgslSnippet` supports text snippets, file snippets, and named `@block` snippets.
-6. `ShaderDefines` can prepend generated defines to assembled source.
-7. Template output can be passed to `WgDefaultShader` through `WgModelBatch.Config.shaderSource`.
-8. `FogOfWar3DTest` is the proof case for external template assembly.
+4. The published model-batch sections are `fragment.signature` and `fragment.return`.
+5. `WgShaderTemplate` can build complete WGSL from text-backed and file-backed templates.
+6. `WgslSnippet` supports text snippets, file snippets, and named `@block` snippets.
+7. `ShaderDefines` can prepend generated defines to assembled source.
+8. Template output can be passed to `WgDefaultShader` through `WgModelBatch.Config.shaderSource`.
+9. `FogOfWar3DTest`, `MRTTest3D`, and `WgIDShaderProvider` are the current proof cases for external template assembly.
 
 Not complete yet:
 
 1. `depth.template.wgsl`
 2. `spritebatch.template.wgsl`
-3. `@section` regions in `modelbatch.template.wgsl`
+3. broad `@section` coverage in `modelbatch.template.wgsl` beyond the current fragment output sections
 4. `Surface` data model in `modelbatch.template.wgsl`
 5. automatic module lifecycle orchestration inside `WgShaderTemplate.build(...)`; callers currently invoke `configureLayout(...)`, `configureDefines(...)`, and `contribute(...)` before calling `build(...)`
 6. complete supported include workflow, documentation, and coverage
@@ -142,7 +143,14 @@ fn readSurface(in: VertexOutput) -> Surface {
 // @end
 ```
 
-Sections are part of the target architecture. `modelbatch.template.wgsl` does not publish sections yet.
+Sections are part of the target architecture. `modelbatch.template.wgsl` currently publishes only the sections needed by the first MRT proof cases.
+
+Current model-batch sections:
+
+1. `fragment.signature` lets modules replace the fragment entry-point return type.
+2. `fragment.return` lets modules replace the final fragment return block.
+
+These two sections support MRT modules such as normal-output and object-ID-output without exposing arbitrary source replacement.
 
 ### `@block`
 
@@ -295,7 +303,7 @@ Generated source should remain easy to inspect. Snippet insertion emits comments
 
 ## Proof Case
 
-`FogOfWar3DTest` is the current proof case. It should demonstrate:
+`FogOfWar3DTest` is the material-layout and color-slot proof case. It should demonstrate:
 
 1. external template assembly
 2. module WGSL contribution to `color.final`
@@ -305,3 +313,17 @@ Generated source should remain easy to inspect. Snippet insertion emits comments
 6. generated material layout passed through `WgModelBatch.Config.materials`
 
 This proof case must not require template-specific code in `WgDefaultShader`.
+
+`MRTTest3D` is the fragment-output section proof case. It should demonstrate:
+
+1. `helpers` slot contribution for a custom fragment output struct
+2. `fragment.signature` replacement for an MRT return type
+3. `fragment.return` replacement for writing color and normal attachments
+4. generated WGSL passed through `WgModelBatch.Config.shaderSource`
+
+`WgIDShaderProvider` is the object-ID output proof case used by picking and edge-detection outline tests. It should demonstrate:
+
+1. `material.uniformFields` contribution for `colored_id`
+2. `color.final` contribution for single-target ID output
+3. `fragment.signature` and `fragment.return` replacement for MRT color plus ID output
+4. compatibility with existing `WgIDShader` material layout extension

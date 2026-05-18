@@ -32,6 +32,7 @@ import com.github.xpenatan.webgpu.WGPUTextureFormat;
  * 3D Model Picking Test using MRT (Multiple Render Targets).
  * Tests picking with static geometry, morph models, and animated skeletal models.
  * Renders models with picking IDs encoded as material attributes.
+ * Uses WgIDShaderProvider's model-batch shader template module to add the MRT ID output.
  */
 public class Picking3DTest extends GdxTest {
 
@@ -67,10 +68,10 @@ public class Picking3DTest extends GdxTest {
         };
         mrtFbo = new WgFrameBuffer(formats, WIDTH, HEIGHT, true);
 
-        // Build MRT shader with picking ID support
+        // Use the template-based ID shader provider, preserving the explicit IDs assigned below.
         WgModelBatch.Config config = new WgModelBatch.Config();
         config.numBones = 80; // For animated models
-        modelBatch = new WgModelBatch(new WgIDShaderProvider(config, true));
+        modelBatch = new WgModelBatch(new WgIDShaderProvider(config, true, false));
 
         cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         cam.position.set(10, 10, 10);

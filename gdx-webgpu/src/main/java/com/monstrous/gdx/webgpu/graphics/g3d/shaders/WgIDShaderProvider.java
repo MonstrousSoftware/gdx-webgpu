@@ -1,22 +1,63 @@
 package com.monstrous.gdx.webgpu.graphics.g3d.shaders;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.Shader;
+import com.badlogic.gdx.utils.Array;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.IdAttribute;
-import com.monstrous.gdx.webgpu.graphics.shader.builder.WgModelBatchShaderBuilder;
-import com.monstrous.gdx.webgpu.graphics.shader.builder.WgShaderChunk;
+import com.monstrous.gdx.webgpu.graphics.shader.modular.WgShaderModule;
+import com.monstrous.gdx.webgpu.graphics.shader.modular.template.ShaderBuildResult;
+import com.monstrous.gdx.webgpu.graphics.shader.modular.template.ShaderDefines;
+import com.monstrous.gdx.webgpu.graphics.shader.modular.template.WgShaderTemplate;
+import com.monstrous.gdx.webgpu.graphics.shader.modular.template.WgslSnippet;
 
 /**
  * Shader to render encoded ID to the color.
  */
 public class WgIDShaderProvider extends WgDefaultShaderProvider {
 
-    private static final String PICKING_SHADER_SOURCE_MRT = buildPickingShaderSourceMRT();
-    private static final String PICKING_SHADER_SOURCE_SINGLE = buildPickingShaderSourceSingle();
+    private static String pickingShaderSourceMRT;
+    private static String pickingShaderSourceSingle;
     private final boolean pickingUseMRT;
     private boolean autoSetId;
     private int nextId = 1;
+
+    private static class PickingIdShaderModule implements WgShaderModule {
+        private final boolean useMrt;
+
+        PickingIdShaderModule(boolean useMrt) {
+            this.useMrt = useMrt;
+        }
+
+        @Override
+        public String getSignature() {
+            return getClass().getName() + ":mrt=" + useMrt;
+        }
+
+        @Override
+        public void contribute(WgShaderTemplate template) {
+            template.insert("material.uniformFields", WgslSnippet.text("    colored_id: vec4f,\n"));
+            if (useMrt) {
+                template.insert("helpers", WgslSnippet.text(
+                        "struct FragmentOutput {\n"
+                      + "    @location(0) color : vec4f,\n"
+                      + "    @location(1) colored_id : vec4f,\n"
+                      + "};\n"));
+                template.replaceSection("fragment.signature", WgslSnippet.text(
+                        "@fragment\n"
+                      + "fn fs_main(in : VertexOutput) -> FragmentOutput {\n"));
+                template.replaceSection("fragment.return", WgslSnippet.text(
+                        "    var output: FragmentOutput;\n"
+                      + "    output.color = color;\n"
+                      + "    output.colored_id = material.colored_id;\n"
+                      + "    return output;\n"
+                      + "};\n"));
+            } else {
+                template.insert("color.final", WgslSnippet.text("    color = material.colored_id;\n"));
+            }
+        }
+    }
 
     public WgIDShaderProvider(WgModelBatch.Config config) {
         this(config, false, true);
@@ -54,59 +95,31 @@ public class WgIDShaderProvider extends WgDefaultShaderProvider {
             }
         }
 
-        pickingConfig.shaderSource = pickingUseMRT ? PICKING_SHADER_SOURCE_MRT : PICKING_SHADER_SOURCE_SINGLE;
+        pickingConfig.shaderSource = pickingUseMRT ? getPickingShaderSourceMRT() : getPickingShaderSourceSingle();
 
         return new WgIDShader(renderable, pickingConfig);
     }
 
-    private static String buildPickingShaderSourceMRT() {
-        return WgModelBatchShaderBuilder.defaultModelBatch()
-                .replaceChunk(WgModelBatchShaderBuilder.STRUCT_MATERIAL_UNIFORMS,
-                        new WgShaderChunk(WgModelBatchShaderBuilder.STRUCT_MATERIAL_UNIFORMS,
-                                "struct MaterialUniforms {\n"
-                              + "    diffuseColor: vec4f,\n"
-                              + "    shininess: f32,\n"
-                              + "    roughnessFactor: f32,\n"
-                              + "    metallicFactor: f32,\n"
-                              + "    colored_id: vec4f,\n"
-                              + "};\n"))
-                .insertBefore(WgModelBatchShaderBuilder.FS_SIGNATURE,
-                        new WgShaderChunk("mrt_output_struct",
-                                "struct FragmentOutput {\n"
-                              + "    @location(0) color : vec4f,\n"
-                              + "    @location(1) colored_id : vec4f,\n"
-                              + "};\n"))
-                .replaceChunk(WgModelBatchShaderBuilder.FS_SIGNATURE,
-                        new WgShaderChunk(WgModelBatchShaderBuilder.FS_SIGNATURE,
-                                "@fragment\n"
-                              + "fn fs_main(in : VertexOutput) -> FragmentOutput {\n"))
-                .replaceChunk(WgModelBatchShaderBuilder.FS_RETURN,
-                        new WgShaderChunk(WgModelBatchShaderBuilder.FS_RETURN,
-                                "    var output: FragmentOutput;\n"
-                              + "    output.color = color;\n"
-                              + "    output.colored_id = material.colored_id;\n"
-                              + "    return output;\n"
-                              + "};\n"))
-                .build();
+    private static String getPickingShaderSourceMRT() {
+        if (pickingShaderSourceMRT == null)
+            pickingShaderSourceMRT = buildPickingShaderSource(true);
+        return pickingShaderSourceMRT;
     }
 
-    private static String buildPickingShaderSourceSingle() {
-        return WgModelBatchShaderBuilder.defaultModelBatch()
-                .replaceChunk(WgModelBatchShaderBuilder.STRUCT_MATERIAL_UNIFORMS,
-                        new WgShaderChunk(WgModelBatchShaderBuilder.STRUCT_MATERIAL_UNIFORMS,
-                                "struct MaterialUniforms {\n"
-                              + "    diffuseColor: vec4f,\n"
-                              + "    shininess: f32,\n"
-                              + "    roughnessFactor: f32,\n"
-                              + "    metallicFactor: f32,\n"
-                              + "    colored_id: vec4f,\n"
-                              + "};\n"))
-                // Keep the original FS_SIGNATURE (returns a single @location(0) vec4f) and only replace the return
-                .replaceChunk(WgModelBatchShaderBuilder.FS_RETURN,
-                        new WgShaderChunk(WgModelBatchShaderBuilder.FS_RETURN,
-                                "    color = material.colored_id;\n"
-                              + "    return color;\n"
-                              + "};\n"))
-                .build();
+    private static String getPickingShaderSourceSingle() {
+        if (pickingShaderSourceSingle == null)
+            pickingShaderSourceSingle = buildPickingShaderSource(false);
+        return pickingShaderSourceSingle;
+    }
+
+    private static String buildPickingShaderSource(boolean useMrt) {
+        WgShaderTemplate template = new WgShaderTemplate(Gdx.files.classpath("shaders/modelbatch.template.wgsl"));
+        PickingIdShaderModule module = new PickingIdShaderModule(useMrt);
+        module.contribute(template);
+
+        Array<WgShaderModule> modules = new Array<>();
+        modules.add(module);
+        ShaderBuildResult result = template.build(new ShaderDefines(), null, modules);
+        return result.shaderSourceForPipeline;
     }
 }

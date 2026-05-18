@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
+import com.badlogic.gdx.utils.Array;
 import com.github.xpenatan.webgpu.WGPUTextureFormat;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
@@ -17,9 +18,12 @@ import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelInstance;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLTFModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgModelLoader;
-import com.monstrous.gdx.webgpu.graphics.shader.builder.WgModelBatchShaderBuilder;
-import com.monstrous.gdx.webgpu.graphics.shader.builder.WgShaderChunk;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDefaultShaderProvider;
+import com.monstrous.gdx.webgpu.graphics.shader.modular.WgShaderModule;
+import com.monstrous.gdx.webgpu.graphics.shader.modular.template.ShaderBuildResult;
+import com.monstrous.gdx.webgpu.graphics.shader.modular.template.ShaderDefines;
+import com.monstrous.gdx.webgpu.graphics.shader.modular.template.WgShaderTemplate;
+import com.monstrous.gdx.webgpu.graphics.shader.modular.template.WgslSnippet;
 import com.monstrous.gdx.webgpu.graphics.utils.WgFrameBuffer;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 
@@ -28,6 +32,29 @@ import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
  * and Normal attachments.
  */
 public class MRTTest3D extends GdxTest {
+    private static class NormalMrtShaderModule implements WgShaderModule {
+        @Override
+        public void contribute(WgShaderTemplate template) {
+            template.insert("helpers", WgslSnippet.text(
+                    "struct FragmentOutput {\n"
+                  + "    @location(0) color : vec4f,\n"
+                  + "    @location(1) normal : vec4f,\n"
+                  + "};\n"));
+            template.replaceSection("fragment.signature", WgslSnippet.text(
+                    "@fragment\n"
+                  + "fn fs_main(in : VertexOutput) -> FragmentOutput {\n"));
+            template.replaceSection("fragment.return", WgslSnippet.text(
+                    "    var fragOut: FragmentOutput;\n"
+                  + "    fragOut.color = color;\n"
+                  + "    #ifdef LIGHTING\n"
+                  + "       fragOut.normal = vec4f(normal * 0.5 + 0.5, 1.0);\n"
+                  + "    #else\n"
+                  + "       fragOut.normal = vec4f(normalize(in.normal) * 0.5 + 0.5, 1.0);\n"
+                  + "    #endif\n"
+                  + "    return fragOut;\n"
+                  + "};\n"));
+        }
+    }
 
 
     WgModelBatch modelBatch;
@@ -53,35 +80,10 @@ public class MRTTest3D extends GdxTest {
         };
         mrtFbo = new WgFrameBuffer(formats, WIDTH, HEIGHT, true);
 
-        // Build MRT shader: only 3 targeted changes on top of the standard model-batch shader.
-        // 1. Insert the FragmentOutput struct declaration before the fs_main signature.
-        // 2. Replace the signature to return FragmentOutput instead of @location(0) vec4f.
-        // 3. Replace the return statement to write both color and normal outputs.
+        // Build MRT shader through the modular template system.
         WgModelBatch.Config config = new WgModelBatch.Config();
         config.numBones = 100; // Increase bone limit for SillyDancing model (65 bones)
-        config.shaderSource = WgModelBatchShaderBuilder.defaultModelBatch()
-                .insertBefore(WgModelBatchShaderBuilder.FS_SIGNATURE,
-                        new WgShaderChunk("mrt_output_struct",
-                                "struct FragmentOutput {\n"
-                              + "    @location(0) color : vec4f,\n"
-                              + "    @location(1) normal : vec4f,\n"
-                              + "};\n"))
-                .replaceChunk(WgModelBatchShaderBuilder.FS_SIGNATURE,
-                        new WgShaderChunk(WgModelBatchShaderBuilder.FS_SIGNATURE,
-                                "@fragment\n"
-                              + "fn fs_main(in : VertexOutput) -> FragmentOutput {\n"))
-                .replaceChunk(WgModelBatchShaderBuilder.FS_RETURN,
-                        new WgShaderChunk(WgModelBatchShaderBuilder.FS_RETURN,
-                                "    var fragOut: FragmentOutput;\n"
-                              + "    fragOut.color = color;\n"
-                              + "    #ifdef LIGHTING\n"
-                              + "       fragOut.normal = vec4f(normal * 0.5 + 0.5, 1.0);\n"
-                              + "    #else\n"
-                              + "       fragOut.normal = vec4f(normalize(in.normal) * 0.5 + 0.5, 1.0);\n"
-                              + "    #endif\n"
-                              + "    return fragOut;\n"
-                              + "};\n"))
-                .build();
+        config.shaderSource = buildMrtShaderSource();
 
         modelBatch = new WgModelBatch(new WgDefaultShaderProvider(config));
 
@@ -112,6 +114,17 @@ public class MRTTest3D extends GdxTest {
         environment = new Environment();
         environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1f));
         environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
+    }
+
+    private String buildMrtShaderSource() {
+        WgShaderTemplate template = new WgShaderTemplate(Gdx.files.classpath("shaders/modelbatch.template.wgsl"));
+        NormalMrtShaderModule module = new NormalMrtShaderModule();
+        module.contribute(template);
+
+        Array<WgShaderModule> modules = new Array<>();
+        modules.add(module);
+        ShaderBuildResult result = template.build(new ShaderDefines(), null, modules);
+        return result.shaderSourceForPipeline;
     }
 
     public void render() {
