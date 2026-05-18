@@ -1,7 +1,7 @@
 # Shader Template System
 
-> Version: 0.1
-> Last updated: 2026-05-17
+> Version: 0.2
+> Last updated: 2026-05-18
 
 ## Purpose
 
@@ -11,29 +11,32 @@ The system is about shader source assembly. Resource layout declarations live in
 
 ## Current Status
 
-The Shader Template System is version `0.1` and is a work in progress.
+The Shader Template System is version `0.2` and is a work in progress.
 
 Implemented:
 
 1. `modelbatch.template.wgsl` exists and is intended to match `modelbatch.wgsl` when no modules are applied.
-2. The model-batch template is a phase-1 template copied from `modelbatch.wgsl` with a small number of additive slots.
-3. The published model-batch slots are `material.uniformFields`, `material.bindings`, `helpers`, and `color.final`.
-4. The published model-batch sections are `fragment.signature` and `fragment.return`.
-5. `WgShaderTemplate` can build complete WGSL from text-backed and file-backed templates.
-6. `WgslSnippet` supports text snippets, file snippets, and named `@block` snippets.
-7. `ShaderDefines` can prepend generated defines to assembled source.
-8. Template output can be passed to `WgDefaultShader` through `WgModelBatch.Config.shaderSource`.
-9. `FogOfWar3DTest`, `MRTTest3D`, and `WgIDShaderProvider` are the current proof cases for external template assembly.
+2. `spritebatch.template.wgsl` exists and is intended to match `spritebatch.wgsl` when no modules are applied.
+3. The model-batch template is a phase-1 template copied from `modelbatch.wgsl` with a small number of additive slots.
+4. The sprite-batch template is a phase-1 template copied from `spritebatch.wgsl` with a helper slot and fragment-output sections.
+5. The published model-batch slots are `material.uniformFields`, `material.bindings`, `helpers`, and `color.final`.
+6. The published sprite-batch slot is `helpers`.
+7. The published model-batch and sprite-batch sections are `fragment.signature` and `fragment.return`.
+8. `WgShaderTemplate` can build complete WGSL from text-backed and file-backed templates.
+9. `WgslSnippet` supports text snippets, file snippets, and named `@block` snippets.
+10. `ShaderDefines` can prepend generated defines to assembled source.
+11. Template output can be passed to `WgDefaultShader` through `WgModelBatch.Config.shaderSource`.
+12. Template output can be passed to `WgSpriteBatch` through a custom `WgShaderProgram`.
+13. `FogOfWar3DTest`, `MRTTest2D`, `MRTTest3D`, and `WgIDShaderProvider` are the current proof cases for external template assembly.
 
 Not complete yet:
 
 1. `depth.template.wgsl`
-2. `spritebatch.template.wgsl`
-3. broad `@section` coverage in `modelbatch.template.wgsl` beyond the current fragment output sections
-4. `Surface` data model in `modelbatch.template.wgsl`
-5. automatic module lifecycle orchestration inside `WgShaderTemplate.build(...)`; callers currently invoke `configureLayout(...)`, `configureDefines(...)`, and `contribute(...)` before calling `build(...)`
-6. complete supported include workflow, documentation, and coverage
-7. additional templates for font, highlight, immediate-mode, particle, utility, and other shader-owning classes
+2. broad `@section` coverage in `modelbatch.template.wgsl` and `spritebatch.template.wgsl` beyond the current fragment output sections
+3. `Surface` data model in `modelbatch.template.wgsl`
+4. automatic module lifecycle orchestration inside `WgShaderTemplate.build(...)`; callers currently invoke `configureLayout(...)`, `configureDefines(...)`, and `contribute(...)` before calling `build(...)`
+5. complete supported include workflow, documentation, and coverage
+6. additional templates for font, highlight, immediate-mode, particle, utility, and other shader-owning classes
 
 ## Boundaries
 
@@ -66,7 +69,7 @@ Resource binding and renderer-owned layout application belong to the Shader Layo
 
 1. Base shader templates must remain readable WGSL files.
 2. Template files use the `.template.wgsl` suffix.
-3. `modelbatch.wgsl` remains the stable built-in fallback.
+3. `modelbatch.wgsl` and `spritebatch.wgsl` remain the stable built-in fallbacks.
 4. `WgDefaultShader` remains the owner of the model-batch Java rendering contract.
 5. Core renderer classes do not need to know about template modules.
 6. Template output is passed into existing renderer hooks, such as `WgModelBatch.Config.shaderSource`.
@@ -143,9 +146,9 @@ fn readSurface(in: VertexOutput) -> Surface {
 // @end
 ```
 
-Sections are part of the target architecture. `modelbatch.template.wgsl` currently publishes only the sections needed by the first MRT proof cases.
+Sections are part of the target architecture. The current templates publish only the sections needed by the first MRT proof cases.
 
-Current model-batch sections:
+Current model-batch and sprite-batch sections:
 
 1. `fragment.signature` lets modules replace the fragment entry-point return type.
 2. `fragment.return` lets modules replace the final fragment return block.
@@ -201,9 +204,9 @@ public final class FogOfWarShaderModule implements WgShaderModule {
 }
 ```
 
-Future sprite, depth, font, and utility modules should follow the same pattern: pass module-specific data directly to the module instead of adding a shared context abstraction.
+Sprite, depth, font, and utility modules should follow the same pattern: pass module-specific data directly to the module instead of adding a shared context abstraction.
 
-`WgShaderTemplate.build(...)` does not call those hooks automatically in version `0.1`. The caller is responsible for this order:
+`WgShaderTemplate.build(...)` does not call those hooks automatically in version `0.2`. The caller is responsible for this order:
 
 1. Create `ShaderDefines`.
 2. Create and configure `ShaderLayoutBuilder`.
@@ -247,6 +250,28 @@ config.materials = new MaterialsCache(materialLayout);
 ```
 
 The important rule is that `WgModelBatch`, `WgDefaultShaderProvider`, and `WgDefaultShader` do not need template-specific fields. They receive complete WGSL and material layout objects through existing APIs.
+
+## Sprite-Batch Integration
+
+The current sprite-batch integration path is external to core sprite-batch classes.
+
+```java
+WgShaderTemplate template = new WgShaderTemplate(
+    Gdx.files.classpath("shaders/spritebatch.template.wgsl")
+);
+
+ShaderDefines defines = new ShaderDefines();
+defines.define("TEXTURE_COORDINATE");
+defines.define("COLOR");
+
+// caller invokes module hooks here
+
+ShaderBuildResult result = template.build(defines, null, modules);
+WgShaderProgram shader = new WgShaderProgram("custom-sprite-shader", result.shaderSourceForPipeline);
+WgSpriteBatch batch = new WgSpriteBatch(1000, shader);
+```
+
+The important rule is that `WgSpriteBatch` does not need template-specific fields. It receives a complete shader through the existing custom `WgShaderProgram` constructor.
 
 ## Model-Batch Template Direction
 
@@ -320,6 +345,14 @@ This proof case must not require template-specific code in `WgDefaultShader`.
 2. `fragment.signature` replacement for an MRT return type
 3. `fragment.return` replacement for writing color and normal attachments
 4. generated WGSL passed through `WgModelBatch.Config.shaderSource`
+
+`MRTTest2D` is the sprite-batch fragment-output section proof case. It should demonstrate:
+
+1. `helpers` slot contribution for a custom fragment output struct
+2. `fragment.signature` replacement for an MRT return type
+3. `fragment.return` replacement for writing red and green channels to separate attachments
+4. generated WGSL passed through a custom `WgShaderProgram`
+5. custom shader use through `WgSpriteBatch`
 
 `WgIDShaderProvider` is the object-ID output proof case used by picking and edge-detection outline tests. It should demonstrate:
 

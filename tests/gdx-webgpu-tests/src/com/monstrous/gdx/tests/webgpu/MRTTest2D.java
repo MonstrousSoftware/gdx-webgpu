@@ -3,44 +3,53 @@ package com.monstrous.gdx.tests.webgpu;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.utils.Array;
 import com.github.xpenatan.webgpu.WGPUTextureFormat;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
-import com.monstrous.gdx.webgpu.graphics.shader.builder.WgShaderChunk;
-import com.monstrous.gdx.webgpu.graphics.shader.builder.WgSpriteBatchShaderBuilder;
+import com.monstrous.gdx.webgpu.graphics.ShaderPrefix;
 import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgBitmapFont;
 import com.monstrous.gdx.webgpu.graphics.g2d.WgSpriteBatch;
+import com.monstrous.gdx.webgpu.graphics.shader.modular.WgShaderModule;
+import com.monstrous.gdx.webgpu.graphics.shader.modular.template.ShaderBuildResult;
+import com.monstrous.gdx.webgpu.graphics.shader.modular.template.ShaderDefines;
+import com.monstrous.gdx.webgpu.graphics.shader.modular.template.WgShaderTemplate;
+import com.monstrous.gdx.webgpu.graphics.shader.modular.template.WgslSnippet;
 import com.monstrous.gdx.webgpu.graphics.utils.WgFrameBuffer;
 import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 
 /**
  * Tests Multiple Render Targets (MRT) by rendering to a FrameBuffer with two color attachments.
- * The MRT shader is built via {@link WgSpriteBatchShaderBuilder} — only 3 targeted chunk
- * replacements on top of the standard sprite-batch shader.
+ * The MRT shader is built through the shader template system on top of the standard sprite-batch shader.
  */
 public class MRTTest2D extends GdxTest {
 
-    // MRT output struct inserted before the FS signature
-    private static final WgShaderChunk MRT_OUTPUT_STRUCT = new WgShaderChunk("mrt_output_struct",
-            "struct FragmentOutput {\n"
-          + "    @location(0) color0 : vec4f,\n"
-          + "    @location(1) color1 : vec4f,\n"
-          + "};\n");
+    private static class SpriteMrtShaderModule implements WgShaderModule {
+        @Override
+        public String getSignature() {
+            return getClass().getName();
+        }
 
-    // Replacement FS signature that returns the MRT struct
-    private static final WgShaderChunk MRT_FS_SIGNATURE = new WgShaderChunk(WgSpriteBatchShaderBuilder.FS_SIGNATURE,
-            "@fragment\n"
-          + "fn fs_main(in : VertexOutput) -> FragmentOutput {\n");
-
-    // Replacement return that writes red channel to target 0, green to target 1
-    private static final WgShaderChunk MRT_FS_RETURN = new WgShaderChunk(WgSpriteBatchShaderBuilder.FS_RETURN,
-            "    var o: FragmentOutput;\n"
-          + "    o.color0 = vec4f(color.r, 0.0, 0.0, color.a);\n"
-          + "    o.color1 = vec4f(0.0, color.g, 0.0, color.a);\n"
-          + "    return o;\n"
-          + "};\n");
+        @Override
+        public void contribute(WgShaderTemplate template) {
+            template.insert("helpers", WgslSnippet.text(
+                    "struct FragmentOutput {\n"
+                  + "    @location(0) color0 : vec4f,\n"
+                  + "    @location(1) color1 : vec4f,\n"
+                  + "};\n"));
+            template.replaceSection("fragment.signature", WgslSnippet.text(
+                    "@fragment\n"
+                  + "fn fs_main(in : VertexOutput) -> FragmentOutput {\n"));
+            template.replaceSection("fragment.return", WgslSnippet.text(
+                    "    var o: FragmentOutput;\n"
+                  + "    o.color0 = vec4f(color.r, 0.0, 0.0, color.a);\n"
+                  + "    o.color1 = vec4f(0.0, color.g, 0.0, color.a);\n"
+                  + "    return o;\n"
+                  + "};\n"));
+        }
+    }
 
     WgSpriteBatch batch;
     WgSpriteBatch mrtBatch;
@@ -55,16 +64,8 @@ public class MRTTest2D extends GdxTest {
         batch = new WgSpriteBatch();
         font = new WgBitmapFont();
 
-        // Build the MRT shader: standard sprite-batch + 3 targeted chunk changes
-        String shaderSource = WgSpriteBatchShaderBuilder.defaultSpriteBatch()
-                .insertBefore(WgSpriteBatchShaderBuilder.FS_SIGNATURE, MRT_OUTPUT_STRUCT)
-                .replaceChunk(WgSpriteBatchShaderBuilder.FS_SIGNATURE, MRT_FS_SIGNATURE)
-                .replaceChunk(WgSpriteBatchShaderBuilder.FS_RETURN, MRT_FS_RETURN)
-                .build();
-
-        // SpriteBatch always uses TEXTURE_COORDINATE and COLOR vertex attributes
-        String prefix = "#define TEXTURE_COORDINATE\n#define COLOR\n";
-        mrtShader = new WgShaderProgram("mrt_sprite_shader", shaderSource, prefix);
+        String shaderSource = buildMrtShaderSource();
+        mrtShader = new WgShaderProgram("mrt_sprite_shader", shaderSource);
         mrtBatch = new WgSpriteBatch(1000, mrtShader);
 
         texture = new WgTexture(Gdx.files.internal("data/badlogic.jpg"));
@@ -74,6 +75,24 @@ public class MRTTest2D extends GdxTest {
                 WGPUTextureFormat.RGBA8Unorm
         };
         mrtFbo = new WgFrameBuffer(formats, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
+    }
+
+    private String buildMrtShaderSource() {
+        WgShaderTemplate template = new WgShaderTemplate(Gdx.files.classpath("shaders/spritebatch.template.wgsl"));
+        SpriteMrtShaderModule module = new SpriteMrtShaderModule();
+        module.contribute(template);
+
+        ShaderDefines defines = new ShaderDefines();
+        defines.define("TEXTURE_COORDINATE");
+        defines.define("COLOR");
+        if (!ShaderPrefix.hasLinearOutput()) {
+            defines.define("GAMMA_CORRECTION");
+        }
+
+        Array<WgShaderModule> modules = new Array<>();
+        modules.add(module);
+        ShaderBuildResult result = template.build(defines, null, modules);
+        return result.shaderSourceForPipeline;
     }
 
     public void render() {
