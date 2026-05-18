@@ -7,7 +7,6 @@ import com.badlogic.gdx.utils.Array;
 import com.monstrous.gdx.webgpu.graphics.g3d.WgModelBatch;
 import com.monstrous.gdx.webgpu.graphics.g3d.attributes.IdAttribute;
 import com.monstrous.gdx.webgpu.graphics.shader.modular.WgShaderModule;
-import com.monstrous.gdx.webgpu.graphics.shader.modular.template.ShaderBuildResult;
 import com.monstrous.gdx.webgpu.graphics.shader.modular.template.ShaderDefines;
 import com.monstrous.gdx.webgpu.graphics.shader.modular.template.WgShaderTemplate;
 import com.monstrous.gdx.webgpu.graphics.shader.modular.template.WgslSnippet;
@@ -119,7 +118,6 @@ public class WgIDShaderProvider extends WgDefaultShaderProvider {
 
         Array<WgShaderModule> modules = new Array<>();
         modules.add(module);
-        ShaderBuildResult result = template.build(new ShaderDefines(), null, modules);
-        return result.shaderSourceForPipeline;
+        return template.build(new ShaderDefines(), null, modules);
     }
 }

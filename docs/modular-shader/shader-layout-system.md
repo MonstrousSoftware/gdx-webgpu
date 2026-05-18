@@ -20,7 +20,7 @@ Current limited support:
 3. `addUniform("material", ...)` can register material uniforms.
 4. `addTexture("material", ...)` can register material textures and samplers.
 5. `apply()` forwards those declarations to `MaterialUniformLayout`.
-6. `summary()` contributes simple layout diagnostics to `ShaderBuildResult`.
+6. `summary()` contributes simple layout diagnostics to `ShaderBuildResult` when templates are built through `buildForResult(...)`.
 
 Not implemented:
 

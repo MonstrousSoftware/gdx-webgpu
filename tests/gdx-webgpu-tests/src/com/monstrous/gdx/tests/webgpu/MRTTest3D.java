@@ -20,7 +20,6 @@ import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgGLTFModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.loaders.WgModelLoader;
 import com.monstrous.gdx.webgpu.graphics.g3d.shaders.WgDefaultShaderProvider;
 import com.monstrous.gdx.webgpu.graphics.shader.modular.WgShaderModule;
-import com.monstrous.gdx.webgpu.graphics.shader.modular.template.ShaderBuildResult;
 import com.monstrous.gdx.webgpu.graphics.shader.modular.template.ShaderDefines;
 import com.monstrous.gdx.webgpu.graphics.shader.modular.template.WgShaderTemplate;
 import com.monstrous.gdx.webgpu.graphics.shader.modular.template.WgslSnippet;
@@ -123,8 +122,7 @@ public class MRTTest3D extends GdxTest {
 
         Array<WgShaderModule> modules = new Array<>();
         modules.add(module);
-        ShaderBuildResult result = template.build(new ShaderDefines(), null, modules);
-        return result.shaderSourceForPipeline;
+        return template.build(new ShaderDefines(), null, modules);
     }
 
     public void render() {

@@ -46,10 +46,10 @@ The template system owns:
 2. Parsing template markers.
 3. Inserting WGSL snippets.
 4. Appending or replacing named sections.
-5. Collecting module names and signatures for diagnostics.
+5. Collecting module names and signatures through `buildForResult(...)` diagnostics.
 6. Prepending generated defines.
 7. Producing complete WGSL source for the existing shader pipeline.
-8. Recording layout summaries in `ShaderBuildResult` for diagnostics.
+8. Recording layout summaries in `ShaderBuildResult` when detailed diagnostics are requested.
 
 The template system does not own:
 
@@ -225,6 +225,33 @@ The template processor does not allocate bindings itself. It only receives layou
 
 See [Shader Layout System](shader-layout-system.md) for the current `ShaderLayoutBuilder` material-layout helper and the planned resource layout model.
 
+## Simple Template Build
+
+Use the no-argument `build()` method when the template already contains everything needed, or when the caller only makes direct snippet edits and does not need defines, layout diagnostics, or module metadata.
+
+```java
+WgShaderTemplate template = new WgShaderTemplate(
+    Gdx.files.classpath("shaders/modelbatch.template.wgsl")
+);
+
+template.insert("helpers", WgslSnippet.text(
+    "fn tintColor(color: vec4f) -> vec4f {\n"
+  + "    return vec4f(color.rgb * 0.75, color.a);\n"
+  + "}\n"
+));
+template.insert("color.final", WgslSnippet.text(
+    "    color = tintColor(color);\n"
+));
+
+String shaderSource = template.build();
+
+WgModelBatch.Config config = new WgModelBatch.Config();
+config.shaderSource = shaderSource;
+WgModelBatch modelBatch = new WgModelBatch(config);
+```
+
+This is equivalent to `template.build(null, null, null)`. Use `build(defines, layout, modules)` when generated defines, layout summaries, or module identity should be part of the build. Use `buildForResult(...)` when debugging needs the full `ShaderBuildResult`.
+
 ## Model-Batch Integration
 
 The current integration path is external to core model-batch classes.
@@ -242,10 +269,10 @@ ShaderLayoutBuilder layout = new ShaderLayoutBuilder()
 // caller invokes module hooks here
 
 layout.apply();
-ShaderBuildResult result = template.build(defines, layout, modules);
+String shaderSource = template.build(defines, layout, modules);
 
 WgModelBatch.Config config = new WgModelBatch.Config();
-config.shaderSource = result.shaderSourceForPipeline;
+config.shaderSource = shaderSource;
 config.materials = new MaterialsCache(materialLayout);
 ```
 
@@ -266,8 +293,8 @@ defines.define("COLOR");
 
 // caller invokes module hooks here
 
-ShaderBuildResult result = template.build(defines, null, modules);
-WgShaderProgram shader = new WgShaderProgram("custom-sprite-shader", result.shaderSourceForPipeline);
+String shaderSource = template.build(defines, null, modules);
+WgShaderProgram shader = new WgShaderProgram("custom-sprite-shader", shaderSource);
 WgSpriteBatch batch = new WgSpriteBatch(1000, shader);
 ```
 
@@ -311,7 +338,7 @@ The future `Surface` refactor should only be merged after zero-module output rem
 
 ## Debug Output
 
-Every template build should produce a `ShaderBuildResult` containing:
+`WgShaderTemplate.build(...)` returns the complete WGSL string used by the pipeline. When a caller needs diagnostic details, `WgShaderTemplate.buildForResult(...)` returns a `ShaderBuildResult` containing:
 
 1. template name
 2. original template source

@@ -73,15 +73,31 @@ public final class WgShaderTemplate {
         }
     }
 
-    public ShaderBuildResult build(ShaderDefines defines, ShaderLayoutBuilder layout,
-                                   Array<WgShaderModule> modules) {
+    /** Builds and returns complete WGSL source for pipeline creation. */
+    public String build(ShaderDefines defines, ShaderLayoutBuilder layout,
+                        Array<WgShaderModule> modules) {
         return build(defines, layout, modules, null);
     }
 
-    public ShaderBuildResult build(ShaderDefines defines, ShaderLayoutBuilder layout,
-                                   Array<WgShaderModule> modules, ShaderTemplateConfig config) {
+    public String build(ShaderDefines defines, ShaderLayoutBuilder layout,
+                        Array<WgShaderModule> modules, ShaderTemplateConfig config) {
+        if (config != null && config.dumpShaderBuilds)
+            return buildForResult(defines, layout, modules, config).shaderSourceForPipeline;
+        String assembled = assemble(false);
+        String definesSource = defines == null ? "" : defines.buildSource();
+        return definesSource + assembled;
+    }
+
+    /** Builds complete WGSL plus diagnostic metadata for debugging and shader dumps. */
+    public ShaderBuildResult buildForResult(ShaderDefines defines, ShaderLayoutBuilder layout,
+                                            Array<WgShaderModule> modules) {
+        return buildForResult(defines, layout, modules, null);
+    }
+
+    public ShaderBuildResult buildForResult(ShaderDefines defines, ShaderLayoutBuilder layout,
+                                            Array<WgShaderModule> modules, ShaderTemplateConfig config) {
         contributions.clear();
-        String assembled = assemble();
+        String assembled = assemble(true);
         String definesSource = defines == null ? "" : defines.buildSource();
         String shaderSourceForPipeline = definesSource + assembled;
         String layoutSummary = layout == null ? "" : layout.summary();
@@ -103,7 +119,7 @@ public final class WgShaderTemplate {
     }
 
     public String build() {
-        return build(new ShaderDefines(), null, null).shaderSourceForPipeline;
+        return build(null, null, null);
     }
 
     private void parseTemplate() {
@@ -136,7 +152,7 @@ public final class WgShaderTemplate {
             throw new ShaderTemplateException("Unterminated @section '" + activeSection + "' in " + templateName);
     }
 
-    private String assemble() {
+    private String assemble(boolean collectContributions) {
         StringBuilder out = new StringBuilder();
         String[] lines = templateSource.split("\\r?\\n", -1);
         String activeSection = null;
@@ -146,7 +162,7 @@ public final class WgShaderTemplate {
             Marker marker = Marker.parse(line);
             if (activeSection != null) {
                 if (marker != null && "end".equals(marker.kind)) {
-                    emitSectionBody(out, section, sectionBody.toString());
+                    emitSectionBody(out, section, sectionBody.toString(), collectContributions);
                     out.append(line).append('\n');
                     activeSection = null;
                     section = null;
@@ -160,7 +176,7 @@ public final class WgShaderTemplate {
             if (marker == null)
                 continue;
             if ("slot".equals(marker.kind)) {
-                emitSnippets(out, slots.get(marker.name).inserts, "slot " + marker.name);
+                emitSnippets(out, slots.get(marker.name).inserts, "slot " + marker.name, collectContributions);
             } else if ("section".equals(marker.kind)) {
                 activeSection = marker.name;
                 section = sections.get(marker.name);
@@ -170,22 +186,24 @@ public final class WgShaderTemplate {
         return out.toString();
     }
 
-    private void emitSectionBody(StringBuilder out, Section section, String originalBody) {
+    private void emitSectionBody(StringBuilder out, Section section, String originalBody, boolean collectContributions) {
         if (section.replacement != null)
-            emitSnippet(out, section.replacement, "section " + section.name + " replacement");
+            emitSnippet(out, section.replacement, "section " + section.name + " replacement", collectContributions);
         else
             out.append(originalBody);
-        emitSnippets(out, section.appends, "section " + section.name + " append");
+        emitSnippets(out, section.appends, "section " + section.name + " append", collectContributions);
     }
 
-    private void emitSnippets(StringBuilder out, Array<WgslSnippet> snippets, String destination) {
+    private void emitSnippets(StringBuilder out, Array<WgslSnippet> snippets, String destination,
+                              boolean collectContributions) {
         for (WgslSnippet snippet : snippets)
-            emitSnippet(out, snippet, destination);
+            emitSnippet(out, snippet, destination, collectContributions);
     }
 
-    private void emitSnippet(StringBuilder out, WgslSnippet snippet, String destination) {
+    private void emitSnippet(StringBuilder out, WgslSnippet snippet, String destination, boolean collectContributions) {
         WgslSnippet.Resolved resolved = snippet.resolve();
-        contributions.add(destination + " <- " + resolved.origin);
+        if (collectContributions)
+            contributions.add(destination + " <- " + resolved.origin);
         out.append("// @module ").append(resolved.origin).append('\n');
         out.append(resolved.source);
         if (!resolved.source.endsWith("\n"))

@@ -23,7 +23,6 @@ import com.monstrous.gdx.webgpu.graphics.shader.modular.WgShaderModule;
 import com.monstrous.gdx.webgpu.graphics.shader.modular.layout.ShaderLayoutBuilder;
 import com.monstrous.gdx.webgpu.graphics.shader.modular.layout.TextureBinding;
 import com.monstrous.gdx.webgpu.graphics.shader.modular.layout.UniformType;
-import com.monstrous.gdx.webgpu.graphics.shader.modular.template.ShaderBuildResult;
 import com.monstrous.gdx.webgpu.graphics.shader.modular.template.ShaderDefines;
 import com.monstrous.gdx.webgpu.graphics.shader.modular.template.WgShaderTemplate;
 import com.monstrous.gdx.webgpu.graphics.shader.modular.template.WgslSnippet;
@@ -215,10 +214,9 @@ public class FogOfWar3DTest extends GdxTest {
 
         Array<WgShaderModule> modules = new Array<>();
         modules.add(module);
-        ShaderBuildResult result = template.build(defines, layout, modules);
 
         config.materials = new MaterialsCache(config.maxMaterials, materialLayout);
-        return result.shaderSourceForPipeline;
+        return template.build(defines, layout, modules);
     }
 
     private MaterialUniformLayout createDefaultMaterialLayout() {
