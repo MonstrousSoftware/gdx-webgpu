@@ -699,6 +699,8 @@ public class WgSkin extends Skin {
         for (ObjectMap.Entry<String, Class> entry : jsonClassTags)
             json.addClassTag(entry.key, entry.value);
 
+        json.setIgnoreUnknownFields(true);
+
         return json;
     }
 
