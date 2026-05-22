@@ -411,6 +411,26 @@ val matrixSprite2dLwjgl3 = tasks.register<JavaExec>("matrixSprite2dLwjgl3") {
     configureLwjgl3BenchmarkProcess(sprite2dMatrixArgs())
 }
 
+val matrixSprite2dRawJniDefault = tasks.register<JavaExec>("matrixSprite2dRawJniDefault") {
+    group = "LibGDX"
+    description = "Run raw SpriteBatch 2D on JNI WGPU DEFAULT"
+    dependsOn(":benchmark:webgpu-raw-jni:classes")
+    configureRawWebgpuBenchmarkProcess(
+        ":benchmark:webgpu-raw-jni",
+        sprite2dMatrixArgs() + listOf("--webgpu=WGPU", "--backend=DEFAULT", "--samples=1", "--binding=jni")
+    )
+}
+
+val matrixSprite2dRawFfmDefault = tasks.register<JavaExec>("matrixSprite2dRawFfmDefault") {
+    group = "LibGDX"
+    description = "Run raw SpriteBatch 2D on FFM WGPU DEFAULT"
+    dependsOn(":benchmark:webgpu-raw-ffm:classes")
+    configureRawWebgpuBenchmarkProcess(
+        ":benchmark:webgpu-raw-ffm",
+        sprite2dMatrixArgs() + listOf("--webgpu=WGPU", "--backend=DEFAULT", "--samples=1", "--binding=ffm")
+    )
+}
+
 val prepareSprite2dMatrixReport = tasks.register("prepareSprite2dMatrixReport") {
     group = "LibGDX"
     description = "Clear previous SpriteBatch 2D matrix benchmark report data"
@@ -435,7 +455,9 @@ listOf(
     matrixSprite2dFfmOpenGL,
     matrixSprite2dFfmD3D12,
     matrixSprite2dFfmDawnDefault,
-    matrixSprite2dLwjgl3
+    matrixSprite2dLwjgl3,
+    matrixSprite2dRawJniDefault,
+    matrixSprite2dRawFfmDefault
 ).forEach { taskProvider ->
     taskProvider.configure {
         dependsOn(prepareSprite2dMatrixReport)
@@ -453,10 +475,12 @@ matrixSprite2dFfmOpenGL.configure { mustRunAfter(matrixSprite2dFfmVulkan) }
 matrixSprite2dFfmD3D12.configure { mustRunAfter(matrixSprite2dFfmOpenGL) }
 matrixSprite2dFfmDawnDefault.configure { mustRunAfter(matrixSprite2dFfmD3D12) }
 matrixSprite2dLwjgl3.configure { mustRunAfter(matrixSprite2dFfmDawnDefault) }
+matrixSprite2dRawJniDefault.configure { mustRunAfter(matrixSprite2dLwjgl3) }
+matrixSprite2dRawFfmDefault.configure { mustRunAfter(matrixSprite2dRawJniDefault) }
 
 tasks.register("compareSprite2dMatrix") {
     group = "LibGDX"
-    description = "Run SpriteBatch 2D matrix: JNI/FFM WGPU DEFAULT/VULKAN/OPENGL/D3D12, DAWN DEFAULT, plus LWJGL3"
+    description = "Run SpriteBatch 2D matrix: JNI/FFM WGPU DEFAULT/VULKAN/OPENGL/D3D12, DAWN DEFAULT, LWJGL3, and raw WGPU DEFAULT"
     dependsOn(
         matrixSprite2dJniDefault,
         matrixSprite2dJniVulkan,
@@ -468,7 +492,9 @@ tasks.register("compareSprite2dMatrix") {
         matrixSprite2dFfmOpenGL,
         matrixSprite2dFfmD3D12,
         matrixSprite2dFfmDawnDefault,
-        matrixSprite2dLwjgl3
+        matrixSprite2dLwjgl3,
+        matrixSprite2dRawJniDefault,
+        matrixSprite2dRawFfmDefault
     )
 
     doLast {

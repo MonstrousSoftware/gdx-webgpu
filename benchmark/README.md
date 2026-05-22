@@ -63,7 +63,7 @@ Run the full explicit matrix:
 
 The matrix runs JNI `WGPU DEFAULT`, JNI `WGPU VULKAN`, JNI `WGPU OPENGL`, JNI `WGPU D3D12`,
 JNI `DAWN DEFAULT`, FFM `WGPU DEFAULT`, FFM `WGPU VULKAN`, FFM `WGPU OPENGL`, FFM `WGPU D3D12`,
-FFM `DAWN DEFAULT`, then stock libGDX LWJGL3.
+FFM `DAWN DEFAULT`, stock libGDX LWJGL3, raw JNI `WGPU DEFAULT`, then raw FFM `WGPU DEFAULT`.
 This avoids relying on whatever
 `WebGPUContext.Backend.DEFAULT` chooses on the current machine.
 It also writes a Markdown report to `benchmark/build/benchmark-results/sprite2d-matrix/results.md`.
