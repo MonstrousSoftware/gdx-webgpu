@@ -3,12 +3,7 @@ import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 val mainClassName = "com.monstrous.gdx.benchmarks.lwjgl3.Lwjgl3BenchmarkLauncher"
 
 plugins {
-    application
     id("java-library")
-}
-
-application {
-    mainClass.set(mainClassName)
 }
 
 val javaVersion = project.property("javaMain") as String
@@ -28,7 +23,11 @@ dependencies {
     implementation("com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop")
 }
 
-tasks.named<JavaExec>("run") {
+tasks.register<JavaExec>("run") {
+    group = "LibGDX"
+    description = "Run desktop LWJGL3 benchmarks"
+    mainClass.set(mainClassName)
+    classpath = sourceSets["main"].runtimeClasspath
     workingDir = File("../../tests/assets")
     setIgnoreExitValue(true)
     standardInput = System.`in`

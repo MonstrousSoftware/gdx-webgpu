@@ -3,12 +3,7 @@ import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 val mainClassName = "com.monstrous.gdx.benchmarks.webgpu.raw.RawWebGPUSpriteBenchmarkLauncher"
 
 plugins {
-    application
     id("java-library")
-}
-
-application {
-    mainClass.set(mainClassName)
 }
 
 val javaVersion = project.property("javaFFM") as String
@@ -26,7 +21,11 @@ dependencies {
     implementation(project(":backends:backend-desktop-ffm"))
 }
 
-tasks.named<JavaExec>("run") {
+tasks.register<JavaExec>("run") {
+    group = "LibGDX"
+    description = "Run the raw WebGPU sprite benchmark through FFM"
+    mainClass.set(mainClassName)
+    classpath = sourceSets["main"].runtimeClasspath
     workingDir = File("../../../tests/assets")
     setIgnoreExitValue(true)
     standardInput = System.`in`
