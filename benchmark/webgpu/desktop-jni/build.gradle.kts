@@ -13,7 +13,7 @@ application {
 
 val javaVersion = project.property("javaMain") as String
 
-sourceSets["main"].resources.srcDirs(File("../../tests/assets"))
+sourceSets["main"].resources.srcDirs(File("../../../tests/assets"))
 
 if (JavaVersion.current().isJava9Compatible) {
     tasks.withType<JavaCompile> {
@@ -22,15 +22,16 @@ if (JavaVersion.current().isJava9Compatible) {
 }
 
 dependencies {
-    implementation(project(":benchmark:core"))
-    implementation(project(":gdx-webgpu"))
+    implementation(project(":benchmark:webgpu:core"))
     implementation(project(":backends:backend-desktop-jni"))
 }
 
 tasks.named<JavaExec>("run") {
-    workingDir = File("../../tests/assets")
+    workingDir = File("../../../tests/assets")
     setIgnoreExitValue(true)
     standardInput = System.`in`
+    args("--binding=jni")
+    jvmArgs("-Dbenchmark.binding=jni")
 
     if (DefaultNativePlatform.getCurrentOperatingSystem().isMacOsX) {
         jvmArgs("-XstartOnFirstThread")
@@ -42,9 +43,11 @@ tasks.register<JavaExec>("benchmark") {
     description = "Run desktop WebGPU JNI benchmarks"
     mainClass.set(mainClassName)
     classpath = sourceSets["main"].runtimeClasspath
-    workingDir = File("../../tests/assets")
+    workingDir = File("../../../tests/assets")
     setIgnoreExitValue(true)
     standardInput = System.`in`
+    args("--binding=jni")
+    jvmArgs("-Dbenchmark.binding=jni")
 
     if (DefaultNativePlatform.getCurrentOperatingSystem().isMacOsX) {
         jvmArgs("-XstartOnFirstThread")

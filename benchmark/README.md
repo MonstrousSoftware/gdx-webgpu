@@ -1,7 +1,7 @@
 # gdx benchmark tests
 
-This module contains benchmark cases that are backend-agnostic. Desktop launchers in sibling modules provide backend
-factories so a benchmark can use the same test body with stock libGDX LWJGL3 or gdx-webgpu.
+This module contains benchmark cases that are backend-agnostic. Desktop modules provide backend factories so a
+benchmark can use the same test body with stock libGDX LWJGL3 or gdx-webgpu.
 
 ## SpriteBatch 2D
 
@@ -80,14 +80,17 @@ properties:
 Run WebGPU JNI:
 
 ```bash
-./gradlew :benchmark:desktop-jni:benchmark --args="--test=sprite2d --sprites=8191 --seconds=10 --warmup=2 --webgpu=WGPU --backend=DEFAULT"
+./gradlew :benchmark:webgpu:desktop-jni:benchmark --args="--test=sprite2d --sprites=8191 --seconds=10 --warmup=2 --webgpu=WGPU --backend=DEFAULT"
 ```
 
 Run WebGPU FFM:
 
 ```bash
-./gradlew :benchmark:desktop-ffm:benchmark --args="--test=sprite2d --sprites=8191 --seconds=10 --warmup=2 --webgpu=WGPU --backend=DEFAULT"
+./gradlew :benchmark:webgpu:desktop-ffm:benchmark --args="--test=sprite2d --sprites=8191 --seconds=10 --warmup=2 --webgpu=WGPU --backend=DEFAULT"
 ```
+
+The stock WebGPU benchmark code is split into `benchmark:webgpu:core` for `WebGPUBenchmarkLauncher` and
+`benchmark:webgpu:desktop-jni` / `benchmark:webgpu:desktop-ffm` for platform dependencies only.
 
 Run raw WebGPU JNI:
 
