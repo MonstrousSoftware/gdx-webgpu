@@ -11,10 +11,9 @@ application {
     mainClass.set(mainClassName)
 }
 
-val javaVersion = project.property("javaFFM") as String
+val javaVersion = project.property("javaMain") as String
 
-sourceSets["main"].java.srcDirs(File("../webgpu-raw-jni/src/main/java"))
-sourceSets["main"].resources.srcDirs(File("../../tests/assets"))
+sourceSets["main"].resources.srcDirs(File("../../../tests/assets"))
 
 if (JavaVersion.current().isJava9Compatible) {
     tasks.withType<JavaCompile> {
@@ -23,17 +22,16 @@ if (JavaVersion.current().isJava9Compatible) {
 }
 
 dependencies {
-    implementation(project(":benchmark:core"))
-    implementation(project(":gdx-webgpu"))
-    implementation(project(":backends:backend-desktop-ffm"))
+    implementation(project(":benchmark:webgpu-raw:core"))
+    implementation(project(":backends:backend-desktop-jni"))
 }
 
 tasks.named<JavaExec>("run") {
-    workingDir = File("../../tests/assets")
+    workingDir = File("../../../tests/assets")
     setIgnoreExitValue(true)
     standardInput = System.`in`
-    args("--binding=ffm")
-    jvmArgs("-Dbenchmark.binding=ffm")
+    args("--binding=jni")
+    jvmArgs("-Dbenchmark.binding=jni")
 
     if (DefaultNativePlatform.getCurrentOperatingSystem().isMacOsX) {
         jvmArgs("-XstartOnFirstThread")
@@ -42,14 +40,14 @@ tasks.named<JavaExec>("run") {
 
 tasks.register<JavaExec>("benchmark") {
     group = "LibGDX"
-    description = "Run the raw WebGPU sprite benchmark through FFM"
+    description = "Run the raw WebGPU sprite benchmark through JNI"
     mainClass.set(mainClassName)
     classpath = sourceSets["main"].runtimeClasspath
-    workingDir = File("../../tests/assets")
+    workingDir = File("../../../tests/assets")
     setIgnoreExitValue(true)
     standardInput = System.`in`
-    args("--binding=ffm")
-    jvmArgs("-Dbenchmark.binding=ffm")
+    args("--binding=jni")
+    jvmArgs("-Dbenchmark.binding=jni")
 
     if (DefaultNativePlatform.getCurrentOperatingSystem().isMacOsX) {
         jvmArgs("-XstartOnFirstThread")

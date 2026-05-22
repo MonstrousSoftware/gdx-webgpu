@@ -8,7 +8,6 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.BufferUtils;
 import com.badlogic.gdx.utils.TimeUtils;
-import com.github.xpenatan.webgpu.JWebGPUBackend;
 import com.github.xpenatan.webgpu.WGPUBindGroup;
 import com.github.xpenatan.webgpu.WGPUBindGroupDescriptor;
 import com.github.xpenatan.webgpu.WGPUBindGroupEntry;
@@ -62,8 +61,6 @@ import com.github.xpenatan.webgpu.WGPUVertexStepMode;
 import com.monstrous.gdx.benchmarks.BenchmarkConfig;
 import com.monstrous.gdx.webgpu.application.WebGPUContext;
 import com.monstrous.gdx.webgpu.application.WgGraphics;
-import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopApplication;
-import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopApplicationConfiguration;
 import com.monstrous.gdx.webgpu.graphics.WgShaderProgram;
 import com.monstrous.gdx.webgpu.graphics.WgTexture;
 
@@ -75,57 +72,7 @@ import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.Random;
 
-public class RawWebGPUSpriteBenchmarkLauncher {
-    public static void main(String[] args) {
-        BenchmarkConfig benchmarkConfig = BenchmarkConfig.fromArgs(args);
-        JWebGPUBackend webgpuBackend = parseWebGPUBackend(args, JWebGPUBackend.WGPU);
-        WebGPUContext.Backend backend = parseBackend(args, WebGPUContext.Backend.DEFAULT);
-        int samples = parseIntArg(args, "samples", 1);
-        String binding = parseStringArg(args, "binding", System.getProperty("benchmark.binding", "jni"));
-        if (samples != 1) {
-            throw new IllegalArgumentException("The raw WebGPU sprite benchmark currently supports --samples=1 only.");
-        }
-
-        WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
-        config.setTitle("gdx benchmark raw WebGPU sprites");
-        config.setWindowedMode(benchmarkConfig.width, benchmarkConfig.height);
-        config.backendWebGPU = webgpuBackend;
-        config.backend = backend;
-        config.enableGPUtiming = false;
-        config.samples = 1;
-        config.setForegroundFPS(0);
-        config.useVsync(false);
-
-        String backendName = "webgpu-raw-" + binding + "-" + webgpuBackend + "-" + backend;
-        new WgDesktopApplication(new RawSpriteBenchmarkApplication(backendName, benchmarkConfig), config);
-    }
-
-    private static JWebGPUBackend parseWebGPUBackend(String[] args, JWebGPUBackend defaultValue) {
-        String value = parseStringArg(args, "webgpu", null);
-        return value == null ? defaultValue : JWebGPUBackend.valueOf(value);
-    }
-
-    private static WebGPUContext.Backend parseBackend(String[] args, WebGPUContext.Backend defaultValue) {
-        String value = parseStringArg(args, "backend", null);
-        return value == null ? defaultValue : WebGPUContext.Backend.valueOf(value);
-    }
-
-    private static int parseIntArg(String[] args, String key, int defaultValue) {
-        String value = parseStringArg(args, key, null);
-        return value == null ? defaultValue : Integer.parseInt(value);
-    }
-
-    private static String parseStringArg(String[] args, String key, String defaultValue) {
-        String prefix = "--" + key + "=";
-        for (String arg : args) {
-            if (arg != null && arg.startsWith(prefix)) {
-                return arg.substring(prefix.length());
-            }
-        }
-        return defaultValue;
-    }
-
-    private static class RawSpriteBenchmarkApplication extends ApplicationAdapter {
+public class RawSpriteBenchmarkApplication extends ApplicationAdapter {
         private static final long SECOND = 1000000000L;
 
         private final String backendName;
@@ -141,7 +88,7 @@ public class RawWebGPUSpriteBenchmarkLauncher {
         private long totalFps;
         private boolean finished;
 
-        RawSpriteBenchmarkApplication(String backendName, BenchmarkConfig config) {
+        public RawSpriteBenchmarkApplication(String backendName, BenchmarkConfig config) {
             this.backendName = backendName;
             this.config = config;
         }
@@ -260,7 +207,7 @@ public class RawWebGPUSpriteBenchmarkLauncher {
         }
     }
 
-    private static class RawSpriteRenderer {
+class RawSpriteRenderer {
         private static final int SPRITE_WIDTH = 32;
         private static final int SPRITE_HEIGHT = 32;
         private static final float ROTATION_SPEED = 20f;
@@ -731,5 +678,4 @@ public class RawWebGPUSpriteBenchmarkLauncher {
                     + "    return textureSample(spriteTexture, spriteSampler, input.uv);\n"
                     + "}\n";
         }
-    }
 }

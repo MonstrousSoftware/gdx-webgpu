@@ -80,26 +80,29 @@ properties:
 Run WebGPU JNI:
 
 ```bash
-./gradlew :benchmark:webgpu-jni:benchmark --args="--test=sprite2d --sprites=8191 --seconds=10 --warmup=2 --webgpu=WGPU --backend=DEFAULT"
+./gradlew :benchmark:desktop-jni:benchmark --args="--test=sprite2d --sprites=8191 --seconds=10 --warmup=2 --webgpu=WGPU --backend=DEFAULT"
 ```
 
 Run WebGPU FFM:
 
 ```bash
-./gradlew :benchmark:webgpu-ffm:benchmark --args="--test=sprite2d --sprites=8191 --seconds=10 --warmup=2 --webgpu=WGPU --backend=DEFAULT"
+./gradlew :benchmark:desktop-ffm:benchmark --args="--test=sprite2d --sprites=8191 --seconds=10 --warmup=2 --webgpu=WGPU --backend=DEFAULT"
 ```
 
 Run raw WebGPU JNI:
 
 ```bash
-./gradlew :benchmark:webgpu-raw-jni:benchmark --args="--test=sprite2d --sprites=8191 --seconds=10 --warmup=2 --webgpu=WGPU --backend=DEFAULT"
+./gradlew :benchmark:webgpu-raw:desktop-jni:benchmark --args="--test=sprite2d --sprites=8191 --seconds=10 --warmup=2 --webgpu=WGPU --backend=DEFAULT"
 ```
 
 Run raw WebGPU FFM:
 
 ```bash
-./gradlew :benchmark:webgpu-raw-ffm:benchmark --args="--test=sprite2d --sprites=8191 --seconds=10 --warmup=2 --webgpu=WGPU --backend=DEFAULT"
+./gradlew :benchmark:webgpu-raw:desktop-ffm:benchmark --args="--test=sprite2d --sprites=8191 --seconds=10 --warmup=2 --webgpu=WGPU --backend=DEFAULT"
 ```
+
+The raw benchmark code is split into `benchmark:webgpu-raw:core` for the renderer/test and
+`benchmark:webgpu-raw:desktop-jni` / `benchmark:webgpu-raw:desktop-ffm` for launchers.
 
 Run stock libGDX LWJGL3:
 

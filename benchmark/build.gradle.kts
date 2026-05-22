@@ -148,9 +148,9 @@ val sharedArgs = sharedBenchmarkArgs()
 val compareWebgpu = tasks.register<JavaExec>("compareWebgpu") {
     group = "LibGDX"
     description = "Run the WebGPU side of benchmark comparison"
-    dependsOn(":benchmark:webgpu-jni:classes")
+    dependsOn(":benchmark:desktop-jni:classes")
     configureBenchmarkProcess(
-        ":benchmark:webgpu-jni",
+        ":benchmark:desktop-jni",
         "com.monstrous.gdx.benchmarks.webgpu.WebGPUBenchmarkLauncher",
         sharedArgs + listOf(
             "--webgpu=${benchmarkProperty("webgpu", "WGPU")}",
@@ -188,7 +188,7 @@ fun registerComparePreset(
     descriptionText: String,
     sharedArgs: List<String>,
     webgpuArgs: List<String>,
-    webgpuProjectPath: String = ":benchmark:webgpu-jni"
+    webgpuProjectPath: String = ":benchmark:desktop-jni"
 ) {
     val webgpuTask = tasks.register<JavaExec>("${taskName}Webgpu") {
         group = "LibGDX"
@@ -269,7 +269,7 @@ registerComparePreset(
     "Compare SpriteBatch 2D with 8191 sprites on WebGPU FFM WGPU DEFAULT and LWJGL3",
     sprite2dArgs(),
     listOf("--webgpu=WGPU", "--backend=DEFAULT", "--samples=1", "--binding=ffm"),
-    ":benchmark:webgpu-ffm"
+    ":benchmark:desktop-ffm"
 )
 
 registerComparePreset(
@@ -277,7 +277,7 @@ registerComparePreset(
     "Compare SpriteBatch 2D with 8191 sprites on WebGPU FFM WGPU VULKAN and LWJGL3",
     sprite2dArgs(),
     listOf("--webgpu=WGPU", "--backend=VULKAN", "--samples=1", "--binding=ffm"),
-    ":benchmark:webgpu-ffm"
+    ":benchmark:desktop-ffm"
 )
 
 registerComparePreset(
@@ -285,7 +285,7 @@ registerComparePreset(
     "Compare SpriteBatch 2D with 8191 sprites on WebGPU FFM WGPU OPENGL and LWJGL3",
     sprite2dArgs(),
     listOf("--webgpu=WGPU", "--backend=OPENGL", "--samples=1", "--binding=ffm"),
-    ":benchmark:webgpu-ffm"
+    ":benchmark:desktop-ffm"
 )
 
 registerComparePreset(
@@ -293,7 +293,7 @@ registerComparePreset(
     "Compare SpriteBatch 2D with 8191 sprites on WebGPU FFM WGPU D3D12 and LWJGL3",
     sprite2dArgs(),
     listOf("--webgpu=WGPU", "--backend=D3D12", "--samples=1", "--binding=ffm"),
-    ":benchmark:webgpu-ffm"
+    ":benchmark:desktop-ffm"
 )
 
 registerComparePreset(
@@ -301,15 +301,15 @@ registerComparePreset(
     "Compare SpriteBatch 2D with 8191 sprites on WebGPU FFM DAWN DEFAULT and LWJGL3",
     sprite2dArgs(),
     listOf("--webgpu=DAWN", "--backend=DEFAULT", "--samples=1", "--binding=ffm"),
-    ":benchmark:webgpu-ffm"
+    ":benchmark:desktop-ffm"
 )
 
 tasks.register<JavaExec>("rawSprite2dWgpuJni") {
     group = "LibGDX"
     description = "Run the isolated raw WebGPU sprite benchmark through JNI on WGPU DEFAULT"
-    dependsOn(":benchmark:webgpu-raw-jni:classes")
+    dependsOn(":benchmark:webgpu-raw:desktop-jni:classes")
     configureRawWebgpuBenchmarkProcess(
-        ":benchmark:webgpu-raw-jni",
+        ":benchmark:webgpu-raw:desktop-jni",
         sprite2dArgs() + listOf("--webgpu=WGPU", "--backend=DEFAULT", "--samples=1", "--binding=jni")
     )
 }
@@ -317,9 +317,9 @@ tasks.register<JavaExec>("rawSprite2dWgpuJni") {
 tasks.register<JavaExec>("rawSprite2dWgpuFfm") {
     group = "LibGDX"
     description = "Run the isolated raw WebGPU sprite benchmark through FFM on WGPU DEFAULT"
-    dependsOn(":benchmark:webgpu-raw-ffm:classes")
+    dependsOn(":benchmark:webgpu-raw:desktop-ffm:classes")
     configureRawWebgpuBenchmarkProcess(
-        ":benchmark:webgpu-raw-ffm",
+        ":benchmark:webgpu-raw:desktop-ffm",
         sprite2dArgs() + listOf("--webgpu=WGPU", "--backend=DEFAULT", "--samples=1", "--binding=ffm")
     )
 }
@@ -327,7 +327,7 @@ tasks.register<JavaExec>("rawSprite2dWgpuFfm") {
 val matrixSprite2dJniDefault = registerWebgpuOnlyPreset(
     "matrixSprite2dJniDefault",
     "Run SpriteBatch 2D on JNI WGPU DEFAULT",
-    ":benchmark:webgpu-jni",
+    ":benchmark:desktop-jni",
     sprite2dMatrixArgs(),
     listOf("--webgpu=WGPU", "--backend=DEFAULT", "--samples=1", "--binding=jni")
 )
@@ -335,7 +335,7 @@ val matrixSprite2dJniDefault = registerWebgpuOnlyPreset(
 val matrixSprite2dJniVulkan = registerWebgpuOnlyPreset(
     "matrixSprite2dJniVulkan",
     "Run SpriteBatch 2D on JNI WGPU VULKAN",
-    ":benchmark:webgpu-jni",
+    ":benchmark:desktop-jni",
     sprite2dMatrixArgs(),
     listOf("--webgpu=WGPU", "--backend=VULKAN", "--samples=1", "--binding=jni")
 )
@@ -343,7 +343,7 @@ val matrixSprite2dJniVulkan = registerWebgpuOnlyPreset(
 val matrixSprite2dJniOpenGL = registerWebgpuOnlyPreset(
     "matrixSprite2dJniOpenGL",
     "Run SpriteBatch 2D on JNI WGPU OPENGL",
-    ":benchmark:webgpu-jni",
+    ":benchmark:desktop-jni",
     sprite2dMatrixArgs(),
     listOf("--webgpu=WGPU", "--backend=OPENGL", "--samples=1", "--binding=jni")
 )
@@ -351,7 +351,7 @@ val matrixSprite2dJniOpenGL = registerWebgpuOnlyPreset(
 val matrixSprite2dJniD3D12 = registerWebgpuOnlyPreset(
     "matrixSprite2dJniD3D12",
     "Run SpriteBatch 2D on JNI WGPU D3D12",
-    ":benchmark:webgpu-jni",
+    ":benchmark:desktop-jni",
     sprite2dMatrixArgs(),
     listOf("--webgpu=WGPU", "--backend=D3D12", "--samples=1", "--binding=jni")
 )
@@ -359,7 +359,7 @@ val matrixSprite2dJniD3D12 = registerWebgpuOnlyPreset(
 val matrixSprite2dJniDawnDefault = registerWebgpuOnlyPreset(
     "matrixSprite2dJniDawnDefault",
     "Run SpriteBatch 2D on JNI DAWN DEFAULT",
-    ":benchmark:webgpu-jni",
+    ":benchmark:desktop-jni",
     sprite2dMatrixArgs(),
     listOf("--webgpu=DAWN", "--backend=DEFAULT", "--samples=1", "--binding=jni")
 )
@@ -367,7 +367,7 @@ val matrixSprite2dJniDawnDefault = registerWebgpuOnlyPreset(
 val matrixSprite2dFfmDefault = registerWebgpuOnlyPreset(
     "matrixSprite2dFfmDefault",
     "Run SpriteBatch 2D on FFM WGPU DEFAULT",
-    ":benchmark:webgpu-ffm",
+    ":benchmark:desktop-ffm",
     sprite2dMatrixArgs(),
     listOf("--webgpu=WGPU", "--backend=DEFAULT", "--samples=1", "--binding=ffm")
 )
@@ -375,7 +375,7 @@ val matrixSprite2dFfmDefault = registerWebgpuOnlyPreset(
 val matrixSprite2dFfmVulkan = registerWebgpuOnlyPreset(
     "matrixSprite2dFfmVulkan",
     "Run SpriteBatch 2D on FFM WGPU VULKAN",
-    ":benchmark:webgpu-ffm",
+    ":benchmark:desktop-ffm",
     sprite2dMatrixArgs(),
     listOf("--webgpu=WGPU", "--backend=VULKAN", "--samples=1", "--binding=ffm")
 )
@@ -383,7 +383,7 @@ val matrixSprite2dFfmVulkan = registerWebgpuOnlyPreset(
 val matrixSprite2dFfmOpenGL = registerWebgpuOnlyPreset(
     "matrixSprite2dFfmOpenGL",
     "Run SpriteBatch 2D on FFM WGPU OPENGL",
-    ":benchmark:webgpu-ffm",
+    ":benchmark:desktop-ffm",
     sprite2dMatrixArgs(),
     listOf("--webgpu=WGPU", "--backend=OPENGL", "--samples=1", "--binding=ffm")
 )
@@ -391,7 +391,7 @@ val matrixSprite2dFfmOpenGL = registerWebgpuOnlyPreset(
 val matrixSprite2dFfmD3D12 = registerWebgpuOnlyPreset(
     "matrixSprite2dFfmD3D12",
     "Run SpriteBatch 2D on FFM WGPU D3D12",
-    ":benchmark:webgpu-ffm",
+    ":benchmark:desktop-ffm",
     sprite2dMatrixArgs(),
     listOf("--webgpu=WGPU", "--backend=D3D12", "--samples=1", "--binding=ffm")
 )
@@ -399,7 +399,7 @@ val matrixSprite2dFfmD3D12 = registerWebgpuOnlyPreset(
 val matrixSprite2dFfmDawnDefault = registerWebgpuOnlyPreset(
     "matrixSprite2dFfmDawnDefault",
     "Run SpriteBatch 2D on FFM DAWN DEFAULT",
-    ":benchmark:webgpu-ffm",
+    ":benchmark:desktop-ffm",
     sprite2dMatrixArgs(),
     listOf("--webgpu=DAWN", "--backend=DEFAULT", "--samples=1", "--binding=ffm")
 )
@@ -414,9 +414,9 @@ val matrixSprite2dLwjgl3 = tasks.register<JavaExec>("matrixSprite2dLwjgl3") {
 val matrixSprite2dRawJniDefault = tasks.register<JavaExec>("matrixSprite2dRawJniDefault") {
     group = "LibGDX"
     description = "Run raw SpriteBatch 2D on JNI WGPU DEFAULT"
-    dependsOn(":benchmark:webgpu-raw-jni:classes")
+    dependsOn(":benchmark:webgpu-raw:desktop-jni:classes")
     configureRawWebgpuBenchmarkProcess(
-        ":benchmark:webgpu-raw-jni",
+        ":benchmark:webgpu-raw:desktop-jni",
         sprite2dMatrixArgs() + listOf("--webgpu=WGPU", "--backend=DEFAULT", "--samples=1", "--binding=jni")
     )
 }
@@ -424,9 +424,9 @@ val matrixSprite2dRawJniDefault = tasks.register<JavaExec>("matrixSprite2dRawJni
 val matrixSprite2dRawFfmDefault = tasks.register<JavaExec>("matrixSprite2dRawFfmDefault") {
     group = "LibGDX"
     description = "Run raw SpriteBatch 2D on FFM WGPU DEFAULT"
-    dependsOn(":benchmark:webgpu-raw-ffm:classes")
+    dependsOn(":benchmark:webgpu-raw:desktop-ffm:classes")
     configureRawWebgpuBenchmarkProcess(
-        ":benchmark:webgpu-raw-ffm",
+        ":benchmark:webgpu-raw:desktop-ffm",
         sprite2dMatrixArgs() + listOf("--webgpu=WGPU", "--backend=DEFAULT", "--samples=1", "--binding=ffm")
     )
 }

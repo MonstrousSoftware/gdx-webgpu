@@ -1,6 +1,6 @@
 import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 
-val mainClassName = "com.monstrous.gdx.benchmarks.webgpu.WebGPUBenchmarkLauncher"
+val mainClassName = "com.monstrous.gdx.benchmarks.webgpu.raw.RawWebGPUSpriteBenchmarkLauncher"
 
 plugins {
     application
@@ -13,8 +13,7 @@ application {
 
 val javaVersion = project.property("javaFFM") as String
 
-sourceSets["main"].java.srcDirs(File("../webgpu-jni/src/main/java"))
-sourceSets["main"].resources.srcDirs(File("../../tests/assets"))
+sourceSets["main"].resources.srcDirs(File("../../../tests/assets"))
 
 if (JavaVersion.current().isJava9Compatible) {
     tasks.withType<JavaCompile> {
@@ -23,13 +22,12 @@ if (JavaVersion.current().isJava9Compatible) {
 }
 
 dependencies {
-    implementation(project(":benchmark:core"))
-    implementation(project(":gdx-webgpu"))
+    implementation(project(":benchmark:webgpu-raw:core"))
     implementation(project(":backends:backend-desktop-ffm"))
 }
 
 tasks.named<JavaExec>("run") {
-    workingDir = File("../../tests/assets")
+    workingDir = File("../../../tests/assets")
     setIgnoreExitValue(true)
     standardInput = System.`in`
     args("--binding=ffm")
@@ -42,10 +40,10 @@ tasks.named<JavaExec>("run") {
 
 tasks.register<JavaExec>("benchmark") {
     group = "LibGDX"
-    description = "Run desktop WebGPU FFM benchmarks"
+    description = "Run the raw WebGPU sprite benchmark through FFM"
     mainClass.set(mainClassName)
     classpath = sourceSets["main"].runtimeClasspath
-    workingDir = File("../../tests/assets")
+    workingDir = File("../../../tests/assets")
     setIgnoreExitValue(true)
     standardInput = System.`in`
     args("--binding=ffm")

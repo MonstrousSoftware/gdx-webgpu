@@ -76,7 +76,7 @@ That gives us a cleaner answer to two questions:
 
 ## Raw Benchmark Added
 
-A new module was added at `benchmark/webgpu-raw-jni`. It is intentionally separate from `WgSpriteBatch` and uses:
+A new raw benchmark group was added at `benchmark/webgpu-raw`. Its `core` module is intentionally separate from `WgSpriteBatch` and uses:
 
 - One startup-created pipeline.
 - One startup-created bind group.
