@@ -26,7 +26,8 @@ include(":tests:gdx-tests-android")
 include(":benchmark")
 include(":benchmark:core")
 include(":benchmark:lwjgl3")
-include(":benchmark:graalvm")
+include(":benchmark:graalvm:desktop-jni")
+include(":benchmark:graalvm:desktop-ffm")
 include(":benchmark:webgpu")
 include(":benchmark:webgpu:core")
 include(":benchmark:webgpu:desktop-jni")
@@ -35,3 +36,13 @@ include(":benchmark:webgpu-raw")
 include(":benchmark:webgpu-raw:core")
 include(":benchmark:webgpu-raw:desktop-jni")
 include(":benchmark:webgpu-raw:desktop-ffm")
+
+//includeBuild("E:\\Dev\\Projects\\java\\jWebGPU") {
+//    dependencySubstitution {
+////        substitute(module("com.github.xpenatan.jWebGPU:webgpu-android")).using(project(":webgpu:webgpu-android"))
+//        substitute(module("com.github.xpenatan.jWebGPU:webgpu-web")).using(project(":webgpu:webgpu-web"))
+//        substitute(module("com.github.xpenatan.jWebGPU:webgpu-core")).using(project(":webgpu:webgpu-core"))
+//        substitute(module("com.github.xpenatan.jWebGPU:webgpu-ffm")).using(project(":webgpu:webgpu-ffm"))
+//        substitute(module("com.github.xpenatan.jWebGPU:webgpu-jni")).using(project(":webgpu:webgpu-jni"))
+//    }
+//}

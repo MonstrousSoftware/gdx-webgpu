@@ -183,10 +183,19 @@ fun runNativeBenchmark(executable: File, workingDir: File, benchmarkArgs: List<S
     }
 }
 
-fun runGraalvmReleaseBenchmark(benchmarkArgs: List<String>) {
-    val outputDir = project(":benchmark:graalvm").layout.buildDirectory.dir("native/nativeReleaseCompile").get().asFile
-    val executable = outputDir.resolve(nativeExecutableName("benchmark-webgpu-graalvm-release"))
-    runNativeBenchmark(executable, outputDir, benchmarkArgs, "GraalVM WebGPU")
+fun runGraalvmReleaseBenchmark(benchmarkArgs: List<String>, binding: String = "jni") {
+    val graalvmProject = if (binding == "ffm") {
+        project(":benchmark:graalvm:desktop-ffm")
+    } else {
+        project(":benchmark:graalvm:desktop-jni")
+    }
+    val outputDir = graalvmProject.layout.buildDirectory.dir("native/nativeReleaseCompile").get().asFile
+    val executableName = if (binding == "ffm") {
+        "benchmark-webgpu-graalvm-ffm-release"
+    } else {
+        "benchmark-webgpu-graalvm-jni-release"
+    }
+    runNativeBenchmark(executable = outputDir.resolve(nativeExecutableName(executableName)), workingDir = outputDir, benchmarkArgs = benchmarkArgs, backendName = "GraalVM WebGPU $binding")
 }
 
 val sharedArgs = sharedBenchmarkArgs()
@@ -352,8 +361,8 @@ registerComparePreset(
 
 tasks.register("compareSprite2dGraalvm") {
     group = "LibGDX"
-    description = "Run SpriteBatch 2D on the optimized GraalVM WebGPU native image"
-    dependsOn(":benchmark:graalvm:copyBenchmarkAssetsToReleaseNativeCompile")
+    description = "Run SpriteBatch 2D on the optimized GraalVM WebGPU JNI native image"
+    dependsOn(":benchmark:graalvm:desktop-jni:copyBenchmarkAssetsToReleaseNativeCompile")
 
     doLast {
         runGraalvmReleaseBenchmark(
@@ -363,6 +372,24 @@ tasks.register("compareSprite2dGraalvm") {
                 "--samples=${benchmarkProperty("webgpuSamples", "1")}",
                 "--binding=graalvm-jni"
             )
+        )
+    }
+}
+
+tasks.register("compareSprite2dGraalvmFfm") {
+    group = "LibGDX"
+    description = "Run SpriteBatch 2D on the optimized GraalVM WebGPU FFM native image"
+    dependsOn(":benchmark:graalvm:desktop-ffm:copyBenchmarkAssetsToReleaseNativeCompile")
+
+    doLast {
+        runGraalvmReleaseBenchmark(
+            sprite2dArgs() + listOf(
+                "--webgpu=${benchmarkProperty("webgpu", "WGPU")}",
+                "--backend=${benchmarkProperty("nativeBackend", "DEFAULT")}",
+                "--samples=${benchmarkProperty("webgpuSamples", "1")}",
+                "--binding=graalvm-ffm"
+            ),
+            "ffm"
         )
     }
 }
@@ -477,7 +504,7 @@ val matrixSprite2dLwjgl3 = tasks.register<JavaExec>("matrixSprite2dLwjgl3") {
 val matrixSprite2dGraalvmDefault = tasks.register("matrixSprite2dGraalvmDefault") {
     group = "LibGDX"
     description = "Run SpriteBatch 2D on GraalVM WebGPU JNI WGPU DEFAULT"
-    dependsOn(":benchmark:graalvm:copyBenchmarkAssetsToReleaseNativeCompile")
+    dependsOn(":benchmark:graalvm:desktop-jni:copyBenchmarkAssetsToReleaseNativeCompile")
 
     doLast {
         try {
@@ -491,6 +518,28 @@ val matrixSprite2dGraalvmDefault = tasks.register("matrixSprite2dGraalvmDefault"
             )
         } catch (e: GradleException) {
             logger.error("BENCH_MATRIX_BACKEND_FAILED backend=webgpu-graalvm-jni-WGPU-DEFAULT message=${e.message}")
+        }
+    }
+}
+
+val matrixSprite2dGraalvmFfmDefault = tasks.register("matrixSprite2dGraalvmFfmDefault") {
+    group = "LibGDX"
+    description = "Run SpriteBatch 2D on GraalVM WebGPU FFM WGPU DEFAULT"
+    dependsOn(":benchmark:graalvm:desktop-ffm:copyBenchmarkAssetsToReleaseNativeCompile")
+
+    doLast {
+        try {
+            runGraalvmReleaseBenchmark(
+                sprite2dMatrixArgs() + listOf(
+                    "--webgpu=WGPU",
+                    "--backend=DEFAULT",
+                    "--samples=1",
+                    "--binding=graalvm-ffm"
+                ),
+                "ffm"
+            )
+        } catch (e: GradleException) {
+            logger.error("BENCH_MATRIX_BACKEND_FAILED backend=webgpu-graalvm-ffm-WGPU-DEFAULT message=${e.message}")
         }
     }
 }
@@ -553,6 +602,10 @@ matrixSprite2dGraalvmDefault.configure {
     dependsOn(prepareSprite2dMatrixReport)
 }
 
+matrixSprite2dGraalvmFfmDefault.configure {
+    dependsOn(prepareSprite2dMatrixReport)
+}
+
 matrixSprite2dJniVulkan.configure { mustRunAfter(matrixSprite2dJniDefault) }
 matrixSprite2dJniOpenGL.configure { mustRunAfter(matrixSprite2dJniVulkan) }
 matrixSprite2dJniD3D12.configure { mustRunAfter(matrixSprite2dJniOpenGL) }
@@ -564,7 +617,8 @@ matrixSprite2dFfmD3D12.configure { mustRunAfter(matrixSprite2dFfmOpenGL) }
 matrixSprite2dFfmDawnDefault.configure { mustRunAfter(matrixSprite2dFfmD3D12) }
 matrixSprite2dLwjgl3.configure { mustRunAfter(matrixSprite2dFfmDawnDefault) }
 matrixSprite2dGraalvmDefault.configure { mustRunAfter(matrixSprite2dLwjgl3) }
-matrixSprite2dRawJniDefault.configure { mustRunAfter(matrixSprite2dGraalvmDefault) }
+matrixSprite2dGraalvmFfmDefault.configure { mustRunAfter(matrixSprite2dGraalvmDefault) }
+matrixSprite2dRawJniDefault.configure { mustRunAfter(matrixSprite2dGraalvmFfmDefault) }
 matrixSprite2dRawFfmDefault.configure { mustRunAfter(matrixSprite2dRawJniDefault) }
 
 tasks.register("compareSprite2dMatrix") {
@@ -583,6 +637,7 @@ tasks.register("compareSprite2dMatrix") {
         matrixSprite2dFfmDawnDefault,
         matrixSprite2dLwjgl3,
         matrixSprite2dGraalvmDefault,
+        matrixSprite2dGraalvmFfmDefault,
         matrixSprite2dRawJniDefault,
         matrixSprite2dRawFfmDefault
     )

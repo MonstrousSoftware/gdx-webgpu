@@ -63,8 +63,8 @@ Run the full explicit matrix:
 
 The matrix runs JNI `WGPU DEFAULT`, JNI `WGPU VULKAN`, JNI `WGPU OPENGL`, JNI `WGPU D3D12`,
 JNI `DAWN DEFAULT`, FFM `WGPU DEFAULT`, FFM `WGPU VULKAN`, FFM `WGPU OPENGL`, FFM `WGPU D3D12`,
-FFM `DAWN DEFAULT`, stock libGDX LWJGL3, GraalVM WebGPU JNI `WGPU DEFAULT`, raw JNI `WGPU DEFAULT`,
-then raw FFM `WGPU DEFAULT`.
+FFM `DAWN DEFAULT`, stock libGDX LWJGL3, GraalVM WebGPU JNI `WGPU DEFAULT`, GraalVM WebGPU FFM `WGPU DEFAULT`,
+raw JNI `WGPU DEFAULT`, then raw FFM `WGPU DEFAULT`.
 This avoids relying on whatever
 `WebGPUContext.Backend.DEFAULT` chooses on the current machine.
 It also writes a Markdown report to `benchmark/build/benchmark-results/sprite2d-matrix/results.md`.
@@ -97,16 +97,20 @@ Run WebGPU through GraalVM native image:
 
 ```bash
 ./gradlew :benchmark:compareSprite2dGraalvm
-./gradlew :benchmark:graalvm:benchmarkJvm
-./gradlew :benchmark:graalvm:benchmarkRelease
+./gradlew :benchmark:compareSprite2dGraalvmFfm
+./gradlew :benchmark:graalvm:desktop-jni:benchmarkJvm
+./gradlew :benchmark:graalvm:desktop-ffm:benchmarkJvm
+./gradlew :benchmark:graalvm:desktop-jni:benchmarkRelease
+./gradlew :benchmark:graalvm:desktop-ffm:benchmarkRelease
 ```
 
 `benchmarkRelease` builds the optimized native executable, copies the benchmark texture plus native LWJGL/libGDX
-libraries beside it, and runs WebGPU through the JNI binding. Configure it with the same properties used by the other
-WebGPU benchmark tasks, for example:
+libraries beside it, and runs WebGPU through the selected GraalVM desktop binding. Configure both with the same
+properties used by the other WebGPU benchmark tasks, for example:
 
 ```bash
-./gradlew :benchmark:graalvm:benchmarkRelease -PbenchSprites=8191 -Pwebgpu=WGPU -PnativeBackend=DEFAULT
+./gradlew :benchmark:graalvm:desktop-jni:benchmarkRelease -PbenchSprites=8191 -Pwebgpu=WGPU -PnativeBackend=DEFAULT
+./gradlew :benchmark:graalvm:desktop-ffm:benchmarkRelease -PbenchSprites=8191 -Pwebgpu=WGPU -PnativeBackend=DEFAULT
 ```
 
 The native-image tasks require a GraalVM JDK with `native-image`; set `GRAALVM_HOME` or run Gradle from a GraalVM

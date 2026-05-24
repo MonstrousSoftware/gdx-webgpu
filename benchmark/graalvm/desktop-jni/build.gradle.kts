@@ -6,9 +6,9 @@ plugins {
 }
 
 val mainClassName = "com.monstrous.gdx.benchmarks.graalvm.GraalVMWebGPUBenchmarkLauncher"
-val nativeImageName = "benchmark-webgpu-graalvm"
-val assetsDir = file("../../tests/assets")
-val benchmarkTexture = file("../../tests/assets/data/badlogicsmall.jpg")
+val nativeImageName = "benchmark-webgpu-graalvm-jni"
+val assetsDir = file("../../../tests/assets")
+val benchmarkTexture = file("../../../tests/assets/data/badlogicsmall.jpg")
 val gdxVersion = project.property("gdxVersion") as String
 val javaVersion = project.property("javaMain") as String
 val lwjglVersion = "3.3.3"
@@ -104,7 +104,7 @@ dependencies {
 
 tasks.register<JavaExec>("benchmarkJvm") {
     group = "benchmark"
-    description = "Run WebGPU benchmark on a GraalVM JVM"
+    description = "Run WebGPU benchmark through JNI on a GraalVM JVM"
     dependsOn("classes")
     mainClass.set(mainClassName)
     classpath = sourceSets["main"].runtimeClasspath
@@ -133,6 +133,7 @@ graalvmNative {
             }
             fallback.set(false)
             resources.autodetect()
+            classpath(sourceSets["main"].runtimeClasspath)
             jvmArgs("-Xmx${nativeImageBuilderMaxHeap.get()}")
             buildArgs.addAll(
                 "-H:+ReportExceptionStackTraces",
@@ -177,7 +178,7 @@ val releaseNativeExecutable = releaseNativeOutputDir.map { it.file(releaseNative
 val copyNativeLibrariesToReleaseNativeCompile = tasks.register<Copy>("copyNativeLibrariesToReleaseNativeCompile") {
     dependsOn("nativeReleaseCompile")
     group = "benchmark"
-    description = "Copy native libraries next to the GraalVM WebGPU benchmark executable"
+    description = "Copy native libraries next to the GraalVM WebGPU JNI benchmark executable"
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     includeEmptyDirs = false
     doFirst {
@@ -207,27 +208,27 @@ val copyNativeLibrariesToReleaseNativeCompile = tasks.register<Copy>("copyNative
 val copyBenchmarkAssetsToReleaseNativeCompile = tasks.register<Copy>("copyBenchmarkAssetsToReleaseNativeCompile") {
     dependsOn("nativeReleaseCompile", copyNativeLibrariesToReleaseNativeCompile)
     group = "benchmark"
-    description = "Copy benchmark assets next to the GraalVM WebGPU benchmark executable"
+    description = "Copy benchmark assets next to the GraalVM WebGPU JNI benchmark executable"
     from(benchmarkTexture)
     into(releaseNativeOutputDir.map { it.dir("data") })
 }
 
 tasks.register("buildRelease") {
     group = "benchmark"
-    description = "Build the optimized GraalVM WebGPU benchmark executable and copy runtime files"
+    description = "Build the optimized GraalVM WebGPU JNI benchmark executable and copy runtime files"
     dependsOn(copyBenchmarkAssetsToReleaseNativeCompile)
 }
 
 tasks.register("benchmarkRelease") {
     group = "benchmark"
-    description = "Build and run the optimized GraalVM WebGPU benchmark executable"
+    description = "Build and run the optimized GraalVM WebGPU JNI benchmark executable"
     dependsOn(copyBenchmarkAssetsToReleaseNativeCompile)
 
     doLast {
         val outputDir = releaseNativeOutputDir.get().asFile
         val executable = releaseNativeExecutable.get().asFile
         if(!executable.isFile) {
-            throw GradleException("Expected GraalVM WebGPU benchmark executable was not built: ${executable.absolutePath}")
+            throw GradleException("Expected GraalVM WebGPU JNI benchmark executable was not built: ${executable.absolutePath}")
         }
 
         val processBuilder = ProcessBuilder(listOf(executable.absolutePath) + benchmarkArgs())
@@ -248,11 +249,11 @@ tasks.register("benchmarkRelease") {
             process.destroyForcibly()
             process.waitFor(5, TimeUnit.SECONDS)
             outputThread.join(1000)
-            throw GradleException("GraalVM WebGPU benchmark timed out after ${timeoutSeconds}s")
+            throw GradleException("GraalVM WebGPU JNI benchmark timed out after ${timeoutSeconds}s")
         }
         outputThread.join(1000)
         if(process.exitValue() != 0) {
-            throw GradleException("GraalVM WebGPU benchmark failed with exit code ${process.exitValue()}")
+            throw GradleException("GraalVM WebGPU JNI benchmark failed with exit code ${process.exitValue()}")
         }
     }
 }

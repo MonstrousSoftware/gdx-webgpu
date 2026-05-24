@@ -1,0 +1,618 @@
+{
+    "reflection":  [
+                       {
+                           "type":  "com.github.xpenatan.webgpu.WGPURequestAdapterCallback",
+                           "methods":  [
+                                           {
+                                               "name":  "internal_onCallback",
+                                               "parameterTypes":  [
+                                                                      "int",
+                                                                      "long",
+                                                                      "java.lang.foreign.MemorySegment"
+                                                                  ]
+                                           }
+                                       ]
+                       },
+                       {
+                           "type":  "com.github.xpenatan.webgpu.WGPURequestDeviceCallback",
+                           "methods":  [
+                                           {
+                                               "name":  "internal_onCallback",
+                                               "parameterTypes":  [
+                                                                      "int",
+                                                                      "long",
+                                                                      "java.lang.foreign.MemorySegment"
+                                                                  ]
+                                           }
+                                       ]
+                       },
+                       {
+                           "type":  "com.github.xpenatan.webgpu.WGPUUncapturedErrorCallback",
+                           "methods":  [
+                                           {
+                                               "name":  "internal_onCallback",
+                                               "parameterTypes":  [
+                                                                      "int",
+                                                                      "java.lang.foreign.MemorySegment"
+                                                                  ]
+                                           }
+                                       ]
+                       }
+                   ],
+    "foreign":  {
+                    "upcalls":  [
+                                    {
+                                        "returnType":  "void",
+                                        "parameterTypes":  [
+                                                               "jint",
+                                                               "jlong",
+                                                               "void*"
+                                                           ]
+                                    },
+                                    {
+                                        "returnType":  "void",
+                                        "parameterTypes":  [
+                                                               "jint",
+                                                               "void*"
+                                                           ]
+                                    }
+                                ],
+                    "downcalls":  [
+                                      {
+                                          "returnType":  "void",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jlong",
+                                                                 "jlong",
+                                                                 "jlong",
+                                                                 "jlong"
+                                                             ]
+                                      },
+                                      {
+                                          "returnType":  "void",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jlong",
+                                                                 "jlong",
+                                                                 "jlong",
+                                                                 "jlong"
+                                                             ],
+                                          "options":  {
+                                                          "critical":  {
+                                                                           "allowHeapAccess":  true
+                                                                       }
+                                                      }
+                                      },
+                                      {
+                                          "returnType":  "void",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jlong",
+                                                                 "jint"
+                                                             ]
+                                      },
+                                      {
+                                          "returnType":  "void",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jlong",
+                                                                 "jint",
+                                                                 "jlong"
+                                                             ]
+                                      },
+                                      {
+                                          "returnType":  "void",
+                                          "parameterTypes":  [
+                                                                 "jlong"
+                                                             ],
+                                          "options":  {
+                                                          "critical":  {
+                                                                           "allowHeapAccess":  true
+                                                                       }
+                                                      }
+                                      },
+                                      {
+                                          "returnType":  "void",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jlong",
+                                                                 "jlong"
+                                                             ],
+                                          "options":  {
+                                                          "critical":  {
+                                                                           "allowHeapAccess":  true
+                                                                       }
+                                                      }
+                                      },
+                                      {
+                                          "returnType":  "void",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jint",
+                                                                 "jint",
+                                                                 "jint"
+                                                             ],
+                                          "options":  {
+                                                          "critical":  {
+                                                                           "allowHeapAccess":  true
+                                                                       }
+                                                      }
+                                      },
+                                      {
+                                          "returnType":  "jlong",
+                                          "parameterTypes":  [
+                                                                 "jlong"
+                                                             ],
+                                          "options":  {
+                                                          "critical":  {
+                                                                           "allowHeapAccess":  true
+                                                                       }
+                                                      }
+                                      },
+                                      {
+                                          "returnType":  "void",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jlong",
+                                                                 "jint",
+                                                                 "jint",
+                                                                 "jlong",
+                                                                 "jint"
+                                                             ]
+                                      },
+                                      {
+                                          "returnType":  "jboolean",
+                                          "parameterTypes":  [
+                                                                 "jlong"
+                                                             ],
+                                          "options":  {
+                                                          "critical":  {
+                                                                           "allowHeapAccess":  true
+                                                                       }
+                                                      }
+                                      },
+                                      {
+                                          "returnType":  "void",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jlong"
+                                                             ]
+                                      },
+                                      {
+                                          "returnType":  "void",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jint"
+                                                             ]
+                                      },
+                                      {
+                                          "returnType":  "void",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jint"
+                                                             ],
+                                          "options":  {
+                                                          "critical":  {
+                                                                           "allowHeapAccess":  true
+                                                                       }
+                                                      }
+                                      },
+                                      {
+                                          "returnType":  "void",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jlong"
+                                                             ],
+                                          "options":  {
+                                                          "critical":  {
+                                                                           "allowHeapAccess":  true
+                                                                       }
+                                                      }
+                                      },
+                                      {
+                                          "returnType":  "void",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jlong",
+                                                                 "jlong"
+                                                             ]
+                                      },
+                                      {
+                                          "returnType":  "void",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jlong",
+                                                                 "jint",
+                                                                 "jint"
+                                                             ]
+                                      },
+                                      {
+                                          "returnType":  "void",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jlong",
+                                                                 "jint",
+                                                                 "jlong",
+                                                                 "jlong"
+                                                             ]
+                                      },
+                                      {
+                                          "returnType":  "void",
+                                          "parameterTypes":  [
+                                                                 "jlong"
+                                                             ]
+                                      },
+                                      {
+                                          "returnType":  "void",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jlong",
+                                                                 "jint",
+                                                                 "jlong",
+                                                                 "jint"
+                                                             ]
+                                      },
+                                      {
+                                          "returnType":  "void",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jfloat",
+                                                                 "jfloat",
+                                                                 "jfloat",
+                                                                 "jfloat",
+                                                                 "jfloat",
+                                                                 "jfloat"
+                                                             ],
+                                          "options":  {
+                                                          "critical":  {
+                                                                           "allowHeapAccess":  true
+                                                                       }
+                                                      }
+                                      },
+                                      {
+                                          "returnType":  "jlong",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jboolean",
+                                                                 "jlong",
+                                                                 "jlong"
+                                                             ],
+                                          "options":  {
+                                                          "critical":  {
+                                                                           "allowHeapAccess":  true
+                                                                       }
+                                                      }
+                                      },
+                                      {
+                                          "returnType":  "void",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jboolean"
+                                                             ],
+                                          "options":  {
+                                                          "critical":  {
+                                                                           "allowHeapAccess":  true
+                                                                       }
+                                                      }
+                                      },
+                                      {
+                                          "returnType":  "void",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jint",
+                                                                 "jint",
+                                                                 "jint",
+                                                                 "jint",
+                                                                 "jint"
+                                                             ]
+                                      },
+                                      {
+                                          "returnType":  "jboolean",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jlong"
+                                                             ],
+                                          "options":  {
+                                                          "critical":  {
+                                                                           "allowHeapAccess":  true
+                                                                       }
+                                                      }
+                                      },
+                                      {
+                                          "returnType":  "jboolean",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jint"
+                                                             ],
+                                          "options":  {
+                                                          "critical":  {
+                                                                           "allowHeapAccess":  true
+                                                                       }
+                                                      }
+                                      },
+                                      {
+                                          "returnType":  "void",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jlong",
+                                                                 "jint",
+                                                                 "jlong",
+                                                                 "jint",
+                                                                 "jint"
+                                                             ]
+                                      },
+                                      {
+                                          "returnType":  "void",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "void*"
+                                                             ]
+                                      },
+                                      {
+                                          "returnType":  "void",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "void*"
+                                                             ],
+                                          "options":  {
+                                                          "critical":  {
+                                                                           "allowHeapAccess":  true
+                                                                       }
+                                                      }
+                                      },
+                                      {
+                                          "returnType":  "jint",
+                                          "parameterTypes":  [
+                                                                 "jlong"
+                                                             ],
+                                          "options":  {
+                                                          "critical":  {
+                                                                           "allowHeapAccess":  true
+                                                                       }
+                                                      }
+                                      },
+                                      {
+                                          "returnType":  "jint",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jlong",
+                                                                 "jint"
+                                                             ]
+                                      },
+                                      {
+                                          "returnType":  "jint",
+                                          "parameterTypes":  [
+
+                                                             ],
+                                          "options":  {
+                                                          "critical":  {
+                                                                           "allowHeapAccess":  true
+                                                                       }
+                                                      }
+                                      },
+                                      {
+                                          "returnType":  "jlong",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "void*"
+                                                             ],
+                                          "options":  {
+                                                          "critical":  {
+                                                                           "allowHeapAccess":  true
+                                                                       }
+                                                      }
+                                      },
+                                      {
+                                          "returnType":  "jlong",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jint",
+                                                                 "jint",
+                                                                 "jint",
+                                                                 "jint",
+                                                                 "jlong"
+                                                             ]
+                                      },
+                                      {
+                                          "returnType":  "void",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jint",
+                                                                 "jlong",
+                                                                 "jlong"
+                                                             ],
+                                          "options":  {
+                                                          "critical":  {
+                                                                           "allowHeapAccess":  true
+                                                                       }
+                                                      }
+                                      },
+                                      {
+                                          "returnType":  "void",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jlong",
+                                                                 "jlong",
+                                                                 "jlong"
+                                                             ]
+                                      },
+                                      {
+                                          "returnType":  "void",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jlong",
+                                                                 "jlong",
+                                                                 "jlong"
+                                                             ],
+                                          "options":  {
+                                                          "critical":  {
+                                                                           "allowHeapAccess":  true
+                                                                       }
+                                                      }
+                                      },
+                                      {
+                                          "returnType":  "void",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jlong",
+                                                                 "jlong",
+                                                                 "jint",
+                                                                 "jlong",
+                                                                 "jlong"
+                                                             ]
+                                      },
+                                      {
+                                          "returnType":  "jlong",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jint",
+                                                                 "jint"
+                                                             ],
+                                          "options":  {
+                                                          "critical":  {
+                                                                           "allowHeapAccess":  true
+                                                                       }
+                                                      }
+                                      },
+                                      {
+                                          "returnType":  "void",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jfloat"
+                                                             ],
+                                          "options":  {
+                                                          "critical":  {
+                                                                           "allowHeapAccess":  true
+                                                                       }
+                                                      }
+                                      },
+                                      {
+                                          "returnType":  "void",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jint",
+                                                                 "jint",
+                                                                 "jint",
+                                                                 "jint"
+                                                             ],
+                                          "options":  {
+                                                          "critical":  {
+                                                                           "allowHeapAccess":  true
+                                                                       }
+                                                      }
+                                      },
+                                      {
+                                          "returnType":  "void",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jint",
+                                                                 "jlong",
+                                                                 "jint",
+                                                                 "jint"
+                                                             ],
+                                          "options":  {
+                                                          "critical":  {
+                                                                           "allowHeapAccess":  true
+                                                                       }
+                                                      }
+                                      },
+                                      {
+                                          "returnType":  "jint",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jint"
+                                                             ],
+                                          "options":  {
+                                                          "critical":  {
+                                                                           "allowHeapAccess":  true
+                                                                       }
+                                                      }
+                                      },
+                                      {
+                                          "returnType":  "jint",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jlong"
+                                                             ],
+                                          "options":  {
+                                                          "critical":  {
+                                                                           "allowHeapAccess":  true
+                                                                       }
+                                                      }
+                                      },
+                                      {
+                                          "returnType":  "jlong",
+                                          "parameterTypes":  [
+
+                                                             ],
+                                          "options":  {
+                                                          "critical":  {
+                                                                           "allowHeapAccess":  true
+                                                                       }
+                                                      }
+                                      },
+                                      {
+                                          "returnType":  "void",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jint",
+                                                                 "jint",
+                                                                 "jint",
+                                                                 "jint"
+                                                             ]
+                                      },
+                                      {
+                                          "returnType":  "void",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jint",
+                                                                 "jlong"
+                                                             ],
+                                          "options":  {
+                                                          "critical":  {
+                                                                           "allowHeapAccess":  true
+                                                                       }
+                                                      }
+                                      },
+                                      {
+                                          "returnType":  "jlong",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jint"
+                                                             ],
+                                          "options":  {
+                                                          "critical":  {
+                                                                           "allowHeapAccess":  true
+                                                                       }
+                                                      }
+                                      },
+                                      {
+                                          "returnType":  "jlong",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jlong"
+                                                             ],
+                                          "options":  {
+                                                          "critical":  {
+                                                                           "allowHeapAccess":  true
+                                                                       }
+                                                      }
+                                      },
+                                      {
+                                          "returnType":  "void",
+                                          "parameterTypes":  [
+                                                                 "jlong",
+                                                                 "jlong",
+                                                                 "jint",
+                                                                 "jint",
+                                                                 "jint"
+                                                             ],
+                                          "options":  {
+                                                          "critical":  {
+                                                                           "allowHeapAccess":  true
+                                                                       }
+                                                      }
+                                      }
+                                  ]
+                }
+}

@@ -10,12 +10,16 @@ public class GraalVMWebGPUBenchmarkLauncher {
     private static final String NATIVE_IMAGE_IMAGE_CODE = "org.graalvm.nativeimage.imagecode";
 
     public static void main(String[] args) {
+        launch(args, "graalvm-jni");
+    }
+
+    static void launch(String[] args, String defaultBinding) {
         configureExternalNativeLibraries();
         if(System.getProperty(LWJGL_JNI_FUNCTION_COUNT) == null) {
             System.setProperty(LWJGL_JNI_FUNCTION_COUNT, JAVA_24_PLUS_JNI_FUNCTION_COUNT);
         }
         if(System.getProperty("benchmark.binding") == null) {
-            System.setProperty("benchmark.binding", "graalvm-jni");
+            System.setProperty("benchmark.binding", defaultBinding);
         }
 
         WebGPUBenchmarkLauncher.main(args);

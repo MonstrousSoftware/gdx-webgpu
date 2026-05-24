@@ -1,0 +1,15 @@
+{
+  "resources": {
+    "includes": [
+      {
+        "pattern": "META-INF/.*\\.(sha1|git)$"
+      },
+      {
+        "pattern": "runtime.*\\.(dll|so|dylib)$"
+      },
+      {
+        "pattern": "native/.*\\.(dll|so|dylib)$"
+      }
+    ]
+  }
+}
