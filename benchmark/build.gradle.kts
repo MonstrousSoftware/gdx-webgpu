@@ -2,6 +2,7 @@ import org.gradle.api.tasks.JavaExec
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 import java.time.Instant
+import java.util.concurrent.TimeUnit
 
 data class BenchmarkReportRow(
     val backend: String,
@@ -141,6 +142,51 @@ fun JavaExec.configureLwjgl3BenchmarkProcess(benchmarkArgs: List<String>) {
         "com.monstrous.gdx.benchmarks.lwjgl3.Lwjgl3BenchmarkLauncher",
         benchmarkArgs
     )
+}
+
+fun nativeExecutableName(imageName: String): String {
+    return if (DefaultNativePlatform.getCurrentOperatingSystem().isWindows) "$imageName.exe" else imageName
+}
+
+fun benchmarkTimeoutSeconds(): Long {
+    return benchmarkProperty("benchWarmup", "2").toLong() + benchmarkProperty("benchSeconds", "10").toLong() + 30
+}
+
+fun runNativeBenchmark(executable: File, workingDir: File, benchmarkArgs: List<String>, backendName: String) {
+    if (!executable.isFile) {
+        throw GradleException("Expected $backendName benchmark executable was not built: ${executable.absolutePath}")
+    }
+
+    val processBuilder = ProcessBuilder(listOf(executable.absolutePath) + benchmarkArgs)
+        .directory(workingDir)
+        .redirectErrorStream(true)
+    val process = processBuilder.start()
+    val outputThread = Thread {
+        process.inputStream.bufferedReader().useLines { lines ->
+            lines.forEach { println(it) }
+        }
+    }
+    outputThread.isDaemon = true
+    outputThread.start()
+
+    val timeoutSeconds = benchmarkTimeoutSeconds()
+    val completed = process.waitFor(timeoutSeconds, TimeUnit.SECONDS)
+    if (!completed) {
+        process.destroyForcibly()
+        process.waitFor(5, TimeUnit.SECONDS)
+        outputThread.join(1000)
+        throw GradleException("$backendName benchmark timed out after ${timeoutSeconds}s")
+    }
+    outputThread.join(1000)
+    if (process.exitValue() != 0) {
+        throw GradleException("$backendName benchmark failed with exit code ${process.exitValue()}")
+    }
+}
+
+fun runGraalvmReleaseBenchmark(benchmarkArgs: List<String>) {
+    val outputDir = project(":benchmark:graalvm").layout.buildDirectory.dir("native/nativeReleaseCompile").get().asFile
+    val executable = outputDir.resolve(nativeExecutableName("benchmark-webgpu-graalvm-release"))
+    runNativeBenchmark(executable, outputDir, benchmarkArgs, "GraalVM WebGPU")
 }
 
 val sharedArgs = sharedBenchmarkArgs()
@@ -304,6 +350,23 @@ registerComparePreset(
     ":benchmark:webgpu:desktop-ffm"
 )
 
+tasks.register("compareSprite2dGraalvm") {
+    group = "LibGDX"
+    description = "Run SpriteBatch 2D on the optimized GraalVM WebGPU native image"
+    dependsOn(":benchmark:graalvm:copyBenchmarkAssetsToReleaseNativeCompile")
+
+    doLast {
+        runGraalvmReleaseBenchmark(
+            sprite2dArgs() + listOf(
+                "--webgpu=${benchmarkProperty("webgpu", "WGPU")}",
+                "--backend=${benchmarkProperty("nativeBackend", "DEFAULT")}",
+                "--samples=${benchmarkProperty("webgpuSamples", "1")}",
+                "--binding=graalvm-jni"
+            )
+        )
+    }
+}
+
 tasks.register<JavaExec>("rawSprite2dWgpuJni") {
     group = "LibGDX"
     description = "Run the isolated raw WebGPU sprite benchmark through JNI on WGPU DEFAULT"
@@ -411,6 +474,27 @@ val matrixSprite2dLwjgl3 = tasks.register<JavaExec>("matrixSprite2dLwjgl3") {
     configureLwjgl3BenchmarkProcess(sprite2dMatrixArgs())
 }
 
+val matrixSprite2dGraalvmDefault = tasks.register("matrixSprite2dGraalvmDefault") {
+    group = "LibGDX"
+    description = "Run SpriteBatch 2D on GraalVM WebGPU JNI WGPU DEFAULT"
+    dependsOn(":benchmark:graalvm:copyBenchmarkAssetsToReleaseNativeCompile")
+
+    doLast {
+        try {
+            runGraalvmReleaseBenchmark(
+                sprite2dMatrixArgs() + listOf(
+                    "--webgpu=WGPU",
+                    "--backend=DEFAULT",
+                    "--samples=1",
+                    "--binding=graalvm-jni"
+                )
+            )
+        } catch (e: GradleException) {
+            logger.error("BENCH_MATRIX_BACKEND_FAILED backend=webgpu-graalvm-jni-WGPU-DEFAULT message=${e.message}")
+        }
+    }
+}
+
 val matrixSprite2dRawJniDefault = tasks.register<JavaExec>("matrixSprite2dRawJniDefault") {
     group = "LibGDX"
     description = "Run raw SpriteBatch 2D on JNI WGPU DEFAULT"
@@ -465,6 +549,10 @@ listOf(
     }
 }
 
+matrixSprite2dGraalvmDefault.configure {
+    dependsOn(prepareSprite2dMatrixReport)
+}
+
 matrixSprite2dJniVulkan.configure { mustRunAfter(matrixSprite2dJniDefault) }
 matrixSprite2dJniOpenGL.configure { mustRunAfter(matrixSprite2dJniVulkan) }
 matrixSprite2dJniD3D12.configure { mustRunAfter(matrixSprite2dJniOpenGL) }
@@ -475,12 +563,13 @@ matrixSprite2dFfmOpenGL.configure { mustRunAfter(matrixSprite2dFfmVulkan) }
 matrixSprite2dFfmD3D12.configure { mustRunAfter(matrixSprite2dFfmOpenGL) }
 matrixSprite2dFfmDawnDefault.configure { mustRunAfter(matrixSprite2dFfmD3D12) }
 matrixSprite2dLwjgl3.configure { mustRunAfter(matrixSprite2dFfmDawnDefault) }
-matrixSprite2dRawJniDefault.configure { mustRunAfter(matrixSprite2dLwjgl3) }
+matrixSprite2dGraalvmDefault.configure { mustRunAfter(matrixSprite2dLwjgl3) }
+matrixSprite2dRawJniDefault.configure { mustRunAfter(matrixSprite2dGraalvmDefault) }
 matrixSprite2dRawFfmDefault.configure { mustRunAfter(matrixSprite2dRawJniDefault) }
 
 tasks.register("compareSprite2dMatrix") {
     group = "LibGDX"
-    description = "Run SpriteBatch 2D matrix: JNI/FFM WGPU DEFAULT/VULKAN/OPENGL/D3D12, DAWN DEFAULT, LWJGL3, and raw WGPU DEFAULT"
+    description = "Run SpriteBatch 2D matrix: JNI/FFM/GraalVM WGPU DEFAULT, JNI/FFM WGPU VULKAN/OPENGL/D3D12, DAWN DEFAULT, LWJGL3, and raw WGPU DEFAULT"
     dependsOn(
         matrixSprite2dJniDefault,
         matrixSprite2dJniVulkan,
@@ -493,6 +582,7 @@ tasks.register("compareSprite2dMatrix") {
         matrixSprite2dFfmD3D12,
         matrixSprite2dFfmDawnDefault,
         matrixSprite2dLwjgl3,
+        matrixSprite2dGraalvmDefault,
         matrixSprite2dRawJniDefault,
         matrixSprite2dRawFfmDefault
     )

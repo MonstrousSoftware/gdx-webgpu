@@ -63,7 +63,8 @@ Run the full explicit matrix:
 
 The matrix runs JNI `WGPU DEFAULT`, JNI `WGPU VULKAN`, JNI `WGPU OPENGL`, JNI `WGPU D3D12`,
 JNI `DAWN DEFAULT`, FFM `WGPU DEFAULT`, FFM `WGPU VULKAN`, FFM `WGPU OPENGL`, FFM `WGPU D3D12`,
-FFM `DAWN DEFAULT`, stock libGDX LWJGL3, raw JNI `WGPU DEFAULT`, then raw FFM `WGPU DEFAULT`.
+FFM `DAWN DEFAULT`, stock libGDX LWJGL3, GraalVM WebGPU JNI `WGPU DEFAULT`, raw JNI `WGPU DEFAULT`,
+then raw FFM `WGPU DEFAULT`.
 This avoids relying on whatever
 `WebGPUContext.Backend.DEFAULT` chooses on the current machine.
 It also writes a Markdown report to `benchmark/build/benchmark-results/sprite2d-matrix/results.md`.
@@ -91,6 +92,25 @@ Run WebGPU FFM:
 
 The stock WebGPU benchmark code is split into `benchmark:webgpu:core` for `WebGPUBenchmarkLauncher` and
 `benchmark:webgpu:desktop-jni` / `benchmark:webgpu:desktop-ffm` for platform dependencies only.
+
+Run WebGPU through GraalVM native image:
+
+```bash
+./gradlew :benchmark:compareSprite2dGraalvm
+./gradlew :benchmark:graalvm:benchmarkJvm
+./gradlew :benchmark:graalvm:benchmarkRelease
+```
+
+`benchmarkRelease` builds the optimized native executable, copies the benchmark texture plus native LWJGL/libGDX
+libraries beside it, and runs WebGPU through the JNI binding. Configure it with the same properties used by the other
+WebGPU benchmark tasks, for example:
+
+```bash
+./gradlew :benchmark:graalvm:benchmarkRelease -PbenchSprites=8191 -Pwebgpu=WGPU -PnativeBackend=DEFAULT
+```
+
+The native-image tasks require a GraalVM JDK with `native-image`; set `GRAALVM_HOME` or run Gradle from a GraalVM
+`JAVA_HOME` if the current JVM is not GraalVM.
 
 Run raw WebGPU JNI:
 

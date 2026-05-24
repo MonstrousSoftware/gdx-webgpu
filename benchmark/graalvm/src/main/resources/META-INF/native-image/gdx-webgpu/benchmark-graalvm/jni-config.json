@@ -1,0 +1,52 @@
+[
+  {
+    "name": "com.github.xpenatan.webgpu.WGPURequestAdapterCallback",
+    "methods": [
+      {
+        "name": "internal_onCallback",
+        "parameterTypes": [
+          "int",
+          "long",
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "com.github.xpenatan.webgpu.WGPURequestDeviceCallback",
+    "methods": [
+      {
+        "name": "internal_onCallback",
+        "parameterTypes": [
+          "int",
+          "long",
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "com.github.xpenatan.webgpu.WGPUUncapturedErrorCallback",
+    "methods": [
+      {
+        "name": "internal_onCallback",
+        "parameterTypes": [
+          "int",
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "com.github.xpenatan.webgpu.WGPUBufferMapCallback",
+    "methods": [
+      {
+        "name": "internal_onCallback",
+        "parameterTypes": [
+          "int",
+          "java.lang.String"
+        ]
+      }
+    ]
+  }
+]
