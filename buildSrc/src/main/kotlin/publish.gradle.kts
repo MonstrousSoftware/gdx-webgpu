@@ -58,9 +58,9 @@ configure(libProjects) {
                         }
                     }
                     scm {
-                        connection.set("scm:git:git://https://github.com/MonstrousSoftware/gdx-webgpu.git")
-                        developerConnection.set("scm:git:ssh://https://github.com/MonstrousSoftware/gdx-webgpu.git")
-                        url.set("http://https://github.com/MonstrousSoftware/gdx-webgpu/tree/master")
+                        connection.set("scm:git:https://github.com/MonstrousSoftware/gdx-webgpu.git")
+                        developerConnection.set("scm:git:ssh://git@github.com/MonstrousSoftware/gdx-webgpu.git")
+                        url.set("https://github.com/MonstrousSoftware/gdx-webgpu/tree/master")
                     }
                     licenses {
                         license {
