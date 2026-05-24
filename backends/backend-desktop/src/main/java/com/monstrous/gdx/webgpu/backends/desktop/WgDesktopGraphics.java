@@ -574,8 +574,8 @@ public class WgDesktopGraphics implements WgGraphics, Disposable {
     @Override
     public void setVSync(boolean vsync) {
         getWindow().getConfig().vSyncEnabled = vsync;
-        // cannot call setVSync() directly because we may be in the middle of a render frame
-        // use postRunnable to call this after we end the frame and have released the surface.
+        // Queue through the window event list. WebGPUApplication will defer the actual surface reconfigure if the
+        // runnable is executed after beginFrame() has acquired a surface texture.
         getWindow().postRunnable(new Runnable() {
             @Override
             public void run() {

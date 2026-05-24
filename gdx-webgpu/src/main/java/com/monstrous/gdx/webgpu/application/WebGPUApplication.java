@@ -138,6 +138,9 @@ public class WebGPUApplication extends WebGPUContext implements WebGPUInitializa
 
     private boolean isFrameStarted = false;
     private WGPUTextureView currentTargetView;
+    private boolean pendingResize = false;
+    private int pendingResizeWidth;
+    private int pendingResizeHeight;
 
     public void beginFrame() {
         if (isFrameStarted) return;
@@ -161,7 +164,10 @@ public class WebGPUApplication extends WebGPUContext implements WebGPUInitializa
         if (!isFrameStarted) return;
         isFrameStarted = false;
 
-        if (currentTargetView == null) return;
+        if (currentTargetView == null) {
+            applyPendingResize();
+            return;
+        }
 
         // resolve time stamps after render pass end and before encoder finish
         gpuTimer.resolveTimeStamps(encoder);
@@ -186,6 +192,8 @@ public class WebGPUApplication extends WebGPUContext implements WebGPUInitializa
         surfaceTextureTexture.release();
 
         frameNumber++;
+
+        applyPendingResize();
     }
 
     public void update() {
@@ -247,12 +255,20 @@ public class WebGPUApplication extends WebGPUContext implements WebGPUInitializa
         }
     }
 
-    // Should not be called during a renderFrame() as the swap chain is then being used.
-    // E.g. WgDesktopWindow calls this via postRunnable() after having received an async resize event from GLFW.
-    //
+    // Reconfigures the swap chain. If called while a frame is using the swap chain, the latest request is deferred
+    // until endFrame() has released the current surface texture.
     public void resize(int width, int height) {
         // If we've been disposed or the device/surface are invalid, ignore resize requests.
         if (disposed || device == null || surface == null) {
+            return;
+        }
+
+        // Reconfiguring the surface while a frame owns a WGPUSurfaceTexture is invalid.
+        // Queue the latest request and apply it after endFrame() releases/presents that texture.
+        if (isFrameStarted) {
+            pendingResize = true;
+            pendingResizeWidth = width;
+            pendingResizeHeight = height;
             return;
         }
 
@@ -287,6 +303,16 @@ public class WebGPUApplication extends WebGPUContext implements WebGPUInitializa
         viewportRectangle.set(0, 0, width, height);
         this.width = width;
         this.height = height;
+    }
+
+    private void applyPendingResize() {
+        if (!pendingResize) {
+            return;
+        }
+        int width = pendingResizeWidth;
+        int height = pendingResizeHeight;
+        pendingResize = false;
+        resize(width, height);
     }
 
     public void setViewportRectangle(int x, int y, int w, int h) {
