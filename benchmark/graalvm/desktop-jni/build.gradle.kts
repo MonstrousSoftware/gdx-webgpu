@@ -1,7 +1,7 @@
 import java.util.concurrent.TimeUnit
 
 plugins {
-    id("application")
+    id("java-library")
     id("org.graalvm.buildtools.native") version "1.1.0"
 }
 
@@ -77,10 +77,6 @@ fun nativeExecutableName(imageName: String): String {
 }
 
 val lwjglNatives = lwjglNativesClassifier()
-
-application {
-    mainClass.set(mainClassName)
-}
 
 if(JavaVersion.current().isJava9Compatible) {
     tasks.withType<JavaCompile> {
