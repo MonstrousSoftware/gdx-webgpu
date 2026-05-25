@@ -5,7 +5,6 @@ import com.badlogic.gdx.utils.Array;
 import com.monstrous.gdx.webgpu.graphics.shader.modular.WgShaderModule;
 import com.monstrous.gdx.webgpu.graphics.shader.modular.layout.ShaderLayoutBuilder;
 
-import java.security.MessageDigest;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -250,16 +249,48 @@ public final class WgShaderTemplate {
     }
 
     private static String hash(String text) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] bytes = digest.digest(text.getBytes("UTF-8"));
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < 8; i++)
-                sb.append(String.format("%02x", bytes[i] & 0xff));
-            return sb.toString();
-        } catch (Exception e) {
-            throw new ShaderTemplateException("Failed to hash shader template output.", e);
+        long hash = 0xcbf29ce484222325L;
+        for (int i = 0; i < text.length();) {
+            int codePoint = text.charAt(i++);
+            if (codePoint >= 0xd800 && codePoint <= 0xdbff && i < text.length()) {
+                char low = text.charAt(i);
+                if (low >= 0xdc00 && low <= 0xdfff) {
+                    codePoint = 0x10000 + ((codePoint - 0xd800) << 10) + (low - 0xdc00);
+                    i++;
+                }
+            }
+            if (codePoint < 0x80) {
+                hash = fnv1aByte(hash, codePoint);
+            } else if (codePoint < 0x800) {
+                hash = fnv1aByte(hash, 0xc0 | (codePoint >> 6));
+                hash = fnv1aByte(hash, 0x80 | (codePoint & 0x3f));
+            } else if (codePoint < 0x10000) {
+                hash = fnv1aByte(hash, 0xe0 | (codePoint >> 12));
+                hash = fnv1aByte(hash, 0x80 | ((codePoint >> 6) & 0x3f));
+                hash = fnv1aByte(hash, 0x80 | (codePoint & 0x3f));
+            } else {
+                hash = fnv1aByte(hash, 0xf0 | (codePoint >> 18));
+                hash = fnv1aByte(hash, 0x80 | ((codePoint >> 12) & 0x3f));
+                hash = fnv1aByte(hash, 0x80 | ((codePoint >> 6) & 0x3f));
+                hash = fnv1aByte(hash, 0x80 | (codePoint & 0x3f));
+            }
         }
+        return toHex(hash);
+    }
+
+    private static long fnv1aByte(long hash, int value) {
+        hash ^= value & 0xffL;
+        return hash * 0x100000001b3L;
+    }
+
+    private static String toHex(long value) {
+        char[] chars = new char[16];
+        for (int i = chars.length - 1; i >= 0; i--) {
+            int digit = (int)(value & 0xf);
+            chars[i] = (char)(digit < 10 ? '0' + digit : 'a' + digit - 10);
+            value >>>= 4;
+        }
+        return new String(chars);
     }
 
     private static final class Slot {
