@@ -21,13 +21,6 @@ import java.nio.ShortBuffer;
 
 public class WgMesh extends Mesh {
 
-    protected VertexData vertices; // we need to shadow Mesh.vertices which is package private
-
-    protected WgMesh(VertexData vertices, IndexData indices, boolean isVertexArray) {
-        super(vertices, indices, isVertexArray);
-        this.vertices = vertices;
-    }
-
     /**
      * Creates a new Mesh with the given attributes.
      *
@@ -38,7 +31,7 @@ public class WgMesh extends Mesh {
      *            position, normal or texture coordinate
      */
     public WgMesh(boolean isStatic, int maxVertices, int maxIndices, VertexAttribute... attributes) {
-        this(new WgVertexBuffer(isStatic, maxVertices, new VertexAttributes(attributes)),
+        super(new WgVertexBuffer(isStatic, maxVertices, new VertexAttributes(attributes)),
                 new WgIndexBuffer(isStatic, maxIndices, maxVertices), false);
     }
 
@@ -52,7 +45,7 @@ public class WgMesh extends Mesh {
      *            position, normal or texture coordinate
      */
     public WgMesh(boolean isStatic, int maxVertices, int maxIndices, VertexAttributes attributes) {
-        this(new WgVertexBuffer(isStatic, maxVertices, attributes), new WgIndexBuffer(isStatic, maxIndices, maxVertices), false);
+        super(new WgVertexBuffer(isStatic, maxVertices, attributes), new WgIndexBuffer(isStatic, maxIndices, maxVertices), false);
     }
 
     /**
@@ -65,11 +58,10 @@ public class WgMesh extends Mesh {
      * @param attributes the {@link VertexAttributes}. Each vertex attribute defines one property of a vertex such as
      *            position, normal or texture coordinate
      *
-     *            original author Jaroslaw Wisniewski (j.wisniewski@appsisle.com)
      **/
     public WgMesh(boolean staticVertices, boolean staticIndices, int maxVertices, int maxIndices,
             VertexAttributes attributes) {
-        this(new WgVertexBuffer(staticVertices, maxVertices, attributes), new WgIndexBuffer(staticIndices, maxIndices, maxVertices),
+        super(new WgVertexBuffer(staticVertices, maxVertices, attributes), new WgIndexBuffer(staticIndices, maxIndices, maxVertices),
                 false);
     }
 
@@ -77,7 +69,7 @@ public class WgMesh extends Mesh {
      * Creates a new Mesh with the given attributes. This is an expert method with no error checking. Use at your own
      * risk.
      *
-     * @param type the {@link VertexDataType} to be used, VBO or VA.
+     * @param type the {@link VertexDataType} to be used, ignored
      * @param isStatic whether this mesh is static or not. Allows for internal optimizations.
      * @param maxVertices the maximum number of vertices this mesh can hold
      * @param maxIndices the maximum number of indices this mesh can hold
@@ -86,7 +78,7 @@ public class WgMesh extends Mesh {
      */
     public WgMesh(VertexDataType type, boolean isStatic, int maxVertices, int maxIndices,
             VertexAttribute... attributes) {
-        this(new WgVertexBuffer(isStatic, maxVertices, new VertexAttributes(attributes)),
+        super(new WgVertexBuffer(isStatic, maxVertices, new VertexAttributes(attributes)),
                 new WgIndexBuffer(isStatic, maxIndices, maxVertices), false);
     }
 
@@ -94,24 +86,33 @@ public class WgMesh extends Mesh {
      * Creates a new Mesh with the given attributes. This is an expert method with no error checking. Use at your own
      * risk.
      *
-     * @param type the {@link VertexDataType} to be used, VBO or VA.
+     * @param type the {@link VertexDataType} ignored
      * @param isStatic whether this mesh is static or not. Allows for internal optimizations.
      * @param maxVertices the maximum number of vertices this mesh can hold
      * @param maxIndices the maximum number of indices this mesh can hold
      * @param attributes the {@link VertexAttributes}.
      */
     public WgMesh(VertexDataType type, boolean isStatic, int maxVertices, int maxIndices, VertexAttributes attributes) {
-        this(new WgVertexBuffer(isStatic, maxVertices, attributes), new WgIndexBuffer(isStatic, maxIndices, maxVertices), false);
+        super(new WgVertexBuffer(isStatic, maxVertices, attributes), new WgIndexBuffer(isStatic, maxIndices, maxVertices), false);
     }
 
     // version that allows to request wide indices
     public WgMesh(boolean isStatic, int maxVertices, int maxIndices, boolean wideIndices, VertexAttributes attributes) {
-        this(new WgVertexBuffer(isStatic, maxVertices, attributes),
+        super(new WgVertexBuffer(isStatic, maxVertices, attributes),
                 new WgIndexBuffer(isStatic, maxIndices, wideIndices), false);
     }
 
-    public VertexData getVertexData() {
-        return vertices;
+    /** Bind mesh's vertex buffer to the render pass. */
+    public void bind(WebGPURenderPass renderPass){
+        ((WgVertexBuffer) vertices).bind(renderPass);
+        if (getIndexData().getNumIndices() > 0) { // is it an indexed mesh?
+            ((WgIndexBuffer) getIndexData()).bind(renderPass);// bind indices
+        }
+    }
+
+    /** unbind. For symmetry more than anything. Actually does nothing. */
+    public void unbind(WebGPURenderPass renderPass){
+        // no-op
     }
 
     @Override
@@ -125,17 +126,16 @@ public class WgMesh extends Mesh {
     }
 
     /**
-     * New method for WebGPU rendering (uses a renderPass). note: primitiveType is ignored. Should be set in the
-     * pipeline.
+     * New method for WebGPU rendering (uses a renderPass).
+     * Note: there is no parameter for primitiveType. This should be set in the pipeline, not in the render call
+     * to WgMesh.
      */
-    public void render(WebGPURenderPass renderPass, int primitiveType, int offset, int size, int numInstances,
+    public void render(WebGPURenderPass renderPass, int offset, int size, int numInstances,
             int firstInstance) {
 
-        // bind vertices
-        ((WgVertexBuffer) vertices).bind(renderPass);
+        if(autoBind) bind(renderPass);
 
         if (getIndexData().getNumIndices() > 0) { // is it an indexed mesh?
-            ((WgIndexBuffer) getIndexData()).bind(renderPass);// bind indices
             renderPass.drawIndexed(size, numInstances, offset, 0, firstInstance);
         } else {
             renderPass.draw(size, numInstances, offset, firstInstance);

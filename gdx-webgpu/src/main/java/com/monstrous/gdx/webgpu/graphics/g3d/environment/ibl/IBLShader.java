@@ -199,7 +199,7 @@ public class IBLShader extends WgShader implements Disposable {
         applyMaterial(renderable.material);
         final WgMesh mesh = (WgMesh) renderable.meshPart.mesh;
         final MeshPart meshPart = renderable.meshPart;
-        mesh.render(renderPass, meshPart.primitiveType, meshPart.offset, meshPart.size, 1, 0);
+        mesh.render(renderPass, meshPart.offset, meshPart.size, 1, 0);
     }
 
     @Override

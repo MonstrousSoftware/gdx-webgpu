@@ -257,8 +257,7 @@ public class WgParticleShader extends WgShader {
     public void render(Renderable renderable, Attributes attributes) {
 
         // bind vertices
-        VertexData vertexData = ((WgMesh) renderable.meshPart.mesh).getVertexData();
-        ((WgVertexBuffer) vertexData).bind(renderPass);
+        ((WgMesh) renderable.meshPart.mesh).bind(renderPass);
 
         int numParticles = renderable.meshPart.size;
 

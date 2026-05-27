@@ -387,7 +387,7 @@ public class WgDepthShader extends WgShader {
     private void renderBatch(MeshPart meshPart, int numInstances, int numRenderables) {
         final WgMesh mesh = (WgMesh) meshPart.mesh;
         // use an instance offset to find the right modelMatrix in the instanceBuffer
-        mesh.render(renderPass, meshPart.primitiveType, meshPart.offset, meshPart.size, numInstances, numRenderables);
+        mesh.render(renderPass, meshPart.offset, meshPart.size, numInstances, numRenderables);
         drawCalls++;
     }
 

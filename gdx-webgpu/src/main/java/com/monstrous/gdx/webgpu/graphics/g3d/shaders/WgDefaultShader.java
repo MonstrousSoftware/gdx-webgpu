@@ -625,7 +625,7 @@ public class WgDefaultShader extends WgShader implements Disposable {
         // System.out.println("numInstances: "+numInstances);
         final WgMesh mesh = (WgMesh) meshPart.mesh;
         // use an instance offset to find the right modelMatrix in the instanceBuffer
-        mesh.render(renderPass, meshPart.primitiveType, meshPart.offset, meshPart.size, numInstances, numRenderables);
+        mesh.render(renderPass, meshPart.offset, meshPart.size, numInstances, numRenderables);
         // we can't use the following statement, because meshPart was unmodified and doesn't know about WebGPUMesh
         // and we're not using WebGPUMeshPart because then we need to modify Renderable.
         // renderable.meshPart.render(renderPass);

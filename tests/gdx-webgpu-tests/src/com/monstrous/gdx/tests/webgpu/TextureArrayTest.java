@@ -194,7 +194,7 @@ public class TextureArrayTest extends GdxTest {
         pass.setPipeline(pipeline);
         binder.bindGroup(pass, 0);
 
-        terrain.render(pass, GL20.GL_TRIANGLES, 0, terrain.getNumVertices(), 1, 0);
+        terrain.render(pass,  0, terrain.getNumVertices(), 1, 0);
 
         // end the render pass
         pass.end();

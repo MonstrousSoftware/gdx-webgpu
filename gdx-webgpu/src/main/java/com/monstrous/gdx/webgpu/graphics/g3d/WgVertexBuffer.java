@@ -99,6 +99,10 @@ public class WgVertexBuffer implements VertexData {
         return floatBuffer;
     }
 
+    /** Ensures the backing buffer is copied to the vertex buffer (if dirty)
+     *
+     * @param shader    Left for compatibility but not used
+     */
     @Override
     public void bind(ShaderProgram shader) {
         if (isDirty) {
