@@ -25,10 +25,14 @@ import com.monstrous.gdx.webgpu.graphics.WgTexture;
  * Loads images from texture atlases created by TexturePacker.<br>
  * <br>
  * A TextureAtlas must be disposed to free up the resources consumed by the backing textures.
- * 
+ *
  * @author Nathan Sweet
  */
 public class WgTextureAtlas extends TextureAtlas {
+
+
+    public WgTextureAtlas() {
+    }
 
     public WgTextureAtlas(FileHandle packFile) {
         super(packFile, packFile.parent());
