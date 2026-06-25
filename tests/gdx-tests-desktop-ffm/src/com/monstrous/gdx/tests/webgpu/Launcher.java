@@ -16,10 +16,11 @@ public class Launcher {
         config.backendWebGPU = JWebGPUBackend.WGPU; // prefer WGPU or DAWN
         config.backend = WebGPUContext.Backend.DEFAULT; // Vulkan, DX12, etc.
 
+
         config.enableGPUtiming = false;
         config.samples = 1;
 
-        config.useVsync(true);
+        config.useVsync(false);
 
         // new WgDesktopApplication(new SpriteBatchScissorTest(), config);
         // new WgDesktopApplication(new Scene2dTestScrollPane(), config);
@@ -30,7 +31,8 @@ public class Launcher {
 
         //new WgDesktopApplication(new Basic3DDynamicShader(), config);
 
-        new WgDesktopApplication(new AutoTestRunner(), config);
+        new WgDesktopApplication(new SpriteBatchTest(), config);
+        //new WgDesktopApplication(new AutoTestRunner(), config);
 
     }
 

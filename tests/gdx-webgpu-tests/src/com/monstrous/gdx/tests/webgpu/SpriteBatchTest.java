@@ -15,7 +15,7 @@ import java.text.DecimalFormat;
 
 public class SpriteBatchTest extends GdxTest {
     private static final String TAG = "SpriteBatchTest";
-    DecimalFormat df = new DecimalFormat("000.0000000000");
+    DecimalFormat df = new DecimalFormat("0.0");
     int SPRITES = 16000;
 
     long startTime = TimeUtils.nanoTime();
@@ -85,7 +85,7 @@ public class SpriteBatchTest extends GdxTest {
 
         long start = TimeUtils.nanoTime();
         spriteBatch.begin();
-        begin = (TimeUtils.nanoTime() - start) / 1000000000.0f;
+        begin = (TimeUtils.nanoTime() - start) / 1000.0f;
 
         float angleInc = ROTATION_SPEED * Gdx.graphics.getDeltaTime();
         scale += SCALE_SPEED * Gdx.graphics.getDeltaTime();
@@ -106,19 +106,19 @@ public class SpriteBatchTest extends GdxTest {
                 sprites[i].setScale(scale);
             sprites[i].draw(spriteBatch);
         }
-        draw1 = (TimeUtils.nanoTime() - start) / 1000000000.0f;
+        draw1 = (TimeUtils.nanoTime() - start) / 1000.0f;
 
         start = TimeUtils.nanoTime();
-        drawText = (TimeUtils.nanoTime() - start) / 1000000000.0f;
+        drawText = (TimeUtils.nanoTime() - start) / 1000.0f;
 
         start = TimeUtils.nanoTime();
         spriteBatch.end();
-        end = (TimeUtils.nanoTime() - start) / 1000000000.0f;
+        end = (TimeUtils.nanoTime() - start) / 1000.0f;
 
         if (TimeUtils.nanoTime() - startTime > 1000000000) {
             Gdx.app.log(TAG,
                     "fps: " + frames + ", render calls: " + spriteBatch.renderCalls + ", begin: " + df.format(begin)
-                            + ", " + df.format(draw1) + ", " + df.format(drawText) + ", end: " + df.format(end));
+                            + ", draw: " + df.format(draw1) + ", end: " + df.format(end));
             frames = 0;
             startTime = TimeUtils.nanoTime();
 
