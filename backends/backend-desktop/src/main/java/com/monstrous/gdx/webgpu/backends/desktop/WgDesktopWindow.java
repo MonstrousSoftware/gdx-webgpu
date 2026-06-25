@@ -23,7 +23,9 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.Os;
 import com.badlogic.gdx.utils.SharedLibraryLoader;
+import com.github.xpenatan.webgpu.WGPUCommandBuffer;
 import com.github.xpenatan.webgpu.WGPUInstance;
+import java.util.concurrent.ArrayBlockingQueue;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.*;
 import org.lwjgl.system.Configuration;
@@ -48,6 +50,9 @@ public class WgDesktopWindow implements Disposable {
     boolean focused = false;
     boolean asyncResized = false;
     private boolean requestRendering = false;
+    private WgRenderThread renderThread;
+    private ArrayBlockingQueue<WGPUCommandBuffer> commandQueue; // inter-thread queue
+
 
     // Pending resize state — set by resizeCallback, consumed before beginFrame() in update().
     // This avoids acquiring a surface texture at the old size and presenting an empty frame.
@@ -253,6 +258,14 @@ public class WgDesktopWindow implements Disposable {
         if (windowListener != null) {
             windowListener.created(this);
         }
+
+        if (!listenerInitialized) {
+            initializeListener();
+        }
+        commandQueue = new ArrayBlockingQueue<>(32);
+        renderThread = new WgRenderThread(graphics.context.device, commandQueue, listener);
+        renderThread.start();
+
     }
 
     /** @return the {@link ApplicationListener} associated with this window **/
@@ -480,7 +493,7 @@ public class WgDesktopWindow implements Disposable {
                 return false;
             }
 
-            graphics.context.beginFrame();
+            //graphics.context.beginFrame();
             if (!listenerInitialized) {
                 initializeListener();
             }
@@ -524,7 +537,7 @@ public class WgDesktopWindow implements Disposable {
 
             if (shouldRender) {
                 graphics.update();
-                listener.render();
+                //listener.render();
             }
 
             if (!iconified)
@@ -532,7 +545,14 @@ public class WgDesktopWindow implements Disposable {
 
             return shouldRender;
         } finally {
-            graphics.context.endFrame();
+            //graphics.context.endFrame();
+            try {
+                WGPUCommandBuffer command = commandQueue.take();
+                graphics.context.processCommandBuffer(command);
+            } catch(InterruptedException e){
+                System.out.println("Interruped on command queue take()");
+            }
+
         }
     }
 

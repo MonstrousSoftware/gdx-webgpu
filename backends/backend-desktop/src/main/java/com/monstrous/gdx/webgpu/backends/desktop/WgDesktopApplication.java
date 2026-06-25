@@ -26,8 +26,10 @@ import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.utils.*;
 import com.github.xpenatan.webgpu.JWebGPULoader;
 import com.github.xpenatan.webgpu.WGPU;
+import com.github.xpenatan.webgpu.WGPUCommandBuffer;
 import com.github.xpenatan.webgpu.WGPUInstance;
 import com.monstrous.gdx.webgpu.application.WgVersion;
+import java.util.concurrent.ArrayBlockingQueue;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.system.Callback;
@@ -58,6 +60,7 @@ public class WgDesktopApplication implements Application {
     private final Sync sync;
     public int wGPUInit = 0;
     private WGPUInstance instance;
+
 
     static void initializeGlfw() {
         if (errorCallback == null) {
@@ -135,6 +138,8 @@ public class WgDesktopApplication implements Application {
 
         createWindow(config, instance, listener);
 
+
+
         wGPUInit = 3; // todo should wait
 
         try {
@@ -153,6 +158,7 @@ public class WgDesktopApplication implements Application {
     }
 
     protected void loop() {
+
         Array<WgDesktopWindow> closedWindows = new Array<WgDesktopWindow>();
         while (running && windows.size > 0) {
             // FIXME put it on a separate thread

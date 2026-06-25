@@ -155,9 +155,9 @@ public class WebGPUApplication extends WebGPUContext implements WebGPUInitializa
         targetViews = defaultTargetViews;
         surfaceFormats = defaultSurfaceFormats;
 
-        WGPUCommandEncoderDescriptor encoderDesc = WGPUCommandEncoderDescriptor.obtain();
-        encoderDesc.setLabel("The Command Encoder");
-        device.createCommandEncoder(encoderDesc, encoder);
+//        WGPUCommandEncoderDescriptor encoderDesc = WGPUCommandEncoderDescriptor.obtain();
+//        encoderDesc.setLabel("The Command Encoder");
+//        device.createCommandEncoder(encoderDesc, encoder);
     }
 
     public void endFrame() {
@@ -178,13 +178,21 @@ public class WebGPUApplication extends WebGPUContext implements WebGPUInitializa
         encoder.finish(cmdBufferDescriptor, command);
         encoder.release();
 
+
+        processCommandBuffer(command);
+
+    }
+
+    public void processCommandBuffer(WGPUCommandBuffer command){
         queue.submit(command);
         command.release();
 
         // fetch time stamps after submitting the command buffer
         gpuTimer.fetchTimestamps();
 
-        currentTargetView.release();
+        // should this be in the render thread or main thread?
+
+        //currentTargetView.release();
 
         if (WGPU.getPlatformType() != WGPUPlatformType.WGPU_Web) {
             surface.present();
@@ -329,7 +337,7 @@ public class WebGPUApplication extends WebGPUContext implements WebGPUInitializa
 
     @Override
     public boolean isFrameStarted() {
-        return isFrameStarted;
+        return true; // todo isFrameStarted;
     }
 
     @Override
