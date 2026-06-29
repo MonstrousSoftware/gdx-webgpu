@@ -25,6 +25,8 @@ import com.badlogic.gdx.utils.Os;
 import com.badlogic.gdx.utils.SharedLibraryLoader;
 import com.github.xpenatan.webgpu.WGPUCommandBuffer;
 import com.github.xpenatan.webgpu.WGPUInstance;
+import com.github.xpenatan.webgpu.WGPUTexture;
+import com.github.xpenatan.webgpu.WGPUTextureView;
 import java.util.concurrent.ArrayBlockingQueue;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.*;
@@ -52,6 +54,8 @@ public class WgDesktopWindow implements Disposable {
     private boolean requestRendering = false;
     private WgRenderThread renderThread;
     private ArrayBlockingQueue<WGPUCommandBuffer> commandQueue; // inter-thread queue
+    private ArrayBlockingQueue<WGPUTextureView> textureViewQueue; // inter-thread queue
+    private ArrayBlockingQueue<WGPUTexture> textureQueue; // inter-thread queue
 
 
     // Pending resize state — set by resizeCallback, consumed before beginFrame() in update().
@@ -263,7 +267,10 @@ public class WgDesktopWindow implements Disposable {
             initializeListener();
         }
         commandQueue = new ArrayBlockingQueue<>(32);
-        renderThread = new WgRenderThread(graphics.context.device, commandQueue, listener);
+        textureQueue = new ArrayBlockingQueue<>(32);
+        textureViewQueue = new ArrayBlockingQueue<>(32);
+
+        renderThread = new WgRenderThread(graphics.context.device, commandQueue, textureQueue, textureViewQueue, listener);
         renderThread.start();
 
     }
@@ -548,7 +555,9 @@ public class WgDesktopWindow implements Disposable {
             //graphics.context.endFrame();
             try {
                 WGPUCommandBuffer command = commandQueue.take();
-                graphics.context.processCommandBuffer(command);
+                WGPUTexture surfaceTexture = textureQueue.take();
+                WGPUTextureView view = textureViewQueue.take();
+                graphics.context.processCommandBuffer(command, surfaceTexture, view);
             } catch(InterruptedException e){
                 System.out.println("Interruped on command queue take()");
             }

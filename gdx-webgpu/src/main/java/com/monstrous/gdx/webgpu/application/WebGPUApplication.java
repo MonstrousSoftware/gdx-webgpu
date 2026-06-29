@@ -179,24 +179,25 @@ public class WebGPUApplication extends WebGPUContext implements WebGPUInitializa
         encoder.release();
 
 
-        processCommandBuffer(command);
+        processCommandBuffer(command, surfaceTextureTexture, currentTargetView);
 
     }
 
-    public void processCommandBuffer(WGPUCommandBuffer command){
+    public void processCommandBuffer(WGPUCommandBuffer command, WGPUTexture surfaceTextureTexture, WGPUTextureView currentTargetView){
         queue.submit(command);
         command.release();
 
         // fetch time stamps after submitting the command buffer
         gpuTimer.fetchTimestamps();
 
-        // should this be in the render thread or main thread?
 
-        //currentTargetView.release();
 
         if (WGPU.getPlatformType() != WGPUPlatformType.WGPU_Web) {
             surface.present();
         }
+
+        // should this be in the render thread or main thread?
+        currentTargetView.release();
         surfaceTextureTexture.release();
 
         frameNumber++;

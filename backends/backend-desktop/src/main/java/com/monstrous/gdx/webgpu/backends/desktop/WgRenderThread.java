@@ -11,22 +11,30 @@ public class WgRenderThread  extends Thread {
 
     private final WGPUDevice device;
     private final ArrayBlockingQueue<WGPUCommandBuffer> commandQueue;
+    private final ArrayBlockingQueue<WGPUTexture> textureQueue;
+    private final ArrayBlockingQueue<WGPUTextureView> textureViewQueue;
+
     private final ApplicationListener listener;
     public WGPUCommandEncoder encoder;
     private WGPUCommandBuffer command;
     private WGPUTextureView[] defaultTargetViews;
     private WGPUTexture surfaceTextureTexture;
-    private WGPUTextureView targetView;
+    //private WGPUTextureView targetView;
     private WGPUSurface surface;
 
-    public WgRenderThread(WGPUDevice device, ArrayBlockingQueue<WGPUCommandBuffer> commandQueue, ApplicationListener listener) {
+    public WgRenderThread(WGPUDevice device, ArrayBlockingQueue<WGPUCommandBuffer> commandQueue,
+                    ArrayBlockingQueue<WGPUTexture> textureQueue,
+                    ArrayBlockingQueue<WGPUTextureView> textureViewQueue,
+                    ApplicationListener listener) {
         this.device = device;
         this.commandQueue = commandQueue;
+        this.textureQueue = textureQueue;
+        this.textureViewQueue = textureViewQueue;
         this.listener = listener;
         encoder = new WGPUCommandEncoder();
         command = new WGPUCommandBuffer();
-        surfaceTextureTexture = new WGPUTexture();
-        targetView = new WGPUTextureView();
+//        surfaceTextureTexture = new WGPUTexture();
+//        targetView = new WGPUTextureView();
         defaultTargetViews = new WGPUTextureView[1];
     }
 
@@ -38,6 +46,22 @@ public class WgRenderThread  extends Thread {
 
         for(;;) {
 
+
+
+            // need to do  getNextSurfaceTextureView(); ?
+            // needed for RenderPassBuilder
+
+            // obtain render surface texture from the swap chain
+            currentTargetView = getNextSurfaceTextureView();
+
+            // if (currentTargetView == null) return;
+
+            defaultTargetViews[0] = currentTargetView;
+            // defaultSurfaceFormats[0] is already set to surface format
+            webgpu.targetViews = defaultTargetViews;
+            //webgpu.surfaceFormats = defaultSurfaceFormats;
+
+
             // create an encoder
             WGPUCommandEncoderDescriptor encoderDesc = WGPUCommandEncoderDescriptor.obtain();
             encoderDesc.setLabel("The Command Encoder");
@@ -45,19 +69,6 @@ public class WgRenderThread  extends Thread {
 
             webgpu.encoder = encoder;
 
-            // need to do  getNextSurfaceTextureView(); ?
-            // needed for RenderPassBuilder
-
-            if (currentTargetView != null)
-                currentTargetView.release();
-            currentTargetView = getNextSurfaceTextureView();
-
-           // if (currentTargetView == null) return;
-
-            defaultTargetViews[0] = currentTargetView;
-            // defaultSurfaceFormats[0] is already set to surface format
-            webgpu.targetViews = defaultTargetViews;
-            //webgpu.surfaceFormats = defaultSurfaceFormats;
 
 
             // call application render code
@@ -78,7 +89,10 @@ public class WgRenderThread  extends Thread {
             boolean ok = commandQueue.offer(command);   // returns false if queue was already full
             if(!ok)
                 System.out.println("Command queue full");
+            textureViewQueue.offer(currentTargetView);
+            textureQueue.offer(surfaceTextureTexture);
 
+            // sync
             while(!commandQueue.isEmpty()) {
                 try {
                     Thread.sleep(100);
@@ -88,7 +102,7 @@ public class WgRenderThread  extends Thread {
             }
 
 
-            System.out.println("This code is running in a thread");
+//            System.out.println("This code is running in a thread");
 //            try {
 //                Thread.sleep(1000);
 //            } catch (InterruptedException e) {
@@ -100,7 +114,7 @@ public class WgRenderThread  extends Thread {
     private WGPUTextureView getNextSurfaceTextureView() {
 
         // get the surface texture for this frame
-        WGPUSurfaceTexture surfaceTexture = WGPUSurfaceTexture.obtain();
+        WGPUSurfaceTexture surfaceTexture = new WGPUSurfaceTexture(); //.obtain();
         surface.getCurrentTexture(surfaceTexture);
         WGPUSurfaceGetCurrentTextureStatus status = surfaceTexture.getStatus();
 
@@ -110,12 +124,16 @@ public class WgRenderThread  extends Thread {
             // System.out.println("Surface texture status: "+status);
             return null;
         }
+
+
         // get texture from surface texture
+        surfaceTextureTexture = new WGPUTexture();  // todo needs releasing
         surfaceTexture.getTexture(surfaceTextureTexture);
         if (!surfaceTextureTexture.isValid()) {
             System.out.println("Surface texture texture is not valid!");
             return null;
         }
+        surfaceTexture.dispose();
 
         // surfaceTexture is not releasable.
         // we will release surfaceTextureTexture after SurfacePresent (due to WGPU constraint, on Dawn we could release
@@ -134,6 +152,7 @@ public class WgRenderThread  extends Thread {
         viewDescriptor.setArrayLayerCount(1);
         viewDescriptor.setAspect(WGPUTextureAspect.All);
 
+        WGPUTextureView targetView = new WGPUTextureView();
         surfaceTextureTexture.createView(viewDescriptor, targetView);
 
         return targetView;
