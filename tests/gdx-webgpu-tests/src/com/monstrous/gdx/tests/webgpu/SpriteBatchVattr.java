@@ -20,6 +20,8 @@ import com.monstrous.gdx.webgpu.wrappers.WebGPUBindGroupLayout;
 import com.monstrous.gdx.webgpu.wrappers.WebGPUUniformBuffer;
 import com.monstrous.gdx.webgpu.wrappers.WebGPUVertexLayout;
 
+// BROKEN
+
 // Sprite batch with fewer vertex attributes.
 // By default, every vertex has 2d position, packed vertex color and texture coordinates (5 floats in total).
 // The 2d position is mandatory, but depending on your use case you could omit the vertex color or the texture coordinates if you
@@ -37,24 +39,24 @@ public class SpriteBatchVattr extends GdxTest {
     // create a subclass of WgSpriteBatch
     public static class MySpriteBatch extends WgSpriteBatch {
 
-        @Override
-        protected void setVertexAttributes(){
-            vertexAttributes = new VertexAttributes(
-                new VertexAttribute(VertexAttributes.Usage.Position, 2, ShaderProgram.POSITION_ATTRIBUTE), // 2D position
-                //VertexAttribute.ColorPacked(),
-                VertexAttribute.TexCoords(0),
-                VertexAttribute.TexCoords(1)
-                );
-        }
-
-        @Override
-        protected void setVertexAttributeLocations(WebGPUVertexLayout vertexLayout) {
-            // define locations of vertex attributes in line with shader code
-            vertexLayout.setVertexAttributeLocation(ShaderProgram.POSITION_ATTRIBUTE, 0);
-            vertexLayout.setVertexAttributeLocation(ShaderProgram.COLOR_ATTRIBUTE, 5);
-            vertexLayout.setVertexAttributeLocation(ShaderProgram.TEXCOORD_ATTRIBUTE + "0", 1);
-            vertexLayout.setVertexAttributeLocation(ShaderProgram.TEXCOORD_ATTRIBUTE + "1", 10);
-        }
+//        @Override
+//        protected void setVertexAttributes(){
+//            vertexAttributes = new VertexAttributes(
+//                new VertexAttribute(VertexAttributes.Usage.Position, 2, ShaderProgram.POSITION_ATTRIBUTE), // 2D position
+//                //VertexAttribute.ColorPacked(),
+//                VertexAttribute.TexCoords(0),
+//                VertexAttribute.TexCoords(1)
+//                );
+//        }
+//
+//        @Override
+//        protected void setVertexAttributeLocations(WebGPUVertexLayout vertexLayout) {
+//            // define locations of vertex attributes in line with shader code
+//            vertexLayout.setVertexAttributeLocation(ShaderProgram.POSITION_ATTRIBUTE, 0);
+//            vertexLayout.setVertexAttributeLocation(ShaderProgram.COLOR_ATTRIBUTE, 5);
+//            vertexLayout.setVertexAttributeLocation(ShaderProgram.TEXCOORD_ATTRIBUTE + "0", 1);
+//            vertexLayout.setVertexAttributeLocation(ShaderProgram.TEXCOORD_ATTRIBUTE + "1", 10);
+//        }
     }
 
 

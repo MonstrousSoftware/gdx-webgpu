@@ -1,6 +1,7 @@
 package com.monstrous.gdx.tests.webgpu;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Version;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
@@ -33,6 +34,7 @@ public class SpriteBatchTest extends GdxTest {
 
     @Override
     public void create() {
+        Gdx.app.log("libgdx", Version.VERSION);
         WgGraphics gfx = (WgGraphics) Gdx.graphics;
         webgpu = gfx.getContext();
         Gdx.app.log(TAG, "[" + this.hashCode() + "] create() START"); // Log instance and start

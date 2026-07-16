@@ -18,6 +18,8 @@ import com.monstrous.gdx.webgpu.graphics.utils.WgScreenUtils;
 import com.monstrous.gdx.webgpu.wrappers.WebGPUBindGroupLayout;
 import com.monstrous.gdx.webgpu.wrappers.WebGPUVertexLayout;
 
+// BROKEN
+
 // Sprite batch with additional vertex attributes.
 // By default, every vertex has 2d position, packed vertex color and texture coordinates (5 floats in total).
 // In this demo we derive our own SpriteBatch class to add an extra texture binding, and we add an extra set of texture coordinates per vertex.
@@ -68,40 +70,40 @@ public class SpriteBatchExtraVertAttrib extends GdxTest {
 
         // define the vertex attributes per vertex adding an extra texture coordinate
         // this will create extra space per vertex in the vertex buffer (2 extra floats)
-        @Override
-        protected void setVertexAttributes(){
-            vertexAttributes = new VertexAttributes(
-                new VertexAttribute(VertexAttributes.Usage.Position, 2, ShaderProgram.POSITION_ATTRIBUTE), // 2D position
-                VertexAttribute.ColorPacked(),
-                VertexAttribute.TexCoords(0),
-                VertexAttribute.TexCoords(1)        //  new
-                );
-        }
-
-        // define a location (10) for the new vertex attribute
-        @Override
-        protected void setVertexAttributeLocations(WebGPUVertexLayout vertexLayout) {
-            // define locations of vertex attributes in line with shader code
-            super.setVertexAttributeLocations(vertexLayout);
-            // add extra vertex attribute
-            vertexLayout.setVertexAttributeLocation(ShaderProgram.TEXCOORD_ATTRIBUTE + "1", 10);
-        }
+//        @Override
+//        protected void setVertexAttributes(){
+//            vertexAttributes = new VertexAttributes(
+//                new VertexAttribute(VertexAttributes.Usage.Position, 2, ShaderProgram.POSITION_ATTRIBUTE), // 2D position
+//                VertexAttribute.ColorPacked(),
+//                VertexAttribute.TexCoords(0),
+//                VertexAttribute.TexCoords(1)        //  new
+//                );
+//        }
+//
+//        // define a location (10) for the new vertex attribute
+//        @Override
+//        protected void setVertexAttributeLocations(WebGPUVertexLayout vertexLayout) {
+//            // define locations of vertex attributes in line with shader code
+//            super.setVertexAttributeLocations(vertexLayout);
+//            // add extra vertex attribute
+//            vertexLayout.setVertexAttributeLocation(ShaderProgram.TEXCOORD_ATTRIBUTE + "1", 10);
+//        }
 
         // override addVertex to set the extra vertex attributes
-        @Override
-        protected void addVertex(float x, float y, float u, float v) {
-            // set 2nd texture coordinate
-            float u2 = textureOffset + (x / 512);
-            float v2 = textureOffset + (384- y) / 256;
-            // texture coordinates go into offsets 5 and 6 in the vertex buffer
-            vertexFloats.put(vertexOffset+5, u2);
-            vertexFloats.put(vertexOffset+6, v2);
-
-            // then do the regular vertex attributes
-            // note: needs to be done after, because this advances vertexOffset
-            // if you do super.addVertex() before you need to put in vertexOffset-2 and vertexOffset-1
-            super.addVertex(x,y,u,v);
-        }
+//        @Override
+//        protected void addVertex(float x, float y, float u, float v) {
+//            // set 2nd texture coordinate
+//            float u2 = textureOffset + (x / 512);
+//            float v2 = textureOffset + (384- y) / 256;
+//            // texture coordinates go into offsets 5 and 6 in the vertex buffer
+//            vertexFloats.put(vertexOffset+5, u2);
+//            vertexFloats.put(vertexOffset+6, v2);
+//
+//            // then do the regular vertex attributes
+//            // note: needs to be done after, because this advances vertexOffset
+//            // if you do super.addVertex() before you need to put in vertexOffset-2 and vertexOffset-1
+//            super.addVertex(x,y,u,v);
+//        }
 
         public void setTextureOffset( float time ){
             // move texture coordinates over time to scroll the texture

@@ -20,17 +20,40 @@ public class WebGPUVertexBuffer extends WebGPUBuffer {
     }
 
     public void setVertices(float[] vertexData) {
+        setVertices(vertexData, 0, vertexData.length, 0);
+//        // Create vertex buffer
+//        int size = vertexData.length * Float.BYTES;
+//        if (size > getSize())
+//            throw new IllegalArgumentException("VertexBuffer.setVertices: data set too large.");
+//        ByteBuffer dataBuf = BufferUtils.newUnsafeByteBuffer(size);
+//        dataBuf.order(ByteOrder.LITTLE_ENDIAN);
+//        FloatBuffer floatBuf = dataBuf.asFloatBuffer();
+//        for (float f : vertexData)
+//            floatBuf.put(f);
+//        // Upload geometry data to the buffer
+//        write(0, dataBuf, size);
+//        BufferUtils.disposeUnsafeByteBuffer(dataBuf);
+    }
+
+    /** Add vertex data from a section of a float array.
+     *
+     * @param vertexData floats
+     * @param offset    start offset in vertexData
+     * @param count     number of floats
+     * @param targetOffset  offset in destination (number of floats)
+     */
+    public void setVertices(float[] vertexData, int offset, int count, int targetOffset) {
         // Create vertex buffer
-        int size = vertexData.length * Float.BYTES;
+        int size = count * Float.BYTES;
         if (size > getSize())
             throw new IllegalArgumentException("VertexBuffer.setVertices: data set too large.");
         ByteBuffer dataBuf = BufferUtils.newUnsafeByteBuffer(size);
         dataBuf.order(ByteOrder.LITTLE_ENDIAN);
         FloatBuffer floatBuf = dataBuf.asFloatBuffer();
-        for (float f : vertexData)
-            floatBuf.put(f);
+        floatBuf.put(vertexData, offset, count);
         // Upload geometry data to the buffer
-        write(0, dataBuf, size);
+        write(targetOffset*Float.BYTES, dataBuf, size);
+        BufferUtils.disposeUnsafeByteBuffer(dataBuf);
     }
 
     public void setVertices(ArrayList<Float> floats) {

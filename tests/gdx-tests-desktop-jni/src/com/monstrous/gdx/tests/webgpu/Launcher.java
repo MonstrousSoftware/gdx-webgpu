@@ -19,7 +19,7 @@ public class Launcher {
         config.enableGPUtiming = false;
         config.samples = 1;
 
-        config.useVsync(true);
+        config.useVsync(false);
 
         // new WgDesktopApplication(new SpriteBatchScissorTest(), config);
         // new WgDesktopApplication(new Scene2dTestScrollPane(), config);
@@ -28,7 +28,7 @@ public class Launcher {
         //new WgDesktopApplication(new DynamicTexture(), config);
 
 
-        new WgDesktopApplication(new TextureGreyscale(), config);
+        new WgDesktopApplication(new SpriteBatchTest(), config);
 
 
         //new WgDesktopApplication(new AutoTestRunner(), config);

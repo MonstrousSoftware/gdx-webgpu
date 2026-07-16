@@ -3,6 +3,7 @@ package com.monstrous.gdx.webgpu.graphics.g2d;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Affine2;
@@ -23,10 +24,14 @@ import com.monstrous.gdx.webgpu.wrappers.*;
 
 import java.nio.*;
 
+// This was an experiment to derive from SpriteBatch to reduce the code size.
+// This was assuming teh package private members of SpriteBatch can be made protected via a PR on libgdx.
+// However, the SpriteBatch constructor will always create a Mesh and this requires a GL context.
+// So we cannot use SpriteBatch subclasses, but we need to duplicate a lot of code :-(
 /**
  * Class to render textured rectangles in batches.
  */
-public class WgSpriteBatch implements Batch {
+public class WgSpriteBatch extends SpriteBatch {
 
     private final static int VERTS_PER_SPRITE = 4;
     private final static int INDICES_PER_SPRITE = 6;    // to build a rectangle from two triangles
@@ -35,14 +40,14 @@ public class WgSpriteBatch implements Batch {
     private final WebGPUContext webgpu;
     private final WgShaderProgram specificShader;
     private final int maxSpritesPerFlush;
-    private boolean drawing;
+    //private boolean drawing;
     private final int vertexSize;
-    private final ByteBuffer vertexBB;
-    protected final FloatBuffer vertexFloats; // float buffer view on byte buffer
+    //private final ByteBuffer vertexBB;
+    //protected final FloatBuffer vertexFloats; // float buffer view on byte buffer
     public int numSprites;
-    private int numSpritesPerFlush;
-    private final Color tint;
-    private float tintPacked;
+    //private int numSpritesPerFlush;
+    //private final Color tint;
+    //private float tintPacked;
     private WebGPUVertexBuffer vertexBuffer;
     private WgIndexBuffer indexBuffer;
     private WebGPUUniformBuffer uniformBuffer;
@@ -51,21 +56,21 @@ public class WgSpriteBatch implements Batch {
     private final WGPUPipelineLayout pipelineLayout;
     private final PipelineSpecification pipelineSpec;
     private int uniformBufferSize;
-    private WgTexture lastTexture;
+    //private WgTexture lastTexture;
     private final Matrix4 projectionMatrix;
     private final Matrix4 transformMatrix;
     private final Matrix4 combinedMatrix;
     private final Matrix4 shiftDepthMatrix;
     private WebGPURenderPass renderPass;
-    private int vbOffset;
+    private int vbOffset;                       // offset in vertex buffer (in floats), updated per flush
     private final PipelineCache pipelines;
     public int topSpritesPerBatch; // most nr of sprites in the batch over its lifetime
     public int renderCalls;
     public int pipelineCount;
     public int flushCount; // number of flushes since begin()
     public int maxFlushes;
-    private float invTexWidth;
-    private float invTexHeight;
+    //private float invTexWidth;
+    //private float invTexHeight;
     protected final Binder binder;
     private static String defaultShader;
     private int frameNumber;
@@ -119,15 +124,15 @@ public class WgSpriteBatch implements Batch {
         createIndexBuffer(maxSpritesPerFlush);
 
         // Create FloatBuffer to hold vertex data per batch, is reset every flush
-        vertexBB = BufferUtils.newUnsafeByteBuffer(maxSpritesPerFlush * VERTS_PER_SPRITE * vertexSize);
-        vertexBB.order(ByteOrder.LITTLE_ENDIAN);
-        // important, webgpu expects little endian. ByteBuffer defaults to big endian.
-        vertexFloats = vertexBB.asFloatBuffer();
-
-        tint = new Color(Color.WHITE);
-
-        invTexWidth = 0f;
-        invTexHeight = 0f;
+//        vertexBB = BufferUtils.newUnsafeByteBuffer(maxSpritesPerFlush * VERTS_PER_SPRITE * vertexSize);
+//        vertexBB.order(ByteOrder.LITTLE_ENDIAN);
+//        // important, webgpu expects little endian. ByteBuffer defaults to big endian.
+//        vertexFloats = vertexBB.asFloatBuffer();
+//
+//        tint = new Color(Color.WHITE);
+//
+//        invTexWidth = 0f;
+//        invTexHeight = 0f;
 
         bindGroupLayout = createBindGroupLayout();
 
@@ -172,23 +177,18 @@ public class WgSpriteBatch implements Batch {
         projectionMatrix.setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), 0, 100);
         transformMatrix.idt();
 
-        drawing = false;
+//        drawing = false;
         frameNumber = -1;
     }
 
-    /** You can override this to use different vertex attributes, i.e. omit packed color or texture coordinate per
-     * vertex to save a few bytes or to add more vertex attributes.
-     * The position is mandatory.  This needs to be matched to your shader code.
-     * Note: using different vertex attributes makes a batch unsuitable for BitmapFont or Sprite.
-     */
-    protected void setVertexAttributes(){
+    private void setVertexAttributes(){
         vertexAttributes = new VertexAttributes(
             new VertexAttribute(VertexAttributes.Usage.Position, 2, ShaderProgram.POSITION_ATTRIBUTE), // 2D position
             VertexAttribute.ColorPacked(),
             VertexAttribute.TexCoords(0));
     }
 
-    protected void setVertexAttributeLocations(WebGPUVertexLayout vertexLayout) {
+    private void setVertexAttributeLocations(WebGPUVertexLayout vertexLayout) {
         // define locations of vertex attributes in line with shader code
         vertexLayout.setVertexAttributeLocation(ShaderProgram.POSITION_ATTRIBUTE, 0);
         vertexLayout.setVertexAttributeLocation(ShaderProgram.COLOR_ATTRIBUTE, 5);
@@ -235,28 +235,28 @@ public class WgSpriteBatch implements Batch {
         indexBuffer.bind(); // commit buffer contents
     }
 
-    public void setColor(float r, float g, float b, float a) {
-        tint.set(r, g, b, a);
-    }
-
-    public void setColor(Color color) {
-        tint.set(color);
-    }
-
-    public Color getColor() {
-        return tint;
-    }
-
-    @Override
-    public void setPackedColor(float packedColor) {
-        Color.abgr8888ToColor(tint, packedColor);
-        this.tintPacked = packedColor;
-    }
-
-    @Override
-    public float getPackedColor() {
-        return tintPacked;
-    }
+//    public void setColor(float r, float g, float b, float a) {
+//        tint.set(r, g, b, a);
+//    }
+//
+//    public void setColor(Color color) {
+//        tint.set(color);
+//    }
+//
+//    public Color getColor() {
+//        return tint;
+//    }
+//
+//    @Override
+//    public void setPackedColor(float packedColor) {
+//        Color.abgr8888ToColor(tint, packedColor);
+//        this.tintPacked = packedColor;
+//    }
+//
+//    @Override
+//    public float getPackedColor() {
+//        return tintPacked;
+//    }
 
     public void setBlendFactor(WGPUBlendFactor srcFunc, WGPUBlendFactor dstFunc) {
         pipelineSpec.setBlendFactorSeparate(srcFunc, dstFunc, srcFunc, dstFunc);
@@ -271,7 +271,7 @@ public class WgSpriteBatch implements Batch {
 
         flush();
         pipelineSpec.setBlendFactorSeparate(srcFuncColor, dstFuncColor, srcFuncAlpha, dstFuncAlpha);
-        if (drawing)
+        if (this.drawing)
             setPipeline(renderPass);
     }
 
@@ -292,10 +292,12 @@ public class WgSpriteBatch implements Batch {
     }
 
     // for compatibility with GL based methods
+    @Override
     public void setBlendFunction(int srcFunc, int dstFunc) {
         setBlendFunctionSeparate(srcFunc, dstFunc, srcFunc, dstFunc);
     }
 
+    @Override
     public void setBlendFunctionSeparate(int srcFuncColor, int dstFuncColor, int srcFuncAlpha, int dstFuncAlpha) {
         WGPUBlendFactor srcFactorColor = BlendMapper.blendFactor(srcFuncColor);
         WGPUBlendFactor dstFactorColor = BlendMapper.blendFactor(dstFuncColor);
@@ -312,22 +314,27 @@ public class WgSpriteBatch implements Batch {
             setPipeline(renderPass);
     }
 
+    @Override
     public int getBlendSrcFunc() {
         return BlendMapper.blendFunction(pipelineSpec.getBlendSrcFactor());
     }
 
+    @Override
     public int getBlendDstFunc() {
         return BlendMapper.blendFunction(pipelineSpec.getBlendDstFactor());
     }
 
+    @Override
     public int getBlendSrcFuncAlpha() {
         return BlendMapper.blendFunction(pipelineSpec.getBlendSrcFactorAlpha());
     }
 
+    @Override
     public int getBlendDstFuncAlpha() {
         return BlendMapper.blendFunction(pipelineSpec.getBlendDstFactorAlpha());
     }
 
+    @Override
     public void enableBlending() {
         if (pipelineSpec.isBlendingEnabled())
             return;
@@ -337,6 +344,7 @@ public class WgSpriteBatch implements Batch {
             setPipeline(renderPass);
     }
 
+    @Override
     public void disableBlending() {
         if (!pipelineSpec.isBlendingEnabled())
             return;
@@ -358,14 +366,16 @@ public class WgSpriteBatch implements Batch {
         explicitScissor = true;
     }
 
+    @Override
     public boolean isBlendingEnabled() {
         return pipelineSpec.isBlendingEnabled();
     }
 
-    public boolean isDrawing() {
-        return drawing;
-    }
+//    public boolean isDrawing() {
+//        return drawing;
+//    }
 
+    @Override
     public void begin() {
         begin(null);
     }
@@ -388,10 +398,11 @@ public class WgSpriteBatch implements Batch {
             uniformBuffer.beginSlices(); // setDynamicOffsetIndex(0); // reset the dynamic offset to the start
             // if the same spritebatch is used multiple times per frame this will overwrite the previous pass
             // to solve this we reset at the start of a new frame.
-            numSpritesPerFlush = 0;
+            //numSpritesPerFlush = 0;
+            //idx = 0;
             vbOffset = 0;
-            vertexFloats.clear();
-            vertexOffset = 0;
+//            vertexFloats.clear();
+//            vertexOffset = 0;
             topSpritesPerBatch = 0;
             flushCount = 0;
             numSprites = 0;
@@ -404,23 +415,23 @@ public class WgSpriteBatch implements Batch {
         explicitScissor = false;
 
         // set default state
-        tint.set(Color.WHITE);
+//        tint.set(Color.WHITE);
 
         // don't reset the matrices because setProjectionMatrix() and setTransformMatrix()
         // may be called before begin() and need to be respected.
-
+        idx = 0;
     }
 
+    @Override
     protected void switchTexture(Texture texture) {
-        flush();
         if (!(texture instanceof WgTexture))
             throw new IllegalArgumentException("texture must be WebGPUTexture");
-        lastTexture = (WgTexture) texture;
-        invTexWidth = 1.0f / texture.getWidth();
-        invTexHeight = 1.0f / texture.getHeight();
-
-        binder.setTexture("texture", lastTexture.getTextureView());
-        binder.setSampler("textureSampler", lastTexture.getSampler());
+        super.switchTexture(texture);
+//        invTexWidth = 1.0f / texture.getWidth();
+//        invTexHeight = 1.0f / texture.getHeight();
+        WgTexture wgTexture = (WgTexture) texture;
+        binder.setTexture("texture", wgTexture.getTextureView());
+        binder.setSampler("textureSampler", wgTexture.getSampler());
     }
 
     /** Synchronize the active render pass scissor with the WebGPU context's scissor state. The state is
@@ -446,17 +457,20 @@ public class WgSpriteBatch implements Batch {
         lastAppliedScissorEnabled = enabled;
     }
 
+    @Override
     public void flush() {
         if (!drawing)
             return;
-        if (numSpritesPerFlush == 0)
+        if (idx == 0)
             return;
-        if (numSpritesPerFlush > topSpritesPerBatch)    // keep statistics
-            topSpritesPerBatch = numSpritesPerFlush;
         if (flushCount > maxFlushes - 1) {
             Gdx.app.error("WgSpriteBatch", "Too many flushes (" + flushCount + "). Increase maxFlushes.");
             return;
         }
+        int spriteCount = idx / (VERTS_PER_SPRITE * vertexSize / Float.BYTES);
+        if ( spriteCount > topSpritesPerBatch)    // keep statistics
+            topSpritesPerBatch = spriteCount;
+
         renderCalls++;
 
         // Apply pending scissor changes (e.g. from libgdx's ScissorStack via WgGL20.glScissor /
@@ -475,38 +489,35 @@ public class WgSpriteBatch implements Batch {
         renderPass.setBindGroup(0, bg, dynamicOffset);
 
         // append new vertex data to GPU vertex buffer
-        int numBytes = numSpritesPerFlush * VERTS_PER_SPRITE * vertexSize;
-        vertexBuffer.setVertices(vertexBB, vbOffset, numBytes);
+        // offset and size in floats
+        vertexBuffer.setVertices(vertices, 0, idx, vbOffset );
 
         // Set vertex buffer while encoding the render pass
         // use an offset to set the vertex buffer for this batch
-        renderPass.setVertexBuffer(0, vertexBuffer.getBuffer(), vbOffset, numBytes);
+        // offset and size in bytes
+        renderPass.setVertexBuffer(0, vertexBuffer.getBuffer(), vbOffset*Float.BYTES, idx*Float.BYTES);
         indexBuffer.bind(renderPass);
 
-        renderPass.drawIndexed(numSpritesPerFlush * 6, 1, 0, 0, 0);
+        renderPass.drawIndexed(spriteCount * INDICES_PER_SPRITE, 1, 0, 0, 0);
 
         // bg.release();
 
-        vbOffset += numBytes;
-        vertexFloats.clear(); // reset fill position for next batch
-        numSprites += numSpritesPerFlush;
-        numSpritesPerFlush = 0; // reset
-        vertexOffset = 0;
+        numSprites += spriteCount;
+        vbOffset += idx;
+        idx = 0;
         flushCount++;
-        // advance the dynamic offset in the uniform buffer ready for the next flush
-        // uniformBuffer.setDynamicOffsetIndex(flushCount);
     }
 
+    @Override
     public void end() {
-        if (!drawing) // catch incorrect usage
-            throw new RuntimeException("Cannot end() without begin()");
-
-        flush();
+        if (!drawing) throw new IllegalStateException("SpriteBatch.begin must be called before end.");
+        if (idx > 0) flush();
+        lastTexture = null;
+        drawing = false;
         uniformBuffer.endSlices();
         renderPass.end();
         renderPass = null;
         pipelineCount = pipelines.size(); // statistics
-        drawing = false;
     }
 
     // create or reuse pipeline on demand to match the pipeline spec
@@ -568,33 +579,33 @@ public class WgSpriteBatch implements Batch {
             setPipeline(renderPass);
     }
 
-    @Override
-    public Matrix4 getProjectionMatrix() {
-        return projectionMatrix;
-    }
+//    @Override
+//    public Matrix4 getProjectionMatrix() {
+//        return projectionMatrix;
+//    }
+//
+//    @Override
+//    public Matrix4 getTransformMatrix() {
+//        return transformMatrix;
+//    }
 
-    @Override
-    public Matrix4 getTransformMatrix() {
-        return transformMatrix;
-    }
-
-    /**
-     * Set projection matrix. Expects an OpenGL standard projection matrix, i.e. mapping Z to [-1 .. 1]
-     *
-     */
-    @Override
-    public void setProjectionMatrix(Matrix4 projection) {
-        if (drawing)
-            flush();
-        projectionMatrix.set(projection);
-    }
-
-    @Override
-    public void setTransformMatrix(Matrix4 transform) {
-        if (drawing)
-            flush();
-        transformMatrix.set(transform);
-    }
+//    /**
+//     * Set projection matrix. Expects an OpenGL standard projection matrix, i.e. mapping Z to [-1 .. 1]
+//     *
+//     */
+//    @Override
+//    public void setProjectionMatrix(Matrix4 projection) {
+//        if (drawing)
+//            flush();
+//        projectionMatrix.set(projection);
+//    }
+//
+//    @Override
+//    public void setTransformMatrix(Matrix4 transform) {
+//        if (drawing)
+//            flush();
+//        transformMatrix.set(transform);
+//    }
 
     @Override
     public void setShader(ShaderProgram shader) {
@@ -603,219 +614,219 @@ public class WgSpriteBatch implements Batch {
 
     @Override
     public ShaderProgram getShader() {
-        return null;
+        throw new IllegalStateException("getShader() not implemented");
     }
 
-    public void draw(Texture texture, float x, float y) {
-        draw(texture, x, y, texture.getWidth(), texture.getHeight());
-    }
-
-    public void draw(Texture texture, float x, float y, float w, float h) {
-        this.draw(texture, x, y, w, h, 0f, 1f, 1f, 0f);
-    }
-
-    public void draw(TextureRegion region, float x, float y) {
-        // note: v2 is top of glyph, v the bottom
-        draw(region, x, y, region.getRegionWidth(), region.getRegionHeight());
-    }
-
-    private boolean check() {
-        if (!drawing)
-            throw new RuntimeException("SpriteBatch: Must call begin() before draw().");
-        if (numSpritesPerFlush == maxSpritesPerFlush) {
-            Gdx.app.error("WgSpriteBatch", "Too many sprites (more than " + maxSpritesPerFlush + "). Enlarge maxSprites.");
-            return false;
-        }
-        return true;
-    }
-
-    public void draw(TextureRegion region, float x, float y, float w, float h) {
-        if (!check())
-            return;
-
-        if (region.getTexture() != lastTexture) { // changing texture, need to flush what we have so far
-            switchTexture(region.getTexture());
-        }
-        addRect(x, y, w, h, region.getU(), region.getV2(), region.getU2(), region.getV()); // flip v and v2
-        numSpritesPerFlush++;
-    }
-
-    public void draw(Texture texture, float x, float y, float width, float height, float u, float v, float u2,
-            float v2) {
-
-        if (lastTexture == null || ((WgTexture)texture).getHandle() != lastTexture.getHandle()) { // changing texture, need to flush what we have so far
-            switchTexture(texture);
-        }
-        // put check after texture switch, because the switch resets numSpritesPerFlush
-        if (!check())
-            return;
-        addRect(x, y, width, height, u, v, u2, v2);
-        numSpritesPerFlush++;
-    }
-
-    public void draw(Texture texture, float x, float y, float originX, float originY, float width, float height,
-            float scaleX, float scaleY, float rotation, int srcX, int srcY, int srcWidth, int srcHeight, boolean flipX,
-            boolean flipY) {
-
-        if (texture != lastTexture) { // changing texture, need to flush what we have so far
-            switchTexture(texture);
-        }
-        // put check after texture switch, because the switch resets numSpritesPerFlush
-        if (!check())
-            return;
-
-        // bottom left and top right corner points relative to origin
-        final float worldOriginX = x + originX;
-        final float worldOriginY = y + originY;
-        float fx = -originX;
-        float fy = -originY;
-        float fx2 = width - originX;
-        float fy2 = height - originY;
-
-        // scale
-        if (scaleX != 1 || scaleY != 1) {
-            fx *= scaleX;
-            fy *= scaleY;
-            fx2 *= scaleX;
-            fy2 *= scaleY;
-        }
-
-        // construct corner points, start from top left and go counter clockwise
-        final float p1x = fx;
-        final float p1y = fy;
-        final float p2x = fx;
-        final float p2y = fy2;
-        final float p3x = fx2;
-        final float p3y = fy2;
-        final float p4x = fx2;
-        final float p4y = fy;
-
-        float x1;
-        float y1;
-        float x2;
-        float y2;
-        float x3;
-        float y3;
-        float x4;
-        float y4;
-
-        // rotate
-        if (rotation != 0) {
-            final float cos = MathUtils.cosDeg(rotation);
-            final float sin = MathUtils.sinDeg(rotation);
-
-            x1 = cos * p1x - sin * p1y;
-            y1 = sin * p1x + cos * p1y;
-
-            x2 = cos * p2x - sin * p2y;
-            y2 = sin * p2x + cos * p2y;
-
-            x3 = cos * p3x - sin * p3y;
-            y3 = sin * p3x + cos * p3y;
-
-            x4 = x1 + (x3 - x2);
-            y4 = y3 - (y2 - y1);
-        } else {
-            x1 = p1x;
-            y1 = p1y;
-
-            x2 = p2x;
-            y2 = p2y;
-
-            x3 = p3x;
-            y3 = p3y;
-
-            x4 = p4x;
-            y4 = p4y;
-        }
-
-        x1 += worldOriginX;
-        y1 += worldOriginY;
-        x2 += worldOriginX;
-        y2 += worldOriginY;
-        x3 += worldOriginX;
-        y3 += worldOriginY;
-        x4 += worldOriginX;
-        y4 += worldOriginY;
-
-        float u = srcX * invTexWidth;
-        float v = (srcY + srcHeight) * invTexHeight;
-        float u2 = (srcX + srcWidth) * invTexWidth;
-        float v2 = srcY * invTexHeight;
-
-        if (flipX) {
-            float tmp = u;
-            u = u2;
-            u2 = tmp;
-        }
-
-        if (flipY) {
-            float tmp = v;
-            v = v2;
-            v2 = tmp;
-        }
-        addVertex(x1, y1, u, v);
-        addVertex(x2, y2, u, v2);
-        addVertex(x3, y3, u2, v2);
-        addVertex(x4, y4, u2, v);
-        numSpritesPerFlush++;
-    }
-
-    public void draw(Texture texture, float x, float y, float width, float height, int srcX, int srcY, int srcWidth,
-            int srcHeight, boolean flipX, boolean flipY) {
-
-        if (texture != lastTexture)
-            switchTexture(texture);
-        // put check after texture switch, because the switch resets numSpritesPerFlush
-        if (!check())
-            return;
-
-        float u = srcX * invTexWidth;
-        float v = (srcY + srcHeight) * invTexHeight;
-        float u2 = (srcX + srcWidth) * invTexWidth;
-        float v2 = srcY * invTexHeight;
-        final float fx2 = x + width;
-        final float fy2 = y + height;
-
-        if (flipX) {
-            float tmp = u;
-            u = u2;
-            u2 = tmp;
-        }
-
-        if (flipY) {
-            float tmp = v;
-            v = v2;
-            v2 = tmp;
-        }
-
-        addVertex(x, y, u, v);
-        addVertex(x, fy2, u, v2);
-        addVertex(fx2, fy2, u2, v2);
-        addVertex(fx2, y, u2, v);
-        numSpritesPerFlush++;
-    }
-
-    public void draw(Texture texture, float x, float y, int srcX, int srcY, int srcWidth, int srcHeight) {
-        if (texture != lastTexture)
-            switchTexture(texture);
-        // put check after texture switch, because the switch resets numSpritesPerFlush
-        if (!check())
-            return;
-
-        final float u = srcX * invTexWidth;
-        final float v = (srcY + srcHeight) * invTexHeight;
-        final float u2 = (srcX + srcWidth) * invTexWidth;
-        final float v2 = srcY * invTexHeight;
-        final float fx2 = x + srcWidth;
-        final float fy2 = y + srcHeight;
-
-        addVertex(x, y, u, v);
-        addVertex(x, fy2, u, v2);
-        addVertex(fx2, fy2, u2, v2);
-        addVertex(fx2, y, u2, v);
-        numSpritesPerFlush++;
-    }
+//    public void draw(Texture texture, float x, float y) {
+//        draw(texture, x, y, texture.getWidth(), texture.getHeight());
+//    }
+//
+//    public void draw(Texture texture, float x, float y, float w, float h) {
+//        this.draw(texture, x, y, w, h, 0f, 1f, 1f, 0f);
+//    }
+//
+//    public void draw(TextureRegion region, float x, float y) {
+//        // note: v2 is top of glyph, v the bottom
+//        draw(region, x, y, region.getRegionWidth(), region.getRegionHeight());
+//    }
+//
+//    private boolean check() {
+//        if (!drawing)
+//            throw new RuntimeException("SpriteBatch: Must call begin() before draw().");
+//        if (numSpritesPerFlush == maxSpritesPerFlush) {
+//            Gdx.app.error("WgSpriteBatch", "Too many sprites (more than " + maxSpritesPerFlush + "). Enlarge maxSprites.");
+//            return false;
+//        }
+//        return true;
+//    }
+//
+//    public void draw(TextureRegion region, float x, float y, float w, float h) {
+//        if (!check())
+//            return;
+//
+//        if (region.getTexture() != lastTexture) { // changing texture, need to flush what we have so far
+//            switchTexture(region.getTexture());
+//        }
+//        addRect(x, y, w, h, region.getU(), region.getV2(), region.getU2(), region.getV()); // flip v and v2
+//        numSpritesPerFlush++;
+//    }
+//
+//    public void draw(Texture texture, float x, float y, float width, float height, float u, float v, float u2,
+//            float v2) {
+//
+//        if (lastTexture == null || ((WgTexture)texture).getHandle() != lastTexture.getHandle()) { // changing texture, need to flush what we have so far
+//            switchTexture(texture);
+//        }
+//        // put check after texture switch, because the switch resets numSpritesPerFlush
+//        if (!check())
+//            return;
+//        addRect(x, y, width, height, u, v, u2, v2);
+//        numSpritesPerFlush++;
+//    }
+//
+//    public void draw(Texture texture, float x, float y, float originX, float originY, float width, float height,
+//            float scaleX, float scaleY, float rotation, int srcX, int srcY, int srcWidth, int srcHeight, boolean flipX,
+//            boolean flipY) {
+//
+//        if (texture != lastTexture) { // changing texture, need to flush what we have so far
+//            switchTexture(texture);
+//        }
+//        // put check after texture switch, because the switch resets numSpritesPerFlush
+//        if (!check())
+//            return;
+//
+//        // bottom left and top right corner points relative to origin
+//        final float worldOriginX = x + originX;
+//        final float worldOriginY = y + originY;
+//        float fx = -originX;
+//        float fy = -originY;
+//        float fx2 = width - originX;
+//        float fy2 = height - originY;
+//
+//        // scale
+//        if (scaleX != 1 || scaleY != 1) {
+//            fx *= scaleX;
+//            fy *= scaleY;
+//            fx2 *= scaleX;
+//            fy2 *= scaleY;
+//        }
+//
+//        // construct corner points, start from top left and go counter clockwise
+//        final float p1x = fx;
+//        final float p1y = fy;
+//        final float p2x = fx;
+//        final float p2y = fy2;
+//        final float p3x = fx2;
+//        final float p3y = fy2;
+//        final float p4x = fx2;
+//        final float p4y = fy;
+//
+//        float x1;
+//        float y1;
+//        float x2;
+//        float y2;
+//        float x3;
+//        float y3;
+//        float x4;
+//        float y4;
+//
+//        // rotate
+//        if (rotation != 0) {
+//            final float cos = MathUtils.cosDeg(rotation);
+//            final float sin = MathUtils.sinDeg(rotation);
+//
+//            x1 = cos * p1x - sin * p1y;
+//            y1 = sin * p1x + cos * p1y;
+//
+//            x2 = cos * p2x - sin * p2y;
+//            y2 = sin * p2x + cos * p2y;
+//
+//            x3 = cos * p3x - sin * p3y;
+//            y3 = sin * p3x + cos * p3y;
+//
+//            x4 = x1 + (x3 - x2);
+//            y4 = y3 - (y2 - y1);
+//        } else {
+//            x1 = p1x;
+//            y1 = p1y;
+//
+//            x2 = p2x;
+//            y2 = p2y;
+//
+//            x3 = p3x;
+//            y3 = p3y;
+//
+//            x4 = p4x;
+//            y4 = p4y;
+//        }
+//
+//        x1 += worldOriginX;
+//        y1 += worldOriginY;
+//        x2 += worldOriginX;
+//        y2 += worldOriginY;
+//        x3 += worldOriginX;
+//        y3 += worldOriginY;
+//        x4 += worldOriginX;
+//        y4 += worldOriginY;
+//
+//        float u = srcX * invTexWidth;
+//        float v = (srcY + srcHeight) * invTexHeight;
+//        float u2 = (srcX + srcWidth) * invTexWidth;
+//        float v2 = srcY * invTexHeight;
+//
+//        if (flipX) {
+//            float tmp = u;
+//            u = u2;
+//            u2 = tmp;
+//        }
+//
+//        if (flipY) {
+//            float tmp = v;
+//            v = v2;
+//            v2 = tmp;
+//        }
+//        addVertex(x1, y1, u, v);
+//        addVertex(x2, y2, u, v2);
+//        addVertex(x3, y3, u2, v2);
+//        addVertex(x4, y4, u2, v);
+//        numSpritesPerFlush++;
+//    }
+//
+//    public void draw(Texture texture, float x, float y, float width, float height, int srcX, int srcY, int srcWidth,
+//            int srcHeight, boolean flipX, boolean flipY) {
+//
+//        if (texture != lastTexture)
+//            switchTexture(texture);
+//        // put check after texture switch, because the switch resets numSpritesPerFlush
+//        if (!check())
+//            return;
+//
+//        float u = srcX * invTexWidth;
+//        float v = (srcY + srcHeight) * invTexHeight;
+//        float u2 = (srcX + srcWidth) * invTexWidth;
+//        float v2 = srcY * invTexHeight;
+//        final float fx2 = x + width;
+//        final float fy2 = y + height;
+//
+//        if (flipX) {
+//            float tmp = u;
+//            u = u2;
+//            u2 = tmp;
+//        }
+//
+//        if (flipY) {
+//            float tmp = v;
+//            v = v2;
+//            v2 = tmp;
+//        }
+//
+//        addVertex(x, y, u, v);
+//        addVertex(x, fy2, u, v2);
+//        addVertex(fx2, fy2, u2, v2);
+//        addVertex(fx2, y, u2, v);
+//        numSpritesPerFlush++;
+//    }
+//
+//    public void draw(Texture texture, float x, float y, int srcX, int srcY, int srcWidth, int srcHeight) {
+//        if (texture != lastTexture)
+//            switchTexture(texture);
+//        // put check after texture switch, because the switch resets numSpritesPerFlush
+//        if (!check())
+//            return;
+//
+//        final float u = srcX * invTexWidth;
+//        final float v = (srcY + srcHeight) * invTexHeight;
+//        final float u2 = (srcX + srcWidth) * invTexWidth;
+//        final float v2 = srcY * invTexHeight;
+//        final float fx2 = x + srcWidth;
+//        final float fy2 = y + srcHeight;
+//
+//        addVertex(x, y, u, v);
+//        addVertex(x, fy2, u, v2);
+//        addVertex(fx2, fy2, u2, v2);
+//        addVertex(fx2, y, u2, v);
+//        numSpritesPerFlush++;
+//    }
 
     // public void draw (Texture texture, float x, float y, float width, float height, float u, float v, float u2, float
     // v2) {
@@ -837,293 +848,293 @@ public class WgSpriteBatch implements Batch {
     // draw(texture, x, y, texture.getWidth(), texture.getHeight());
     // }
 
-    // used by Sprite class and BitmapFont
-    public void draw(Texture texture, float[] spriteVertices, int offset, int numFloats) {
-
-        if (texture != lastTexture) { // changing texture, need to flush what we have so far
-            switchTexture(texture);
-        }
-
-        int remaining = 20 * (maxSpritesPerFlush - numSpritesPerFlush);
-        if (numFloats > remaining) // avoid buffer overflow by truncating as needed
-            numFloats = remaining;
-        // IMPORTANT: write at vertexOffset (absolute index), not at the FloatBuffer's relative position.
-        // addVertex() uses absolute put(index,value) via vertexOffset and does NOT advance position.
-        // If we used a relative put here, interleaving the two draw paths (e.g. 9-patch bg → Image
-        // drawable → BitmapFont label) would cause the two trackers to diverge and sprites would
-        // overwrite each other. Keep a single source of truth: vertexOffset.
-        vertexFloats.position(vertexOffset);
-        vertexFloats.put(spriteVertices, offset, numFloats);
-        vertexOffset += numFloats;
-        numSpritesPerFlush += numFloats / 20;
-    }
-
-    public void draw(TextureRegion region, float x, float y, float originX, float originY, float width, float height,
-            float scaleX, float scaleY, float rotation) {
-
-        Texture texture = region.getTexture();
-        if (texture != lastTexture)
-            switchTexture(texture);
-        // put check after texture switch, because the switch resets numSpritesPerFlush
-        if (!check())
-            return;
-
-        // bottom left and top right corner points relative to origin
-        final float worldOriginX = x + originX;
-        final float worldOriginY = y + originY;
-        float fx = -originX;
-        float fy = -originY;
-        float fx2 = width - originX;
-        float fy2 = height - originY;
-
-        // scale
-        if (scaleX != 1 || scaleY != 1) {
-            fx *= scaleX;
-            fy *= scaleY;
-            fx2 *= scaleX;
-            fy2 *= scaleY;
-        }
-
-        // construct corner points, start from top left and go counter clockwise
-        final float p1x = fx;
-        final float p1y = fy;
-        final float p2x = fx;
-        final float p2y = fy2;
-        final float p3x = fx2;
-        final float p3y = fy2;
-        final float p4x = fx2;
-        final float p4y = fy;
-
-        float x1;
-        float y1;
-        float x2;
-        float y2;
-        float x3;
-        float y3;
-        float x4;
-        float y4;
-
-        // rotate
-        if (rotation != 0) {
-            final float cos = MathUtils.cosDeg(rotation);
-            final float sin = MathUtils.sinDeg(rotation);
-
-            x1 = cos * p1x - sin * p1y;
-            y1 = sin * p1x + cos * p1y;
-
-            x2 = cos * p2x - sin * p2y;
-            y2 = sin * p2x + cos * p2y;
-
-            x3 = cos * p3x - sin * p3y;
-            y3 = sin * p3x + cos * p3y;
-
-            x4 = x1 + (x3 - x2);
-            y4 = y3 - (y2 - y1);
-        } else {
-            x1 = p1x;
-            y1 = p1y;
-
-            x2 = p2x;
-            y2 = p2y;
-
-            x3 = p3x;
-            y3 = p3y;
-
-            x4 = p4x;
-            y4 = p4y;
-        }
-
-        x1 += worldOriginX;
-        y1 += worldOriginY;
-        x2 += worldOriginX;
-        y2 += worldOriginY;
-        x3 += worldOriginX;
-        y3 += worldOriginY;
-        x4 += worldOriginX;
-        y4 += worldOriginY;
-
-        final float u = region.getU();
-        final float v = region.getV2();
-        final float u2 = region.getU2();
-        final float v2 = region.getV();
-
-        addVertex(x1, y1, u, v);
-        addVertex(x2, y2, u, v2);
-        addVertex(x3, y3, u2, v2);
-        addVertex(x4, y4, u2, v);
-        numSpritesPerFlush++;
-    }
-
-    public void draw(TextureRegion region, float x, float y, float originX, float originY, float width, float height,
-            float scaleX, float scaleY, float rotation, boolean clockwise) {
-        Texture texture = region.getTexture();
-        if (texture != lastTexture)
-            switchTexture(texture);
-        // put check after texture switch, because the switch resets numSpritesPerFlush
-        if (!check())
-            return;
-
-        // bottom left and top right corner points relative to origin
-        final float worldOriginX = x + originX;
-        final float worldOriginY = y + originY;
-        float fx = -originX;
-        float fy = -originY;
-        float fx2 = width - originX;
-        float fy2 = height - originY;
-
-        // scale
-        if (scaleX != 1 || scaleY != 1) {
-            fx *= scaleX;
-            fy *= scaleY;
-            fx2 *= scaleX;
-            fy2 *= scaleY;
-        }
-
-        // construct corner points, start from top left and go counter clockwise
-        final float p1x = fx;
-        final float p1y = fy;
-        final float p2x = fx;
-        final float p2y = fy2;
-        final float p3x = fx2;
-        final float p3y = fy2;
-        final float p4x = fx2;
-        final float p4y = fy;
-
-        float x1;
-        float y1;
-        float x2;
-        float y2;
-        float x3;
-        float y3;
-        float x4;
-        float y4;
-
-        // rotate
-        if (rotation != 0) {
-            final float cos = MathUtils.cosDeg(rotation);
-            final float sin = MathUtils.sinDeg(rotation);
-
-            x1 = cos * p1x - sin * p1y;
-            y1 = sin * p1x + cos * p1y;
-
-            x2 = cos * p2x - sin * p2y;
-            y2 = sin * p2x + cos * p2y;
-
-            x3 = cos * p3x - sin * p3y;
-            y3 = sin * p3x + cos * p3y;
-
-            x4 = x1 + (x3 - x2);
-            y4 = y3 - (y2 - y1);
-        } else {
-            x1 = p1x;
-            y1 = p1y;
-
-            x2 = p2x;
-            y2 = p2y;
-
-            x3 = p3x;
-            y3 = p3y;
-
-            x4 = p4x;
-            y4 = p4y;
-        }
-
-        x1 += worldOriginX;
-        y1 += worldOriginY;
-        x2 += worldOriginX;
-        y2 += worldOriginY;
-        x3 += worldOriginX;
-        y3 += worldOriginY;
-        x4 += worldOriginX;
-        y4 += worldOriginY;
-
-        float u1, v1, u2, v2, u3, v3, u4, v4;
-        if (clockwise) {
-            u1 = region.getU2();
-            v1 = region.getV2();
-            u2 = region.getU();
-            v2 = region.getV2();
-            u3 = region.getU();
-            v3 = region.getV();
-            u4 = region.getU2();
-            v4 = region.getV();
-        } else {
-            u1 = region.getU();
-            v1 = region.getV();
-            u2 = region.getU2();
-            v2 = region.getV();
-            u3 = region.getU2();
-            v3 = region.getV2();
-            u4 = region.getU();
-            v4 = region.getV2();
-        }
-
-        addVertex(x1, y1, u1, v1);
-        addVertex(x2, y2, u2, v2);
-        addVertex(x3, y3, u3, v3);
-        addVertex(x4, y4, u4, v4);
-        numSpritesPerFlush++;
-    }
-
-    public void draw(TextureRegion region, float width, float height, Affine2 transform) {
-        Texture texture = region.getTexture();
-        if (texture != lastTexture)
-            switchTexture(texture);
-        // put check after texture switch, because the switch resets numSpritesPerFlush
-        if (!check())
-            return;
-
-        // construct corner points
-        float x1 = transform.m02;
-        float y1 = transform.m12;
-        float x2 = transform.m01 * height + transform.m02;
-        float y2 = transform.m11 * height + transform.m12;
-        float x3 = transform.m00 * width + transform.m01 * height + transform.m02;
-        float y3 = transform.m10 * width + transform.m11 * height + transform.m12;
-        float x4 = transform.m00 * width + transform.m02;
-        float y4 = transform.m10 * width + transform.m12;
-
-        float u = region.getU();
-        float v = region.getV2();
-        float u2 = region.getU2();
-        float v2 = region.getV();
-
-        addVertex(x1, y1, u, v);
-        addVertex(x2, y2, u, v2);
-        addVertex(x3, y3, u2, v2);
-        addVertex(x4, y4, u2, v);
-        numSpritesPerFlush++;
-    }
-
-    private void addRect(float x, float y, float w, float h, float u, float v, float u2, float v2) {
-        addVertex(x, y, u, v);
-        addVertex(x, y + h, u, v2);
-        addVertex(x + w, y + h, u2, v2);
-        addVertex(x + w, y, u2, v);
-    }
-
-    protected int vertexOffset;
-
-    protected void addVertex(float x, float y, float u, float v) {
-        int stride = vertexAttributes.vertexSize / Float.BYTES;
-        boolean hasColor = (vertexAttributes.getMask() & VertexAttributes.Usage.ColorPacked) != 0;
-        boolean hasUV = (vertexAttributes.getMask() & VertexAttributes.Usage.TextureCoordinates) != 0;
-        float col = tint.toFloatBits();
-
-        int start = vertexOffset;
-
-        vertexFloats.put(vertexOffset++, x);
-        vertexFloats.put(vertexOffset++, y);
-        if (hasColor) {
-            vertexFloats.put(vertexOffset++,col);
-        }
-        if (hasUV) {
-            vertexFloats.put(vertexOffset++, u);
-            vertexFloats.put(vertexOffset++, v);
-        }
-        // skip any other vertex attributes that may be defined
-        vertexOffset = start + stride;
-    }
+//    // used by Sprite class and BitmapFont
+//    public void draw(Texture texture, float[] spriteVertices, int offset, int numFloats) {
+//
+//        if (texture != lastTexture) { // changing texture, need to flush what we have so far
+//            switchTexture(texture);
+//        }
+//
+//        int remaining = 20 * (maxSpritesPerFlush - numSpritesPerFlush);
+//        if (numFloats > remaining) // avoid buffer overflow by truncating as needed
+//            numFloats = remaining;
+//        // IMPORTANT: write at vertexOffset (absolute index), not at the FloatBuffer's relative position.
+//        // addVertex() uses absolute put(index,value) via vertexOffset and does NOT advance position.
+//        // If we used a relative put here, interleaving the two draw paths (e.g. 9-patch bg → Image
+//        // drawable → BitmapFont label) would cause the two trackers to diverge and sprites would
+//        // overwrite each other. Keep a single source of truth: vertexOffset.
+//        vertexFloats.position(vertexOffset);
+//        vertexFloats.put(spriteVertices, offset, numFloats);
+//        vertexOffset += numFloats;
+//        numSpritesPerFlush += numFloats / 20;
+//    }
+//
+//    public void draw(TextureRegion region, float x, float y, float originX, float originY, float width, float height,
+//            float scaleX, float scaleY, float rotation) {
+//
+//        Texture texture = region.getTexture();
+//        if (texture != lastTexture)
+//            switchTexture(texture);
+//        // put check after texture switch, because the switch resets numSpritesPerFlush
+//        if (!check())
+//            return;
+//
+//        // bottom left and top right corner points relative to origin
+//        final float worldOriginX = x + originX;
+//        final float worldOriginY = y + originY;
+//        float fx = -originX;
+//        float fy = -originY;
+//        float fx2 = width - originX;
+//        float fy2 = height - originY;
+//
+//        // scale
+//        if (scaleX != 1 || scaleY != 1) {
+//            fx *= scaleX;
+//            fy *= scaleY;
+//            fx2 *= scaleX;
+//            fy2 *= scaleY;
+//        }
+//
+//        // construct corner points, start from top left and go counter clockwise
+//        final float p1x = fx;
+//        final float p1y = fy;
+//        final float p2x = fx;
+//        final float p2y = fy2;
+//        final float p3x = fx2;
+//        final float p3y = fy2;
+//        final float p4x = fx2;
+//        final float p4y = fy;
+//
+//        float x1;
+//        float y1;
+//        float x2;
+//        float y2;
+//        float x3;
+//        float y3;
+//        float x4;
+//        float y4;
+//
+//        // rotate
+//        if (rotation != 0) {
+//            final float cos = MathUtils.cosDeg(rotation);
+//            final float sin = MathUtils.sinDeg(rotation);
+//
+//            x1 = cos * p1x - sin * p1y;
+//            y1 = sin * p1x + cos * p1y;
+//
+//            x2 = cos * p2x - sin * p2y;
+//            y2 = sin * p2x + cos * p2y;
+//
+//            x3 = cos * p3x - sin * p3y;
+//            y3 = sin * p3x + cos * p3y;
+//
+//            x4 = x1 + (x3 - x2);
+//            y4 = y3 - (y2 - y1);
+//        } else {
+//            x1 = p1x;
+//            y1 = p1y;
+//
+//            x2 = p2x;
+//            y2 = p2y;
+//
+//            x3 = p3x;
+//            y3 = p3y;
+//
+//            x4 = p4x;
+//            y4 = p4y;
+//        }
+//
+//        x1 += worldOriginX;
+//        y1 += worldOriginY;
+//        x2 += worldOriginX;
+//        y2 += worldOriginY;
+//        x3 += worldOriginX;
+//        y3 += worldOriginY;
+//        x4 += worldOriginX;
+//        y4 += worldOriginY;
+//
+//        final float u = region.getU();
+//        final float v = region.getV2();
+//        final float u2 = region.getU2();
+//        final float v2 = region.getV();
+//
+//        addVertex(x1, y1, u, v);
+//        addVertex(x2, y2, u, v2);
+//        addVertex(x3, y3, u2, v2);
+//        addVertex(x4, y4, u2, v);
+//        numSpritesPerFlush++;
+//    }
+//
+//    public void draw(TextureRegion region, float x, float y, float originX, float originY, float width, float height,
+//            float scaleX, float scaleY, float rotation, boolean clockwise) {
+//        Texture texture = region.getTexture();
+//        if (texture != lastTexture)
+//            switchTexture(texture);
+//        // put check after texture switch, because the switch resets numSpritesPerFlush
+//        if (!check())
+//            return;
+//
+//        // bottom left and top right corner points relative to origin
+//        final float worldOriginX = x + originX;
+//        final float worldOriginY = y + originY;
+//        float fx = -originX;
+//        float fy = -originY;
+//        float fx2 = width - originX;
+//        float fy2 = height - originY;
+//
+//        // scale
+//        if (scaleX != 1 || scaleY != 1) {
+//            fx *= scaleX;
+//            fy *= scaleY;
+//            fx2 *= scaleX;
+//            fy2 *= scaleY;
+//        }
+//
+//        // construct corner points, start from top left and go counter clockwise
+//        final float p1x = fx;
+//        final float p1y = fy;
+//        final float p2x = fx;
+//        final float p2y = fy2;
+//        final float p3x = fx2;
+//        final float p3y = fy2;
+//        final float p4x = fx2;
+//        final float p4y = fy;
+//
+//        float x1;
+//        float y1;
+//        float x2;
+//        float y2;
+//        float x3;
+//        float y3;
+//        float x4;
+//        float y4;
+//
+//        // rotate
+//        if (rotation != 0) {
+//            final float cos = MathUtils.cosDeg(rotation);
+//            final float sin = MathUtils.sinDeg(rotation);
+//
+//            x1 = cos * p1x - sin * p1y;
+//            y1 = sin * p1x + cos * p1y;
+//
+//            x2 = cos * p2x - sin * p2y;
+//            y2 = sin * p2x + cos * p2y;
+//
+//            x3 = cos * p3x - sin * p3y;
+//            y3 = sin * p3x + cos * p3y;
+//
+//            x4 = x1 + (x3 - x2);
+//            y4 = y3 - (y2 - y1);
+//        } else {
+//            x1 = p1x;
+//            y1 = p1y;
+//
+//            x2 = p2x;
+//            y2 = p2y;
+//
+//            x3 = p3x;
+//            y3 = p3y;
+//
+//            x4 = p4x;
+//            y4 = p4y;
+//        }
+//
+//        x1 += worldOriginX;
+//        y1 += worldOriginY;
+//        x2 += worldOriginX;
+//        y2 += worldOriginY;
+//        x3 += worldOriginX;
+//        y3 += worldOriginY;
+//        x4 += worldOriginX;
+//        y4 += worldOriginY;
+//
+//        float u1, v1, u2, v2, u3, v3, u4, v4;
+//        if (clockwise) {
+//            u1 = region.getU2();
+//            v1 = region.getV2();
+//            u2 = region.getU();
+//            v2 = region.getV2();
+//            u3 = region.getU();
+//            v3 = region.getV();
+//            u4 = region.getU2();
+//            v4 = region.getV();
+//        } else {
+//            u1 = region.getU();
+//            v1 = region.getV();
+//            u2 = region.getU2();
+//            v2 = region.getV();
+//            u3 = region.getU2();
+//            v3 = region.getV2();
+//            u4 = region.getU();
+//            v4 = region.getV2();
+//        }
+//
+//        addVertex(x1, y1, u1, v1);
+//        addVertex(x2, y2, u2, v2);
+//        addVertex(x3, y3, u3, v3);
+//        addVertex(x4, y4, u4, v4);
+//        numSpritesPerFlush++;
+//    }
+//
+//    public void draw(TextureRegion region, float width, float height, Affine2 transform) {
+//        Texture texture = region.getTexture();
+//        if (texture != lastTexture)
+//            switchTexture(texture);
+//        // put check after texture switch, because the switch resets numSpritesPerFlush
+//        if (!check())
+//            return;
+//
+//        // construct corner points
+//        float x1 = transform.m02;
+//        float y1 = transform.m12;
+//        float x2 = transform.m01 * height + transform.m02;
+//        float y2 = transform.m11 * height + transform.m12;
+//        float x3 = transform.m00 * width + transform.m01 * height + transform.m02;
+//        float y3 = transform.m10 * width + transform.m11 * height + transform.m12;
+//        float x4 = transform.m00 * width + transform.m02;
+//        float y4 = transform.m10 * width + transform.m12;
+//
+//        float u = region.getU();
+//        float v = region.getV2();
+//        float u2 = region.getU2();
+//        float v2 = region.getV();
+//
+//        addVertex(x1, y1, u, v);
+//        addVertex(x2, y2, u, v2);
+//        addVertex(x3, y3, u2, v2);
+//        addVertex(x4, y4, u2, v);
+//        numSpritesPerFlush++;
+//    }
+//
+//    private void addRect(float x, float y, float w, float h, float u, float v, float u2, float v2) {
+//        addVertex(x, y, u, v);
+//        addVertex(x, y + h, u, v2);
+//        addVertex(x + w, y + h, u2, v2);
+//        addVertex(x + w, y, u2, v);
+//    }
+//
+//    protected int vertexOffset;
+//
+//    protected void addVertex(float x, float y, float u, float v) {
+//        int stride = vertexAttributes.vertexSize / Float.BYTES;
+//        boolean hasColor = (vertexAttributes.getMask() & VertexAttributes.Usage.ColorPacked) != 0;
+//        boolean hasUV = (vertexAttributes.getMask() & VertexAttributes.Usage.TextureCoordinates) != 0;
+//        float col = tint.toFloatBits();
+//
+//        int start = vertexOffset;
+//
+//        vertexFloats.put(vertexOffset++, x);
+//        vertexFloats.put(vertexOffset++, y);
+//        if (hasColor) {
+//            vertexFloats.put(vertexOffset++,col);
+//        }
+//        if (hasUV) {
+//            vertexFloats.put(vertexOffset++, u);
+//            vertexFloats.put(vertexOffset++, v);
+//        }
+//        // skip any other vertex attributes that may be defined
+//        vertexOffset = start + stride;
+//    }
 
     private void createBuffers(int maxFlushes) {
         int indexSize = maxSpritesPerFlush * INDICES_PER_SPRITE * Short.BYTES;
