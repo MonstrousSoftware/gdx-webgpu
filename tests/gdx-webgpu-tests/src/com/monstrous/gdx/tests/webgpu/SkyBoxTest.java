@@ -112,6 +112,7 @@ public class SkyBoxTest extends GdxTest {
 
     @Override
     public void dispose() {
+        skybox.dispose();
         modelBatch.dispose();
         model.dispose();
         cubemap.dispose();

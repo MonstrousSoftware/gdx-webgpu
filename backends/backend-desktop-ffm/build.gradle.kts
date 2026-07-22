@@ -17,8 +17,7 @@ dependencies {
     val jWebGPUVVersion = project.property("jWebGPUVVersion") as String
 
     api(project(":backends:backend-desktop"))
-    api("com.github.xpenatan.jWebGPU:webgpu-ffm:$jWebGPUVVersion")
-    api("com.github.xpenatan.jWebGPU:webgpu-ffm_desktop:$jWebGPUVVersion")
+    api("com.github.xpenatan.jWebGPU:webgpu-desktop-ffm:$jWebGPUVVersion")
 }
 
 publishing {
@@ -29,4 +28,3 @@ publishing {
         }
     }
 }
-

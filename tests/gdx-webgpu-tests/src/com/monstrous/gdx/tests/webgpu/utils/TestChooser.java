@@ -49,35 +49,7 @@ public class TestChooser extends ApplicationAdapter {
 
         stage = new WgStage(new ScreenViewport());
 
-        Gdx.input = new InputWrapper(Gdx.input) {
-            @Override
-            public boolean keyUp(int keycode) {
-                if (keycode == Input.Keys.ESCAPE) {
-                    if (test != null) {
-                        Gdx.app.log("GdxTestTeaVM", "Exiting current test.");
-                        dispose = true;
-                    }
-                }
-                return false;
-            }
-
-            @Override
-            public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-                if (mobile && test != null) {
-                    int hotspotSize = (int) (80 * uiScale); // ~80dp scaled
-                    boolean inHotspot = (Gdx.graphics.getWidth() - screenX) < hotspotSize
-                            && (Gdx.graphics.getHeight() - screenY) < hotspotSize;
-                    if (inHotspot) {
-                        Gdx.app.log("TestChooser", "Top-left hotspot tapped, closing current test.");
-                        dispose = true;
-                        return true;
-                    }
-                }
-                return super.touchDown(screenX, screenY, pointer, button);
-            }
-        };
-
-        ((InputWrapper) Gdx.input).multiplexer.addProcessor(stage);
+        Gdx.input.setInputProcessor(stage);
 
         skin = new WgSkin(Gdx.files.internal("data/uiskin.json"));
 
@@ -115,18 +87,8 @@ public class TestChooser extends ApplicationAdapter {
             testButton.addListener(new ChangeListener() {
                 @Override
                 public void changed(ChangeEvent event, Actor actor) {
-                    boolean openedNewWindow = false;
-                    WindowOpener opener = WindowOpenerRegistry.getOpener();
-                    if (opener != null) {
-                        try {
-                            openedNewWindow = opener.open(testName);
-                        } catch (Throwable t) {
-                            openedNewWindow = false;
-                        }
-                    }
-
-                    if (!openedNewWindow) {
-                        ((InputWrapper) Gdx.input).multiplexer.removeProcessor(stage);
+                    if (!openInNewWindow(testName)) {
+                        Gdx.input.setInputProcessor(null);
                         test = WebGPUTests.newTest(testName);
                         test.create();
                         test.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -161,12 +123,37 @@ public class TestChooser extends ApplicationAdapter {
         }
     }
 
+    private boolean openInNewWindow(String testName) {
+        WindowOpener opener = WindowOpenerRegistry.getOpener();
+        if (opener == null) {
+            return false;
+        }
+        try {
+            return opener.open(testName);
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
     @Override
     public void render() {
         if (test == null) {
             stage.act();
             stage.draw();
         } else {
+            if (!dispose && Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+                Gdx.app.log("GdxTestTeaVM", "Exiting current test.");
+                dispose = true;
+            }
+            if (!dispose && mobile && Gdx.input.justTouched()) {
+                int hotspotSize = (int) (80 * uiScale);
+                boolean inHotspot = (Gdx.graphics.getWidth() - Gdx.input.getX()) < hotspotSize
+                        && (Gdx.graphics.getHeight() - Gdx.input.getY()) < hotspotSize;
+                if (inHotspot) {
+                    Gdx.app.log("TestChooser", "Top-left hotspot tapped, closing current test.");
+                    dispose = true;
+                }
+            }
             if (dispose) {
                 test.pause();
                 test.dispose();
@@ -179,10 +166,7 @@ public class TestChooser extends ApplicationAdapter {
                     Gdx.graphics.setVSync(true);
                 }
 
-                InputWrapper wrapper = ((InputWrapper) Gdx.input);
-                wrapper.multiplexer.addProcessor(stage);
-                wrapper.multiplexer.removeProcessor(wrapper.lastProcessor);
-                wrapper.lastProcessor = null;
+                Gdx.input.setInputProcessor(stage);
                 dispose = false;
             } else {
                 test.render();

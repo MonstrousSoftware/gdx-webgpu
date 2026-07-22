@@ -30,11 +30,9 @@ package com.monstrous.gdx.tests.webgpu;
 
 import com.monstrous.gdx.tests.webgpu.utils.GdxTest;
 import com.badlogic.gdx.utils.ObjectMap;
-import com.badlogic.gdx.utils.StreamUtils;
+import com.badlogic.gdx.utils.reflect.ClassReflection;
+import com.badlogic.gdx.utils.reflect.ReflectionException;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -46,98 +44,130 @@ import java.util.List;
  * @author badlogicgames@gmail.com
  */
 public class WebGPUTests {
+    /** Stable public names mapped to classes; the string identifiers survive compiler obfuscation. */
+    private static final ObjectMap<String, Class<? extends GdxTest>> testsByName =
+            new ObjectMap<String, Class<? extends GdxTest>>();
+
     public static final List<Class<? extends GdxTest>> tests = new ArrayList<Class<? extends GdxTest>>(
             Arrays.<Class<? extends GdxTest>>asList(
                     // @off
-                    AssetManagerTest.class, ClearScreen.class, SpriteBatchTest.class, StageTest.class, ColorTest.class,
-                    FontTest.class, Scene2dTest.class, ImmediateModeRendererTest.class, ShapeRendererTest.class,
-                    ShapeRenderer2DTest.class, NinePatchTest.class, ModelBatchTest.class, ModelBatchMaskingTest.class,
-                    ModelBatchOutlineTest.class, SpriteHighlightTest.class, WrapAndFilterTest.class, LoadObjTest.class,
-                    LoadG3DJTest.class, LoadModelTest.class, LoadGLTFTest.class, LightingTest.class,
-                    InstancingTest.class, ViewportTest.class, ScissorTest.class, ASimpleGame.class,
-                    ParticleEmitterTest.class, ParticleEmittersTest.class, HeightMapTest.class, FullScreenTest.class,
-                    GPUTimerTest.class, FrameBufferTest.class, PostProcessing.class, SuperKoalio.class,
-                    DistanceFontTest.class, DepthClearTest.class, FogTest.class, ShadowTest.class,
-                    CSMShadowTest.class,
-                    TextureAtlasTest.class, TestTextureMipMap.class, Basic3DTest.class, TestMesh.class,
-                    TestMeshNoIndices.class, TestMeshBuilder.class, TestTexture.class, SpriteBatchDoubleLoop.class,
-                    TransparencyTest.class, TestCompute.class, ComputeMoldSlime.class, SpriteBatchBasic.class,
-                    SpriteBatchClear.class, SpriteBatchDraw.class, SpriteBatchTextures.class,
-                    SpriteBatchCount.class,
-                EnvironmentMapTest.class, Gamma3D.class, TextureArrayTest.class,
-                    SkyBoxTest.class, DuckField.class, IBL_Sliders.class, IBL_Spheres.class, IBL_GenerateOutdoor.class,
-                    GLTFAnimation.class, GLTFMorphAnimation.class, GLTFSkinning.class, Scene2dTestScrollPane.class,
-                    GLTFSkinningMultiple.class, GLTFSkinningShadow.class, ParticleControllerTest.class,
-                    Particles3D.class, Particles3DSnow.class, Particles3DmodelInstance.class, ScreenReaderTest.class,
-                    MRTTest2D.class, MRTTest3D.class, Picking3DTest.class, EdgeDetectionOutlineTest.class, UITest.class,
-                    DebugLinesDepthTest.class,
-                    SpriteBatchUniforms.class,
-                    SpriteBatchExtraVertAttrib.class,
-                    SpriteBatchWideIndices.class,
-                    DynamicTexture.class,
-                    FogOfWar2DTest.class,
-                    FogOfWar3DTest.class,
-                    TextureGreyscale.class
+                    register("AssetManagerTest", AssetManagerTest.class),
+                    register("ClearScreen", ClearScreen.class),
+                    register("SpriteBatchTest", SpriteBatchTest.class),
+                    register("StageTest", StageTest.class),
+                    register("ColorTest", ColorTest.class),
+                    register("FontTest", FontTest.class),
+                    register("Scene2dTest", Scene2dTest.class),
+                    register("ImmediateModeRendererTest", ImmediateModeRendererTest.class),
+                    register("ShapeRendererTest", ShapeRendererTest.class),
+                    register("ShapeRenderer2DTest", ShapeRenderer2DTest.class),
+                    register("NinePatchTest", NinePatchTest.class),
+                    register("ModelBatchTest", ModelBatchTest.class),
+                    register("ModelBatchMaskingTest", ModelBatchMaskingTest.class),
+                    register("ModelBatchOutlineTest", ModelBatchOutlineTest.class),
+                    register("SpriteHighlightTest", SpriteHighlightTest.class),
+                    register("WrapAndFilterTest", WrapAndFilterTest.class),
+                    register("LoadObjTest", LoadObjTest.class),
+                    register("LoadG3DJTest", LoadG3DJTest.class),
+                    register("LoadModelTest", LoadModelTest.class),
+                    register("LoadGLTFTest", LoadGLTFTest.class),
+                    register("LightingTest", LightingTest.class),
+                    register("InstancingTest", InstancingTest.class),
+                    register("ViewportTest", ViewportTest.class),
+                    register("ScissorTest", ScissorTest.class),
+                    register("ASimpleGame", ASimpleGame.class),
+                    register("ParticleEmitterTest", ParticleEmitterTest.class),
+                    register("ParticleEmittersTest", ParticleEmittersTest.class),
+                    register("HeightMapTest", HeightMapTest.class),
+                    register("FullScreenTest", FullScreenTest.class),
+                    register("GPUTimerTest", GPUTimerTest.class),
+                    register("FrameBufferTest", FrameBufferTest.class),
+                    register("PostProcessing", PostProcessing.class),
+                    register("SuperKoalio", SuperKoalio.class),
+                    register("DistanceFontTest", DistanceFontTest.class),
+                    register("DepthClearTest", DepthClearTest.class),
+                    register("FogTest", FogTest.class),
+                    register("ShadowTest", ShadowTest.class),
+                    register("CSMShadowTest", CSMShadowTest.class),
+                    register("TextureAtlasTest", TextureAtlasTest.class),
+                    register("TestTextureMipMap", TestTextureMipMap.class),
+                    register("Basic3DTest", Basic3DTest.class),
+                    register("TestMesh", TestMesh.class),
+                    register("TestMeshNoIndices", TestMeshNoIndices.class),
+                    register("TestMeshBuilder", TestMeshBuilder.class),
+                    register("TestTexture", TestTexture.class),
+                    register("SpriteBatchDoubleLoop", SpriteBatchDoubleLoop.class),
+                    register("TransparencyTest", TransparencyTest.class),
+                    register("TestCompute", TestCompute.class),
+                    register("ComputeMoldSlime", ComputeMoldSlime.class),
+                    register("SpriteBatchBasic", SpriteBatchBasic.class),
+                    register("SpriteBatchClear", SpriteBatchClear.class),
+                    register("SpriteBatchDraw", SpriteBatchDraw.class),
+                    register("SpriteBatchTextures", SpriteBatchTextures.class),
+                    register("SpriteBatchCount", SpriteBatchCount.class),
+                    register("EnvironmentMapTest", EnvironmentMapTest.class),
+                    register("Gamma3D", Gamma3D.class),
+                    register("TextureArrayTest", TextureArrayTest.class),
+                    register("SkyBoxTest", SkyBoxTest.class),
+                    register("DuckField", DuckField.class),
+                    register("IBL_Sliders", IBL_Sliders.class),
+                    register("IBL_Spheres", IBL_Spheres.class),
+                    register("IBL_GenerateOutdoor", IBL_GenerateOutdoor.class),
+                    register("GLTFAnimation", GLTFAnimation.class),
+                    register("GLTFMorphAnimation", GLTFMorphAnimation.class),
+                    register("GLTFSkinning", GLTFSkinning.class),
+                    register("Scene2dTestScrollPane", Scene2dTestScrollPane.class),
+                    register("GLTFSkinningMultiple", GLTFSkinningMultiple.class),
+                    register("GLTFSkinningShadow", GLTFSkinningShadow.class),
+                    register("ParticleControllerTest", ParticleControllerTest.class),
+                    register("Particles3D", Particles3D.class),
+                    register("Particles3DSnow", Particles3DSnow.class),
+                    register("Particles3DmodelInstance", Particles3DmodelInstance.class),
+                    register("ScreenReaderTest", ScreenReaderTest.class),
+                    register("MRTTest2D", MRTTest2D.class),
+                    register("MRTTest3D", MRTTest3D.class),
+                    register("Picking3DTest", Picking3DTest.class),
+                    register("EdgeDetectionOutlineTest", EdgeDetectionOutlineTest.class),
+                    register("UITest", UITest.class),
+                    register("DebugLinesDepthTest", DebugLinesDepthTest.class),
+                    register("SpriteBatchUniforms", SpriteBatchUniforms.class),
+                    register("SpriteBatchExtraVertAttrib", SpriteBatchExtraVertAttrib.class),
+                    register("SpriteBatchWideIndices", SpriteBatchWideIndices.class),
+                    register("DynamicTexture", DynamicTexture.class),
+                    register("FogOfWar2DTest", FogOfWar2DTest.class),
+                    register("FogOfWar3DTest", FogOfWar3DTest.class),
+                    register("TextureGreyscale", TextureGreyscale.class)
 
             // @on
 
             ));
 
-    static final ObjectMap<String, String> obfuscatedToOriginal = new ObjectMap();
-    static final ObjectMap<String, String> originalToObfuscated = new ObjectMap();
-
-    static {
-        InputStream mappingInput = WebGPUTests.class.getResourceAsStream("/mapping.txt");
-        if (mappingInput != null) {
-            BufferedReader reader = null;
-            try {
-                reader = new BufferedReader(new InputStreamReader(mappingInput), 512);
-                while (true) {
-                    String line = reader.readLine();
-                    if (line == null)
-                        break;
-                    if (line.startsWith("    "))
-                        continue;
-                    String[] split = line.replace(":", "").split(" -> ");
-                    String original = split[0];
-                    if (original.indexOf('.') != -1)
-                        original = original.substring(original.lastIndexOf('.') + 1);
-                    originalToObfuscated.put(original, split[1]);
-                    obfuscatedToOriginal.put(split[1], original);
-                }
-                reader.close();
-            } catch (Exception ex) {
-                System.out.println("GdxTests: Error reading mapping file: mapping.txt");
-                ex.printStackTrace();
-            } finally {
-                StreamUtils.closeQuietly(reader);
-            }
+    private static Class<? extends GdxTest> register(String name, Class<? extends GdxTest> testClass) {
+        if (testsByName.containsKey(name)) {
+            throw new IllegalArgumentException("Duplicate test name: " + name);
         }
+        testsByName.put(name, testClass);
+        return testClass;
     }
 
     public static List<String> getNames() {
-        List<String> names = new ArrayList<String>(tests.size());
-        for (Class clazz : tests)
-            names.add(obfuscatedToOriginal.get(clazz.getSimpleName(), clazz.getSimpleName()));
+        List<String> names = new ArrayList<String>(testsByName.size);
+        for (ObjectMap.Entry<String, Class<? extends GdxTest>> test : testsByName)
+            names.add(test.key);
         Collections.sort(names);
         return names;
     }
 
     public static Class<? extends GdxTest> forName(String name) {
-        name = originalToObfuscated.get(name, name);
-        for (Class clazz : tests)
-            if (clazz.getSimpleName().equals(name))
-                return clazz;
-        return null;
+        return testsByName.get(name);
     }
 
     public static GdxTest newTest(String testName) {
-        testName = originalToObfuscated.get(testName, testName);
+        Class<? extends GdxTest> testClass = forName(testName);
+        if (testClass == null) return null;
         try {
-            return forName(testName).newInstance();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
+            return ClassReflection.newInstance(testClass);
+        } catch (ReflectionException e) {
             e.printStackTrace();
         }
         return null;

@@ -21,7 +21,7 @@ import java.lang.reflect.Field;
  * <p>
  * {@link WgAndroidApplication} extends Activity + {@code AndroidApplicationBase} but does
  * <b>not</b> extend {@code AndroidApplication}, so that cast throws {@code ClassCastException}.
- * This class overrides the affected method with equivalent libGDX 1.14.1 logic using the correct type.
+ * This class overrides the affected method with equivalent libGDX logic using the correct type.
  */
 public class WgDefaultAndroidInput extends DefaultAndroidInput {
 
