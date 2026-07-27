@@ -50,6 +50,9 @@ import java.nio.FloatBuffer;
  */
 
 public class WebGPUUniformBuffer extends WebGPUBuffer {
+    private static final int WASM_PAGE_SIZE = 64 * 1024;
+    private static final int TEAVM_HEAP_HEADER_PADDING = 16;
+
     private final ByteBuffer dataBuf;
     private final FloatBuffer floatData;
     private int dynamicOffset;
@@ -91,10 +94,19 @@ public class WebGPUUniformBuffer extends WebGPUBuffer {
         dynamicOffset = 0;
         dirty = false;
 
-        // working buffer in native memory to use as input to WriteBuffer
-        dataBuf = BufferUtils.newUnsafeByteBuffer(contentSize);
+        // Working buffer in native memory to use as input to WriteBuffer.
+        // TeaVM WasmGC cannot grow its native heap by exactly one payload-sized page because
+        // the new page also needs an allocation header. Extra staging capacity is harmless:
+        // GPU writes remain limited to bytesFilled and the GPU buffer keeps its original size.
+        dataBuf = BufferUtils.newUnsafeByteBuffer(calculateStagingBufferSize(contentSize));
         dataBuf.order(ByteOrder.LITTLE_ENDIAN);
         floatData = dataBuf.asFloatBuffer();
+    }
+
+    private static int calculateStagingBufferSize(int contentSize) {
+        if (contentSize > 0 && contentSize % WASM_PAGE_SIZE == 0)
+            return contentSize + TEAVM_HEAP_HEADER_PADDING;
+        return contentSize;
     }
 
     private static int calculateBufferSize(int contentSize, int maxSlices) {

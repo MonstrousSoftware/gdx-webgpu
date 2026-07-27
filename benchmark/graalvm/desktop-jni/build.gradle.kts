@@ -1,4 +1,6 @@
 import java.util.concurrent.TimeUnit
+import org.gradle.api.GradleException
+import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 
 plugins {
     id("java-library")
@@ -16,6 +18,23 @@ val graalvmJavaVersion = JavaVersion.current().majorVersion.toInt()
 val nativeImageThreads = providers.gradleProperty("nativeImageThreads").orElse("2")
 val nativeImageBuilderMaxHeap = providers.gradleProperty("nativeImageBuilderMaxHeap").orElse("4g")
 val graalVmHomeEnv = providers.environmentVariable("GRAALVM_HOME").orElse(providers.environmentVariable("JAVA_HOME"))
+val currentDesktopOperatingSystem = DefaultNativePlatform.getCurrentOperatingSystem()
+val currentDesktopArchitecture = DefaultNativePlatform.getCurrentArchitecture().name.lowercase()
+val currentDesktopPlatform = when {
+    currentDesktopOperatingSystem.isWindows -> "windows_x64"
+    currentDesktopOperatingSystem.isLinux -> "linux_x64"
+    currentDesktopOperatingSystem.isMacOsX &&
+        (currentDesktopArchitecture.contains("aarch64") || currentDesktopArchitecture.contains("arm64")) -> "mac_arm64"
+    currentDesktopOperatingSystem.isMacOsX -> "mac_x64"
+    else -> throw GradleException(
+        "Unsupported desktop platform: ${currentDesktopOperatingSystem.name} $currentDesktopArchitecture"
+    )
+}
+val webgpuImplementation = ((findProperty("webgpu") as String?) ?: "WGPU").uppercase()
+if(webgpuImplementation != "WGPU" && webgpuImplementation != "DAWN") {
+    throw GradleException("Unsupported jWebGPU implementation: $webgpuImplementation")
+}
+val jWebGPUVersion = project.property("jWebGPUVVersion") as String
 
 fun benchmarkProperty(name: String, defaultValue: String): String {
     return (findProperty(name) as String?) ?: defaultValue
@@ -87,6 +106,10 @@ if(JavaVersion.current().isJava9Compatible) {
 dependencies {
     implementation(project(":benchmark:webgpu:core"))
     implementation(project(":backends:backend-desktop-jni"))
+    runtimeOnly(
+        "com.github.xpenatan.jWebGPU:" +
+            "webgpu-desktop-jni-${webgpuImplementation.lowercase()}_$currentDesktopPlatform:$jWebGPUVersion"
+    )
     implementation("com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop")
     implementation("com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion")
 
@@ -106,6 +129,7 @@ tasks.register<JavaExec>("benchmarkJvm") {
     classpath = sourceSets["main"].runtimeClasspath
     workingDir = assetsDir
     args(benchmarkArgs())
+    systemProperty("jwebgpu.backend", webgpuImplementation)
     standardInput = System.`in`
 
     if(org.gradle.internal.os.OperatingSystem.current().isMacOsX) {

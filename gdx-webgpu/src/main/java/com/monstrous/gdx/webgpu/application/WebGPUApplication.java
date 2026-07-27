@@ -77,35 +77,44 @@ public class WebGPUApplication extends WebGPUContext implements WebGPUInitializa
     @Override
     public void onInit(WebGPUInitState initState, WGPUAdapter adapter, WGPUDevice device) {
         this.initState = initState;
-        if (isReady()) {
-            this.device = device;
-            this.queue = device.getQueue();
+        try {
+            if (isReady()) {
+                this.device = device;
+                this.queue = device.getQueue();
 
-            // Find out the preferred surface format of the window
-            // = the first one listed under capabilities
-            WGPUSurfaceCapabilities surfaceCapabilities = WGPUSurfaceCapabilities.obtain();
-            surface.getCapabilities(adapter, surfaceCapabilities);
-            WGPUVectorTextureFormat formats = surfaceCapabilities.getFormats();
-            if (formats.size() == 0) {
-                throw new RuntimeException("Adapter has no surface formats available");
+                // Find out the preferred surface format of the window
+                // = the first one listed under capabilities
+                WGPUSurfaceCapabilities surfaceCapabilities = WGPUSurfaceCapabilities.obtain();
+                surface.getCapabilities(adapter, surfaceCapabilities);
+                WGPUVectorTextureFormat formats = surfaceCapabilities.getFormats();
+                if (formats.size() == 0) {
+                    throw new RuntimeException("Adapter has no surface formats available");
+                }
+                WGPUTextureFormat surfaceFormat = formats.get(0);
+                // System.out.println("surfaceFormat: " + surfaceFormat);
+
+                // allocate some objects we will reuse a lot
+                defaultTargetViews = new WGPUTextureView[1];
+                defaultSurfaceFormats = new WGPUTextureFormat[] {surfaceFormat};
+                targetViews = defaultTargetViews;
+                surfaceFormats = defaultSurfaceFormats;
+
+                encoder = new WGPUCommandEncoder();
+                command = new WGPUCommandBuffer();
+                textureViewOut = new WGPUTextureView();
+                surfaceTextureTexture = new WGPUTexture();
+
+                gpuTimer = new GPUTimer(device, config.gpuTimingEnabled);
+            } else {
+                throw new RuntimeException("Failed to initialize WebGPU: " + initState);
             }
-            WGPUTextureFormat surfaceFormat = formats.get(0);
-            // System.out.println("surfaceFormat: " + surfaceFormat);
-
-            // allocate some objects we will reuse a lot
-            defaultTargetViews = new WGPUTextureView[1];
-            defaultSurfaceFormats = new WGPUTextureFormat[] {surfaceFormat};
-            targetViews = defaultTargetViews;
-            surfaceFormats = defaultSurfaceFormats;
-
-            encoder = new WGPUCommandEncoder();
-            command = new WGPUCommandBuffer();
-            textureViewOut = new WGPUTextureView();
-            surfaceTextureTexture = new WGPUTexture();
-
-            gpuTimer = new GPUTimer(device, config.gpuTimingEnabled);
-        } else {
-            throw new RuntimeException("Failed to initialize WebGPU: " + initState);
+        } finally {
+            // The adapter is only needed to request the device and query the surface capabilities.
+            // Releasing the Java wrapper alone does not release the underlying WebGPU handle.
+            if (adapter != null) {
+                adapter.release();
+                adapter.dispose();
+            }
         }
     }
 
@@ -274,16 +283,19 @@ public class WebGPUApplication extends WebGPUContext implements WebGPUInitializa
 
         // System.out.println("resize: "+width+" x "+height);
 
+        // GLFW reports a zero-sized framebuffer while a window is minimized. Keep the last valid
+        // surface configuration active so the application loop cannot acquire from an unconfigured
+        // surface before the restore event supplies a usable size.
+        if (width <= 0 || height <= 0)
+            return;
+
         // if there was already a swap chain, release it
-        // (there won't be one on the very first resize, or coming back from a minimize)
+        // (there won't be one on the very first resize)
         if (swapChainActive) {
             terminateDepthBuffer();
             exitSwapChain();
             swapChainActive = false;
         }
-
-        if (width * height == 0) // on minimize, don't create zero sized textures
-            return;
 
         initSwapChain(width, height, config.vSyncEnabled);
         initDepthBuffer(width, height, config.numSamples);
@@ -431,6 +443,7 @@ public class WebGPUApplication extends WebGPUContext implements WebGPUInitializa
         WebGPURenderPass.clearPool();
 
         if (device != null) {
+            device.release();
             device.dispose();
         }
     }

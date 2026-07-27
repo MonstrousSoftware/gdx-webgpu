@@ -1,3 +1,14 @@
+pluginManagement {
+    repositories {
+        mavenCentral()
+        maven { url = uri("https://central.sonatype.com/repository/maven-snapshots/") }
+        gradlePluginPortal()
+    }
+    plugins {
+        id("com.github.xpenatan.gdx-teavm") version providers.gradleProperty("gdxTeaVMVersion").get()
+    }
+}
+
 plugins {
   // Applies the foojay-resolver plugin to allow automatic download of JDKs.
   id("org.gradle.toolchains.foojay-resolver-convention") version "0.9.0"
@@ -13,6 +24,7 @@ include(":backends")
 include(":backends:backend-desktop")
 include(":backends:backend-desktop-jni")
 include(":backends:backend-desktop-ffm")
+include(":backends:backend-desktop-c")
 include(":backends:backend-teavm")
 include(":backends:backend-android")
 
@@ -20,6 +32,7 @@ include(":tests")
 include(":tests:gdx-webgpu-tests")
 include(":tests:gdx-tests-desktop-jni")
 include(":tests:gdx-tests-desktop-ffm")
+include(":tests:gdx-tests-desktop-c")
 include(":tests:gdx-tests-teavm")
 include(":tests:gdx-tests-android")
 
@@ -32,6 +45,7 @@ include(":benchmark:webgpu")
 include(":benchmark:webgpu:core")
 include(":benchmark:webgpu:desktop-jni")
 include(":benchmark:webgpu:desktop-ffm")
+include(":benchmark:webgpu:desktop-c")
 include(":benchmark:webgpu-raw")
 include(":benchmark:webgpu-raw:core")
 include(":benchmark:webgpu-raw:desktop-jni")

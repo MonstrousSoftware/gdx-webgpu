@@ -84,6 +84,9 @@ public class WebGPUInitialization {
         adapter.requestDevice(deviceDescriptor, WGPUCallbackMode.AllowProcessEvents, new WGPURequestDeviceCallback() {
             @Override
             protected void onCallback(WGPURequestDeviceStatus status, WGPUDevice device, String message) {
+                if (status != WGPURequestDeviceStatus.Success) {
+                    System.err.println("RequestDevice failed: " + status + " message: " + message);
+                }
                 WebGPUInitState initState;
                 if (status == WGPURequestDeviceStatus.Success) {
                     initState = WebGPUInitState.DEVICE_VALID;

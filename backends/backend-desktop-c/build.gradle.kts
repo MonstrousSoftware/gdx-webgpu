@@ -1,10 +1,9 @@
 plugins {
-    id("java")
     id("java-library")
     id("maven-publish")
 }
 
-val javaVersion = JavaVersion.toVersion(project.property("javaMain") as String)
+val javaVersion = JavaVersion.toVersion(project.property("javaWeb") as String)
 
 java {
     sourceCompatibility = javaVersion
@@ -14,16 +13,18 @@ java {
 }
 
 dependencies {
+    val gdxTeaVMVersion = project.property("gdxTeaVMVersion") as String
     val jWebGPUVVersion = project.property("jWebGPUVVersion") as String
 
-    api(project(":backends:backend-desktop"))
-    api("com.github.xpenatan.jWebGPU:webgpu-desktop-jni:$jWebGPUVVersion")
+    api(project(":gdx-webgpu"))
+    api("com.github.xpenatan.gdx-teavm:backend-glfw:$gdxTeaVMVersion")
+    api("com.github.xpenatan.jWebGPU:webgpu-c:$jWebGPUVVersion")
 }
 
 publishing {
     publications {
         create<MavenPublication>("maven") {
-            artifactId = "backend-desktop-jni"
+            artifactId = "backend-desktop-c"
             from(components["java"])
         }
     }

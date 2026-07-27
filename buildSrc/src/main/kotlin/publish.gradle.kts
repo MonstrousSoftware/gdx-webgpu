@@ -7,6 +7,7 @@ var libProjects = mutableSetOf(
     project(":backends:backend-desktop"),
     project(":backends:backend-desktop-jni"),
     project(":backends:backend-desktop-ffm"),
+    project(":backends:backend-desktop-c"),
     project(":backends:backend-teavm"),
     project(":backends:backend-android")
 )

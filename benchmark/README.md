@@ -64,10 +64,12 @@ Run the full explicit matrix:
 The matrix runs JNI `WGPU DEFAULT`, JNI `WGPU VULKAN`, JNI `WGPU OPENGL`, JNI `WGPU D3D12`,
 JNI `DAWN DEFAULT`, FFM `WGPU DEFAULT`, FFM `WGPU VULKAN`, FFM `WGPU OPENGL`, FFM `WGPU D3D12`,
 FFM `DAWN DEFAULT`, stock libGDX LWJGL3, GraalVM WebGPU JNI `WGPU DEFAULT`, GraalVM WebGPU FFM `WGPU DEFAULT`,
-raw JNI `WGPU DEFAULT`, then raw FFM `WGPU DEFAULT`.
+raw JNI `WGPU DEFAULT`, raw FFM `WGPU DEFAULT`, TeaVM-C `WGPU DEFAULT`, then TeaVM-C `DAWN DEFAULT`.
 This avoids relying on whatever
 `WebGPUContext.Backend.DEFAULT` chooses on the current machine.
 It also writes a Markdown report to `benchmark/build/benchmark-results/sprite2d-matrix/results.md`.
+If `native-image` is unavailable, the two GraalVM rows are reported as skipped and the rest of the matrix continues.
+Set `GRAALVM_HOME` to a GraalVM installation to include them; `-PbenchIncludeGraalvm=true` forces the build attempt.
 Benchmark runs force vsync off on every platform module; there is no benchmark command-line option to enable it.
 The report includes a `VSync` column so capped runs are visible.
 
@@ -90,8 +92,31 @@ Run WebGPU FFM:
 ./gradlew :benchmark:webgpu:desktop-ffm:benchmark --args="--test=sprite2d --sprites=8191 --seconds=10 --warmup=2 --webgpu=WGPU --backend=DEFAULT"
 ```
 
+Build WebGPU TeaVM-C with WGPU (the default), then run the configurable benchmark task:
+
+```bash
+./gradlew :benchmark:webgpu:desktop-c:gdx_teavm_glfw_build
+./gradlew :benchmark:webgpu:desktop-c:benchmark -PbenchSprites=8191 -PbenchSeconds=10 -PbenchWarmup=2
+```
+
+Use `-PwebgpuCBackend=dawn` on each command to build and run the same TeaVM-C benchmark with Dawn:
+
+```bash
+./gradlew :benchmark:webgpu:desktop-c:gdx_teavm_glfw_build -PwebgpuCBackend=dawn
+./gradlew :benchmark:webgpu:desktop-c:benchmark -PwebgpuCBackend=dawn
+```
+
+The TeaVM-C module detects Windows x64, Linux x64, macOS x64, or macOS arm64 and resolves the matching jWebGPU
+native artifact. The `gdx_teavm_glfw_build` task generates and compiles the native executable, while
+`gdx_teavm_glfw_run` generates, builds, and runs it with default benchmark arguments. The module's `benchmark` task
+runs an existing build and accepts the `bench*`, `nativeBackend`, and `webgpuSamples` Gradle properties shown above.
+The full matrix uses `gdx_teavm_glfw_benchmark` in isolated nested builds so WGPU and Dawn are both generated and
+measured in one matrix invocation.
+
 The stock WebGPU benchmark code is split into `benchmark:webgpu:core` for `WebGPUBenchmarkLauncher` and
-`benchmark:webgpu:desktop-jni` / `benchmark:webgpu:desktop-ffm` for platform dependencies only.
+`benchmark:webgpu:desktop-jni` / `benchmark:webgpu:desktop-ffm` for JVM platform dependencies. The
+`benchmark:webgpu:desktop-c` module has a TeaVM-C-specific launcher and reuses the same backend-agnostic benchmark
+case from `benchmark:core`.
 
 Run WebGPU through GraalVM native image:
 

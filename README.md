@@ -112,28 +112,61 @@ The `tests/` folder contains a suite of test applications. You can run them on d
 
 ### Desktop
 
-Use the Gradle task `gdx_webgpu_tests_run_desktop_jni`:
+Use the backend-specific Gradle task names:
 
 ```bash
 # Interactive test chooser (default):
-./gradlew gdx_webgpu_tests_run_desktop_jni
-./gradlew gdx_webgpu_tests_run_desktop_ffm
+./gradlew gdx_webgpu_tests_desktop_jni_wgpu_run
+./gradlew gdx_webgpu_tests_desktop_jni_dawn_run
+./gradlew gdx_webgpu_tests_desktop_ffm_wgpu_run
+./gradlew gdx_webgpu_tests_desktop_ffm_dawn_run
 
 # Run a single test by class name:
-./gradlew gdx_webgpu_tests_run_desktop_jni --args="Particles3D"
-./gradlew gdx_webgpu_tests_run_desktop_ffm --args="Particles3D"
+./gradlew gdx_webgpu_tests_desktop_jni_wgpu_run --args="Particles3D"
+./gradlew gdx_webgpu_tests_desktop_jni_dawn_run --args="Particles3D"
+./gradlew gdx_webgpu_tests_desktop_ffm_wgpu_run --args="Particles3D"
+./gradlew gdx_webgpu_tests_desktop_ffm_dawn_run --args="Particles3D"
 
 # Run ALL tests sequentially (auto mode):
-./gradlew gdx_webgpu_tests_run_desktop_jni --args="auto"
-./gradlew gdx_webgpu_tests_run_desktop_ffm --args="auto"
+./gradlew gdx_webgpu_tests_auto_desktop_jni_wgpu_run
+./gradlew gdx_webgpu_tests_auto_desktop_jni_dawn_run
+./gradlew gdx_webgpu_tests_auto_desktop_ffm_wgpu_run
+./gradlew gdx_webgpu_tests_auto_desktop_ffm_dawn_run
 ```
+
+Desktop apps should package only one jWebGPU native backend jar. Add the desktop bridge through gdx-webgpu, then add either the WGPU or Dawn runtime for the target platform:
+
+```kotlin
+runtimeOnly("com.github.xpenatan.jWebGPU:webgpu-desktop-jni-wgpu_windows_x64:$jWebGPUVVersion")
+runtimeOnly("com.github.xpenatan.jWebGPU:webgpu-desktop-jni-dawn_windows_x64:$jWebGPUVVersion")
+runtimeOnly("com.github.xpenatan.jWebGPU:webgpu-desktop-ffm-wgpu_windows_x64:$jWebGPUVVersion")
+runtimeOnly("com.github.xpenatan.jWebGPU:webgpu-desktop-ffm-dawn_windows_x64:$jWebGPUVVersion")
+```
+
+Use one line, not both backends. The test projects mirror this with `dist_wgpu` and `dist_dawn`, which produce separate jars containing only `native/wgpu` or only `native/dawn`.
+
+### Native Desktop (TeaVM C)
+
+The TeaVM C test project selects the native WebGPU implementation at build time. It automatically chooses the matching Windows x64, Linux x64, macOS x64, or macOS arm64 artifact for the current host.
+
+```bash
+# WGPU (default)
+./gradlew gdx_teavm_glfw_run
+
+# Dawn
+./gradlew gdx_teavm_glfw_run -PwebgpuCBackend=dawn
+```
+
+Use `gdx_teavm_glfw_generate` or `gdx_teavm_glfw_build` instead of the `run` task when only generation or compilation is needed. Supported values for `webgpuCBackend` are `wgpu` and `dawn`; exactly one backend artifact is packaged in each output under `tests/gdx-tests-desktop-c/build/dist/<backend>/<platform>`.
+
+The published Windows TeaVM C payloads use the dynamic MSVC runtime, so this test project passes the standard CMake value `CMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL` (`/MD`). When substituting jWebGPU libraries built for `/MT`, select the matching consumer runtime with `-PwebgpuCMSVCRuntime=MultiThreaded`.
 
 ### Web (TeaVM)
 
 First, build the web version. This compiles to JavaScript/WebAssembly and starts a local Jetty server:
 
 ```bash
-./gradlew gdx_webgpu_tests_run_teavm
+./gradlew gdx_webgpu_tests_teavm_run
 ```
 
 Then open one of the following URLs in a WebGPU-capable browser:
@@ -294,5 +327,3 @@ Modify the last line which creates a `TeaApplication` to create a `WgTeaApplicat
         //new TeaApplication(new Main(), config);
     }
 ```
-
-

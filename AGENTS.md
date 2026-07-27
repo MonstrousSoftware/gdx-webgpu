@@ -140,18 +140,38 @@ gdx-webgpu/
 
 ### Running Desktop Tests
 
-Use the Gradle task `gdx_webgpu_tests_run_desktop_jni`:
+Use backend-specific Gradle task names:
 
 ```bash
 # Run ALL tests sequentially (auto-advances through every test):
-./gradlew gdx_webgpu_tests_run_desktop_jni --args="auto"
+./gradlew gdx_webgpu_tests_auto_desktop_jni_wgpu_run
+./gradlew gdx_webgpu_tests_auto_desktop_jni_dawn_run
+./gradlew gdx_webgpu_tests_auto_desktop_ffm_wgpu_run
+./gradlew gdx_webgpu_tests_auto_desktop_ffm_dawn_run
 
 # Run a SINGLE test by class name:
-./gradlew gdx_webgpu_tests_run_desktop_jni --args="Particles3D"
+./gradlew gdx_webgpu_tests_desktop_jni_wgpu_run --args="Particles3D"
+./gradlew gdx_webgpu_tests_desktop_jni_dawn_run --args="Particles3D"
+./gradlew gdx_webgpu_tests_desktop_ffm_wgpu_run --args="Particles3D"
+./gradlew gdx_webgpu_tests_desktop_ffm_dawn_run --args="Particles3D"
 ```
 
-- The `auto` argument loops through all registered tests automatically.
+- The `gdx_webgpu_tests_auto_*` tasks loop through all registered tests automatically.
 - Passing a test class name (e.g., `SpriteBatchTest`, `IBL_Spheres`) launches only that test interactively.
+
+### Running Native TeaVM C Desktop Tests
+
+The host platform is detected automatically (Windows x64, Linux x64, macOS x64, or macOS arm64). Select the linked WebGPU implementation with `webgpuCBackend`:
+
+```bash
+# WGPU (default)
+./gradlew gdx_teavm_glfw_run
+
+# Dawn
+./gradlew gdx_teavm_glfw_run -PwebgpuCBackend=dawn
+```
+
+The corresponding `gdx_teavm_glfw_generate` and `gdx_teavm_glfw_build` tasks generate or compile without launching.
 
 ### Running Android Tests
 
@@ -180,7 +200,7 @@ adb shell am start -n com.monstrous.gdx.tests.webgpu/.GdxTestActivity
 Build the TeaVM web app first, which compiles to JS and starts a local Jetty server:
 
 ```bash
-./gradlew gdx_webgpu_tests_run_teavm
+./gradlew gdx_webgpu_tests_teavm_run
 ```
 
 Then open the local URL (shown in console output) in a WebGPU-capable browser. URL query parameters control the mode:

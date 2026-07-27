@@ -1,4 +1,5 @@
 import org.gradle.api.tasks.JavaExec
+import org.gradle.api.tasks.Exec
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 import java.time.Instant
@@ -105,6 +106,33 @@ fun runtimeClasspath(projectPath: String) =
     project(projectPath).extensions.getByType(SourceSetContainer::class.java)
         .named("main").get().runtimeClasspath
 
+val currentDesktopOperatingSystem = DefaultNativePlatform.getCurrentOperatingSystem()
+val currentDesktopArchitecture = DefaultNativePlatform.getCurrentArchitecture().name.lowercase()
+val currentDesktopPlatform = when {
+    currentDesktopOperatingSystem.isWindows -> "windows_x64"
+    currentDesktopOperatingSystem.isLinux -> "linux_x64"
+    currentDesktopOperatingSystem.isMacOsX &&
+        (currentDesktopArchitecture.contains("aarch64") || currentDesktopArchitecture.contains("arm64")) -> "mac_arm64"
+    currentDesktopOperatingSystem.isMacOsX -> "mac_x64"
+    else -> throw GradleException(
+        "Unsupported desktop platform: ${currentDesktopOperatingSystem.name} $currentDesktopArchitecture"
+    )
+}
+
+fun argumentValue(arguments: List<String>, name: String): String? {
+    val prefix = "--$name="
+    return arguments.firstOrNull { it.startsWith(prefix) }?.substring(prefix.length)
+}
+
+fun webgpuNativeRuntime(projectPath: String, benchmarkArgs: List<String>) = configurations.detachedConfiguration(
+    dependencies.create(
+        "com.github.xpenatan.jWebGPU:" +
+            "webgpu-desktop-${if (projectPath.endsWith("desktop-ffm")) "ffm" else "jni"}-" +
+            "${(argumentValue(benchmarkArgs, "webgpu") ?: "WGPU").lowercase()}_$currentDesktopPlatform:" +
+            (project.property("jWebGPUVVersion") as String)
+    )
+)
+
 fun JavaExec.configureBenchmarkProcess(projectPath: String, mainClassName: String, benchmarkArgs: List<String>) {
     mainClass.set(mainClassName)
     classpath = runtimeClasspath(projectPath)
@@ -126,6 +154,7 @@ fun JavaExec.configureWebgpuBenchmarkProcess(projectPath: String, benchmarkArgs:
         "com.monstrous.gdx.benchmarks.webgpu.WebGPUBenchmarkLauncher",
         benchmarkArgs
     )
+    configureWebgpuNativeRuntime(projectPath, benchmarkArgs)
 }
 
 fun JavaExec.configureRawWebgpuBenchmarkProcess(projectPath: String, benchmarkArgs: List<String>) {
@@ -134,6 +163,23 @@ fun JavaExec.configureRawWebgpuBenchmarkProcess(projectPath: String, benchmarkAr
         "com.monstrous.gdx.benchmarks.webgpu.raw.RawWebGPUSpriteBenchmarkLauncher",
         benchmarkArgs
     )
+    configureWebgpuNativeRuntime(projectPath, benchmarkArgs)
+}
+
+fun JavaExec.configureWebgpuNativeRuntime(projectPath: String, benchmarkArgs: List<String>) {
+    val webgpuImplementation = (argumentValue(benchmarkArgs, "webgpu") ?: "WGPU").uppercase()
+    if (webgpuImplementation != "WGPU" && webgpuImplementation != "DAWN") {
+        throw GradleException("Unsupported jWebGPU implementation: $webgpuImplementation")
+    }
+
+    classpath = classpath + webgpuNativeRuntime(projectPath, benchmarkArgs)
+    systemProperty("jwebgpu.backend", webgpuImplementation)
+
+    val binding = if (projectPath.endsWith("desktop-ffm")) "ffm" else "jni"
+    systemProperty("benchmark.binding", binding)
+    if (binding == "ffm") {
+        jvmArgs("--enable-native-access=ALL-UNNAMED")
+    }
 }
 
 fun JavaExec.configureLwjgl3BenchmarkProcess(benchmarkArgs: List<String>) {
@@ -147,6 +193,23 @@ fun JavaExec.configureLwjgl3BenchmarkProcess(benchmarkArgs: List<String>) {
 fun nativeExecutableName(imageName: String): String {
     return if (DefaultNativePlatform.getCurrentOperatingSystem().isWindows) "$imageName.exe" else imageName
 }
+
+fun nativeImageExecutable(): File? {
+    val executableName = if (currentDesktopOperatingSystem.isWindows) "native-image.cmd" else "native-image"
+    val homes = listOfNotNull(
+        System.getenv("GRAALVM_HOME"),
+        System.getenv("JAVA_HOME"),
+        System.getProperty("java.home")
+    ).distinct()
+    return homes.asSequence()
+        .map { file(it).resolve("bin").resolve(executableName) }
+        .firstOrNull { it.isFile }
+}
+
+val includeGraalvmInMatrix = benchmarkProperty(
+    "benchIncludeGraalvm",
+    (nativeImageExecutable() != null).toString()
+).toBoolean()
 
 fun benchmarkTimeoutSeconds(): Long {
     return benchmarkProperty("benchWarmup", "2").toLong() + benchmarkProperty("benchSeconds", "10").toLong() + 30
@@ -204,9 +267,8 @@ val compareWebgpu = tasks.register<JavaExec>("compareWebgpu") {
     group = "LibGDX"
     description = "Run the WebGPU side of benchmark comparison"
     dependsOn(":benchmark:webgpu:desktop-jni:classes")
-    configureBenchmarkProcess(
+    configureWebgpuBenchmarkProcess(
         ":benchmark:webgpu:desktop-jni",
-        "com.monstrous.gdx.benchmarks.webgpu.WebGPUBenchmarkLauncher",
         sharedArgs + listOf(
             "--webgpu=${benchmarkProperty("webgpu", "WGPU")}",
             "--backend=${benchmarkProperty("nativeBackend", "DEFAULT")}",
@@ -504,9 +566,18 @@ val matrixSprite2dLwjgl3 = tasks.register<JavaExec>("matrixSprite2dLwjgl3") {
 val matrixSprite2dGraalvmDefault = tasks.register("matrixSprite2dGraalvmDefault") {
     group = "LibGDX"
     description = "Run SpriteBatch 2D on GraalVM WebGPU JNI WGPU DEFAULT"
-    dependsOn(":benchmark:graalvm:desktop-jni:copyBenchmarkAssetsToReleaseNativeCompile")
+    if (includeGraalvmInMatrix) {
+        dependsOn(":benchmark:graalvm:desktop-jni:copyBenchmarkAssetsToReleaseNativeCompile")
+    }
 
     doLast {
+        if (!includeGraalvmInMatrix) {
+            println(
+                "BENCH_MATRIX_BACKEND_SKIPPED backend=webgpu-graalvm-jni-WGPU-DEFAULT " +
+                    "message=native-image was not found; set GRAALVM_HOME or use -PbenchIncludeGraalvm=true"
+            )
+            return@doLast
+        }
         try {
             runGraalvmReleaseBenchmark(
                 sprite2dMatrixArgs() + listOf(
@@ -525,9 +596,18 @@ val matrixSprite2dGraalvmDefault = tasks.register("matrixSprite2dGraalvmDefault"
 val matrixSprite2dGraalvmFfmDefault = tasks.register("matrixSprite2dGraalvmFfmDefault") {
     group = "LibGDX"
     description = "Run SpriteBatch 2D on GraalVM WebGPU FFM WGPU DEFAULT"
-    dependsOn(":benchmark:graalvm:desktop-ffm:copyBenchmarkAssetsToReleaseNativeCompile")
+    if (includeGraalvmInMatrix) {
+        dependsOn(":benchmark:graalvm:desktop-ffm:copyBenchmarkAssetsToReleaseNativeCompile")
+    }
 
     doLast {
+        if (!includeGraalvmInMatrix) {
+            println(
+                "BENCH_MATRIX_BACKEND_SKIPPED backend=webgpu-graalvm-ffm-WGPU-DEFAULT " +
+                    "message=native-image was not found; set GRAALVM_HOME or use -PbenchIncludeGraalvm=true"
+            )
+            return@doLast
+        }
         try {
             runGraalvmReleaseBenchmark(
                 sprite2dMatrixArgs() + listOf(
@@ -563,6 +643,60 @@ val matrixSprite2dRawFfmDefault = tasks.register<JavaExec>("matrixSprite2dRawFfm
         sprite2dMatrixArgs() + listOf("--webgpu=WGPU", "--backend=DEFAULT", "--samples=1", "--binding=ffm")
     )
 }
+
+fun registerTeaVMCMatrixBackend(taskName: String, webgpuBackend: String) =
+    tasks.register<Exec>(taskName) {
+        group = "LibGDX"
+        description = "Generate, build, and run SpriteBatch 2D on TeaVM-C ${webgpuBackend.uppercase()} DEFAULT"
+        workingDir = rootDir
+        standardInput = System.`in`
+        standardOutput = System.out
+        errorOutput = System.err
+
+        val nestedArguments = mutableListOf(
+            "--no-daemon",
+            "--console=plain",
+            ":benchmark:webgpu:desktop-c:gdx_teavm_glfw_benchmark",
+            "-PwebgpuCBackend=$webgpuBackend",
+            "-PbenchTest=sprite2d",
+            "-PbenchSprites=${benchmarkProperty("benchSprites", "8191")}",
+            "-PbenchSeconds=${benchmarkProperty("benchSeconds", "10")}",
+            "-PbenchWarmup=${benchmarkProperty("benchWarmup", "2")}",
+            "-PbenchWidth=${benchmarkProperty("benchWidth", "640")}",
+            "-PbenchHeight=${benchmarkProperty("benchHeight", "480")}",
+            "-PbenchRotate=${benchmarkProperty("benchRotate", "true")}",
+            "-PbenchScale=${benchmarkProperty("benchScale", "true")}",
+            "-PnativeBackend=DEFAULT",
+            "-PwebgpuSamples=1",
+            "-PbenchResultFile=${matrixResultsFile.get().asFile.absolutePath}"
+        ).apply {
+            if(gradle.startParameter.isOffline) {
+                add("--offline")
+            }
+            if(gradle.startParameter.isRefreshDependencies) {
+                add("--refresh-dependencies")
+            }
+        }
+        val gradleWrapper = rootDir.resolve(
+            if(currentDesktopOperatingSystem.isWindows) "gradlew.bat" else "gradlew"
+        )
+        if(currentDesktopOperatingSystem.isWindows) {
+            commandLine("cmd", "/c", gradleWrapper.absolutePath, *nestedArguments.toTypedArray())
+        }
+        else {
+            commandLine(gradleWrapper.absolutePath, *nestedArguments.toTypedArray())
+        }
+    }
+
+val matrixSprite2dTeaVMCWgpu = registerTeaVMCMatrixBackend(
+    "matrixSprite2dTeaVMCWgpu",
+    "wgpu"
+)
+
+val matrixSprite2dTeaVMCDawn = registerTeaVMCMatrixBackend(
+    "matrixSprite2dTeaVMCDawn",
+    "dawn"
+)
 
 val prepareSprite2dMatrixReport = tasks.register("prepareSprite2dMatrixReport") {
     group = "LibGDX"
@@ -606,6 +740,14 @@ matrixSprite2dGraalvmFfmDefault.configure {
     dependsOn(prepareSprite2dMatrixReport)
 }
 
+matrixSprite2dTeaVMCWgpu.configure {
+    dependsOn(prepareSprite2dMatrixReport)
+}
+
+matrixSprite2dTeaVMCDawn.configure {
+    dependsOn(prepareSprite2dMatrixReport)
+}
+
 matrixSprite2dJniVulkan.configure { mustRunAfter(matrixSprite2dJniDefault) }
 matrixSprite2dJniOpenGL.configure { mustRunAfter(matrixSprite2dJniVulkan) }
 matrixSprite2dJniD3D12.configure { mustRunAfter(matrixSprite2dJniOpenGL) }
@@ -620,10 +762,12 @@ matrixSprite2dGraalvmDefault.configure { mustRunAfter(matrixSprite2dLwjgl3) }
 matrixSprite2dGraalvmFfmDefault.configure { mustRunAfter(matrixSprite2dGraalvmDefault) }
 matrixSprite2dRawJniDefault.configure { mustRunAfter(matrixSprite2dGraalvmFfmDefault) }
 matrixSprite2dRawFfmDefault.configure { mustRunAfter(matrixSprite2dRawJniDefault) }
+matrixSprite2dTeaVMCWgpu.configure { mustRunAfter(matrixSprite2dRawFfmDefault) }
+matrixSprite2dTeaVMCDawn.configure { mustRunAfter(matrixSprite2dTeaVMCWgpu) }
 
 tasks.register("compareSprite2dMatrix") {
     group = "LibGDX"
-    description = "Run SpriteBatch 2D matrix: JNI/FFM/GraalVM WGPU DEFAULT, JNI/FFM WGPU VULKAN/OPENGL/D3D12, DAWN DEFAULT, LWJGL3, and raw WGPU DEFAULT"
+    description = "Run SpriteBatch 2D matrix: JNI/FFM/GraalVM/TeaVM-C, WGPU/Dawn, explicit native backends, LWJGL3, and raw WGPU"
     dependsOn(
         matrixSprite2dJniDefault,
         matrixSprite2dJniVulkan,
@@ -639,7 +783,9 @@ tasks.register("compareSprite2dMatrix") {
         matrixSprite2dGraalvmDefault,
         matrixSprite2dGraalvmFfmDefault,
         matrixSprite2dRawJniDefault,
-        matrixSprite2dRawFfmDefault
+        matrixSprite2dRawFfmDefault,
+        matrixSprite2dTeaVMCWgpu,
+        matrixSprite2dTeaVMCDawn
     )
 
     doLast {

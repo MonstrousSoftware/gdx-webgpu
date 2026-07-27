@@ -29,6 +29,7 @@ import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopApplication;
 import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopApplicationConfiguration;
 import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopGraphics;
 import com.monstrous.gdx.webgpu.backends.desktop.WgDesktopWindowConfiguration;
+import java.util.Locale;
 
 // test starter
 public class WebGPUTestStarter {
@@ -41,11 +42,14 @@ public class WebGPUTestStarter {
      */
     public static void main(String[] argv) {
 
+        final JWebGPUBackend webGPUBackend = resolveWebGPUBackend();
+        final String runtimeTitle = "FFM - " + webGPUBackend.name();
         WgDesktopApplicationConfiguration config = new WgDesktopApplicationConfiguration();
+        config.setTitle("gdx-webgpu tests - " + runtimeTitle);
         config.setWindowedMode(900, 740);
         config.enableGPUtiming = true;
         config.backend = WebGPUContext.Backend.DEFAULT;
-        config.backendWebGPU = JWebGPUBackend.DAWN; // WGPU or DAWN
+        config.backendWebGPU = webGPUBackend;
         config.samples = 4; // anti-aliasing (4) or not (1)
         config.useVsync(true);
 
@@ -57,6 +61,7 @@ public class WebGPUTestStarter {
             }
             ApplicationListener test = WebGPUTests.newTest(testName);
             if (test != null) {
+                config.setTitle(testName + " - " + runtimeTitle);
                 new WgDesktopApplication(test, config);
                 return;
             }
@@ -70,7 +75,7 @@ public class WebGPUTestStarter {
                 ApplicationListener test = WebGPUTests.newTest(testName);
                 if (test == null) return false;
                 WgDesktopWindowConfiguration winConfig = new WgDesktopWindowConfiguration();
-                winConfig.setTitle(testName);
+                winConfig.setTitle(testName + " - " + runtimeTitle);
                 winConfig.setWindowedMode(640, 480);
                 // position the new window slightly offset from the current one
                 winConfig.setWindowPosition(((WgDesktopGraphics) Gdx.graphics).getWindow().getPositionX() + 40,
@@ -84,5 +89,18 @@ public class WebGPUTestStarter {
         });
 
         new WgDesktopApplication(new TestChooser(), config);
+    }
+
+    private static JWebGPUBackend resolveWebGPUBackend() {
+        String backendName = System.getProperty("jwebgpu.backend", "WGPU").trim();
+        if (backendName.isEmpty()) {
+            return JWebGPUBackend.WGPU;
+        }
+        try {
+            return JWebGPUBackend.valueOf(backendName.toUpperCase(Locale.ROOT));
+        }
+        catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Unsupported jwebgpu.backend: " + backendName + ". Expected WGPU or DAWN.", e);
+        }
     }
 }

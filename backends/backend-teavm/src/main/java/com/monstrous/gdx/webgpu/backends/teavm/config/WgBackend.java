@@ -1,13 +1,13 @@
 package com.monstrous.gdx.webgpu.backends.teavm.config;
 
 import com.github.xpenatan.gdx.teavm.backends.shared.config.DefaultAssetFilter;
-import com.github.xpenatan.gdx.teavm.backends.shared.config.compiler.TeaCompilerData;
+import com.github.xpenatan.gdx.teavm.backends.shared.config.builder.TeaBuilderData;
 import com.github.xpenatan.gdx.teavm.backends.web.config.backend.WebBackend;
 
 public class WgBackend extends WebBackend {
 
     @Override
-    protected void setup(TeaCompilerData data) {
+    protected void setup(TeaBuilderData data) {
         super.setup(data);
 
         assetFilter = new DefaultAssetFilter() {
