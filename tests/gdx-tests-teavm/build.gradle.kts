@@ -30,6 +30,13 @@ gdxTeaVM {
         debugInformation.set(true)
         sourceMap.set(true)
         obfuscated.set(false)
+
+        devServer {
+            enabled.set(true)
+            autoBuild.set(true)
+            autoReload.set(true)
+            processMemory.set(2048)
+        }
     }
 
     wasm {
@@ -39,5 +46,12 @@ gdxTeaVM {
         serverPort.set(8081)
         optimization.set(OptimizationLevel.BALANCED)
         obfuscated.set(false)
+
+        devServer {
+            enabled.set(true)
+            autoBuild.set(true)
+            autoReload.set(true)
+            processMemory.set(2048)
+        }
     }
 }
