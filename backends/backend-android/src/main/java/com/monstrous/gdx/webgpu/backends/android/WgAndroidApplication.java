@@ -47,7 +47,9 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Clipboard;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.SnapshotArray;
+import com.github.xpenatan.webgpu.JWebGPUBackend;
 import com.github.xpenatan.webgpu.JWebGPULoader;
+import io.github.monstroussoftware.gdx.webgpu.BuildConfig;
 
 /**
  * An implementation of the {@link Application} interface for Android. Create an {@link Activity} that derives from this class.
@@ -142,13 +144,14 @@ public class WgAndroidApplication extends Activity implements AndroidApplication
             throw new GdxRuntimeException("libGDX requires Android API Level " + MINIMUM_SDK + " or later.");
         }
 
-        // Load jWebGPU native library synchronously before creating the WebGPU instance.
+        // The published Android flavor selects exactly one matching jWebGPU native implementation.
+        final JWebGPUBackend webGPUBackend = JWebGPUBackend.valueOf(BuildConfig.JWEBGPU_BACKEND);
         final Object lock = new Object();
         final boolean[] done = {false};
         final boolean[] success = {false};
         final Throwable[] error = {null};
 
-        JWebGPULoader.init((isSuccess, e) -> {
+        JWebGPULoader.init(webGPUBackend, (isSuccess, e) -> {
             synchronized (lock) {
                 success[0] = isSuccess;
                 error[0] = e;
@@ -171,7 +174,7 @@ public class WgAndroidApplication extends Activity implements AndroidApplication
             if (error[0] != null) {
                 error[0].printStackTrace();
             }
-            throw new GdxRuntimeException("WebGPU Failed to load");
+            throw new GdxRuntimeException("WebGPU " + webGPUBackend + " failed to load");
         }
 
         init(listener, config, isForView);

@@ -16,6 +16,16 @@ android {
         versionName = "0.0.1"
     }
 
+    flavorDimensions += "webgpuBackend"
+    productFlavors {
+        create("wgpu") {
+            dimension = "webgpuBackend"
+        }
+        create("dawn") {
+            dimension = "webgpuBackend"
+        }
+    }
+
     sourceSets {
         named("main") {
             assets.srcDirs(project.file("../assets"))

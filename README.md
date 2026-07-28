@@ -181,7 +181,17 @@ Press **Escape** to return to the test chooser when running an individual test i
 
 ### Android
 
-Install the APK on a connected device or emulator, then launch via `adb`:
+Build and install exactly one native WebGPU implementation on a connected device or emulator:
+
+```bash
+# WGPU
+./gradlew :tests:gdx-tests-android:installWgpuDebug
+
+# Dawn
+./gradlew :tests:gdx-tests-android:installDawnDebug
+```
+
+Then launch via `adb`:
 
 ```bash
 # Interactive test chooser (default):
@@ -208,7 +218,7 @@ Apart from the graphics platform, gdx-webgpu offers some new features with regar
 
 | gdx-webgpu | libgdx | gdx-teavm | jWebGPU |
 |------------|--------|-----------|---------|
-| -SNAPSHOT  | 1.14.1 | 1.5.5     | 0.2.0   |
+| -SNAPSHOT  | 1.14.2 | 1.6.1     | 0.3.4   |
 | 0.8        | 1.14.0 | 1.5.0     | 0.1.13  |
 | 0.7.2      | 1.14.0 | 1.4.0     | 0.1.11  |
 | 0.7.1      | 1.14.0 | 1.4.0     | 0.1.9   |
@@ -260,6 +270,19 @@ Assuming we want to use the LWJGL3 (=Desktop) platform, add the following to `bu
 `backend-desktop-jni` and `backend-desktop-ffm` are wrapper artifacts. They pull in
 `backend-desktop` plus the matching jWebGPU runtime dependencies automatically, so users only
 need to set `gdxWebGPUVersion`.
+
+For Android, choose exactly one native WebGPU implementation in the Android launcher module:
+
+```groovy
+dependencies {
+    implementation "io.github.monstroussoftware.gdx-webgpu:backend-android-wgpu:$gdxWebGPUVersion"
+    // or:
+    // implementation "io.github.monstroussoftware.gdx-webgpu:backend-android-dawn:$gdxWebGPUVersion"
+}
+```
+
+Both artifacts contain the same gdx-webgpu Android backend. Each one pulls in the matching
+jWebGPU AAR and initializes WGPU or Dawn automatically; applications must not include both.
 
 In the `lwjgl3` module add a starter class called `Launcher.java` with a content as follows:
 

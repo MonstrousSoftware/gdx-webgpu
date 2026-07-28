@@ -12,6 +12,22 @@ android {
         minSdk = 29
     }
 
+    flavorDimensions += "webgpuBackend"
+    productFlavors {
+        create("wgpu") {
+            dimension = "webgpuBackend"
+            buildConfigField("String", "JWEBGPU_BACKEND", "\"WGPU\"")
+        }
+        create("dawn") {
+            dimension = "webgpuBackend"
+            buildConfigField("String", "JWEBGPU_BACKEND", "\"DAWN\"")
+        }
+    }
+
+    buildFeatures {
+        buildConfig = true
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -24,7 +40,10 @@ android {
     }
 
     publishing {
-        singleVariant("release") {
+        singleVariant("wgpuRelease") {
+            withSourcesJar()
+        }
+        singleVariant("dawnRelease") {
             withSourcesJar()
         }
     }
@@ -35,7 +54,8 @@ dependencies {
     val jWebGPUVVersion = project.property("jWebGPUVVersion") as String
 
     implementation(project(":gdx-webgpu"))
-    api("com.github.xpenatan.jWebGPU:webgpu-android:$jWebGPUVVersion")
+    add("wgpuApi", "com.github.xpenatan.jWebGPU:webgpu-android-wgpu:$jWebGPUVVersion")
+    add("dawnApi", "com.github.xpenatan.jWebGPU:webgpu-android-dawn:$jWebGPUVVersion")
 
     api("com.badlogicgames.gdx:gdx:${gdxVersion}")
     api("com.badlogicgames.gdx:gdx-backend-android:$gdxVersion")
@@ -43,12 +63,20 @@ dependencies {
 
 publishing {
     publications {
-        create<MavenPublication>("maven") {
-            artifactId = "backend-android"
-            group = LibExt.groupId
+        create<MavenPublication>("mavenWgpu") {
+            artifactId = "backend-android-wgpu"
+            groupId = LibExt.groupId
             version = LibExt.libVersion
             afterEvaluate {
-                from(components["release"])
+                from(components["wgpuRelease"])
+            }
+        }
+        create<MavenPublication>("mavenDawn") {
+            artifactId = "backend-android-dawn"
+            groupId = LibExt.groupId
+            version = LibExt.libVersion
+            afterEvaluate {
+                from(components["dawnRelease"])
             }
         }
     }
