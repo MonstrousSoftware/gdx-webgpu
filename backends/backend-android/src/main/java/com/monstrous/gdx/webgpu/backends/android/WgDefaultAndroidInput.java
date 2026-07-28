@@ -5,6 +5,7 @@ import android.content.Context;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AutoCompleteTextView;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
@@ -12,16 +13,16 @@ import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
 import com.badlogic.gdx.backends.android.DefaultAndroidInput;
 import com.badlogic.gdx.backends.android.keyboardheight.KeyboardHeightProvider;
 import com.badlogic.gdx.backends.android.keyboardheight.StandardKeyboardHeightProvider;
+import com.badlogic.gdx.utils.GdxRuntimeException;
 
 import java.lang.reflect.Field;
 
 /**
- * Subclass of {@link DefaultAndroidInput} that fixes the hard-coded {@code (AndroidApplication)app}
- * cast in the upstream keyboard-height callback.
+ * Adapts {@link DefaultAndroidInput} to the WebGPU Android application and surface classes.
  * <p>
- * {@link WgAndroidApplication} extends Activity + {@code AndroidApplicationBase} but does
- * <b>not</b> extend {@code AndroidApplication}, so that cast throws {@code ClassCastException}.
- * This class overrides the affected method with equivalent libGDX logic using the correct type.
+ * The upstream implementation assumes {@code AndroidApplication}, {@code AndroidGraphics}, and
+ * {@code GLSurfaceView20}. The WebGPU backend uses its own equivalents, so affected keyboard
+ * methods are overridden with the same behavior using the WebGPU types.
  */
 public class WgDefaultAndroidInput extends DefaultAndroidInput {
 
@@ -31,14 +32,17 @@ public class WgDefaultAndroidInput extends DefaultAndroidInput {
     private int cachedHeight;
     private boolean cachedVisible;
 
-    // Cached reflection handle for the one private field we need from the super class.
+    // Cached reflection handles for private state that must stay synchronized with the super class.
     private static final Field RELATIVE_LAYOUT_FIELD;
+    private static final Field ONSCREEN_VISIBLE_FIELD;
     static {
         try {
             RELATIVE_LAYOUT_FIELD = DefaultAndroidInput.class.getDeclaredField("relativeLayoutField");
             RELATIVE_LAYOUT_FIELD.setAccessible(true);
+            ONSCREEN_VISIBLE_FIELD = DefaultAndroidInput.class.getDeclaredField("onscreenVisible");
+            ONSCREEN_VISIBLE_FIELD.setAccessible(true);
         } catch (NoSuchFieldException e) {
-            throw new RuntimeException("DefaultAndroidInput layout changed: relativeLayoutField not found", e);
+            throw new RuntimeException("DefaultAndroidInput private fields changed", e);
         }
     }
 
@@ -73,6 +77,49 @@ public class WgDefaultAndroidInput extends DefaultAndroidInput {
     private AutoCompleteTextView wgGetEditText() {
         RelativeLayout relativeLayout = getRelativeLayout();
         return relativeLayout != null ? (AutoCompleteTextView) relativeLayout.getChildAt(0) : null;
+    }
+
+    private void setOnscreenVisible(boolean visible) {
+        try {
+            ONSCREEN_VISIBLE_FIELD.setBoolean(this, visible);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException("Cannot update DefaultAndroidInput onscreen keyboard state", e);
+        }
+    }
+
+    @Override
+    public void setOnscreenKeyboardVisible(boolean visible) {
+        setOnscreenKeyboardVisible(visible, OnscreenKeyboardType.Default);
+    }
+
+    @Override
+    public void setOnscreenKeyboardVisible(final boolean visible, final OnscreenKeyboardType type) {
+        if (wgIsNativeInputOpen()) {
+            throw new GdxRuntimeException("Can't open keyboard if already open");
+        }
+
+        setOnscreenVisible(visible);
+        wgApp.handler.post(() -> {
+            InputMethodManager manager =
+                    (InputMethodManager) wgApp.getSystemService(Context.INPUT_METHOD_SERVICE);
+            WgSurfaceView surfaceView = wgApp.graphics.view;
+
+            if (visible) {
+                OnscreenKeyboardType keyboardType =
+                        type == null ? OnscreenKeyboardType.Default : type;
+                if (surfaceView.onscreenKeyboardType != keyboardType) {
+                    surfaceView.onscreenKeyboardType = keyboardType;
+                    manager.restartInput(surfaceView);
+                }
+
+                surfaceView.setFocusable(true);
+                surfaceView.setFocusableInTouchMode(true);
+                surfaceView.requestFocus();
+                manager.showSoftInput(surfaceView, 0);
+            } else {
+                manager.hideSoftInputFromWindow(surfaceView.getWindowToken(), 0);
+            }
+        });
     }
 
     private int wgGetSoftButtonsBarHeight() {
