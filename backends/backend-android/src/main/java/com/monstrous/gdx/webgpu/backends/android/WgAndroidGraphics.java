@@ -294,6 +294,14 @@ public class WgAndroidGraphics extends AbstractGraphics implements WgGraphics, W
         context = new WebGPUApplication(configg, instance, androidSurface);
 
         WebGPUInitialization.setup(instance, WGPUPowerPreference.HighPerformance, WGPUBackendType.Vulkan, context);
+        while (!context.isReady()) {
+            if (context.isError()) {
+                throw new RuntimeException("Failed to initialize WebGPU");
+            }
+            // Adapter and device callbacks use AllowProcessEvents. Dawn dispatches
+            // them only while the instance event queue is being processed.
+            instance.processEvents();
+        }
 
         this.gl20 = new WgGL20();
         Gdx.gl = this.gl20;

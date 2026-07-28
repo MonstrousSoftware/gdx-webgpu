@@ -175,11 +175,14 @@ The corresponding `gdx_teavm_glfw_generate` and `gdx_teavm_glfw_build` tasks gen
 
 ### Running Android Tests
 
-First build and install the debug APK, then launch via `adb`:
+First build and install one debug APK variant, then launch via `adb`:
 
 ```bash
-# Build & install:
-./gradlew :tests:gdx-tests-android:installDebug
+# WGPU:
+./gradlew :tests:gdx-tests-android:installWgpuDebug
+
+# Dawn:
+./gradlew :tests:gdx-tests-android:installDawnDebug
 
 # Run ALL tests sequentially (auto mode):
 adb shell am start -n com.monstrous.gdx.tests.webgpu/.GdxTestActivity --es test auto
@@ -192,6 +195,7 @@ adb shell am start -n com.monstrous.gdx.tests.webgpu/.GdxTestActivity
 ```
 
 - The `--es test <value>` passes a string Intent extra to `GdxTestActivity`.
+- The Android backend is one source module with WGPU and Dawn product flavors. The published artifacts are `backend-android-wgpu` and `backend-android-dawn`; each selects the matching jWebGPU AAR and loader backend automatically.
 - Monitor test output: `adb logcat -s "System.out" | grep "Running test"`
 - If `adb` is not on PATH, use the full path: `<SDK>/platform-tools/adb` (SDK path is in `local.properties`).
 

@@ -1,10 +1,17 @@
 package com.monstrous.gdx.webgpu.backends.android;
 
 import android.content.Context;
+import android.os.SystemClock;
+import android.view.KeyCharacterMap;
+import android.view.KeyEvent;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.inputmethod.BaseInputConnection;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputConnection;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.backends.android.DefaultAndroidInput;
 import com.badlogic.gdx.backends.android.surfaceview.ResolutionStrategy;
 
 public class WgSurfaceView extends SurfaceView implements SurfaceHolder.Callback2 {
@@ -96,6 +103,35 @@ public class WgSurfaceView extends SurfaceView implements SurfaceHolder.Callback
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         ResolutionStrategy.MeasuredDimension measures = resolutionStrategy.calcMeasures(widthMeasureSpec, heightMeasureSpec);
         setMeasuredDimension(measures.width, measures.height);
+    }
+
+    @Override
+    public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
+        if (outAttrs != null) {
+            outAttrs.imeOptions |= EditorInfo.IME_FLAG_NO_EXTRACT_UI;
+            outAttrs.inputType = DefaultAndroidInput.getAndroidInputType(onscreenKeyboardType, true);
+        }
+
+        return new BaseInputConnection(this, false) {
+            @Override
+            public boolean deleteSurroundingText(int beforeLength, int afterLength) {
+                // Some Android keyboards send this operation instead of KEYCODE_DEL.
+                if (beforeLength == 1 && afterLength == 0) {
+                    sendDownUpKeyEvent(KeyEvent.KEYCODE_DEL);
+                    return true;
+                }
+                return super.deleteSurroundingText(beforeLength, afterLength);
+            }
+
+            private void sendDownUpKeyEvent(int keyCode) {
+                long eventTime = SystemClock.uptimeMillis();
+                int flags = KeyEvent.FLAG_SOFT_KEYBOARD | KeyEvent.FLAG_KEEP_TOUCH_MODE;
+                sendKeyEvent(new KeyEvent(eventTime, eventTime, KeyEvent.ACTION_DOWN, keyCode, 0, 0,
+                        KeyCharacterMap.VIRTUAL_KEYBOARD, 0, flags));
+                sendKeyEvent(new KeyEvent(SystemClock.uptimeMillis(), eventTime, KeyEvent.ACTION_UP, keyCode, 0, 0,
+                        KeyCharacterMap.VIRTUAL_KEYBOARD, 0, flags));
+            }
+        };
     }
 
     public void onPause() {

@@ -53,7 +53,8 @@ include(":benchmark:webgpu-raw:desktop-ffm")
 
 //includeBuild("E:\\Dev\\Projects\\java\\jWebGPU") {
 //    dependencySubstitution {
-////        substitute(module("com.github.xpenatan.jWebGPU:webgpu-android")).using(project(":webgpu:webgpu-android"))
+////        substitute(module("com.github.xpenatan.jWebGPU:webgpu-android-wgpu")).using(project(":webgpu:android:jni"))
+////        substitute(module("com.github.xpenatan.jWebGPU:webgpu-android-dawn")).using(project(":webgpu:android:jni"))
 //        substitute(module("com.github.xpenatan.jWebGPU:webgpu-web")).using(project(":webgpu:webgpu-web"))
 //        substitute(module("com.github.xpenatan.jWebGPU:webgpu-core")).using(project(":webgpu:webgpu-core"))
 //        substitute(module("com.github.xpenatan.jWebGPU:webgpu-ffm")).using(project(":webgpu:webgpu-ffm"))
