@@ -35,9 +35,6 @@ dependencies {
 fun MavenPublication.configureNativeBackend(nativeBackend: String, platform: String? = null) {
     val platformSuffix = platform?.let { "_$it" }.orEmpty()
     artifactId = "backend-desktop-jni-$nativeBackend$platformSuffix"
-    artifact(tasks.named("jar"))
-    artifact(tasks.named("sourcesJar"))
-    artifact(tasks.named("javadocJar"))
 
     pom.withXml {
         val dependenciesNode = asNode().appendNode("dependencies")
