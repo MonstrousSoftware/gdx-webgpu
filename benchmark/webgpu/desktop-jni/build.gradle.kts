@@ -7,6 +7,28 @@ plugins {
 }
 
 val javaVersion = project.property("javaMain") as String
+val jWebGPUVersion = project.property("jWebGPUVVersion") as String
+val webgpuImplementation = ((findProperty("webgpu") as String?) ?: "WGPU").uppercase()
+if (webgpuImplementation != "WGPU" && webgpuImplementation != "DAWN") {
+    throw GradleException("Unsupported jWebGPU implementation: $webgpuImplementation")
+}
+
+val currentOperatingSystem = DefaultNativePlatform.getCurrentOperatingSystem()
+val currentArchitecture = DefaultNativePlatform.getCurrentArchitecture().name.lowercase()
+val currentPlatform = when {
+    currentOperatingSystem.isWindows -> "windows_x64"
+    currentOperatingSystem.isLinux -> "linux_x64"
+    currentOperatingSystem.isMacOsX &&
+        (currentArchitecture.contains("aarch64") || currentArchitecture.contains("arm64")) -> "mac_arm64"
+    currentOperatingSystem.isMacOsX -> "mac_x64"
+    else -> throw GradleException(
+        "Unsupported desktop platform: ${currentOperatingSystem.name} $currentArchitecture"
+    )
+}
+val directWebgpuNativeRuntime = configurations.create("directWebgpuNativeRuntime") {
+    isCanBeConsumed = false
+    isCanBeResolved = true
+}
 
 sourceSets["main"].resources.srcDirs(File("../../../tests/assets"))
 
@@ -19,18 +41,23 @@ if (JavaVersion.current().isJava9Compatible) {
 dependencies {
     implementation(project(":benchmark:webgpu:core"))
     implementation(project(":backends:backend-desktop-jni"))
+    add(
+        directWebgpuNativeRuntime.name,
+        "com.github.xpenatan.jWebGPU:" +
+            "webgpu-desktop-jni-${webgpuImplementation.lowercase()}_$currentPlatform:$jWebGPUVersion"
+    )
 }
 
 tasks.register<JavaExec>("run") {
     group = "LibGDX"
     description = "Run desktop WebGPU JNI benchmarks"
     mainClass.set(mainClassName)
-    classpath = sourceSets["main"].runtimeClasspath
-    workingDir = File("../../../tests/assets")
-    setIgnoreExitValue(true)
+    classpath = sourceSets["main"].runtimeClasspath + directWebgpuNativeRuntime
+    workingDir = rootProject.file("tests/assets")
+    setIgnoreExitValue(false)
     standardInput = System.`in`
-    args("--binding=jni")
-    jvmArgs("-Dbenchmark.binding=jni")
+    args("--binding=jni", "--webgpu=$webgpuImplementation")
+    jvmArgs("-Dbenchmark.binding=jni", "-Djwebgpu.backend=$webgpuImplementation")
 
     if (DefaultNativePlatform.getCurrentOperatingSystem().isMacOsX) {
         jvmArgs("-XstartOnFirstThread")
@@ -41,12 +68,12 @@ tasks.register<JavaExec>("benchmark") {
     group = "LibGDX"
     description = "Run desktop WebGPU JNI benchmarks"
     mainClass.set(mainClassName)
-    classpath = sourceSets["main"].runtimeClasspath
-    workingDir = File("../../../tests/assets")
-    setIgnoreExitValue(true)
+    classpath = sourceSets["main"].runtimeClasspath + directWebgpuNativeRuntime
+    workingDir = rootProject.file("tests/assets")
+    setIgnoreExitValue(false)
     standardInput = System.`in`
-    args("--binding=jni")
-    jvmArgs("-Dbenchmark.binding=jni")
+    args("--binding=jni", "--webgpu=$webgpuImplementation")
+    jvmArgs("-Dbenchmark.binding=jni", "-Djwebgpu.backend=$webgpuImplementation")
 
     if (DefaultNativePlatform.getCurrentOperatingSystem().isMacOsX) {
         jvmArgs("-XstartOnFirstThread")

@@ -1,4 +1,3 @@
-import org.gradle.api.GradleException
 import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 import org.gradle.jvm.tasks.Jar as JarTask
 
@@ -25,28 +24,12 @@ dependencies {
 }
 
 val currentDesktopOperatingSystem = DefaultNativePlatform.getCurrentOperatingSystem()
-val currentDesktopArchitecture = DefaultNativePlatform.getCurrentArchitecture().name.lowercase()
-val currentDesktopPlatform = when {
-    currentDesktopOperatingSystem.isWindows -> "windows_x64"
-    currentDesktopOperatingSystem.isLinux -> "linux_x64"
-    currentDesktopOperatingSystem.isMacOsX &&
-        (currentDesktopArchitecture.contains("aarch64") || currentDesktopArchitecture.contains("arm64")) -> "mac_arm64"
-    currentDesktopOperatingSystem.isMacOsX -> "mac_x64"
-    else -> throw GradleException(
-        "Unsupported desktop platform: ${currentDesktopOperatingSystem.name} $currentDesktopArchitecture"
-    )
-}
-val jWebGPUVersion = project.property("jWebGPUVVersion") as String
 
 tasks.register<JavaExec>("gdx_webgpu_tests_desktop_jni_wgpu_run") {
     group = "LibGDX"
     description = "Run the WebGPU JNI tests with WGPU"
     mainClass.set(mainClassName)
-    classpath = sourceSets["main"].runtimeClasspath + configurations.detachedConfiguration(
-        dependencies.create(
-            "com.github.xpenatan.jWebGPU:webgpu-desktop-jni-wgpu_$currentDesktopPlatform:$jWebGPUVersion"
-        )
-    )
+    classpath = sourceSets["main"].runtimeClasspath
     workingDir = File("../assets")
     setIgnoreExitValue(true)
     systemProperty("jwebgpu.backend", "WGPU")
@@ -61,11 +44,7 @@ tasks.register<JavaExec>("gdx_webgpu_tests_desktop_jni_dawn_run") {
     group = "LibGDX"
     description = "Run the WebGPU JNI tests with Dawn"
     mainClass.set(mainClassName)
-    classpath = sourceSets["main"].runtimeClasspath + configurations.detachedConfiguration(
-        dependencies.create(
-            "com.github.xpenatan.jWebGPU:webgpu-desktop-jni-dawn_$currentDesktopPlatform:$jWebGPUVersion"
-        )
-    )
+    classpath = sourceSets["main"].runtimeClasspath
     workingDir = File("../assets")
     setIgnoreExitValue(true)
     systemProperty("jwebgpu.backend", "DAWN")
@@ -80,11 +59,7 @@ tasks.register<JavaExec>("gdx_webgpu_tests_auto_desktop_jni_wgpu_run") {
     group = "LibGDX"
     description = "Run all WebGPU JNI tests automatically with WGPU"
     mainClass.set(mainClassName)
-    classpath = sourceSets["main"].runtimeClasspath + configurations.detachedConfiguration(
-        dependencies.create(
-            "com.github.xpenatan.jWebGPU:webgpu-desktop-jni-wgpu_$currentDesktopPlatform:$jWebGPUVersion"
-        )
-    )
+    classpath = sourceSets["main"].runtimeClasspath
     workingDir = File("../assets")
     setIgnoreExitValue(true)
     args("auto")
@@ -100,11 +75,7 @@ tasks.register<JavaExec>("gdx_webgpu_tests_auto_desktop_jni_dawn_run") {
     group = "LibGDX"
     description = "Run all WebGPU JNI tests automatically with Dawn"
     mainClass.set(mainClassName)
-    classpath = sourceSets["main"].runtimeClasspath + configurations.detachedConfiguration(
-        dependencies.create(
-            "com.github.xpenatan.jWebGPU:webgpu-desktop-jni-dawn_$currentDesktopPlatform:$jWebGPUVersion"
-        )
-    )
+    classpath = sourceSets["main"].runtimeClasspath
     workingDir = File("../assets")
     setIgnoreExitValue(true)
     args("auto")
@@ -120,11 +91,7 @@ tasks.register<JarTask>("dist_wgpu") {
     dependsOn(tasks.classes)
     manifest { attributes("Main-Class" to mainClassName) }
     archiveClassifier.set("wgpu")
-    val runtimeClasspath = configurations.runtimeClasspath.get() + configurations.detachedConfiguration(
-        dependencies.create(
-            "com.github.xpenatan.jWebGPU:webgpu-desktop-jni-wgpu_$currentDesktopPlatform:$jWebGPUVersion"
-        )
-    )
+    val runtimeClasspath = configurations.runtimeClasspath.get()
     dependsOn(runtimeClasspath)
     from({ runtimeClasspath.map { if (it.isDirectory) it else zipTree(it) } })
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
@@ -135,11 +102,7 @@ tasks.register<JarTask>("dist_dawn") {
     dependsOn(tasks.classes)
     manifest { attributes("Main-Class" to mainClassName) }
     archiveClassifier.set("dawn")
-    val runtimeClasspath = configurations.runtimeClasspath.get() + configurations.detachedConfiguration(
-        dependencies.create(
-            "com.github.xpenatan.jWebGPU:webgpu-desktop-jni-dawn_$currentDesktopPlatform:$jWebGPUVersion"
-        )
-    )
+    val runtimeClasspath = configurations.runtimeClasspath.get()
     dependsOn(runtimeClasspath)
     from({ runtimeClasspath.map { if (it.isDirectory) it else zipTree(it) } })
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE

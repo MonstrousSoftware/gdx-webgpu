@@ -134,16 +134,24 @@ Use the backend-specific Gradle task names:
 ./gradlew gdx_webgpu_tests_auto_desktop_ffm_dawn_run
 ```
 
-Desktop apps should package only one jWebGPU native backend jar. Add the desktop bridge through gdx-webgpu, then add either the WGPU or Dawn runtime for the target platform:
+Desktop applications can select the Java binding and native WebGPU implementation entirely through gdx-webgpu:
 
 ```kotlin
-runtimeOnly("com.github.xpenatan.jWebGPU:webgpu-desktop-jni-wgpu_windows_x64:$jWebGPUVVersion")
-runtimeOnly("com.github.xpenatan.jWebGPU:webgpu-desktop-jni-dawn_windows_x64:$jWebGPUVVersion")
-runtimeOnly("com.github.xpenatan.jWebGPU:webgpu-desktop-ffm-wgpu_windows_x64:$jWebGPUVVersion")
-runtimeOnly("com.github.xpenatan.jWebGPU:webgpu-desktop-ffm-dawn_windows_x64:$jWebGPUVVersion")
+implementation("io.github.monstroussoftware.gdx-webgpu:backend-desktop-jni-wgpu:$gdxWebGPUVersion")
+// Add this too when the application must support both implementations:
+implementation("io.github.monstroussoftware.gdx-webgpu:backend-desktop-jni-dawn:$gdxWebGPUVersion")
 ```
 
-Use one line, not both backends. The test projects mirror this with `dist_wgpu` and `dist_dawn`, which produce separate jars containing only `native/wgpu` or only `native/dawn`.
+Choose either the JNI or FFM binding, then declare WGPU, Dawn, or both matching artifacts. Gradle deduplicates their shared dependencies when both are present. Each artifact supplies the matching Windows x64, Linux x64, macOS x64, and macOS arm64 native runtimes transitively, so applications do not declare jWebGPU dependencies. Set `config.backendWebGPU` to the implementation to use; Dawn is the current default. The unsuffixed `backend-desktop-jni` and `backend-desktop-ffm` coordinates are not published.
+
+If an application is distributed for only one desktop platform, append the platform to the artifact ID so that only its native runtime is included:
+
+```kotlin
+implementation("io.github.monstroussoftware.gdx-webgpu:backend-desktop-jni-wgpu_linux_x64:$gdxWebGPUVersion")
+implementation("io.github.monstroussoftware.gdx-webgpu:backend-desktop-jni-dawn_linux_x64:$gdxWebGPUVersion") // optional
+```
+
+The available suffixes are `_windows_x64`, `_linux_x64`, `_mac_x64`, and `_mac_arm64`, and they are available for every JNI/FFM and WGPU/Dawn combination. These are separate Maven coordinates rather than classifiers because classifiers share the aggregate coordinate's POM and therefore cannot have a platform-specific transitive dependency set.
 
 ### Native Desktop (TeaVM C)
 
@@ -254,22 +262,29 @@ To include the library in your project add the following lines to your `build.gr
     }
 
 
-Assuming we want to use the LWJGL3 (=Desktop) platform, add the following to `build.gradle` in the `lwjgl3` module:
+Assuming we want to use the LWJGL3 (=Desktop) platform, choose one binding and native implementation in the `lwjgl3` module:
 
     dependencies {
-        // Pick one desktop runtime:
-        implementation "io.github.monstroussoftware.gdx-webgpu:backend-desktop-jni:$gdxWebGPUVersion"
-        // or
-        // implementation "io.github.monstroussoftware.gdx-webgpu:backend-desktop-ffm:$gdxWebGPUVersion"
+        // Choose JNI or FFM, then include one or both implementations:
+        implementation "io.github.monstroussoftware.gdx-webgpu:backend-desktop-jni-dawn:$gdxWebGPUVersion"
+        // implementation "io.github.monstroussoftware.gdx-webgpu:backend-desktop-jni-wgpu:$gdxWebGPUVersion" // optional second implementation
+        // implementation "io.github.monstroussoftware.gdx-webgpu:backend-desktop-ffm-dawn:$gdxWebGPUVersion"
+        // implementation "io.github.monstroussoftware.gdx-webgpu:backend-desktop-ffm-wgpu:$gdxWebGPUVersion" // optional second implementation
         // comment out the following:
         //  implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
         //  implementation "com.badlogicgames.gdx:gdx-lwjgl3-angle:$gdxVersion"
         //  implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
     }
 
-`backend-desktop-jni` and `backend-desktop-ffm` are wrapper artifacts. They pull in
-`backend-desktop` plus the matching jWebGPU runtime dependencies automatically, so users only
-need to set `gdxWebGPUVersion`.
+These are wrapper artifacts: they pull in `backend-desktop`, the Java binding, and all supported
+platform natives for the selected implementation. Users only need to set `gdxWebGPUVersion` and
+do not need a direct jWebGPU dependency. To support both native implementations, declare the WGPU
+and Dawn artifacts for the same Java binding. The unsuffixed `backend-desktop-jni` and
+`backend-desktop-ffm` coordinates are not published.
+
+For a platform-specific distribution, append `_windows_x64`, `_linux_x64`, `_mac_x64`, or
+`_mac_arm64` to the selected artifact ID. For example,
+`backend-desktop-ffm-dawn_mac_arm64` includes only the macOS arm64 Dawn native runtime.
 
 For Android, choose exactly one native WebGPU implementation in the Android launcher module:
 
