@@ -1,8 +1,8 @@
 plugins {
-    id("com.android.library")
+    alias(libs.plugins.androidLibrary)
 }
 
-val javaVersion = project.property("javaMain") as String
+val javaVersion = libs.versions.javaMain.get()
 
 android {
     namespace = "io.github.monstroussoftware.gdx.webgpu"
@@ -50,31 +50,24 @@ android {
 }
 
 dependencies {
-    val gdxVersion = project.property("gdxVersion") as String
-    val jWebGPUVVersion = project.property("jWebGPUVVersion") as String
-
     implementation(project(":gdx-webgpu"))
-    add("wgpuApi", "com.github.xpenatan.jWebGPU:webgpu-android-wgpu:$jWebGPUVVersion")
-    add("dawnApi", "com.github.xpenatan.jWebGPU:webgpu-android-dawn:$jWebGPUVVersion")
+    add("wgpuApi", libs.jWebGPUAndroidWgpu)
+    add("dawnApi", libs.jWebGPUAndroidDawn)
 
-    api("com.badlogicgames.gdx:gdx:${gdxVersion}")
-    api("com.badlogicgames.gdx:gdx-backend-android:$gdxVersion")
+    api(libs.gdxCore)
+    api(libs.gdxBackendAndroid)
 }
 
 publishing {
     publications {
         create<MavenPublication>("mavenWgpu") {
             artifactId = "backend-android-wgpu"
-            groupId = LibExt.groupId
-            version = LibExt.libVersion
             afterEvaluate {
                 from(components["wgpuRelease"])
             }
         }
         create<MavenPublication>("mavenDawn") {
             artifactId = "backend-android-dawn"
-            groupId = LibExt.groupId
-            version = LibExt.libVersion
             afterEvaluate {
                 from(components["dawnRelease"])
             }

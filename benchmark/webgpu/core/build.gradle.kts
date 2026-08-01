@@ -2,7 +2,7 @@ plugins {
     id("java-library")
 }
 
-val javaVersion = project.property("javaMain") as String
+val javaVersion = libs.versions.javaMain.get()
 
 if (JavaVersion.current().isJava9Compatible) {
     tasks.withType<JavaCompile> {
@@ -11,10 +11,8 @@ if (JavaVersion.current().isJava9Compatible) {
 }
 
 dependencies {
-    val jWebGPUVVersion = project.property("jWebGPUVVersion") as String
-
     implementation(project(":benchmark:core"))
     implementation(project(":gdx-webgpu"))
     implementation(project(":backends:backend-desktop"))
-    compileOnly("com.github.xpenatan.jWebGPU:webgpu-core:$jWebGPUVVersion")
+    compileOnly(libs.jWebGPUCore)
 }

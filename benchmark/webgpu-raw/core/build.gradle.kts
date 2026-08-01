@@ -2,7 +2,7 @@ plugins {
     id("java-library")
 }
 
-val javaVersion = project.property("javaMain") as String
+val javaVersion = libs.versions.javaMain.get()
 
 if (JavaVersion.current().isJava9Compatible) {
     tasks.withType<JavaCompile> {

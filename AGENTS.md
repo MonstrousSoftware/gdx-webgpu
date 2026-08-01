@@ -1,7 +1,7 @@
 ﻿# gdx-webgpu — AI Context Memory File
 
 > **Purpose:** This file helps AI assistants remember how this project works across chat sessions.
-> Last updated: 2026-03-18
+> Last updated: 2026-07-31
 
 ---
 
@@ -133,7 +133,8 @@ gdx-webgpu/
 ## Build & Run
 
 - **Build system**: Gradle with Kotlin DSL
-- **Java version**: Check `gradle.properties` for specifics
+- **Versions and Java targets**: Check `gradle/libs.versions.toml`
+- **Publishing**: Root `easyPublishing` configuration provides `prepareSnapshot`, `publishSnapshot`, `prepareRelease`, and `publishRelease`
 - **Desktop entry point**: `backends/backend-desktop/` → `WgDesktopApplication`
 - **TeaVM web entry point**: `backends/backend-teavm/`
 - **Test projects**: `tests/gdx-tests-desktop/`, `tests/gdx-tests-teavm/`

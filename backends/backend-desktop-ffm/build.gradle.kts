@@ -1,12 +1,11 @@
 plugins {
     id("java")
     id("java-library")
-    id("maven-publish")
 }
 
-val javaVersion = JavaVersion.toVersion(project.property("javaFFM") as String)
-val jWebGPUVersion = project.property("jWebGPUVVersion") as String
-val jWebGPUGroup = "com.github.xpenatan.jWebGPU"
+val javaVersion = JavaVersion.toVersion(libs.versions.javaFFM.get())
+val jWebGPUVersion = libs.versions.jWebGPU.get()
+val jWebGPUGroup = libs.versions.jWebGPUGroup.get()
 val jWebGPUDesktopArtifact = "webgpu-desktop-ffm"
 val desktopPlatforms = listOf("windows_x64", "linux_x64", "mac_x64", "mac_arm64")
 val nativeBackends = listOf("wgpu", "dawn")
@@ -20,7 +19,7 @@ java {
 
 dependencies {
     api(project(":backends:backend-desktop"))
-    api("$jWebGPUGroup:$jWebGPUDesktopArtifact:$jWebGPUVersion")
+    api(libs.jWebGPUDesktopFFM)
 
     // Local project consumers (the test modules) can switch between both native backends.
     nativeBackends.forEach { nativeBackend ->
@@ -47,7 +46,12 @@ fun MavenPublication.configureNativeBackend(nativeBackend: String, platform: Str
             dependencyNode.appendNode("scope", scope)
         }
 
-        addDependency(LibExt.groupId, "backend-desktop", LibExt.libVersion, "compile")
+        addDependency(
+            libs.versions.gdxWebGPUGroup.get(),
+            "backend-desktop",
+            project.version.toString(),
+            "compile"
+        )
         addDependency(jWebGPUGroup, jWebGPUDesktopArtifact, jWebGPUVersion, "compile")
         val includedPlatforms = platform?.let { listOf(it) } ?: desktopPlatforms
         includedPlatforms.forEach { includedPlatform ->

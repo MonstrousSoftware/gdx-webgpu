@@ -6,8 +6,8 @@ plugins {
     id("java-library")
 }
 
-val javaVersion = project.property("javaFFM") as String
-val jWebGPUVersion = project.property("jWebGPUVVersion") as String
+val javaVersion = libs.versions.javaFFM.get()
+val jWebGPUVersion = libs.versions.jWebGPU.get()
 val webgpuImplementation = ((findProperty("webgpu") as String?) ?: "WGPU").uppercase()
 if (webgpuImplementation != "WGPU" && webgpuImplementation != "DAWN") {
     throw GradleException("Unsupported jWebGPU implementation: $webgpuImplementation")
@@ -43,7 +43,7 @@ dependencies {
     implementation(project(":backends:backend-desktop-ffm"))
     add(
         directWebgpuNativeRuntime.name,
-        "com.github.xpenatan.jWebGPU:" +
+        "${libs.versions.jWebGPUGroup.get()}:" +
             "webgpu-desktop-ffm-${webgpuImplementation.lowercase()}_$currentPlatform:$jWebGPUVersion"
     )
 }

@@ -2,8 +2,7 @@ plugins {
     id("java-library")
 }
 
-val javaVersion = project.property("javaMain") as String
-val gdxVersion = project.property("gdxVersion") as String
+val javaVersion = libs.versions.javaMain.get()
 
 if (JavaVersion.current().isJava9Compatible) {
     tasks.withType<JavaCompile> {
@@ -12,5 +11,5 @@ if (JavaVersion.current().isJava9Compatible) {
 }
 
 dependencies {
-    api("com.badlogicgames.gdx:gdx:$gdxVersion")
+    api(libs.gdxCore)
 }

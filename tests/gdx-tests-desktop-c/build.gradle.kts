@@ -3,10 +3,10 @@ import org.teavm.gradle.api.OptimizationLevel
 
 plugins {
     id("java-library")
-    id("com.github.xpenatan.gdx-teavm")
+    alias(libs.plugins.gdxTeaVM)
 }
 
-val javaVersion = JavaVersion.toVersion(project.property("javaWeb") as String)
+val javaVersion = JavaVersion.toVersion(libs.versions.javaWeb.get())
 val webgpuCBackend = providers.gradleProperty("webgpuCBackend")
     .orElse("wgpu")
     .map { it.lowercase() }
@@ -36,12 +36,11 @@ java {
 }
 
 dependencies {
-    val jWebGPUVVersion = project.property("jWebGPUVVersion") as String
-
     implementation(project(":backends:backend-desktop-c"))
     implementation(project(":tests:gdx-webgpu-tests"))
     implementation(
-        "com.github.xpenatan.jWebGPU:webgpu-desktop-c-${webgpuCBackend}_$webgpuCPlatform:$jWebGPUVVersion"
+        "${libs.versions.jWebGPUGroup.get()}:" +
+            "webgpu-desktop-c-${webgpuCBackend}_$webgpuCPlatform:${libs.versions.jWebGPU.get()}"
     )
 }
 
