@@ -14,7 +14,7 @@
  * limitations under the License.
  ******************************************************************************/
 
-val javaVersion = project.property("javaMain") as String
+val javaVersion = libs.versions.javaMain.get()
 
 dependencies {
     implementation(project(":gdx-webgpu"))
@@ -28,4 +28,3 @@ if (JavaVersion.current().isJava9Compatible) {
 }
 
 // note: do not add dependencies here on platform specific modules
-

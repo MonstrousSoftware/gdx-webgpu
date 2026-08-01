@@ -1,25 +1,11 @@
-buildscript {
-    repositories {
-        mavenCentral()
-        google()
-    }
-
-    val kotlinVersion = "2.1.10"
-
-    dependencies {
-        classpath("com.android.tools.build:gradle:8.12.3")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
-    }
-}
+import com.github.xpenatan.easypublishing.EasyPublishingExtension
 
 plugins {
     id("java")
-    id("maven-publish")
-    id("signing")
+    alias(libs.plugins.easyPublishing) apply false
 }
 
-
-allprojects()  {
+allprojects {
     repositories {
         google()
         mavenCentral()
@@ -32,4 +18,56 @@ allprojects()  {
     }
 }
 
-apply(plugin = "publish")
+// The GraalVM plugin adds a self-project dependency while it is applied. Pre-apply Maven
+// publishing to the affected hierarchy, then evaluate the native projects before
+// EasyPublishing starts observing project dependencies.
+val graalNativeProjects = listOf(
+    ":benchmark:graalvm:desktop-jni",
+    ":benchmark:graalvm:desktop-ffm",
+)
+val graalPublishingProjects = listOf(
+    ":benchmark",
+    ":benchmark:graalvm",
+) + graalNativeProjects
+graalPublishingProjects.forEach { projectPath ->
+    project(projectPath).pluginManager.apply("maven-publish")
+}
+graalNativeProjects.forEach { projectPath ->
+    evaluationDependsOn(projectPath)
+}
+
+apply(plugin = "com.github.xpenatan.easy-publishing")
+
+extensions.configure<EasyPublishingExtension> {
+    modules(
+        ":gdx-webgpu",
+        ":backends:backend-desktop",
+        ":backends:backend-desktop-jni",
+        ":backends:backend-desktop-ffm",
+        ":backends:backend-desktop-c",
+        ":backends:backend-teavm",
+        ":backends:backend-android",
+    )
+
+    groupId.set(libs.versions.gdxWebGPUGroup)
+    releaseVersion.set(libs.versions.gdxWebGPURelease)
+    snapshotVersion.set(libs.versions.gdxWebGPUSnapshot)
+
+    snapshotRepositoryUrl.set("https://central.sonatype.com/repository/maven-snapshots/")
+    releaseRepositoryUrl.set("https://central.sonatype.com")
+    username.set(providers.environmentVariable("CENTRAL_PORTAL_USERNAME"))
+    password.set(providers.environmentVariable("CENTRAL_PORTAL_PASSWORD"))
+    signingKey.set(providers.environmentVariable("SIGNING_KEY"))
+    signingPassword.set(providers.environmentVariable("SIGNING_PASSWORD"))
+
+    pomName.set(libs.versions.gdxWebGPUName)
+    pomDescription.set("WebGPU extension for LibGDX")
+    projectUrl.set("https://github.com/MonstrousSoftware/gdx-webgpu")
+
+    developerId.set("MonstrousSoftware")
+    developerName.set("MonstrousSoftware")
+
+    scmUrl.set("https://github.com/MonstrousSoftware/gdx-webgpu/tree/master")
+    scmConnection.set("scm:git:https://github.com/MonstrousSoftware/gdx-webgpu.git")
+    scmDeveloperConnection.set("scm:git:ssh://git@github.com/MonstrousSoftware/gdx-webgpu.git")
+}

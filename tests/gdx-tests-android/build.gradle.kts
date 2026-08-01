@@ -1,9 +1,8 @@
 plugins {
-    id("com.android.application")
-    id("kotlin-android")
+    alias(libs.plugins.androidApplication)
 }
 
-val javaVersion = project.property("javaMain") as String
+val javaVersion = libs.versions.javaMain.get()
 
 android {
     namespace = "com.monstrous.gdx.tests.webgpu"
@@ -45,11 +44,10 @@ dependencies {
     implementation(project(":backends:backend-android"))
     implementation(project(":tests:gdx-webgpu-tests"))
 
-    val gdxVersion = project.property("gdxVersion") as String
-    natives("com.badlogicgames.gdx:gdx-platform:${gdxVersion}:natives-armeabi-v7a")
-    natives("com.badlogicgames.gdx:gdx-platform:${gdxVersion}:natives-arm64-v8a")
-    natives("com.badlogicgames.gdx:gdx-platform:${gdxVersion}:natives-x86_64")
-    natives("com.badlogicgames.gdx:gdx-platform:${gdxVersion}:natives-x86")
+    natives(variantOf(libs.gdxPlatform) { classifier("natives-armeabi-v7a") })
+    natives(variantOf(libs.gdxPlatform) { classifier("natives-arm64-v8a") })
+    natives(variantOf(libs.gdxPlatform) { classifier("natives-x86_64") })
+    natives(variantOf(libs.gdxPlatform) { classifier("natives-x86") })
 }
 
 tasks.register("copyAndroidNatives") {

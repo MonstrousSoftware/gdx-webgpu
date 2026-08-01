@@ -6,8 +6,8 @@ plugins {
     id("java-library")
 }
 
-val javaVersion = project.property("javaMain") as String
-val jWebGPUVersion = project.property("jWebGPUVVersion") as String
+val javaVersion = libs.versions.javaMain.get()
+val jWebGPUVersion = libs.versions.jWebGPU.get()
 val webgpuImplementation = ((findProperty("webgpu") as String?) ?: "WGPU").uppercase()
 if (webgpuImplementation != "WGPU" && webgpuImplementation != "DAWN") {
     throw GradleException("Unsupported jWebGPU implementation: $webgpuImplementation")
@@ -43,7 +43,7 @@ dependencies {
     implementation(project(":backends:backend-desktop-jni"))
     add(
         directWebgpuNativeRuntime.name,
-        "com.github.xpenatan.jWebGPU:" +
+        "${libs.versions.jWebGPUGroup.get()}:" +
             "webgpu-desktop-jni-${webgpuImplementation.lowercase()}_$currentPlatform:$jWebGPUVersion"
     )
 }

@@ -1,0 +1,51 @@
+[versions]
+gdxWebGPUGroup = "io.github.monstroussoftware.gdx-webgpu"
+gdxWebGPUName = "gdx-webgpu"
+gdxWebGPURelease = "0.8.1"
+gdxWebGPUSnapshot = "-SNAPSHOT"
+
+javaMain = "8"
+javaWeb = "17"
+javaFFM = "25"
+
+gdx = "1.14.2"
+gdxTeaVM = "1.6.1"
+jWebGPU = "0.3.4"
+jWebGPUGroup = "com.github.xpenatan.jWebGPU"
+lwjgl = "3.3.3"
+
+easyPublishing = "0.1.2"
+androidGradlePlugin = "9.1.1"
+graalvmBuildtools = "1.1.0"
+
+[libraries]
+gdxCore = { module = "com.badlogicgames.gdx:gdx", version.ref = "gdx" }
+gdxBackendAndroid = { module = "com.badlogicgames.gdx:gdx-backend-android", version.ref = "gdx" }
+gdxBackendLwjgl3 = { module = "com.badlogicgames.gdx:gdx-backend-lwjgl3", version.ref = "gdx" }
+gdxPlatform = { module = "com.badlogicgames.gdx:gdx-platform", version.ref = "gdx" }
+
+gdxTeaVMBackendGlfw = { module = "com.github.xpenatan.gdx-teavm:backend-glfw", version.ref = "gdxTeaVM" }
+gdxTeaVMBackendWeb = { module = "com.github.xpenatan.gdx-teavm:backend-web", version.ref = "gdxTeaVM" }
+
+jWebGPUCore = { module = "com.github.xpenatan.jWebGPU:webgpu-core", version.ref = "jWebGPU" }
+jWebGPUDesktopJni = { module = "com.github.xpenatan.jWebGPU:webgpu-desktop-jni", version.ref = "jWebGPU" }
+jWebGPUDesktopFFM = { module = "com.github.xpenatan.jWebGPU:webgpu-desktop-ffm", version.ref = "jWebGPU" }
+jWebGPUC = { module = "com.github.xpenatan.jWebGPU:webgpu-c", version.ref = "jWebGPU" }
+jWebGPUWeb = { module = "com.github.xpenatan.jWebGPU:webgpu-web", version.ref = "jWebGPU" }
+jWebGPUWebWasm = { module = "com.github.xpenatan.jWebGPU:webgpu-web_wasm", version.ref = "jWebGPU" }
+jWebGPUAndroidWgpu = { module = "com.github.xpenatan.jWebGPU:webgpu-android-wgpu", version.ref = "jWebGPU" }
+jWebGPUAndroidDawn = { module = "com.github.xpenatan.jWebGPU:webgpu-android-dawn", version.ref = "jWebGPU" }
+
+lwjglCore = { module = "org.lwjgl:lwjgl", version.ref = "lwjgl" }
+lwjglGlfw = { module = "org.lwjgl:lwjgl-glfw", version.ref = "lwjgl" }
+lwjglJemalloc = { module = "org.lwjgl:lwjgl-jemalloc", version.ref = "lwjgl" }
+lwjglOpenal = { module = "org.lwjgl:lwjgl-openal", version.ref = "lwjgl" }
+lwjglOpengl = { module = "org.lwjgl:lwjgl-opengl", version.ref = "lwjgl" }
+lwjglStb = { module = "org.lwjgl:lwjgl-stb", version.ref = "lwjgl" }
+
+[plugins]
+easyPublishing = { id = "com.github.xpenatan.easy-publishing", version.ref = "easyPublishing" }
+androidApplication = { id = "com.android.application", version.ref = "androidGradlePlugin" }
+androidLibrary = { id = "com.android.library", version.ref = "androidGradlePlugin" }
+gdxTeaVM = { id = "com.github.xpenatan.gdx-teavm", version.ref = "gdxTeaVM" }
+graalvmNative = { id = "org.graalvm.buildtools.native", version.ref = "graalvmBuildtools" }

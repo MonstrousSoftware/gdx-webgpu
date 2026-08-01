@@ -6,8 +6,7 @@ plugins {
     id("java-library")
 }
 
-val javaVersion = project.property("javaMain") as String
-val gdxVersion = project.property("gdxVersion") as String
+val javaVersion = libs.versions.javaMain.get()
 
 sourceSets["main"].resources.srcDirs(File("../../tests/assets"))
 
@@ -19,8 +18,8 @@ if (JavaVersion.current().isJava9Compatible) {
 
 dependencies {
     implementation(project(":benchmark:core"))
-    implementation("com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion")
-    implementation("com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop")
+    implementation(libs.gdxBackendLwjgl3)
+    implementation(variantOf(libs.gdxPlatform) { classifier("natives-desktop") })
 }
 
 tasks.register<JavaExec>("run") {

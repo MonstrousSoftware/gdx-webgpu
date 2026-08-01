@@ -2,10 +2,10 @@ import org.teavm.gradle.api.OptimizationLevel
 
 plugins {
     id("java")
-    id("com.github.xpenatan.gdx-teavm")
+    alias(libs.plugins.gdxTeaVM)
 }
 
-val javaVersion = JavaVersion.toVersion(project.property("javaWeb") as String)
+val javaVersion = JavaVersion.toVersion(libs.versions.javaWeb.get())
 
 java {
     sourceCompatibility = javaVersion

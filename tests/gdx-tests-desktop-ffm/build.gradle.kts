@@ -7,7 +7,7 @@ plugins {
     id("java-library")
 }
 
-val javaVersion = project.property("javaFFM") as String
+val javaVersion = libs.versions.javaFFM.get()
 
 sourceSets["main"].resources.srcDirs(File("../assets"))
 

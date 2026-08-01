@@ -126,10 +126,10 @@ fun argumentValue(arguments: List<String>, name: String): String? {
 
 fun webgpuNativeRuntime(projectPath: String, benchmarkArgs: List<String>) = configurations.detachedConfiguration(
     dependencies.create(
-        "com.github.xpenatan.jWebGPU:" +
+        "${libs.versions.jWebGPUGroup.get()}:" +
             "webgpu-desktop-${if (projectPath.endsWith("desktop-ffm")) "ffm" else "jni"}-" +
             "${(argumentValue(benchmarkArgs, "webgpu") ?: "WGPU").lowercase()}_$currentDesktopPlatform:" +
-            (project.property("jWebGPUVVersion") as String)
+            libs.versions.jWebGPU.get()
     )
 )
 

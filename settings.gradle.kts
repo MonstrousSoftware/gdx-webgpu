@@ -1,18 +1,18 @@
 pluginManagement {
     repositories {
+        google()
         mavenCentral()
         maven { url = uri("https://central.sonatype.com/repository/maven-snapshots/") }
         gradlePluginPortal()
     }
-    plugins {
-        id("com.github.xpenatan.gdx-teavm") version providers.gradleProperty("gdxTeaVMVersion").get()
-    }
 }
 
 plugins {
-  // Applies the foojay-resolver plugin to allow automatic download of JDKs.
-  id("org.gradle.toolchains.foojay-resolver-convention") version "0.9.0"
+    // Applies the foojay-resolver plugin to allow automatic download of JDKs.
+    id("org.gradle.toolchains.foojay-resolver-convention") version "0.9.0"
 }
+
+rootProject.name = "gdx-webgpu"
 // A list of which subprojects to load as part of the same larger project.
 // You can remove Strings from the list and reload the Gradle project
 // if you want to temporarily disable a subproject.

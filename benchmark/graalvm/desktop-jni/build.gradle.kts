@@ -4,16 +4,14 @@ import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 
 plugins {
     id("java-library")
-    id("org.graalvm.buildtools.native") version "1.1.0"
+    alias(libs.plugins.graalvmNative)
 }
 
 val mainClassName = "com.monstrous.gdx.benchmarks.graalvm.GraalVMWebGPUBenchmarkLauncher"
 val nativeImageName = "benchmark-webgpu-graalvm-jni"
 val assetsDir = file("../../../tests/assets")
 val benchmarkTexture = file("../../../tests/assets/data/badlogicsmall.jpg")
-val gdxVersion = project.property("gdxVersion") as String
-val javaVersion = project.property("javaMain") as String
-val lwjglVersion = "3.3.3"
+val javaVersion = libs.versions.javaMain.get()
 val graalvmJavaVersion = JavaVersion.current().majorVersion.toInt()
 val nativeImageThreads = providers.gradleProperty("nativeImageThreads").orElse("2")
 val nativeImageBuilderMaxHeap = providers.gradleProperty("nativeImageBuilderMaxHeap").orElse("4g")
@@ -34,7 +32,7 @@ val webgpuImplementation = ((findProperty("webgpu") as String?) ?: "WGPU").upper
 if(webgpuImplementation != "WGPU" && webgpuImplementation != "DAWN") {
     throw GradleException("Unsupported jWebGPU implementation: $webgpuImplementation")
 }
-val jWebGPUVersion = project.property("jWebGPUVVersion") as String
+val jWebGPUVersion = libs.versions.jWebGPU.get()
 
 fun benchmarkProperty(name: String, defaultValue: String): String {
     return (findProperty(name) as String?) ?: defaultValue
@@ -107,18 +105,18 @@ dependencies {
     implementation(project(":benchmark:webgpu:core"))
     implementation(project(":backends:backend-desktop-jni"))
     runtimeOnly(
-        "com.github.xpenatan.jWebGPU:" +
+        "${libs.versions.jWebGPUGroup.get()}:" +
             "webgpu-desktop-jni-${webgpuImplementation.lowercase()}_$currentDesktopPlatform:$jWebGPUVersion"
     )
-    implementation("com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop")
-    implementation("com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion")
+    implementation(variantOf(libs.gdxPlatform) { classifier("natives-desktop") })
+    implementation(libs.gdxBackendLwjgl3)
 
-    runtimeOnly("org.lwjgl:lwjgl:$lwjglVersion:$lwjglNatives")
-    runtimeOnly("org.lwjgl:lwjgl-glfw:$lwjglVersion:$lwjglNatives")
-    runtimeOnly("org.lwjgl:lwjgl-jemalloc:$lwjglVersion:$lwjglNatives")
-    runtimeOnly("org.lwjgl:lwjgl-openal:$lwjglVersion:$lwjglNatives")
-    runtimeOnly("org.lwjgl:lwjgl-opengl:$lwjglVersion:$lwjglNatives")
-    runtimeOnly("org.lwjgl:lwjgl-stb:$lwjglVersion:$lwjglNatives")
+    runtimeOnly(variantOf(libs.lwjglCore) { classifier(lwjglNatives) })
+    runtimeOnly(variantOf(libs.lwjglGlfw) { classifier(lwjglNatives) })
+    runtimeOnly(variantOf(libs.lwjglJemalloc) { classifier(lwjglNatives) })
+    runtimeOnly(variantOf(libs.lwjglOpenal) { classifier(lwjglNatives) })
+    runtimeOnly(variantOf(libs.lwjglOpengl) { classifier(lwjglNatives) })
+    runtimeOnly(variantOf(libs.lwjglStb) { classifier(lwjglNatives) })
 }
 
 tasks.register<JavaExec>("benchmarkJvm") {
