@@ -1,7 +1,7 @@
 [versions]
 gdxWebGPUGroup = "io.github.monstroussoftware.gdx-webgpu"
 gdxWebGPUName = "gdx-webgpu"
-gdxWebGPURelease = "0.8.1"
+gdxWebGPURelease = "0.8.5"
 gdxWebGPUSnapshot = "-SNAPSHOT"
 
 javaMain = "8"
